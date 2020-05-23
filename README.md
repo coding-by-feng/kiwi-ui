@@ -6,7 +6,7 @@ http://39.107.142.173/#/index/vocabulary/detail?active=search&lazy=y&word={query
 
 url后面的{query}，就是要查的单词，比如要查单词test，访问连接为：
 ```
-http://39.107.142.173/#/index/vocabulary/detail?active=search&lazy=y&word=checkout
+http://39.107.142.173/#/index/vocabulary/detail?active=search&lazy=y&word=test
 ```
 ### Mac系统下可以结合Alfred快速查询单词
 
