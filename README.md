@@ -6,13 +6,13 @@ http://39.107.142.173/#/index/vocabulary/detail?active=search&lazy=y&word={query
 
 url后面的{query}，就是要查的单词，比如要查单词test，访问连接为：
 ```
-http://39.107.142.173/#/index/vocabulary/detail?active=search&lazy=y&word=test
+http://39.107.142.173/#/index/vocabulary/detail?active=search&lazy=y&word=checkout
 ```
 ### Mac系统下可以结合Alfred快速查询单词
 
 [https://raw.githubusercontent.com/coding-by-feng/oss/master/uPic/QQ20200523-005855.mp4](https://raw.githubusercontent.com/coding-by-feng/oss/master/uPic/QQ20200523-005855.mp4 "")
 
-<video id="video" controls="" preload="none">
+<video id="video" controls="" preload="none">q
 <source id="mp4" src="https://raw.githubusercontent.com/coding-by-feng/oss/master/uPic/QQ20200523-005855.mp4" type="video/mp4">
 </video>
 
