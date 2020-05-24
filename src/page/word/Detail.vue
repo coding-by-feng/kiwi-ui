@@ -150,10 +150,11 @@ export default {
         return
       }
       await this.queryWordDetail(word).then(response => {
+        console.log('queryWordDetail')
         if (response.data.code) {
-          this.wordInfo = { wordName: '' }
-        } else {
           this.wordInfo = response.data.data
+        } else {
+          this.wordInfo = { wordName: '' }
         }
       }).catch(e => {
         console.error(e)
