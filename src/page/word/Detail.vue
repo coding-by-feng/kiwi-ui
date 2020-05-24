@@ -24,9 +24,10 @@
                         <el-tag v-if="wordCharacterVO.wordLabel != ''">{{wordCharacterVO.wordLabel}}</el-tag>
                     </el-col>
                     <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
-                        <el-tag>{{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
-                            <i class="el-icon-video-play"
-                               @click="playPronunciation(wordPronunciationVO.pronunciationId)"></i>
+                        <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+                            {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
+                            <audio id="test" src=""></audio>
+                            <i class="el-icon-video-play" v-show="false"></i>
                         </el-tag>
                     </el-col>
                 </el-row>
@@ -109,11 +110,13 @@ import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 
+let that
 export default {
   name: 'wel',
   components: {},
   data () {
     return {
+      pronunciationAudioMap: new Map(),
       devSwitch: false,
       wordInfo: {
         wordName: ''
@@ -128,8 +131,12 @@ export default {
       },
     }
   },
-  mounted () {
-    this.init()
+  beforeCreate: function () {
+    that = this
+  },
+  async mounted () {
+    await this.init()
+    this.initPronunciation()
   },
   watch: {
     '$route' () {
@@ -150,7 +157,6 @@ export default {
         return
       }
       await this.queryWordDetail(word).then(response => {
-        console.log('queryWordDetail')
         if (response.data.code) {
           this.wordInfo = response.data.data
         } else {
@@ -160,9 +166,28 @@ export default {
         console.error(e)
       })
     },
+    initPronunciation () {
+      if (this.wordInfo.wordCharacterVOList) {
+        let wordCharacterVOList = this.wordInfo.wordCharacterVOList
+        for (let i = 0; i < wordCharacterVOList.length; i++) {
+          let pronunciationVOList = wordCharacterVOList[i].wordPronunciationVOList
+          for (let j = 0; j < pronunciationVOList.length; j++) {
+            let audio = new Audio()
+            audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
+            this.pronunciationAudioMap.set(pronunciationVOList[j].pronunciationId, audio)
+          }
+        }
+      }
+    },
     playPronunciation (id) {
-      var audio = new Audio('/wordBiz/word/pronunciation/downloadVoice/' + id)
-      audio.play()
+      try {
+        let audio = this.pronunciationAudioMap.get(id)
+        if (audio) {
+          audio.play()
+        }
+      } catch (e) {
+        console.error(e)
+      }
     },
     handleChange (val) {
       // console.log(val)
