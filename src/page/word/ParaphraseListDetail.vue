@@ -1,11 +1,18 @@
 <template>
     <div style="margin-top: 10px">
-        <el-collapse v-for="item in listItems">
+        <el-collapse v-for="item in listItems" accordion>
             <el-collapse-item :title="item.wordName" :name="item.wordId">
                 <div>
-                    <p>{{item.paraphraseEnglish}}</p>
+                    <p>
+                        {{item.paraphraseEnglish}}
+                        <el-button type="text">
+                            <i class="el-icon-more"
+                               @click="isShowParaphrase = !isShowParaphrase"
+                               style="color: #333333"></i>
+                        </el-button>
+                    </p>
                     <div>
-                        {{item.meaningChinese}}
+                        {{isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击上面图标显示'}}
                     </div>
                 </div>
                 <el-button type="text"
@@ -32,9 +39,8 @@
                 :total="page.total">
         </el-pagination>
         <el-dialog
-                title="提示"
+                title=""
                 :visible.sync="detail.dialogVisible"
-                width="30%"
                 :before-close="handleDetailClose">
             <el-card class="box-card">
                 <div slot="header">
@@ -92,6 +98,7 @@ export default {
   },
   data () {
     return {
+      isShowParaphrase: false,
       page: {
         current: 1,
         size: 20,
