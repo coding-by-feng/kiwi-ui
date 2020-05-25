@@ -31,17 +31,22 @@
                         </el-tag>
                     </el-col>
                 </el-row>
-                <div v-for="wordParaphraseVO in wordCharacterVO.wordParaphraseVOList">
+                <div v-for="wordParaphraseVO in wordCharacterVO.wordParaphraseVOList" v>
                     <el-card class="box-card">
                         <div slot="header">
                             <el-alert
                                     type="info"
-                                    :description="wordParaphraseVO.meaningChinese"
+                                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击上面图标显示'"
                                     :closable="false"
                                     effect="dark"
                                     center>
                                 <div slot="title">
                                     {{wordParaphraseVO.paraphraseEnglish}}
+                                    <el-button type="text">
+                                        <i class="el-icon-more"
+                                           @click="isShowParaphrase = !isShowParaphrase"
+                                           style="color: #FFFFFF"></i>
+                                    </el-button>
                                     <el-button type="text"><i
                                             :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                                             style="color: #FFFFFF"
@@ -116,6 +121,7 @@ export default {
   components: {},
   data () {
     return {
+      isShowParaphrase: false,
       pronunciationAudioMap: new Map(),
       devSwitch: false,
       wordInfo: {

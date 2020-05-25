@@ -1,11 +1,18 @@
 <template>
     <div style="margin-top: 10px">
-        <el-collapse v-for="item in listItems">
+        <el-collapse accordion v-for="item in listItems">
             <el-collapse-item :title="item.wordName" :name="item.wordId">
                 <div v-for="parahprase in item.parahpraseList">
-                    <p>{{parahprase.paraphraseEnglish}}</p>
+                    <p>
+                        {{parahprase.paraphraseEnglish}}
+                        <el-button type="text">
+                            <i class="el-icon-more"
+                               @click="isShowParaphrase = !isShowParaphrase"
+                               style="color: #333333"></i>
+                        </el-button>
+                    </p>
                     <div>
-                        {{parahprase.meaningChinese}}
+                        {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面图标显示' }}
                     </div>
                 </div>
                 <el-button type="text"
@@ -45,6 +52,7 @@ export default {
   },
   data () {
     return {
+      isShowParaphrase: false,
       page: {
         current: 1,
         size: 20,
