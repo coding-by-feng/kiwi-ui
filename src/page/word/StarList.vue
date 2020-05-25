@@ -47,10 +47,8 @@ export default {
     async init () {
       if (this.list.listType === 'word') {
         await wordStarList.getWordStarList().then(response => {
-          console.log(response.data)
           this.list.starListData = response.data.data
         }).catch(e => {
-          console.log('init error')
           console.error(e)
         })
       } else if (this.list.listType === 'paraphrase') {
@@ -69,7 +67,6 @@ export default {
       this.loading = false
     },
     async refresh () {
-      console.log('refresh')
       if (this.list.status === 'list') {
         await this.init()
       } else {

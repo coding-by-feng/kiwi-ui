@@ -36,7 +36,6 @@ axios.interceptors.request.use(config => {
 
 axios.interceptors.response.use(res => {
   NProgress.done()
-  console.log(JSON.stringify(res))
   const status = String(res.status) || '200'
   const message = res.data.msg || responseCode[status] || responseCode['default']
   if (status === 401) {
