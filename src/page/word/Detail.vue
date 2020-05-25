@@ -136,7 +136,7 @@ export default {
   },
   async mounted () {
     await this.init()
-    this.initPronunciation()
+    // await this.initPronunciation()
   },
   watch: {
     '$route' () {
@@ -166,7 +166,7 @@ export default {
         console.error(e)
       })
     },
-    initPronunciation () {
+    async initPronunciation () {
       if (this.wordInfo.wordCharacterVOList) {
         let wordCharacterVOList = this.wordInfo.wordCharacterVOList
         for (let i = 0; i < wordCharacterVOList.length; i++) {
@@ -179,12 +179,12 @@ export default {
         }
       }
     },
-    playPronunciation (id) {
+    async playPronunciation (id) {
       try {
-        let audio = this.pronunciationAudioMap.get(id)
-        if (audio) {
-          audio.play()
-        }
+        // let audio = this.pronunciationAudioMap.get(id)
+        let audio = new Audio()
+        audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        await audio.play()
       } catch (e) {
         console.error(e)
       }
