@@ -1,4 +1,4 @@
-const url = 'http://kiwi-microservice-local:9991'
+const url = 'http://kiwi-microservice:9991'
 // const url = 'http://localhost:9991'
 let publicPath = './'
 
