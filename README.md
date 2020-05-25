@@ -45,5 +45,5 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ### My Deploy
 ```
 cd yourUIPath
-vue-cli-service build && sshpass -p feng@feng-9210 scp -r /Users/zhanshifeng/Documents/myDocument/webstorm-projects/kiwi-ui/dist root@39.107.142.173:/root/docker/ui/
+vue-cli-service build && sshpass -p xxxx scp -r /Users/zhanshifeng/Documents/myDocument/webstorm-projects/kiwi-ui/dist root@ip:/root/docker/ui/
 ```
