@@ -117,7 +117,7 @@ export default {
         if (this.list.listType === 'word') {
           wordStarList.delById(row.id)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -127,7 +127,7 @@ export default {
         } else if (this.list.listType === 'paraphrase') {
           paraphraseStarList.delById(row.id)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -137,7 +137,7 @@ export default {
         } else if (this.list.listType === 'example') {
           exampleStarList.delById(row.id)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -158,7 +158,7 @@ export default {
         if (this.list.listType === 'word') {
           await wordStarList.updateById(this.edit.form)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -168,7 +168,7 @@ export default {
         } else if (this.list.listType === 'paraphrase') {
           await paraphraseStarList.updateById(this.edit.form)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -178,7 +178,7 @@ export default {
         } else if (this.list.listType === 'example') {
           await exampleStarList.updateById(this.edit.form)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -190,7 +190,7 @@ export default {
         if (this.list.listType === 'word') {
           await wordStarList.save(this.edit.form)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -200,7 +200,7 @@ export default {
         } else if (this.list.listType === 'paraphrase') {
           await paraphraseStarList.save(this.edit.form)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -210,7 +210,7 @@ export default {
         } else if (this.list.listType === 'example') {
           await exampleStarList.save(this.edit.form)
             .then(response => {
-              this.$message.success('操作成功')
+              this.doSuccess()
               this.init()
             })
             .catch(e => {
@@ -223,8 +223,8 @@ export default {
       this.handleEditClose()
     },
     goBack () {
-      this.visibleToggle()
       if (this.list.status === 'detail') {
+        this.visibleToggle()
         this.list.status = 'list'
       } else {
         let queryTmp = { active: 'search' }
@@ -255,6 +255,12 @@ export default {
         this.list.listName = '例句本'
       }
       await this.init()
+    },
+    doSuccess(){
+      this.$message.success({
+        duration: 1000,
+        message: '操作成功'
+      })
     }
   }
 }

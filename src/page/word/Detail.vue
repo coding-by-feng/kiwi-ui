@@ -149,7 +149,7 @@ export default {
         let data = { wordId: this.wordInfo.wordId, listId: listId }
         await this.putWordStarList(data).then(response => {
           this.collect.listSelectDialogVisible = false
-          this.$message.success('保存成功')
+          this.doSuccess()
         }).catch(e => {
           console.error(e)
         })
@@ -157,7 +157,7 @@ export default {
         let data = { paraphraseId: this.collect.collectId, listId: listId }
         await this.putParaphraseStarList(data).then(response => {
           this.collect.listSelectDialogVisible = false
-          this.$message.success('保存成功')
+          this.doSuccess()
         }).catch(e => {
           console.error(e)
         })
@@ -165,7 +165,7 @@ export default {
         let data = { exampleId: this.collect.collectId, listId: listId }
         await this.putExampleStarList(data).then(response => {
           this.collect.listSelectDialogVisible = false
-          this.$message.success('保存成功')
+          this.doSuccess()
         }).catch(e => {
           console.error(e)
         })
@@ -175,11 +175,17 @@ export default {
     playDetail2Audio () {
       this.playText('自动语音播报功能正在开发中，复习单词可以脱离双手的操作，洗澡，洗碗，吃饭等时刻都可以学习英语哦，敬请期待！')
     },
-    playText(text){
+    playText (text) {
       let url = 'http://tts.baidu.com/text2audio?lan=zh&ie=UTF-8&text=' + encodeURI(text)
       let audio = new Audio(url)
-      audio.src = url;
-      audio.play();
+      audio.src = url
+      audio.play()
+    },
+    doSuccess(){
+      this.$message.success({
+        duration: 1000,
+        message: '操作成功'
+      })
     }
   }
 }
@@ -224,7 +230,8 @@ export default {
                             style="color: #76838f"
                             @click="playDetail2Audio"></i>
                     </el-button>
-                    <el-button type="text"><i
+                    <el-button type="text"
+                               v-if="wordInfo.wordName.length>0"><i
                             :class="getWordCollectClass()"
                             style="color: #76838f"
                             @click="wordCollectClickFun()"></i>

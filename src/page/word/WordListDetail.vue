@@ -100,7 +100,7 @@ export default {
     async removeWordStarListFun (wordId) {
       this.removeWordStarList({ wordId: wordId, listId: this.listId })
         .then(response => {
-          this.$message.success('操作成功')
+          this.doSuccess()
           this.initList()
         })
         .catch(e => {
@@ -110,6 +110,12 @@ export default {
     },
     pageChange () {
       this.initList()
+    },
+    doSuccess(){
+      this.$message.success({
+        duration: 1000,
+        message: '操作成功'
+      })
     }
   }
 }
