@@ -249,8 +249,7 @@ export default {
                     <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
                         <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
                             {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
-                            <audio id="test" src=""></audio>
-                            <i class="el-icon-video-play" v-show="false"></i>
+                            <i class="el-icon-video-play"></i>
                         </el-tag>
                     </el-col>
                 </el-row>
