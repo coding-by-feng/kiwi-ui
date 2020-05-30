@@ -237,6 +237,7 @@ export default {
       let autoAudio = new Audio()
       autoAudio.pause()
       autoAudio.loop = false
+      document.body.appendChild(autoAudio)
       audioPlay.playWordDetail(this.wordInfo, autoAudio)
       autoAudio.addEventListener('ended', function () {
         index++
