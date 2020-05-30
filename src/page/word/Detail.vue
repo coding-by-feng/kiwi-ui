@@ -125,9 +125,12 @@ export default {
         this.autoPlayDialogVisible = true
       }
     },
+    async oneWordPlay(){
+      await this.playDetail2Audio()
+      await this.autoReviewStart()
+    },
     autoReviewStart () {
       this.autoPlayDialogVisible = false
-      console.log('this.audioList=')
       console.log(this.audioList)
       if (index === 0 && this.audioList.length) {
         console.log(this.audioList[0])
@@ -241,6 +244,9 @@ export default {
       audioPlay.playWordDetail(this.wordInfo, autoAudio)
       autoAudio.addEventListener('ended', function () {
         index++
+        if (index >= that.audioList.length) {
+          return
+        }
         that.wordInfo = that.autoWordList[index]
         that.audioList[index].play()
       }, false)
@@ -306,7 +312,7 @@ export default {
                     <el-button type="text"><i
                             class="el-icon-video-play outline_fix_top_right"
                             style="color: #76838f"
-                            @click="playDetail2Audio"></i>
+                            @click="oneWordPlay"></i>
                     </el-button>
                     <el-button type="text"
                                v-if="wordInfo.wordName.length>0"><i
