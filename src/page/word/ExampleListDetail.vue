@@ -39,7 +39,11 @@ export default {
       type: Function
     },
     listId: Number,
-    listName: String
+    listName: String,
+    isShowParaphrase: {
+      type: Boolean,
+      default: false
+    }
   },
   data () {
     return {

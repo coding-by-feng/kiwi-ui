@@ -25,7 +25,8 @@ export default {
       },
       detail: {
         detailVisible: false,
-        listId: 0
+        listId: 0,
+        isShowParaphrase: false
       },
       edit: {
         type: '',
@@ -256,11 +257,15 @@ export default {
       }
       await this.init()
     },
-    doSuccess(){
+    doSuccess () {
       this.$message.success({
         duration: 1000,
         message: '操作成功'
       })
+    },
+    autoReview (listId) {
+      let query = { active: 'search', mode: 'autoReview', listId: listId }
+      this.$router.push({ path: '/index/vocabulary/detail', query: query })
     }
   }
 }
@@ -291,6 +296,12 @@ export default {
                            size="mini">
                     <i class="el-icon-refresh"></i>
                 </el-button>
+                <el-button type="primary"
+                           v-show="list.status==='detail'"
+                           @click="detail.isShowParaphrase = !detail.isShowParaphrase"
+                           size="mini">
+                    <i class="el-icon-more"></i>
+                </el-button>
             </div>
         </el-page-header>
         <el-table
@@ -311,6 +322,10 @@ export default {
                 <template slot-scope="scope">
                     <el-button
                             size="mini"
+                            @click="autoReview(scope.row.id)">自动复习
+                    </el-button>
+                    <el-button
+                            size="mini"
                             @click="handleEdit(scope.$index, scope.row)">修改
                     </el-button>
                     <el-button
@@ -326,16 +341,19 @@ export default {
                 ref="wordDetail"
                 v-show="detail.detailVisible && list.listType === 'word' && list.status === 'detail'"
                 :listId="detail.listId"
+                :isShowParaphrase="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></WordListDetail>
         <ParaphraseListDetail
                 ref="paraphraseDetail"
                 v-show="detail.detailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
                 :listId="detail.listId"
+                :isShowParaphrase="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
         <ExampleListDetail
                 ref="exampleDetail"
                 v-show="detail.detailVisible && list.listType === 'example' && list.status === 'detail'"
                 :listId="detail.listId"
+                :isShowParaphrase="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ExampleListDetail>
         <el-dialog
                 :title="edit.title"

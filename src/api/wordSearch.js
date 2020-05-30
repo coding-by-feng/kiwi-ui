@@ -28,6 +28,18 @@ export default {
       method: 'get',
       params: {}
     })
+  },
+
+  queryWordDetailById (id) {
+    return request({
+      url: '/wordBiz/word/main/queryById/' + id,
+      headers: {
+        isToken: false,
+        'Authorization': 'Basic cGlnOnBpZw=='
+      },
+      method: 'get',
+      params: {}
+    })
   }
 
 }

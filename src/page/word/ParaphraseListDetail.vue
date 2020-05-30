@@ -5,14 +5,9 @@
                 <div>
                     <p>
                         {{item.paraphraseEnglish}}
-                        <el-button type="text">
-                            <i class="el-icon-more"
-                               @click="isShowParaphrase = !isShowParaphrase"
-                               style="color: #333333"></i>
-                        </el-button>
                     </p>
                     <div>
-                        {{isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击上面图标显示'}}
+                        {{isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击上面图标...显示'}}
                     </div>
                 </div>
                 <el-button type="text"
@@ -94,11 +89,14 @@ export default {
       type: Function
     },
     listId: Number,
-    listName: String
+    listName: String,
+    isShowParaphrase: {
+      type: Boolean,
+      default: false
+    }
   },
   data () {
     return {
-      isShowParaphrase: false,
       page: {
         current: 1,
         size: 20,

@@ -13,6 +13,17 @@ export default {
     })
   },
 
+  findAllWordId (listId) {
+    return request({
+      url: `/wordBiz/word/star/list/findAllWordId/${listId}`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'get'
+    })
+  },
+
   putWordStarList (data) {
     return request({
       url: '/wordBiz/word/star/list/putWordStarList',
