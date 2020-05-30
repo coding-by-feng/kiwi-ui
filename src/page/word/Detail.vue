@@ -1,10 +1,14 @@
 <script>
 import wordSearch from '@/api/wordSearch'
-import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
+import audioPlay from '@/api/audioPlay'
+import wordStarList from '@/api/wordStarList'
 
 let that
+
+let index = 0
+
 export default {
   name: 'wel',
   components: {},
@@ -16,6 +20,9 @@ export default {
       wordInfo: {
         wordName: ''
       },
+      audioList: new Array(),
+      autoWordList: new Array(),
+      autoPlayDialogVisible: false,
       collect: {
         type: '',
         listSelectDialogVisible: false,
@@ -44,7 +51,33 @@ export default {
     ...paraphraseStarList,
     ...exampleStarList,
     async init () {
-      let word = ''
+      let mode = this.$route.query.mode
+      if ('autoReview' === mode) {
+        let listId = this.$route.query.listId
+        if (listId) {
+          const loading = this.$loading({
+            lock: true,
+            text: '自动复习播报单词本资源加载中，请稍等！',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          })
+          await wordStarList.findAllWordId(listId).then(response => {
+            loading.close()
+            let wordIdList = response.data.data
+            if (wordIdList && wordIdList.length) {
+              this.autoReview(wordIdList)
+            }
+          }).catch(e => {
+            loading.close()
+            console.error(e)
+          })
+        }
+      } else {
+        await this.initDetail('')
+      }
+    },
+    async initDetail (w) {
+      let word = w
       if (this.$route.query.word) {
         word = this.$route.query.word
       }
@@ -72,6 +105,34 @@ export default {
             this.pronunciationAudioMap.set(pronunciationVOList[j].pronunciationId, audio)
           }
         }
+      }
+    },
+    async autoReview (wordIdList) {
+      for (let i = 0; i < wordIdList.length; i++) {
+        let wordId = wordIdList[i]
+        await this.queryWordDetailById(wordId).then(response => {
+          if (response.data.code) {
+            this.wordInfo = response.data.data
+            this.playDetail2Audio()
+          } else {
+            this.wordInfo = { wordName: '' }
+          }
+        }).catch(e => {
+          console.error(e)
+        })
+      }
+      if (index === 0 && this.audioList.length) {
+        this.autoPlayDialogVisible = true
+      }
+    },
+    autoReviewStart () {
+      this.autoPlayDialogVisible = false
+      console.log('this.audioList=')
+      console.log(this.audioList)
+      if (index === 0 && this.audioList.length) {
+        console.log(this.audioList[0])
+        this.wordInfo = this.autoWordList[0]
+        this.audioList[0].play()
       }
     },
     async playPronunciation (id) {
@@ -173,15 +234,19 @@ export default {
       loading.close()
     },
     playDetail2Audio () {
-      this.playText('自动语音播报功能正在开发中，复习单词可以脱离双手的操作，洗澡，洗碗，吃饭等时刻都可以学习英语哦，敬请期待！')
+      let autoAudio = new Audio()
+      autoAudio.pause()
+      autoAudio.loop = false
+      audioPlay.playWordDetail(this.wordInfo, autoAudio)
+      autoAudio.addEventListener('ended', function () {
+        index++
+        this.wordInfo = this.autoWordList[index]
+        this.audioList[index].play()
+      }, false)
+      this.audioList.push(autoAudio)
+      this.autoWordList.push(this.wordInfo)
     },
-    playText (text) {
-      let url = 'http://tts.baidu.com/text2audio?lan=zh&ie=UTF-8&text=' + encodeURI(text)
-      let audio = new Audio(url)
-      audio.src = url
-      audio.play()
-    },
-    doSuccess(){
+    doSuccess () {
       this.$message.success({
         duration: 1000,
         message: '操作成功'
@@ -208,10 +273,16 @@ export default {
         bottom: 5px;
     }
 
-    .outline_fix_top {
+    .outline_fix_top_right {
         position: absolute;
         top: 5px;
         right: 5px;
+    }
+
+    .outline_fix_top_left {
+        position: absolute;
+        top: 5px;
+        left: 5px;
     }
 </style>
 
@@ -219,14 +290,20 @@ export default {
     <el-container>
         <el-header>
             <el-alert
+                    v-if="''!==wordInfo.wordName"
                     type="warning"
                     :closable="false"
                     effect="light"
                     center>
                 <div slot="title">
+                    <el-button type="text">
+                        <i class="el-icon-more outline_fix_top_left"
+                           @click="isShowParaphrase = !isShowParaphrase"
+                           style="color: #76838f"></i>
+                    </el-button>
                     <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{wordInfo.wordName}}</b>
                     <el-button type="text"><i
-                            class="el-icon-video-play outline_fix_top"
+                            class="el-icon-video-play outline_fix_top_right"
                             style="color: #76838f"
                             @click="playDetail2Audio"></i>
                     </el-button>
@@ -258,17 +335,12 @@ export default {
                         <div slot="header">
                             <el-alert
                                     type="info"
-                                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击上面图标显示'"
+                                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击上面图标...显示'"
                                     :closable="false"
                                     effect="dark"
                                     center>
                                 <div slot="title">
                                     {{wordParaphraseVO.paraphraseEnglish}}
-                                    <el-button type="text">
-                                        <i class="el-icon-more"
-                                           @click="isShowParaphrase = !isShowParaphrase"
-                                           style="color: #FFFFFF"></i>
-                                    </el-button>
                                     <el-button type="text"><i
                                             :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                                             style="color: #FFFFFF"
@@ -328,6 +400,16 @@ export default {
                 </el-table>
             </el-dialog>
         </el-main>
+        <el-dialog
+                title="提示"
+                :visible.sync="autoPlayDialogVisible"
+                width="300px">
+            <span>自动复习计划即将开始，请确认。</span>
+            <span slot="footer" class="dialog-footer">
+    <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="autoReviewStart">确 定</el-button>
+  </span>
+        </el-dialog>
     </el-container>
 </template>
 

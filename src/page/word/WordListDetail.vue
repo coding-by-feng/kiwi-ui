@@ -5,14 +5,9 @@
                 <div v-for="parahprase in item.parahpraseList">
                     <p>
                         {{parahprase.paraphraseEnglish}}
-                        <el-button type="text">
-                            <i class="el-icon-more"
-                               @click="isShowParaphrase = !isShowParaphrase"
-                               style="color: #333333"></i>
-                        </el-button>
                     </p>
                     <div>
-                        {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面图标显示' }}
+                        {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面图标...显示' }}
                     </div>
                 </div>
                 <el-button type="text"
@@ -48,11 +43,14 @@ export default {
     tableVisibleToggle: {
       type: Function
     },
-    listId: Number
+    listId: Number,
+    isShowParaphrase: {
+      type: Boolean,
+      default: false
+    }
   },
   data () {
     return {
-      isShowParaphrase: false,
       page: {
         current: 1,
         size: 20,
@@ -111,7 +109,7 @@ export default {
     pageChange () {
       this.initList()
     },
-    doSuccess(){
+    doSuccess () {
       this.$message.success({
         duration: 1000,
         message: '操作成功'
