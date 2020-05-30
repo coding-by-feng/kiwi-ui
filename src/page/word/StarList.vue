@@ -308,11 +308,12 @@ export default {
                 v-show="tableVisible"
                 :data="list.starListData"
                 style="width: 100%">
-            <el-table-column
-                    width="180">
+            <el-table-column>
                 <template slot-scope="scope">
                     <div slot="reference" class="name-wrapper">
-                        <el-button type="primary" @click="selectOneList(scope.row.id, scope.row.listName)">
+                        <el-button type="primary"
+                                   size="mini"
+                                   @click="selectOneList(scope.row.id, scope.row.listName)">
                             {{scope.row.listName}}
                         </el-button>
                     </div>
@@ -322,17 +323,21 @@ export default {
                 <template slot-scope="scope">
                     <el-button
                             size="mini"
+                            type="text"
                             @click="autoReview(scope.row.id)">自动复习
                     </el-button>
                     <el-button
+                            type="text"
                             size="mini"
-                            @click="handleEdit(scope.$index, scope.row)">修改
+                            @click="handleEdit(scope.$index, scope.row)">
+                        <i class="el-icon-edit-outline"></i>
                     </el-button>
                     <el-button
                             size="mini"
-                            type="danger"
+                            type="text"
                             :loading="loading"
-                            @click="handleDelete(scope.$index, scope.row)">删除
+                            @click="handleDelete(scope.$index, scope.row)">
+                        <i class="el-icon-delete"></i>
                     </el-button>
                 </template>
             </el-table-column>
