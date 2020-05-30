@@ -3,7 +3,7 @@ export default {
     let wordName = wordInfo.wordName + ''
     let wordAlphabet = ''
     for (let i = 0; i < wordName.length; i++) {
-      wordAlphabet += wordName.substring(i, i + 1) + '。'
+      wordAlphabet += wordName.substring(i, i + 1).toUpperCase() + '。\n'
     }
     let wordCharacterVOList = wordInfo.wordCharacterVOList
     let wordOtherText = ''

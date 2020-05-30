@@ -20,8 +20,8 @@ export default {
       wordInfo: {
         wordName: ''
       },
-      audioList: new Array(),
-      autoWordList: new Array(),
+      audioList: [],
+      autoWordList: [],
       autoPlayDialogVisible: false,
       collect: {
         type: '',
