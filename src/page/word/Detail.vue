@@ -240,8 +240,8 @@ export default {
       audioPlay.playWordDetail(this.wordInfo, autoAudio)
       autoAudio.addEventListener('ended', function () {
         index++
-        this.wordInfo = this.autoWordList[index]
-        this.audioList[index].play()
+        that.wordInfo = this.autoWordList[index]
+        that.audioList[index].play()
       }, false)
       this.audioList.push(autoAudio)
       this.autoWordList.push(this.wordInfo)
