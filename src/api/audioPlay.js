@@ -7,6 +7,7 @@ export default {
     }
     let wordCharacterVOList = wordInfo.wordCharacterVOList
     let wordOtherText = ''
+    let textStart = '接下来播报的单词是:'
     for (let i = 0; i < wordCharacterVOList.length; i++) {
       let wordCharacterVO = wordCharacterVOList[i]
       wordOtherText += '词性' + wordCharacterVO.wordCharacter + '。'
@@ -24,7 +25,7 @@ export default {
     }
 
     let text = `
-    播报的当前单词是：${wordName}。
+    ${textStart}${wordName}。
      ${wordName}。
     单词拼写是：${wordAlphabet}。
     再度一次拼写：${wordAlphabet}。
