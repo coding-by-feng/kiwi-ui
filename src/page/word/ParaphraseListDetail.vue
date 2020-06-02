@@ -34,7 +34,7 @@
                 :total="page.total">
         </el-pagination>
         <el-dialog
-                title=""
+                :title="this.detail.paraphraseVO.meaningChinese"
                 :visible.sync="detail.dialogVisible"
                 :before-close="handleDetailClose">
             <el-card class="box-card">

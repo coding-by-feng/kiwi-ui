@@ -125,7 +125,7 @@ export default {
         this.autoPlayDialogVisible = true
       }
     },
-    async oneWordPlay(){
+    async oneWordPlay () {
       await this.playDetail2Audio()
       await this.autoReviewStart()
     },
@@ -258,6 +258,21 @@ export default {
         duration: 1000,
         message: '操作成功'
       })
+    },
+    removeByWordNameFun () {
+      this.$confirm('即将清楚当前单词数据，重新抓取, 是否继续?', '清除操作', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then($ => {
+        if ('' !== this.wordInfo.wordName) {
+          this.removeByWordName(this.wordInfo.wordName).then(res => {
+            if (res.data.code === 1) {
+              this.doSuccess()
+            }
+          })
+        }
+      })
     }
   }
 }
@@ -291,6 +306,12 @@ export default {
         top: 5px;
         left: 5px;
     }
+
+    .outline_fix_bottom_left {
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+    }
 </style>
 
 <template>
@@ -304,8 +325,13 @@ export default {
                     center>
                 <div slot="title">
                     <el-button type="text">
-                        <i class="el-icon-more outline_fix_top_left"
+                        <i class="el-icon-s-opportunity outline_fix_top_left"
                            @click="isShowParaphrase = !isShowParaphrase"
+                           style="color: #76838f"></i>
+                    </el-button>
+                    <el-button type="text">
+                        <i class="el-icon-remove outline_fix_bottom_left"
+                           @click="removeByWordNameFun"
                            style="color: #76838f"></i>
                     </el-button>
                     <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{wordInfo.wordName}}</b>
@@ -347,7 +373,11 @@ export default {
                                     effect="dark"
                                     center>
                                 <div slot="title">
-                                    {{wordParaphraseVO.paraphraseEnglish}}
+                                    <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
+                                         v-for="phraseVO in wordParaphraseVO.phraseList">
+                                        <p>[ {{phraseVO}} ]</p>
+                                    </div>
+                                    <p>{{wordParaphraseVO.paraphraseEnglish}}</p>
                                     <el-button type="text"><i
                                             :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                                             style="color: #FFFFFF"

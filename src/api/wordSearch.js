@@ -40,6 +40,18 @@ export default {
       method: 'get',
       params: {}
     })
+  },
+
+  removeByWordName (wordName) {
+    return request({
+      url: '/wordBiz/word/main/removeByWordName/' + wordName,
+      headers: {
+        isToken: false,
+        'Authorization': 'Basic cGlnOnBpZw=='
+      },
+      method: 'get',
+      params: {}
+    })
   }
 
 }
