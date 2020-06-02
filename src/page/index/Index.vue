@@ -2,6 +2,7 @@
 export default {
   data () {
     return {
+      isLogin: true,
       tabsWidth: window.innerWidth - 20 + 'px',
       activeName: this.$route.query.active ? this.$route.query.active : 'search',
       lazy: this.$route.query.lazy ? this.$route.query.lazy === 'y' : false,
@@ -26,7 +27,7 @@ export default {
     },
     tabClick (tab, event) {
       let lazyTmp = {}
-      if (this.lazy == 'y') {
+      if (this.lazy === 'y') {
         lazyTmp = { lazy: this.lazy }
       }
       let params
@@ -39,7 +40,7 @@ export default {
       } else {
         params = { ...paramsTmp }
       }
-      let isActiveChange = JSON.stringify(this.query) == JSON.stringify(params)
+      let isActiveChange = JSON.stringify(this.query) === JSON.stringify(params)
       if (!isActiveChange) {
         this.$router.push({ path: '/index/vocabulary/detail', query: params })
       }
@@ -94,11 +95,15 @@ export default {
                 <span slot="label"><i class="el-icon-search"></i></span>
                 <router-view name="search"></router-view>
             </el-tab-pane>
-            <el-tab-pane name="starList" v-if="!lazy">
+            <el-tab-pane name="starList" v-if="!lazy && isLogin">
                 <span slot="label"><i class="el-icon-tickets"></i></span>
                 <router-view name="starList"></router-view>
             </el-tab-pane>
-            <el-tab-pane>
+            <el-tab-pane name="login">
+                <span slot="label"><i class="el-icon-user"></i></span>
+                <router-view name="userLogin"></router-view>
+            </el-tab-pane>
+            <el-tab-pane name="about">
                 <span slot="label"><i class="el-icon-postcard"></i></span>
             </el-tab-pane>
         </el-tabs>

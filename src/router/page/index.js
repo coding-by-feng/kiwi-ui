@@ -1,6 +1,7 @@
 import Search from '@/page/word/Search'
 import Detail from '@/page/word/Detail'
 import StarList from '@/page/word/StarList'
+import UserLogin from '@/page/login/UserLogin'
 
 export default [{
   path: '/',
@@ -14,7 +15,8 @@ export default [{
     path: 'vocabulary',
     components: {
       search: Search,
-      starList: StarList
+      starList: StarList,
+      userLogin: UserLogin
     },
     children: [{
       path: 'detail',

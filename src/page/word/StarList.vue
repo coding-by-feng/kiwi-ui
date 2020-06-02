@@ -103,14 +103,14 @@ export default {
       this.edit.form.id = row.id
       this.edit.dialogVisible = true
     },
-    async handleDelete (index, row) {
+    handleDelete (index, row) {
       const loading = this.$loading({
         lock: true,
         text: 'Loading',
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       })
-      await this.$confirm('即将进行删除, 是否继续?', '删除操作', {
+      this.$confirm('即将进行删除, 是否继续?', '删除操作', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
