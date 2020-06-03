@@ -1,4 +1,5 @@
 <script>
+import { getStore } from '@/util/store'
 import wordSearch from '@/api/wordSearch'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
@@ -35,6 +36,12 @@ export default {
   },
   beforeCreate: function () {
     that = this
+  },
+  computed: {
+    isLogin () {
+      let accessToken = getStore({ name: 'access_token' })
+      return !!accessToken
+    }
   },
   async mounted () {
     await this.init()
@@ -164,7 +171,20 @@ export default {
       }
       return 'el-icon-circle-plus-outline outline_fix'
     },
+    checkIsLogin () {
+      if (!this.isLogin()) {
+        this.$message.warning({
+          duration: 1000,
+          message: '请先登录在进行收藏操作'
+        })
+        return false
+      }
+      return true
+    },
     async wordCollectClickFun () {
+      if (!this.checkIsLogin()) {
+        return
+      }
       await this.getWordStarList().then(response => {
         this.collect.starListData = response.data.data
         this.collect.type = 'word'
@@ -176,6 +196,9 @@ export default {
       })
     },
     async paraphraseCollectClickFun (paraphraseId) {
+      if (!this.checkIsLogin()) {
+        return
+      }
       this.collect.collectId = paraphraseId
       await this.getParaphraseStarList().then(response => {
         this.collect.starListData = response.data.data
@@ -188,6 +211,9 @@ export default {
       })
     },
     async exampleCollectClickFun (exampleId) {
+      if (!this.checkIsLogin()) {
+        return
+      }
       this.collect.collectId = exampleId
       await this.getExampleStarList().then(response => {
         this.collect.starListData = response.data.data
@@ -312,6 +338,12 @@ export default {
         bottom: 5px;
         left: 5px;
     }
+
+    .outline_fix_bottom_left_2 {
+        position: absolute;
+        bottom: 5px;
+        left: 25px;
+    }
 </style>
 
 <template>
@@ -334,6 +366,13 @@ export default {
                            @click="removeByWordNameFun"
                            style="color: #76838f"></i>
                     </el-button>
+                    <el-tooltip placement="right">
+                        <div slot="content">删除单词数据，后台将重新抓取单词数据</div>
+                        <el-button type="text">
+                            <i class="el-icon-warning outline_fix_bottom_left_2"
+                               style="color: #76838f"></i>
+                        </el-button>
+                    </el-tooltip>
                     <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{wordInfo.wordName}}</b>
                     <el-button type="text"><i
                             class="el-icon-video-play outline_fix_top_right"
