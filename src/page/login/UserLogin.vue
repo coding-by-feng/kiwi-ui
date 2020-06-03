@@ -120,8 +120,8 @@ export default {
     handleRegister () {
       oneClickRegister().then(res => {
         this.$message.success({
-          duration: 1000,
-          message: '注册成功，注意记住账号，密码默认123456,请直接登录'
+          duration: 3000,
+          message: '注册成功，密码默认123456,请直接登录'
         })
         this.passwordType = 'text'
         this.loginForm.username = res.data.data.username
