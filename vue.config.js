@@ -37,6 +37,13 @@ module.exports = {
         pathRewrite: {
           '^/code': '/code'
         }
+      },
+      '/admin': {
+        target: url,
+        ws: true,
+        pathRewrite: {
+          '^/admin': '/admin'
+        }
       }
     }
   }

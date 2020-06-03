@@ -1,8 +1,10 @@
 <script>
+import { getStore } from '@/util/store'
+import website from '@/const/website'
+
 export default {
   data () {
     return {
-      isLogin: true,
       tabsWidth: window.innerWidth - 20 + 'px',
       activeName: this.$route.query.active ? this.$route.query.active : 'search',
       lazy: this.$route.query.lazy ? this.$route.query.lazy === 'y' : false,
@@ -13,6 +15,12 @@ export default {
     $route: function () {
       this.activeName = this.$route.query.active
       this.lazy = this.$route.query.lazy
+    }
+  },
+  computed: {
+    isLogin () {
+      let accessToken = getStore({ name: 'access_token' })
+      return !!accessToken
     }
   },
   mounted () {
@@ -42,7 +50,7 @@ export default {
       }
       let isActiveChange = JSON.stringify(this.query) === JSON.stringify(params)
       if (!isActiveChange) {
-        this.$router.push({ path: '/index/vocabulary/detail', query: params })
+        this.$router.push({ path: website.noAuthPath.detail, query: params })
       }
     }
   }
@@ -99,12 +107,17 @@ export default {
                 <span slot="label"><i class="el-icon-tickets"></i></span>
                 <router-view name="starList"></router-view>
             </el-tab-pane>
-            <el-tab-pane name="login">
+            <el-tab-pane name="userCenter" v-if="!lazy && isLogin">
+                <span slot="label"><i class="el-icon-user"></i></span>
+                <router-view name="userCenter"></router-view>
+            </el-tab-pane>
+            <el-tab-pane name="login" v-if="!lazy && !isLogin">
                 <span slot="label"><i class="el-icon-user"></i></span>
                 <router-view name="userLogin"></router-view>
             </el-tab-pane>
-            <el-tab-pane name="about">
+            <el-tab-pane name="about" v-if="!lazy">
                 <span slot="label"><i class="el-icon-postcard"></i></span>
+                <router-view name="about"></router-view>
             </el-tab-pane>
         </el-tabs>
     </div>

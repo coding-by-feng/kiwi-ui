@@ -6,8 +6,7 @@ export default {
     return request({
       url: '/wordBiz/word/main/fuzzyQueryList',
       headers: {
-        isToken: false,
-        'Authorization': 'Basic cGlnOnBpZw=='
+        isToken: false
       },
       method: 'post',
       params: {
@@ -22,8 +21,7 @@ export default {
     return request({
       url: '/wordBiz/word/main/query/' + word,
       headers: {
-        isToken: false,
-        'Authorization': 'Basic cGlnOnBpZw=='
+        isToken: false
       },
       method: 'get',
       params: {}
@@ -34,8 +32,7 @@ export default {
     return request({
       url: '/wordBiz/word/main/queryById/' + id,
       headers: {
-        isToken: false,
-        'Authorization': 'Basic cGlnOnBpZw=='
+        isToken: false
       },
       method: 'get',
       params: {}
@@ -46,8 +43,7 @@ export default {
     return request({
       url: '/wordBiz/word/main/removeByWordName/' + wordName,
       headers: {
-        isToken: false,
-        'Authorization': 'Basic cGlnOnBpZw=='
+        isToken: true
       },
       method: 'get',
       params: {}
