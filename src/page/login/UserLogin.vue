@@ -14,7 +14,7 @@
         </el-form-item>
         <el-form-item prop="password" label="密码：" style="width: 80%">
             <el-input size="small"
-                      type="password"
+                      :type="passwordType"
                       v-model="loginForm.password"
                       placeholder="请输入密码">
             </el-input>
@@ -42,13 +42,14 @@
         </el-form-item>
         <el-form-item style="width: 70%">
             <el-button type="primary" @click="handleLogin">登录</el-button>
-            <el-button @click="resetForm">重置</el-button>
+            <el-button @click="handleRegister">一键注册</el-button>
         </el-form-item>
     </el-form>
 </template>
 <script>
 import { randomLenNum } from '@/util/util'
 import { mapGetters } from 'vuex'
+import { oneClickRegister } from '@/api/login'
 
 export default {
   name: 'userLogin',
@@ -60,6 +61,7 @@ export default {
         code: '',
         randomStr: ''
       },
+      passwordType: 'password',
       code: {
         src: '/code',
         value: '',
@@ -79,7 +81,6 @@ export default {
           { min: 4, max: 4, message: '验证码长度为4位', trigger: 'blur' }
         ]
       },
-      passwordType: 'password'
     }
   },
   mounted () {
@@ -108,9 +109,23 @@ export default {
           this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
             // that.$router.push({name: '登录页'});
             this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search' } })
-          }).catch(() => {
+            window.location.reload()
+          }).catch(e => {
+            this.refreshCode()
+            console.error(e)
           })
         }
+      })
+    },
+    handleRegister () {
+      oneClickRegister().then(res => {
+        this.$message.success({
+          duration: 1000,
+          message: '注册成功，注意记住账号，密码默认123456,请直接登录'
+        })
+        this.passwordType = 'text'
+        this.loginForm.username = res.data.data.username
+        this.loginForm.password = res.data.data.password
       })
     }
   }

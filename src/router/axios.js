@@ -1,7 +1,8 @@
 import { serialize } from '@/util/util'
-import { getStore } from '@/util/store'
+import {getStore} from '@/util/store'
 import NProgress from 'nprogress'
 import responseCode from '@/const/responseCode'
+import website from '@/const/website'
 import router from '@/router/router'
 import { Message } from 'element-ui'
 import 'nprogress/nprogress.css'
@@ -18,12 +19,10 @@ NProgress.configure({
 })
 axios.interceptors.request.use(config => {
   NProgress.start()
-  const isToken = (config.headers || {}).isToken === false
-  // let token = store.getters.access_token;
-  let token = getStore({
-    name: 'access_token'
-  })
-  if (token && !isToken) {
+  let isToken = !!(config.headers || {}).isToken
+  let token = getStore({ name: 'access_token' })
+  // let token = store.getters.access_token
+  if (token && isToken) {
     config.headers['Authorization'] = 'Bearer ' + token
   }
   // headers中配置serialize为true开启序列化
@@ -40,14 +39,16 @@ axios.interceptors.response.use(res => {
   const message = res.data.msg || responseCode[status] || responseCode['default']
   if (status === 401) {
     store.dispatch('FedLogOut').then(() => {
-      router.push({ path: '/login' })
+      router.push({ path: website.auth.login })
     })
   }
 
   if (status.indexOf('2') !== 0 || res.data.code === responseCode.ERROR) {
     Message({
       message: message,
-      type: 'error'
+      type: 'error',
+      center: true,
+      showClose: true
     })
     return Promise.reject(new Error(message))
   }
@@ -55,6 +56,12 @@ axios.interceptors.response.use(res => {
   return res
 }, error => {
   NProgress.done()
+  Message({
+    message: responseCode['default'],
+    type: 'error',
+    center: true,
+    showClose: true
+  })
   return Promise.reject(new Error(error))
 })
 

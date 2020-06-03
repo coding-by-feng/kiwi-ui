@@ -1,4 +1,5 @@
 <script>
+import {getStore} from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
