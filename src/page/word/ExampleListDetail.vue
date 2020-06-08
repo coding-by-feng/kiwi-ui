@@ -5,9 +5,13 @@
                 <div>
                     <p>{{item.exampleSentence}}</p>
                     <div>
-                        {{item.exampleTranslate}}
+                        {{isShowParaphrase ? item.exampleTranslate : '释义已隐藏，点击上面灯泡显示'}}
                     </div>
                 </div>
+                <el-button type="text"
+                           size="mini"
+                           @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
+                </el-button>
                 <el-button type="text"
                            size="mini"
                            @click="removeExampleStarListFun(item.exampleId)"><i

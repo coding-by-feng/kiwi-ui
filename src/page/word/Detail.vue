@@ -172,7 +172,7 @@ export default {
       return 'el-icon-circle-plus-outline outline_fix'
     },
     checkIsLogin () {
-      if (!this.isLogin()) {
+      if (!this.isLogin) {
         this.$message.warning({
           duration: 1000,
           message: '请先登录在进行收藏操作'
@@ -286,7 +286,7 @@ export default {
       })
     },
     removeByWordNameFun () {
-      this.$confirm('即将清楚当前单词数据，重新抓取, 是否继续?', '清除操作', {
+      this.$confirm('即将清除当前单词数据，重新抓取, 是否继续?', '清除操作', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -307,7 +307,7 @@ export default {
 
 <style>
     .row-bg {
-        padding: 10px 0;
+        padding-top: 10px;
         background-color: #f9fafc;
     }
 
@@ -357,19 +357,14 @@ export default {
                     center>
                 <div slot="title">
                     <el-button type="text">
-                        <i class="el-icon-s-opportunity outline_fix_top_left"
-                           @click="isShowParaphrase = !isShowParaphrase"
-                           style="color: #76838f"></i>
-                    </el-button>
-                    <el-button type="text">
                         <i class="el-icon-remove outline_fix_bottom_left"
                            @click="removeByWordNameFun"
                            style="color: #76838f"></i>
                     </el-button>
-                    <el-tooltip placement="right">
-                        <div slot="content">删除单词数据，后台将重新抓取单词数据</div>
+                    <el-tooltip placement="top">
+                        <div slot="content">如果单词数据有异常，可以点击下面删除单词，后台将重新抓取单词数据</div>
                         <el-button type="text">
-                            <i class="el-icon-warning outline_fix_bottom_left_2"
+                            <i class="el-icon-warning outline_fix_top_left"
                                style="color: #76838f"></i>
                         </el-button>
                     </el-tooltip>
@@ -389,12 +384,14 @@ export default {
             </el-alert>
         </el-header>
         <el-main>
-            <div v-for=" (wordCharacterVO) in wordInfo.wordCharacterVOList">
+            <div v-for="wordCharacterVO in wordInfo.wordCharacterVOList">
                 <el-row type="flex" class="row-bg" justify="end">
                     <el-col>
                         <el-tag type="success">{{wordCharacterVO.wordCharacter}}</el-tag>
                         <el-tag v-if="wordCharacterVO.wordLabel != ''">{{wordCharacterVO.wordLabel}}</el-tag>
                     </el-col>
+                </el-row>
+                <el-row type="flex" class="row-bg" justify="end">
                     <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
                         <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
                             {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
@@ -407,7 +404,7 @@ export default {
                         <div slot="header">
                             <el-alert
                                     type="info"
-                                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击上面图标...显示'"
+                                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击灯泡显示'"
                                     :closable="false"
                                     effect="dark"
                                     center>
@@ -416,7 +413,13 @@ export default {
                                          v-for="phraseVO in wordParaphraseVO.phraseList">
                                         <p>[ {{phraseVO}} ]</p>
                                     </div>
-                                    <p>{{wordParaphraseVO.paraphraseEnglish}}</p>
+                                    <p>{{wordParaphraseVO.paraphraseEnglish}}
+                                        <el-button type="text">
+                                            <i class="el-icon-s-opportunity"
+                                               @click="isShowParaphrase = !isShowParaphrase"
+                                               style="color: #FFFFFF"></i>
+                                        </el-button>
+                                    </p>
                                     <el-button type="text"><i
                                             :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                                             style="color: #FFFFFF"

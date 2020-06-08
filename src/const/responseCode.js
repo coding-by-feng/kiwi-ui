@@ -13,5 +13,7 @@ export default {
 
   SUCCESS: 1,
   FAIL: 0,
-  ERROR: -1
+  ERROR: -1,
+  UNAUTHORIZED: 401
+
 }

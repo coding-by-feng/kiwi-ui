@@ -1,5 +1,5 @@
 import { serialize } from '@/util/util'
-import {getStore} from '@/util/store'
+import { getStore } from '@/util/store'
 import NProgress from 'nprogress'
 import responseCode from '@/const/responseCode'
 import website from '@/const/website'
@@ -37,10 +37,20 @@ axios.interceptors.response.use(res => {
   NProgress.done()
   const status = String(res.status) || '200'
   const message = res.data.msg || responseCode[status] || responseCode['default']
-  if (status === 401) {
-    store.dispatch('FedLogOut').then(() => {
-      router.push({ path: website.auth.login })
-    })
+  let refreshToken = getStore({ name: 'refresh_token' })
+  if (responseCode.UNAUTHORIZED == status) {
+    if (refreshToken) {
+      store.dispatch('RefreshToken').then(() => {
+        // router.push({ path: website.auth.login })
+        console.log('自动刷新token成功')
+      })
+      return
+    } else {
+      store.dispatch('LogOut').then(() => {
+        window.location.reload()
+      })
+      return
+    }
   }
 
   if (status.indexOf('2') !== 0 || res.data.code === responseCode.ERROR) {
