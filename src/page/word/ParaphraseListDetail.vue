@@ -7,9 +7,13 @@
                         {{item.paraphraseEnglish}}
                     </p>
                     <div>
-                        {{isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击上面图标...显示'}}
+                        {{isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击灯泡显示'}}
                     </div>
                 </div>
+                <el-button type="text"
+                           size="mini"
+                           @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
+                </el-button>
                 <el-button type="text"
                            size="mini"
                            @click="showDetail(item.paraphraseId)"><i class="el-icon-more-outline"></i>
@@ -34,23 +38,41 @@
                 :total="page.total">
         </el-pagination>
         <el-dialog
-                :title="this.detail.paraphraseVO.meaningChinese"
+                :title="detail.paraphraseVO.wordName"
                 :visible.sync="detail.dialogVisible"
-                :before-close="handleDetailClose">
+                :before-close="handleDetailClose"
+                width="100%">
             <el-card class="box-card">
                 <div slot="header">
                     <el-alert
+                            ref="paraphraseDetail"
                             type="info"
-                            :description="this.detail.paraphraseVO.meaningChinese"
+                            :description="detail.paraphraseVO.meaningChinese"
                             :closable="false"
                             effect="dark"
                             center>
                         <div slot="title">
-                            {{this.detail.paraphraseVO.paraphraseEnglish}}
+                            <el-row type="flex" class="row-bg" justify="end">
+                                <el-col>
+                                    <el-tag type="success">{{detail.paraphraseVO.wordCharacter}}</el-tag>
+                                    <el-tag v-if="detail.paraphraseVO.wordLabel !== ''">
+                                        {{detail.paraphraseVO.wordLabel}}
+                                    </el-tag>
+                                </el-col>
+                            </el-row>
+                            <el-row type="flex" class="row-bg" justify="end">
+                                <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+                                    <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+                                        {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
+                                        <i class="el-icon-video-play"></i>
+                                    </el-tag>
+                                </el-col>
+                            </el-row>
+                            <p>{{this.detail.paraphraseVO.paraphraseEnglish}}</p>
                         </div>
                     </el-alert>
                 </div>
-                <div v-if="this.detail.paraphraseVO.wordParaphraseExampleVOList && this.detail.paraphraseVO.wordParaphraseExampleVOList.length < 1">
+                <div v-if="detail.paraphraseVO.wordParaphraseExampleVOList && detail.paraphraseVO.wordParaphraseExampleVOList.length < 1">
                     <el-alert
                             type="info"
                             title="该释义暂时没有例句"
@@ -176,7 +198,7 @@ export default {
     pageChange () {
       this.initList()
     },
-    doSuccess(){
+    doSuccess () {
       this.$message.success({
         duration: 1000,
         message: '操作成功'
@@ -187,5 +209,9 @@ export default {
 </script>
 
 <style scoped>
+    .row-bg {
+        padding-top: 10px;
+        background-color: unset;
+    }
 </style>
 

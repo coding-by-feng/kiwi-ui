@@ -1,4 +1,5 @@
 import request from '@/router/axios'
+import { getStore } from '@/util/store'
 
 const scope = 'server'
 
@@ -15,6 +16,20 @@ export const loginByUsername = (username, password, code, randomStr) => {
     params: {
       username, password, randomStr, code, grant_type, scope
     }
+  })
+}
+
+export const refreshToken = () => {
+  const grant_type = 'refresh_token'
+  let refreshToken = getStore({ name: 'refresh_token' })
+  return request({
+    url: '/auth/oauth/token',
+    headers: {
+      'isToken': false,
+      'Authorization': 'Basic dm9jYWJ1bGFyeTplbmhhbmNlcg=='
+    },
+    method: 'post',
+    params: { refresh_token: refreshToken, grant_type: grant_type, scope: scope }
   })
 }
 

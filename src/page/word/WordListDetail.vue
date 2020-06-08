@@ -7,9 +7,13 @@
                         {{parahprase.paraphraseEnglish}}
                     </p>
                     <div>
-                        {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面图标...显示' }}
+                        {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面灯泡显示' }}
                     </div>
                 </div>
+                <el-button type="text"
+                           size="mini"
+                           @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
+                </el-button>
                 <el-button type="text"
                            size="mini"
                            @click="showDetail(item.wordName)"><i class="el-icon-more-outline"></i>

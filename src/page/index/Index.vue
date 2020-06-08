@@ -20,6 +20,7 @@ export default {
   computed: {
     isLogin () {
       let accessToken = getStore({ name: 'access_token' })
+      console.log('accessToken' + accessToken)
       return !!accessToken
     }
   },

@@ -19,9 +19,11 @@ export const setStore = (params = {}) => {
   }
   if (type) {
     /*保存的数据用于浏览器的一次会话（session），当会话结束（通常是窗口关闭），数据被清空*/
-    window.sessionStorage.setItem(name, JSON.stringify(obj))
+    // window.sessionStorage.setItem(name, JSON.stringify(obj))
+    window.localStorage.setItem(name, JSON.stringify(obj))
   } else {
     /*保存的数据用于浏览器的一次会话（session），当会话结束（通常是窗口关闭），数据被清空*/
+    // window.localStorage.setItem(name, JSON.stringify(obj))
     window.sessionStorage.setItem(name, JSON.stringify(obj))
   }
 }
@@ -67,10 +69,12 @@ export const removeStore = (params = {}) => {
     type
   } = params
   name = keyName + name
-  if (type) {
-    window.sessionStorage.removeItem(name)
-  } else {
-    window.localStorage.removeItem(name)
-  }
+  window.sessionStorage.removeItem(name)
+  window.localStorage.removeItem(name)
+  // if (type) {
+  //   window.sessionStorage.removeItem(name)
+  // } else {
+  //   window.localStorage.removeItem(name)
+  // }
 }
 

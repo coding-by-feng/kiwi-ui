@@ -1,6 +1,8 @@
 import { getStore, setStore } from '@/util/store'
-import { loginByUsername, logout } from '@/api/login'
+import { loginByUsername, logout, refreshToken } from '@/api/login'
 import { encryption } from '@/util/util'
+import { Message } from 'element-ui'
+import router from '@/router/router'
 
 const user = {
   store: {
@@ -44,13 +46,31 @@ const user = {
           reject(error)
         })
       })
-
+    },
+    // 刷新token
+    RefreshToken ({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        refreshToken().then(response => {
+          const data = response.data
+          commit('setAccessToken', data.access_token)
+          commit('setRefreshToken', data.refresh_token)
+          commit('setExpiresIn', data.expires_in)
+          commit('clearLock')
+          resolve()
+        }).catch(error => {
+          commit('setAccessToken', '')
+          commit('setRefreshToken', '')
+          commit('setExpiresIn', '')
+          commit('setUserName', '')
+          commit('clearLock')
+          window.location.reload()
+        })
+      })
     },
     // 登出
     LogOut ({ commit }) {
       return new Promise((resolve, reject) => {
         logout().then(() => {
-          console.log('logout success')
           commit('setAccessToken', '')
           commit('setRefreshToken', '')
           commit('setExpiresIn', '')
@@ -70,7 +90,7 @@ const user = {
       setStore({
         name: 'access_token',
         content: state.access_token,
-        type: 'session'
+        type: 'local'
       })
     },
     setRefreshToken: (state, refresh_token) => {
@@ -78,7 +98,7 @@ const user = {
       setStore({
         name: 'refresh_token',
         content: state.refresh_token,
-        type: 'session'
+        type: 'local'
       })
     },
     setExpiresIn: (state, expires_in) => {
@@ -86,7 +106,7 @@ const user = {
       setStore({
         name: 'expires_in',
         content: state.expires_in,
-        type: 'session'
+        type: 'local'
       })
     },
     setUserName: (state, user_name) => {
@@ -95,7 +115,7 @@ const user = {
         setStore({
           name: 'user_name',
           content: state.user_name,
-          type: 'session'
+          type: 'local'
         })
     }
 

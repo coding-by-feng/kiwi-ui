@@ -1,5 +1,5 @@
 <script>
-import {getStore} from '@/util/store'
+import { getStore } from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
@@ -25,7 +25,9 @@ export default {
         status: 'list'
       },
       detail: {
-        detailVisible: false,
+        wordDetailVisible: false,
+        paraphraseDetailVisible: false,
+        exampleDetailVisible: false,
         listId: 0,
         isShowParaphrase: false
       },
@@ -76,8 +78,7 @@ export default {
           await this.$refs.wordDetail.initList()
         } else if (this.list.listType === 'paraphrase') {
           await this.$refs.paraphraseDetail.initList()
-        }
-        if (this.list.listType === 'example') {
+        } else if (this.list.listType === 'example') {
           await this.$refs.exampleDetail.initList()
         }
       }
@@ -89,7 +90,13 @@ export default {
     },
     visibleToggle () {
       this.tableVisible = !this.tableVisible
-      this.detail.detailVisible = !this.detail.detailVisible
+      if (this.list.listType === 'word') {
+        this.detail.wordDetailVisible = !this.detail.wordDetailVisible
+      } else if (this.list.listType === 'paraphrase') {
+        this.detail.paraphraseDetailVisible = !this.detail.paraphraseDetailVisible
+      } else if (this.list.listType === 'example') {
+        this.detail.exampleDetailVisible = !this.detail.exampleDetailVisible
+      }
     },
     handleOperate () {
       this.edit.title = this.list.listName + '增加'
@@ -301,7 +308,7 @@ export default {
                            v-show="list.status==='detail'"
                            @click="detail.isShowParaphrase = !detail.isShowParaphrase"
                            size="mini">
-                    <i class="el-icon-more"></i>
+                    <i class="el-icon-s-opportunity"></i>
                 </el-button>
             </div>
         </el-page-header>
@@ -345,21 +352,21 @@ export default {
         </el-table>
         <WordListDetail
                 ref="wordDetail"
-                v-show="detail.detailVisible && list.listType === 'word' && list.status === 'detail'"
+                v-if="detail.wordDetailVisible && list.listType === 'word' && list.status === 'detail'"
                 :listId="detail.listId"
-                :isShowParaphrase="detail.isShowParaphrase"
+                :isShowParaphrase.sync="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></WordListDetail>
         <ParaphraseListDetail
                 ref="paraphraseDetail"
-                v-show="detail.detailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
+                v-if="detail.paraphraseDetailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
                 :listId="detail.listId"
-                :isShowParaphrase="detail.isShowParaphrase"
+                :isShowParaphrase.sync="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
         <ExampleListDetail
                 ref="exampleDetail"
-                v-show="detail.detailVisible && list.listType === 'example' && list.status === 'detail'"
+                v-if="detail.exampleDetailVisible && list.listType === 'example' && list.status === 'detail'"
                 :listId="detail.listId"
-                :isShowParaphrase="detail.isShowParaphrase"
+                :isShowParaphrase.sync="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ExampleListDetail>
         <el-dialog
                 :title="edit.title"
