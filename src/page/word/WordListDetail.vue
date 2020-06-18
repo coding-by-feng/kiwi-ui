@@ -28,7 +28,7 @@
                 style="margin-top: 10px"
                 background
                 :page-size.sync="page.size"
-                :current-page="page.current"
+                :current-page.sync="page.current"
                 :page-count="page.pages"
                 :page-sizes="[10,20,50,100]"
                 layout="prev, pager, sizes, next"

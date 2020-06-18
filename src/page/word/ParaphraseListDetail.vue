@@ -29,7 +29,7 @@
                 style="margin-top: 10px"
                 background
                 :page-size.sync="page.size"
-                :current-page="page.current"
+                :current-page.sync="page.current"
                 :page-count="page.pages"
                 :page-sizes="[10,20,50,100]"
                 layout="prev, pager, sizes, next"
@@ -44,30 +44,31 @@
                 width="100%">
             <el-card class="box-card">
                 <div slot="header">
+                    <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+                        <el-col>
+                            <el-tag type="success">{{detail.paraphraseVO.wordCharacter}}</el-tag>
+                            <el-tag v-if="detail.paraphraseVO.wordLabel !== ''">
+                                {{detail.paraphraseVO.wordLabel}}
+                            </el-tag>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+                        <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+                            <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+                                {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
+                                <i class="el-icon-video-play"></i>
+                            </el-tag>
+                        </el-col>
+                    </el-row>
                     <el-alert
                             ref="paraphraseDetail"
                             type="info"
                             :description="detail.paraphraseVO.meaningChinese"
                             :closable="false"
                             effect="dark"
+                            style="margin-top: 5px;"
                             center>
                         <div slot="title">
-                            <el-row type="flex" class="row-bg" justify="end">
-                                <el-col>
-                                    <el-tag type="success">{{detail.paraphraseVO.wordCharacter}}</el-tag>
-                                    <el-tag v-if="detail.paraphraseVO.wordLabel !== ''">
-                                        {{detail.paraphraseVO.wordLabel}}
-                                    </el-tag>
-                                </el-col>
-                            </el-row>
-                            <el-row type="flex" class="row-bg" justify="end">
-                                <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
-                                    <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
-                                        {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
-                                        <i class="el-icon-video-play"></i>
-                                    </el-tag>
-                                </el-col>
-                            </el-row>
                             <p>{{this.detail.paraphraseVO.paraphraseEnglish}}</p>
                         </div>
                     </el-alert>
@@ -203,15 +204,21 @@ export default {
         duration: 1000,
         message: '操作成功'
       })
+    },
+    async playPronunciation (id) {
+      try {
+        // let audio = this.pronunciationAudioMap.get(id)
+        let audio = new Audio()
+        audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        await audio.play()
+      } catch (e) {
+        console.error(e)
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-    .row-bg {
-        padding-top: 10px;
-        background-color: unset;
-    }
 </style>
 
