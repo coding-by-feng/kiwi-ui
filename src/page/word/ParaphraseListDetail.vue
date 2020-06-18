@@ -116,6 +116,10 @@ export default {
     isShowParaphrase: {
       type: Boolean,
       default: false
+    },
+    isReview: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -145,11 +149,19 @@ export default {
   methods: {
     ...paraphraseStarList,
     async init () {
-      // todo 对listId进行非空等判断
-      if (this.listId < 1) {
-        return
+      if (this.isReview) {
+        await this.initList()
+        console.log(this.listItems)
+        for (let i = 0; i < this.listItems.length; i++) {
+          await this.showDetail(this.listItems[i].paraphraseId)
+        }
+      } else {
+        // todo 对listId进行非空等判断
+        if (this.listId < 1) {
+          return
+        }
+        await this.initList()
       }
-      await this.initList()
     },
     async initList () {
       this.listRefresh = true

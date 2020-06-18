@@ -59,7 +59,8 @@ export default {
     ...exampleStarList,
     async init () {
       let mode = this.$route.query.mode
-      if ('autoReview' === mode) {
+      let listType = this.$route.query.listType
+      if ('autoReview' === mode && 'word' === listType) {
         let listId = this.$route.query.listId
         if (listId) {
           const loading = this.$loading({
