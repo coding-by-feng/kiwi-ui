@@ -21,6 +21,7 @@ export default {
         wordOtherText += `词义${j + 1}的英文解释为：${wordParaphraseVO.paraphraseEnglish}。`
         wordOtherText += `再读一遍英文解释：${wordParaphraseVO.paraphraseEnglish}。`
         wordOtherText += `对应的中文词义是：${wordParaphraseVO.meaningChinese}。`
+        wordOtherText += `再读一遍英文解释：${wordParaphraseVO.paraphraseEnglish}。`
       }
     }
 
@@ -28,11 +29,50 @@ export default {
     ${textStart}${wordName}。
      ${wordName}。
     单词拼写是：${wordAlphabet}。
-    再度一次拼写：${wordAlphabet}。
+     ${wordName}。
+    再读一次拼写：${wordAlphabet}。
+     ${wordName}。
     单词的词性有${wordCharacterVOList.length}个。
     ${wordOtherText}
     `
     this.playText(text, audio)
+  },
+
+  getPlayWordText (wordInfo) {
+    let wordName = wordInfo.wordName + ''
+    let wordAlphabet = ''
+    for (let i = 0; i < wordName.length; i++) {
+      wordAlphabet += wordName.substring(i, i + 1).toUpperCase() + '。\n'
+    }
+    let wordCharacterVOList = wordInfo.wordCharacterVOList
+    let wordOtherText = ''
+    let textStart = '接下来播报的单词是:'
+    for (let i = 0; i < wordCharacterVOList.length; i++) {
+      let wordCharacterVO = wordCharacterVOList[i]
+      wordOtherText += '词性' + wordCharacterVO.wordCharacter + '。'
+      if (!wordCharacterVO.wordLabel && '' !== wordCharacterVO.wordLabel) {
+        wordOtherText += '词性标签是：' + wordCharacterVO.wordLabel + '。'
+      }
+      let wordParaphraseVOList = wordCharacterVO.wordParaphraseVOList
+      wordOtherText += '词义有' + wordParaphraseVOList.length + '个。'
+      for (let j = 0; j < wordParaphraseVOList.length; j++) {
+        let wordParaphraseVO = wordParaphraseVOList[j]
+        wordOtherText += `词义${j + 1}的英文解释为：${wordParaphraseVO.paraphraseEnglish}。`
+        wordOtherText += `再读一遍英文解释：${wordParaphraseVO.paraphraseEnglish}。`
+        wordOtherText += `对应的中文词义是：${wordParaphraseVO.meaningChinese}。`
+        wordOtherText += `再读一遍英文解释：${wordParaphraseVO.paraphraseEnglish}。`
+      }
+    }
+
+    return {
+      textStart: textStart,
+      wordAlphabet: wordAlphabet,
+      wordOtherText: wordAlphabet
+    }
+  },
+
+  playText2Audio (text) {
+    return this.playText(text, new Audio())
   },
 
   playText (text, audio) {
