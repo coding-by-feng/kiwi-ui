@@ -138,9 +138,9 @@ export default {
     },
     autoReviewStart () {
       this.autoPlayDialogVisible = false
-      console.log(this.audioList)
+      // console.log(this.audioList)
       if (index === 0 && this.audioList.length) {
-        console.log(this.audioList[0])
+        // console.log(this.audioList[0])
         this.wordInfo = this.autoWordList[0]
         this.audioList[0].play()
       }
