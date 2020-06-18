@@ -27,6 +27,7 @@ export default {
       detail: {
         wordDetailVisible: false,
         paraphraseDetailVisible: false,
+        paraphraseIsReview: false,
         exampleDetailVisible: false,
         listId: 0,
         isShowParaphrase: false
@@ -83,7 +84,8 @@ export default {
         }
       }
     },
-    selectOneList (id, name) {
+    selectOneList (id, isReview) {
+      this.detail.paraphraseIsReview = isReview
       this.detail.listId = id
       this.visibleToggle()
       this.list.status = 'detail'
@@ -272,7 +274,13 @@ export default {
       })
     },
     autoReview (listId) {
-      let query = { active: 'search', mode: 'autoReview', listId: listId }
+      let query
+      if ('word' === this.list.listType) {
+        query = { active: 'search', mode: 'autoReview', listId: listId, listType: this.list.listType }
+      } else if ('paraphrase' === this.list.listType) {
+        this.selectOneList(listId, true)
+        query = { active: 'starList', mode: 'autoReview', listId: listId, listType: this.list.listType }
+      }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     }
   }
@@ -321,7 +329,7 @@ export default {
                     <div slot="reference" class="name-wrapper">
                         <el-button type="primary"
                                    size="mini"
-                                   @click="selectOneList(scope.row.id, scope.row.listName)">
+                                   @click="selectOneList(scope.row.id, false)">
                             {{scope.row.listName}}
                         </el-button>
                     </div>
@@ -360,6 +368,7 @@ export default {
                 ref="paraphraseDetail"
                 v-if="detail.paraphraseDetailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
                 :listId="detail.listId"
+                :isReview="detail.paraphraseIsReview"
                 :isShowParaphrase.sync="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
         <ExampleListDetail
