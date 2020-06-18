@@ -8,6 +8,7 @@ import { Message } from 'element-ui'
 import 'nprogress/nprogress.css'
 import store from '@/store'
 import axios from 'axios'
+import el from 'element-ui/src/locale/lang/el'
 
 axios.defaults.timeout = 100000
 axios.defaults.validateStatus = function (status) {
@@ -47,6 +48,12 @@ axios.interceptors.response.use(res => {
       return
     } else {
       store.dispatch('LogOut').then(() => {
+        let word = this.$route.query.word
+        if (word) {
+          this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: word } })
+        } else {
+          this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search' } })
+        }
         window.location.reload()
       })
       return

@@ -1,55 +1,8 @@
-<template>
-    <el-form class="login-form"
-             style="width: 400px;"
-             status-icon
-             ref="loginForm"
-             :model="loginForm"
-             label-width="80px">
-        <el-form-item prop="username" label="账号：" style="width: 80%">
-            <el-input size="small"
-                      v-model="loginForm.username"
-                      placeholder="请输入账号">
-                <i class="icon-yonghu"></i>
-            </el-input>
-        </el-form-item>
-        <el-form-item prop="password" label="密码：" style="width: 80%">
-            <el-input size="small"
-                      :type="passwordType"
-                      v-model="loginForm.password"
-                      placeholder="请输入密码">
-            </el-input>
-        </el-form-item>
-        <el-form-item prop="code" label="验证码：" style="width: 100%">
-            <el-row :span="24">
-                <el-col :span="10">
-                    <el-input size="small"
-                              @keyup.enter.native="handleLogin"
-                              :maxlength="code.len"
-                              v-model="loginForm.code"
-                              auto-complete="off"
-                              placeholder="请输入验证码">
-                        <i class="icon-yanzhengma"></i>
-                    </el-input>
-                </el-col>
-                <el-col :span="10">
-                    <div class="login-code">
-                        <img :src="code.src"
-                             class="login-code-img"
-                             @click="refreshCode" alt="点击刷新"/>
-                    </div>
-                </el-col>
-            </el-row>
-        </el-form-item>
-        <el-form-item style="width: 70%">
-            <el-button type="primary" @click="handleLogin">登录</el-button>
-            <el-button @click="handleRegister">一键注册</el-button>
-        </el-form-item>
-    </el-form>
-</template>
 <script>
 import { randomLenNum } from '@/util/util'
 import { mapGetters } from 'vuex'
 import { oneClickRegister } from '@/api/login'
+import router from '@/router/router'
 
 export default {
   name: 'userLogin',
@@ -108,7 +61,12 @@ export default {
         if (valid) {
           this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
             // that.$router.push({name: '登录页'});
-            this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search' } })
+            let word = this.$route.query.word
+            if (word) {
+              this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: word } })
+            } else {
+              this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search' } })
+            }
             window.location.reload()
           }).catch(e => {
             this.refreshCode()
@@ -132,3 +90,51 @@ export default {
 }
 </script>
 
+<template>
+    <el-form class="login-form"
+             style="width: 400px;"
+             status-icon
+             ref="loginForm"
+             :model="loginForm"
+             label-width="80px">
+        <el-form-item prop="username" label="账号：" style="width: 80%">
+            <el-input size="small"
+                      v-model="loginForm.username"
+                      placeholder="请输入账号">
+                <i class="icon-yonghu"></i>
+            </el-input>
+        </el-form-item>
+        <el-form-item prop="password" label="密码：" style="width: 80%">
+            <el-input size="small"
+                      :type="passwordType"
+                      v-model="loginForm.password"
+                      placeholder="请输入密码">
+            </el-input>
+        </el-form-item>
+        <el-form-item prop="code" label="验证码：" style="width: 100%">
+            <el-row :span="24">
+                <el-col :span="10">
+                    <el-input size="small"
+                              @keyup.enter.native="handleLogin"
+                              :maxlength="code.len"
+                              v-model="loginForm.code"
+                              auto-complete="off"
+                              placeholder="请输入验证码">
+                        <i class="icon-yanzhengma"></i>
+                    </el-input>
+                </el-col>
+                <el-col :span="10">
+                    <div class="login-code">
+                        <img :src="code.src"
+                             class="login-code-img"
+                             @click="refreshCode" alt="点击刷新"/>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-form-item>
+        <el-form-item style="width: 70%">
+            <el-button type="primary" @click="handleLogin">登录</el-button>
+            <el-button @click="handleRegister">一键注册</el-button>
+        </el-form-item>
+    </el-form>
+</template>
