@@ -55,12 +55,26 @@ export default {
     ...paraphraseStarList,
     async init () {
       if (this.isReview) {
+        const loading = this.$loading({
+          lock: true,
+          text: '自动复习释义本资源加载中，请稍等！',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        })
         await this.initList()
-        console.log(this.listItems)
         for (let i = 0; i < this.listItems.length; i++) {
-          await this.showDetail(this.listItems[i].paraphraseId)
+          // await this.showDetail(this.listItems[i].paraphraseId)
+          await this.getItemDetail(this.listItems[i].paraphraseId)
+            .then(response => {
+              this.detail.paraphraseVO = response.data.data
+            })
+            .catch(e => {
+              loading.close()
+              console.error(e)
+            })
           await this.reviewDetail()
         }
+        loading.close()
         this.autoPlayDialogVisible = !this.autoPlayDialogVisible
       } else {
         // todo 对listId进行非空等判断
