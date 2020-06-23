@@ -1,5 +1,4 @@
 <script>
-import { getStore } from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
@@ -50,6 +49,9 @@ export default {
   },
   methods: {
     async init () {
+      if (this.$route.query.listType) {
+        this.list.listType = this.$route.query.listType
+      }
       if (this.list.listType === 'word') {
         await wordStarList.getWordStarList().then(response => {
           this.list.starListData = response.data.data

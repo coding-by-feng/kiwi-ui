@@ -150,6 +150,8 @@ export default {
       try {
         // let audio = this.pronunciationAudioMap.get(id)
         let audio = new Audio()
+        audio.pause()
+        audio.loop = false
         audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         await audio.play()
       } catch (e) {
@@ -484,7 +486,7 @@ export default {
                 title="提示"
                 :visible.sync="autoPlayDialogVisible"
                 width="300px">
-            <span>自动复习计划即将开始，请确认。</span>
+            <span>自动复习即将开始，请确认。</span>
             <span slot="footer" class="dialog-footer">
     <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
     <el-button type="primary" @click="autoReviewStart">确 定</el-button>
