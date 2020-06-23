@@ -1,3 +1,207 @@
+<script>
+import paraphraseStarList from '@/api/paraphraseStarList'
+import audioPlay from '../../api/audioPlay'
+
+let that
+let index = 0
+
+export default {
+  name: 'wordStarListDetail',
+  props: {
+    tableVisibleToggle: {
+      type: Function
+    },
+    listId: Number,
+    listName: String,
+    isShowParaphrase: {
+      type: Boolean,
+      default: false
+    },
+    isReview: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data () {
+    return {
+      page: {
+        current: 1,
+        size: 20,
+        total: 0,
+        pages: 0
+      },
+      detail: {
+        paraphraseVO: {},
+        dialogVisible: false
+      },
+      listItems: [],
+      listRefresh: false,
+      autoPlayDialogVisible: false,
+      reviewAudioArr: []
+    }
+  },
+  beforeCreate: function () {
+    that = this
+  },
+  mounted () {
+    this.init()
+  },
+  watch: {
+    'listId' () {
+      this.init()
+    }
+  },
+  methods: {
+    ...paraphraseStarList,
+    async init () {
+      if (this.isReview) {
+        await this.initList()
+        console.log(this.listItems)
+        for (let i = 0; i < this.listItems.length; i++) {
+          await this.showDetail(this.listItems[i].paraphraseId)
+          await this.reviewDetail()
+        }
+        this.autoPlayDialogVisible = !this.autoPlayDialogVisible
+      } else {
+        // todo 对listId进行非空等判断
+        if (this.listId < 1) {
+          return
+        }
+        await this.initList()
+      }
+    },
+    async initList () {
+      this.listRefresh = true
+      await this.getListItems(this.page, this.listId).then(response => {
+        this.listItems = response.data.data.records
+        this.page.pages = response.data.data.pages
+        this.page.total = response.data.data.total
+      }).catch(e => {
+        console.error(e)
+      })
+      this.listRefresh = false
+    },
+    goBack () {
+      this.$emit('tableVisibleToggle')
+    },
+    async showDetail (paraphraseId) {
+      const loading = this.$loading({
+        lock: true,
+        text: 'Loading',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
+      await this.getItemDetail(paraphraseId)
+        .then(response => {
+          this.detail.paraphraseVO = response.data.data
+        })
+        .catch(e => {
+          console.error(e)
+        })
+      this.detail.dialogVisible = true
+      loading.close()
+    },
+    async removeParaphraseStarListFun (paraphraseId) {
+      this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: this.listId })
+        .then(response => {
+          this.doSuccess()
+          this.initList()
+        })
+        .catch(e => {
+          console.error(e)
+          this.$message.error(e)
+        })
+    },
+    handleDetailClose () {
+      this.detail.dialogVisible = false
+    },
+    pageChange () {
+      this.initList()
+    },
+    doSuccess () {
+      this.$message.success({
+        duration: 1000,
+        message: '操作成功'
+      })
+    },
+    async playPronunciation (id) {
+      try {
+        // let audio = this.pronunciationAudioMap.get(id)
+        let audio = new Audio()
+        audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        audio.pause()
+        audio.loop = false
+        await audio.play()
+      } catch (e) {
+        console.error(e)
+      }
+    },
+    async autoReviewStart () {
+      this.autoPlayDialogVisible = false
+      if (this.reviewAudioArr.length) {
+        await this.showDetail(this.listItems[0].paraphraseId)
+        this.reviewAudioArr[0][0].play()
+      }
+    },
+    createPronunciationAudio () {
+      let pronunciation = new Audio()
+      pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.wordPronunciationVOList[0].pronunciationId
+      pronunciation.pause()
+      pronunciation.loop = false
+      document.body.appendChild(pronunciation)
+      return pronunciation
+    },
+    async reviewDetail () {
+      console.log('reviewDetail，wordName=' + this.detail.paraphraseVO.wordName)
+      let audioQueue = []
+      audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
+
+      audioQueue.push(this.createPronunciationAudio())
+      audioQueue.push(this.createPronunciationAudio())
+
+      audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+      let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
+      audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+      audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
+      audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+
+      audioQueue.push(this.createPronunciationAudio())
+      audioQueue.push(this.createPronunciationAudio())
+
+      audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
+      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+      audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
+      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
+      audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
+
+      for (let j = 0; j < audioQueue.length; j++) {
+        audioQueue[j].addEventListener('ended', function () {
+          console.log('ended, that.reviewAudioArr[index].length=' + that.reviewAudioArr[index].length)
+          console.log('ended, index=' + index)
+          console.log('ended, j=' + j)
+          if (j < audioQueue.length - 1) {
+            audioQueue[j + 1].play()
+          } else if (j === audioQueue.length - 1) {
+            index++
+            that.showDetail(that.listItems[index].paraphraseId)
+            that.reviewAudioArr[index][0].play()
+          }
+        }, false)
+      }
+
+      console.log('audioQueue')
+      console.log(audioQueue)
+
+      this.reviewAudioArr.push(audioQueue)
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>
+
 <template>
     <div style="margin-top: 10px">
         <el-collapse v-for="item in listItems" accordion>
@@ -100,137 +304,15 @@
             </el-card>
             <el-button type="primary" @click="handleDetailClose">确 定</el-button>
         </el-dialog>
+        <el-dialog
+                title="提示"
+                :visible.sync="autoPlayDialogVisible"
+                width="300px">
+            <span>自动复习即将开始，请确认。</span>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="autoReviewStart">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
-<script>
-import paraphraseStarList from '@/api/paraphraseStarList'
-
-export default {
-  name: 'wordStarListDetail',
-  props: {
-    tableVisibleToggle: {
-      type: Function
-    },
-    listId: Number,
-    listName: String,
-    isShowParaphrase: {
-      type: Boolean,
-      default: false
-    },
-    isReview: {
-      type: Boolean,
-      default: false
-    }
-  },
-  data () {
-    return {
-      page: {
-        current: 1,
-        size: 20,
-        total: 0,
-        pages: 0
-      },
-      detail: {
-        paraphraseVO: {},
-        dialogVisible: false
-      },
-      listItems: [],
-      listRefresh: false
-    }
-  },
-  mounted () {
-    this.init()
-  },
-  watch: {
-    'listId' () {
-      this.init()
-    }
-  },
-  methods: {
-    ...paraphraseStarList,
-    async init () {
-      if (this.isReview) {
-        await this.initList()
-        console.log(this.listItems)
-        for (let i = 0; i < this.listItems.length; i++) {
-          await this.showDetail(this.listItems[i].paraphraseId)
-        }
-      } else {
-        // todo 对listId进行非空等判断
-        if (this.listId < 1) {
-          return
-        }
-        await this.initList()
-      }
-    },
-    async initList () {
-      this.listRefresh = true
-      await this.getListItems(this.page, this.listId).then(response => {
-        this.listItems = response.data.data.records
-        this.page.pages = response.data.data.pages
-        this.page.total = response.data.data.total
-      }).catch(e => {
-        console.error(e)
-      })
-      this.listRefresh = false
-    },
-    goBack () {
-      this.$emit('tableVisibleToggle')
-    },
-    async showDetail (paraphraseId) {
-      const loading = this.$loading({
-        lock: true,
-        text: 'Loading',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
-      await this.getItemDetail(paraphraseId)
-        .then(response => {
-          this.detail.paraphraseVO = response.data.data
-        })
-        .catch(e => {
-          console.error(e)
-        })
-      this.detail.dialogVisible = true
-      loading.close()
-    },
-    async removeParaphraseStarListFun (paraphraseId) {
-      this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: this.listId })
-        .then(response => {
-          this.doSuccess()
-          this.initList()
-        })
-        .catch(e => {
-          console.error(e)
-          this.$message.error(e)
-        })
-    },
-    handleDetailClose () {
-      this.detail.dialogVisible = false
-    },
-    pageChange () {
-      this.initList()
-    },
-    doSuccess () {
-      this.$message.success({
-        duration: 1000,
-        message: '操作成功'
-      })
-    },
-    async playPronunciation (id) {
-      try {
-        // let audio = this.pronunciationAudioMap.get(id)
-        let audio = new Audio()
-        audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
-        await audio.play()
-      } catch (e) {
-        console.error(e)
-      }
-    }
-  }
-}
-</script>
-
-<style scoped>
-</style>
-
