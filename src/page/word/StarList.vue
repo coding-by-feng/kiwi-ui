@@ -340,6 +340,7 @@ export default {
             <el-table-column>
                 <template slot-scope="scope">
                     <el-button
+                            v-if="list.listType !== 'example'"
                             size="mini"
                             type="text"
                             @click="autoReview(scope.row.id)">自动复习

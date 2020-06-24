@@ -5,6 +5,7 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
+// import tts from '../../api/tts'
 
 let that
 
@@ -134,6 +135,8 @@ export default {
       }
     },
     async oneWordPlay () {
+      // tts.setAudioText('詹士锋个人测试')
+      // tts.playTTS()
       await this.playDetail2Audio()
       await this.autoReviewStart()
     },
