@@ -90,7 +90,7 @@ export default {
       if (this.$route.query.word) {
         word = this.$route.query.word
       }
-      if (word === this.wordInfo.wordName) {
+      if (word === this.wordInfo.wordName || !word) {
         return
       }
       await this.queryWordDetail(word).then(response => {
