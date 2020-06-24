@@ -50,6 +50,15 @@ export default {
     'listId' () {
       this.init()
     }
+    // 'reviewAudioArr' () {
+    //   console.log('reviewAudioArr change')
+    //   this.reviewLoadingText = `自动复习释义本单词已加载${this.reviewAudioArr.length}个，请稍等！`
+    // }
+  },
+  computed: {
+    // reviewLoadingText () {
+    //   return `自动复习释义本单词已加载${that.reviewAudioArr.length}个，请稍等！`
+    // }
   },
   methods: {
     ...paraphraseStarList,
@@ -57,7 +66,7 @@ export default {
       if (this.isReview) {
         const loading = this.$loading({
           lock: true,
-          text: '自动复习释义本资源加载中，请稍等！',
+          text: '自动复习资源加载中',
           spinner: 'el-icon-loading',
           background: 'rgba(0, 0, 0, 0.7)'
         })
@@ -208,6 +217,11 @@ export default {
       console.log(audioQueue)
 
       this.reviewAudioArr.push(audioQueue)
+
+      this.$message.success({
+        duration: 1000,
+        message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
+      })
     }
   }
 }
