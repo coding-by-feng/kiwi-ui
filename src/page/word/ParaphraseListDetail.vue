@@ -26,7 +26,7 @@ export default {
     return {
       page: {
         current: 1,
-        size: 20,
+        size: 10,
         total: 0,
         pages: 0
       },
@@ -207,8 +207,18 @@ export default {
             audioQueue[j + 1].play()
           } else if (j === audioQueue.length - 1) {
             index++
-            that.showDetail(that.listItems[index].paraphraseId)
-            that.reviewAudioArr[index][0].play()
+            if (index === that.listItems.length) {
+              if (that.page.pages > that.page.current) {
+                that.page.current++
+                that.init()
+                index = 0
+                that.showDetail(that.listItems[index].paraphraseId)
+                that.reviewAudioArr[index][0].play()
+              }
+            } else {
+              that.showDetail(that.listItems[index].paraphraseId)
+              that.reviewAudioArr[index][0].play()
+            }
           }
         }, false)
       }
