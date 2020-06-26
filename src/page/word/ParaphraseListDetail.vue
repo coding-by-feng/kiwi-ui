@@ -278,7 +278,7 @@ export default {
                 :current-page.sync="page.current"
                 :page-count="page.pages"
                 :page-sizes="[1,10,20,50,100]"
-                layout="prev, pager, sizes, next"
+                layout="prev, sizes, next"
                 @size-change="pageChange"
                 @current-change="pageChange"
                 :total="page.total">
