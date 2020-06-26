@@ -284,6 +284,13 @@ export default {
         query = { active: 'starList', mode: 'autoReview', listId: listId, listType: this.list.listType }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
+    },
+    closeAutoReview () {
+      this.detail.paraphraseIsReview = false
+      this.detail.paraphraseDetailVisible = false
+      let query = { active: 'starList' }
+      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      window.location.reload()
     }
   }
 }
@@ -319,6 +326,13 @@ export default {
                            @click="detail.isShowParaphrase = !detail.isShowParaphrase"
                            size="mini">
                     <i class="el-icon-s-opportunity"></i>
+                </el-button>
+                <el-button
+                        v-show="detail.paraphraseIsReview"
+                        size="mini"
+                        type="primary"
+                        @click="closeAutoReview">
+                    <i class="el-icon-switch-button"></i>
                 </el-button>
             </div>
         </el-page-header>

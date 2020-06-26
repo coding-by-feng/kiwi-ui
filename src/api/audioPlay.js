@@ -84,7 +84,7 @@ export default {
   /* Refactor the code */
 
   createAudioFromText (text) {
-    let url = 'http://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.97599789737006322e0c6570fe596a85.2592000.1593269970.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=4&pit=5&aue=3'
+    let url = 'http://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.97599789737006322e0c6570fe596a85.2592000.1593269970.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
     let autoAudio = new Audio()
     autoAudio.pause()
     autoAudio.loop = false
