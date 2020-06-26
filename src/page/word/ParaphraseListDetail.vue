@@ -84,7 +84,11 @@ export default {
           await this.reviewDetail()
         }
         loading.close()
-        this.autoPlayDialogVisible = !this.autoPlayDialogVisible
+        if (this.page.current > 1) {
+          this.reviewAudioArr[0][0].play()
+        } else {
+          this.autoPlayDialogVisible = !this.autoPlayDialogVisible
+        }
       } else {
         // todo 对listId进行非空等判断
         if (this.listId < 1) {
@@ -208,12 +212,12 @@ export default {
           } else if (j === audioQueue.length - 1) {
             index++
             if (index === that.listItems.length) {
+              that.reviewAudioArr = []
               if (that.page.pages > that.page.current) {
                 that.page.current++
                 that.init()
                 index = 0
                 that.showDetail(that.listItems[index].paraphraseId)
-                that.reviewAudioArr[index][0].play()
               }
             } else {
               that.showDetail(that.listItems[index].paraphraseId)
@@ -273,7 +277,7 @@ export default {
                 :page-size.sync="page.size"
                 :current-page.sync="page.current"
                 :page-count="page.pages"
-                :page-sizes="[10,20,50,100]"
+                :page-sizes="[1,10,20,50,100]"
                 layout="prev, pager, sizes, next"
                 @size-change="pageChange"
                 @current-change="pageChange"
