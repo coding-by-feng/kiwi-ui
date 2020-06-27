@@ -87,6 +87,7 @@ export default {
         loading.close()
         if (this.page.current > 1) {
           this.reviewAudioArr[0][0].play()
+          this.showDetail(this.listItems[0].paraphraseId)
         } else {
           this.autoPlayDialogVisible = !this.autoPlayDialogVisible
         }
