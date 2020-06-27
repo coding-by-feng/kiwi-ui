@@ -87,7 +87,7 @@ export default {
         loading.close()
         if (this.page.current > 1) {
           this.reviewAudioArr[0][0].play()
-          this.showDetail(this.listItems[0].paraphraseId)
+          await this.showDetail(this.listItems[0].paraphraseId)
         } else {
           this.autoPlayDialogVisible = !this.autoPlayDialogVisible
         }
@@ -230,9 +230,8 @@ export default {
               that.reviewAudioArr = []
               if (that.page.pages > that.page.current) {
                 that.page.current++
-                that.init()
                 index = 0
-                that.showDetail(that.listItems[index].paraphraseId)
+                that.init()
               }
             } else {
               that.showDetail(that.listItems[index].paraphraseId)
@@ -293,7 +292,7 @@ export default {
                 :current-page.sync="page.current"
                 :page-count="page.pages"
                 :page-sizes="[10,20,50,100]"
-                layout="prev, sizes, next"
+                layout="prev, pages, sizes, next"
                 @size-change="pageChange"
                 @current-change="pageChange"
                 :total="page.total">
