@@ -175,6 +175,7 @@ export default {
       this.autoPlayDialogVisible = false
       if (this.reviewAudioArr.length) {
         await this.showDetail(this.listItems[0].paraphraseId)
+        console.log(this.reviewAudioArr[0][0])
         this.reviewAudioArr[0][0].play()
       }
     },
@@ -183,7 +184,7 @@ export default {
       pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.wordPronunciationVOList[0].pronunciationId
       pronunciation.pause()
       pronunciation.loop = false
-      document.body.appendChild(pronunciation)
+      // document.body.appendChild(pronunciation)
       return pronunciation
     },
     async reviewDetail () {
