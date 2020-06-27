@@ -287,12 +287,13 @@ export default {
         </el-collapse>
         <el-pagination
                 style="margin-top: 10px"
+                small
                 background
                 :page-size.sync="page.size"
                 :current-page.sync="page.current"
                 :page-count="page.pages"
                 :page-sizes="[10,20,50,100]"
-                layout="prev, pages, sizes, next"
+                layout="prev, pager, next"
                 @size-change="pageChange"
                 @current-change="pageChange"
                 :total="page.total">
