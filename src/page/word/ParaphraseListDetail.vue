@@ -212,11 +212,11 @@ export default {
 
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
-          console.log('ended, that.reviewAudioArr[index].length=' + that.reviewAudioArr[index].length)
-          console.log('ended, index=' + index)
-          console.log('ended, j=' + j)
+          // console.log('ended, that.reviewAudioArr[index].length=' + that.reviewAudioArr[index].length)
+          // console.log('ended, index=' + index)
+          // console.log('ended, j=' + j)
           if (isClearOldAudio) {
-            console.log('ClearOldAudio finish')
+            // console.log('ClearOldAudio finish')
             audioQueue = []
             this.reviewAudioArr = []
             isClearOldAudio = false
