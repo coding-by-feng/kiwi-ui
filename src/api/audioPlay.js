@@ -90,7 +90,7 @@ export default {
     autoAudio.loop = false
     autoAudio.src = url
     // 播放完成之后注意删除掉
-    document.body.appendChild(autoAudio)
+    // document.body.appendChild(autoAudio)
     return autoAudio
   },
 
