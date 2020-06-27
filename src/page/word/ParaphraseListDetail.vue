@@ -4,6 +4,7 @@ import audioPlay from '../../api/audioPlay'
 
 let that
 let index = 0
+let isClearOldAudio = false
 
 export default {
   name: 'wordStarListDetail',
@@ -142,8 +143,14 @@ export default {
     handleDetailClose () {
       this.detail.dialogVisible = false
     },
-    pageChange () {
-      this.initList()
+    async pageChange () {
+      if (this.isReview) {
+        this.reviewAudioArr = []
+        isClearOldAudio = true
+        await this.init()
+      } else {
+        await this.initList()
+      }
     },
     doSuccess () {
       this.$message.success({
@@ -207,6 +214,13 @@ export default {
           console.log('ended, that.reviewAudioArr[index].length=' + that.reviewAudioArr[index].length)
           console.log('ended, index=' + index)
           console.log('ended, j=' + j)
+          if (isClearOldAudio) {
+            console.log('ClearOldAudio finish')
+            audioQueue = []
+            this.reviewAudioArr = []
+            isClearOldAudio = false
+            return
+          }
           if (j < audioQueue.length - 1) {
             audioQueue[j + 1].play()
           } else if (j === audioQueue.length - 1) {
@@ -277,7 +291,7 @@ export default {
                 :page-size.sync="page.size"
                 :current-page.sync="page.current"
                 :page-count="page.pages"
-                :page-sizes="[1,10,20,50,100]"
+                :page-sizes="[10,20,50,100]"
                 layout="prev, sizes, next"
                 @size-change="pageChange"
                 @current-change="pageChange"
