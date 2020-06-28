@@ -27,7 +27,7 @@
                 :page-count="page.pages"
                 :pager-count="5"
                 :page-sizes="[10,20,50,100]"
-                layout="prev, pager, next, sizes"
+                layout="prev,pager,next,jumper"
                 @size-change="pageChange"
                 @current-change="pageChange"
                 :total="page.total">

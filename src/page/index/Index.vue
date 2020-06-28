@@ -25,11 +25,11 @@ export default {
     }
   },
   mounted () {
-    window.onresize = () => {
-      return (() => {
-        this.tabsWidth = window.innerWidth - 20 + 'px'
-      })()
-    }
+    // window.onresize = () => {
+    //   return (() => {
+    //     this.tabsWidth = window.innerWidth - 20 + 'px'
+    //   })()
+    // }
   },
   methods: {
     handleSelectMenu () {
