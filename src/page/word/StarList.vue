@@ -354,7 +354,7 @@ export default {
             <el-table-column>
                 <template slot-scope="scope">
                     <el-button
-                            v-if="list.listType !== 'example'"
+                            v-if="list.listType === 'paraphrase'"
                             size="mini"
                             type="text"
                             @click="autoReview(scope.row.id)">自动复习
