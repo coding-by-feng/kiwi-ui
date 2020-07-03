@@ -303,6 +303,7 @@ export default {
               this.doSuccess()
             }
           })
+          window.location.reload()
         }
       })
     }
