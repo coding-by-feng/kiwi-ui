@@ -19,8 +19,8 @@ export default {
       },
       list: {
         starListData: [],
-        listName: '单词本',
-        listType: 'word',
+        listName: '释义本',
+        listType: 'paraphrase',
         status: 'list'
       },
       detail: {
@@ -305,8 +305,8 @@ export default {
                              split-button type="primary" @command="listTypeClick">
                     {{this.list.listName}}
                     <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item command="word">单词本</el-dropdown-item>
                         <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
+                        <el-dropdown-item command="word">单词本</el-dropdown-item>
                         <el-dropdown-item command="example">例句本</el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
