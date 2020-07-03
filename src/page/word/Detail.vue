@@ -19,6 +19,7 @@ export default {
       isShowParaphrase: false,
       pronunciationAudioMap: new Map(),
       devSwitch: false,
+      defaultHint: '',
       wordInfo: {
         wordName: ''
       },
@@ -98,6 +99,7 @@ export default {
           this.wordInfo = response.data.data
         } else {
           this.wordInfo = { wordName: '' }
+          this.defaultHint = '当前单词首次被查询，数据缺失，后台抓取服务已经启动，等候3~10秒之后刷新页面试试！(生僻单词可能抓取不到哦)'
         }
       }).catch(e => {
         console.error(e)
@@ -301,9 +303,9 @@ export default {
           this.removeByWordName(this.wordInfo.wordName).then(res => {
             if (res.data.code === 1) {
               this.doSuccess()
+              window.location.reload()
             }
           })
-          window.location.reload()
         }
       })
     }
@@ -356,6 +358,14 @@ export default {
 <template>
     <el-container>
         <el-header>
+            <el-alert
+                    v-if="''===wordInfo.wordName"
+                    type="warning"
+                    :closable="false"
+                    effect="light"
+                    center>
+                <b>{{defaultHint}}</b>
+            </el-alert>
             <el-alert
                     v-if="''!==wordInfo.wordName"
                     type="warning"
