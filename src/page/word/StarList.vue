@@ -21,7 +21,8 @@ export default {
         starListData: [],
         listName: '释义本',
         listType: 'paraphrase',
-        status: 'list'
+        status: 'list',
+        reviewMode: ''
       },
       detail: {
         wordDetailVisible: false,
@@ -277,11 +278,23 @@ export default {
     },
     autoReview (listId) {
       let query
+      this.list.reviewMode = 'autoReview'
       if ('word' === this.list.listType) {
         query = { active: 'search', mode: 'autoReview', listId: listId, listType: this.list.listType }
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, true)
         query = { active: 'starList', mode: 'autoReview', listId: listId, listType: this.list.listType }
+      }
+      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+    },
+    autoAllReview (listId) {
+      let query
+      this.list.reviewMode = 'autoAllReview'
+      if ('word' === this.list.listType) {
+        query = { active: 'search', mode: 'autoAllReview', listId: listId, listType: this.list.listType }
+      } else if ('paraphrase' === this.list.listType) {
+        this.selectOneList(listId, true)
+        query = { active: 'starList', mode: 'autoAllReview', listId: listId, listType: this.list.listType }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },
@@ -357,7 +370,13 @@ export default {
                             v-if="list.listType === 'paraphrase'"
                             size="mini"
                             type="text"
-                            @click="autoReview(scope.row.id)">自动复习
+                            @click="autoReview(scope.row.id)">复习
+                    </el-button>
+                    <el-button
+                            v-if="list.listType === 'paraphrase'"
+                            size="mini"
+                            type="text"
+                            @click="autoAllReview(scope.row.id)">全量复习
                     </el-button>
                     <el-button
                             type="text"
@@ -386,6 +405,7 @@ export default {
                 v-if="detail.paraphraseDetailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
                 :listId="detail.listId"
                 :isReview="detail.paraphraseIsReview"
+                :reviewMode="list.reviewMode"
                 :isShowParaphrase.sync="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
         <ExampleListDetail

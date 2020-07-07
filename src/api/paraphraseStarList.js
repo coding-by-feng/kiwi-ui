@@ -127,6 +127,21 @@ export default {
         listId: listId
       }
     })
+  },
+
+  forgetOne (paraphraseId, listId) {
+    return request({
+      url: `/wordBiz/word/paraphrase/star/list/rememberOne`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'post',
+      params: {
+        paraphraseId: paraphraseId,
+        listId: listId
+      }
+    })
   }
 
 }
