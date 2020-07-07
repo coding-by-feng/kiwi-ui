@@ -33,7 +33,8 @@ export default {
       },
       detail: {
         paraphraseVO: {},
-        dialogVisible: false
+        dialogVisible: false,
+        rememberLoading: false
       },
       listItems: [],
       listRefresh: false,
@@ -44,8 +45,8 @@ export default {
   beforeCreate: function () {
     that = this
   },
-  mounted () {
-    this.init()
+  async mounted () {
+    await this.init()
   },
   watch: {
     'listId' () {
@@ -73,7 +74,6 @@ export default {
         })
         await this.initList()
         for (let i = 0; i < this.listItems.length; i++) {
-          // await this.showDetail(this.listItems[i].paraphraseId)
           await this.getItemDetail(this.listItems[i].paraphraseId)
             .then(response => {
               this.detail.paraphraseVO = response.data.data
@@ -92,7 +92,6 @@ export default {
           this.autoPlayDialogVisible = !this.autoPlayDialogVisible
         }
       } else {
-        // todo 对listId进行非空等判断
         if (this.listId < 1) {
           return
         }
@@ -101,13 +100,23 @@ export default {
     },
     async initList () {
       this.listRefresh = true
-      await this.getListItems(this.page, this.listId).then(response => {
-        this.listItems = response.data.data.records
-        this.page.pages = response.data.data.pages
-        this.page.total = response.data.data.total
-      }).catch(e => {
-        console.error(e)
-      })
+      if (this.isReview) {
+        await this.getReviewListItems(this.page, this.listId).then(response => {
+          this.listItems = response.data.data.records
+          this.page.pages = response.data.data.pages
+          this.page.total = response.data.data.total
+        }).catch(e => {
+          console.error(e)
+        })
+      } else {
+        await this.getListItems(this.page, this.listId).then(response => {
+          this.listItems = response.data.data.records
+          this.page.pages = response.data.data.pages
+          this.page.total = response.data.data.total
+        }).catch(e => {
+          console.error(e)
+        })
+      }
       this.listRefresh = false
     },
     goBack () {
@@ -242,15 +251,22 @@ export default {
         }, false)
       }
 
-      console.log('audioQueue')
-      console.log(audioQueue)
-
       this.reviewAudioArr.push(audioQueue)
 
       this.$message.success({
         duration: 1000,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
       })
+    },
+    rememberOneFun(){
+      this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.listId)
+        .then(res => {
+          this.doSuccess()
+        })
+        .catch(e => {
+          console.error(e)
+          this.$message.error(e)
+        })
     }
   }
 }
@@ -360,7 +376,8 @@ export default {
                     </el-alert>
                 </div>
             </el-card>
-            <el-button type="primary" @click="handleDetailClose">确 定</el-button>
+            <el-button type="primary" @click="handleDetailClose">确定</el-button>
+            <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
         </el-dialog>
         <el-dialog
                 title="提示"
