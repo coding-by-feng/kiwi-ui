@@ -42,6 +42,20 @@ export default {
     })
   },
 
+  getReviewListItems (page, listId) {
+    return request({
+      url: `/wordBiz/word/paraphrase/star/list/getReviewListItems/${page.size}/${page.current}`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'post',
+      params: {
+        listId: listId
+      }
+    })
+  },
+
   getItemDetail (paraphraseId) {
     return request({
       url: `/wordBiz/word/paraphrase/star/list/getItemDetail/${paraphraseId}`,
@@ -97,6 +111,21 @@ export default {
         'Content-Type': 'application/json'
       },
       method: 'post'
+    })
+  },
+
+  rememberOne (paraphraseId, listId) {
+    return request({
+      url: `/wordBiz/word/paraphrase/star/list/rememberOne`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'post',
+      params: {
+        paraphraseId: paraphraseId,
+        listId: listId
+      }
     })
   }
 
