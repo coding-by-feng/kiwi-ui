@@ -21,6 +21,9 @@ export default {
     isReview: {
       type: Boolean,
       default: false
+    },
+    reviewMode: {
+      type: String
     }
   },
   data () {
@@ -34,7 +37,8 @@ export default {
       detail: {
         paraphraseVO: {},
         dialogVisible: false,
-        rememberLoading: false
+        rememberLoading: false,
+        forgetLoading: false
       },
       listItems: [],
       listRefresh: false,
@@ -98,25 +102,34 @@ export default {
         await this.initList()
       }
     },
+    async initReviewListFun () {
+      await this.getReviewListItems(this.page, this.listId).then(response => {
+        this.listItems = response.data.data.records
+        this.page.pages = response.data.data.pages
+        this.page.total = response.data.data.total
+      }).catch(e => {
+        console.error(e)
+      })
+    },
+    async initDefaultListFun () {
+      await this.getListItems(this.page, this.listId).then(response => {
+        this.listItems = response.data.data.records
+        this.page.pages = response.data.data.pages
+        this.page.total = response.data.data.total
+      }).catch(e => {
+        console.error(e)
+      })
+    },
     async initList () {
       this.listRefresh = true
       if (this.isReview) {
-        await this.getReviewListItems(this.page, this.listId).then(response => {
-          this.listItems = response.data.data.records
-          this.page.pages = response.data.data.pages
-          this.page.total = response.data.data.total
-        }).catch(e => {
-          console.error(e)
-        })
-      } else {
-        await this.getListItems(this.page, this.listId).then(response => {
-          this.listItems = response.data.data.records
-          this.page.pages = response.data.data.pages
-          this.page.total = response.data.data.total
-        }).catch(e => {
-          console.error(e)
-        })
+        if (this.reviewMode === 'autoReview') {
+          await this.initReviewListFun()
+          this.listRefresh = false
+          return
+        }
       }
+      await this.initDefaultListFun()
       this.listRefresh = false
     },
     goBack () {
@@ -258,8 +271,18 @@ export default {
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
       })
     },
-    rememberOneFun(){
+    rememberOneFun () {
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.listId)
+        .then(res => {
+          this.doSuccess()
+        })
+        .catch(e => {
+          console.error(e)
+          this.$message.error(e)
+        })
+    },
+    forgetOneFun () {
+      this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.listId)
         .then(res => {
           this.doSuccess()
         })
@@ -377,7 +400,8 @@ export default {
                 </div>
             </el-card>
             <el-button type="primary" @click="handleDetailClose">确定</el-button>
-            <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
+            <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">已记住</el-button>
+            <el-button type="primary" v-loading="detail.forgetLoading" @click="forgetOneFun">已遗忘</el-button>
         </el-dialog>
         <el-dialog
                 title="提示"
