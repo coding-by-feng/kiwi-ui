@@ -367,13 +367,19 @@ export default {
                     <el-alert
                             ref="paraphraseDetail"
                             type="info"
-                            :description="detail.paraphraseVO.meaningChinese"
+                            :description="detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt"
                             :closable="false"
                             effect="dark"
                             style="margin-top: 5px;"
                             center>
                         <div slot="title">
-                            <p>{{this.detail.paraphraseVO.paraphraseEnglish}}</p>
+                            <p>{{this.detail.paraphraseVO.paraphraseEnglish}}
+                                <el-button type="text"
+                                           @click="detail.showTranslation = !detail.showTranslation"
+                                           size="mini">
+                                    <i class="el-icon-s-opportunity" style="color: #FFFFFF"></i>
+                                </el-button>
+                            </p>
                         </div>
                     </el-alert>
                 </div>
@@ -391,15 +397,10 @@ export default {
                             type="info"
                             center
                             effect="light"
-                            :description="detail.showTranslation ? wordParaphraseExampleVO.exampleTranslate : detail.hideTranslationPrompt"
+                            :description="wordParaphraseExampleVO.exampleTranslate"
                             :closable="false">
                         <div slot="title">
                             {{wordParaphraseExampleVO.exampleSentence}}
-                            <el-button type="text"
-                                       @click="detail.showTranslation = !detail.showTranslation"
-                                       size="mini">
-                                <i class="el-icon-s-opportunity"></i>
-                            </el-button>
                             <el-button type="text"><i
                                     class="el-icon-circle-plus-outline outline_fix" style="color: #FFFFFF"></i>
                             </el-button>
