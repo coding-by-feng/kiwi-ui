@@ -38,7 +38,9 @@ export default {
         paraphraseVO: {},
         dialogVisible: false,
         rememberLoading: false,
-        forgetLoading: false
+        forgetLoading: false,
+        showTranslation: false,
+        hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示'
       },
       listItems: [],
       listRefresh: false,
@@ -211,6 +213,7 @@ export default {
     },
     async reviewDetail () {
       console.log('reviewDetail，wordName=' + this.detail.paraphraseVO.wordName)
+      console.log(this.detail.paraphraseVO)
       let audioQueue = []
       audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
 
@@ -388,10 +391,15 @@ export default {
                             type="info"
                             center
                             effect="light"
-                            :description="wordParaphraseExampleVO.exampleTranslate"
+                            :description="detail.showTranslation ? wordParaphraseExampleVO.exampleTranslate : detail.hideTranslationPrompt"
                             :closable="false">
                         <div slot="title">
                             {{wordParaphraseExampleVO.exampleSentence}}
+                            <el-button type="text"
+                                       @click="detail.showTranslation = !detail.showTranslation"
+                                       size="mini">
+                                <i class="el-icon-s-opportunity"></i>
+                            </el-button>
                             <el-button type="text"><i
                                     class="el-icon-circle-plus-outline outline_fix" style="color: #FFFFFF"></i>
                             </el-button>

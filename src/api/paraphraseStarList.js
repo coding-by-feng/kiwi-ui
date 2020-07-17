@@ -131,7 +131,7 @@ export default {
 
   forgetOne (paraphraseId, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/rememberOne`,
+      url: `/wordBiz/word/paraphrase/star/list/forgetOne`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
