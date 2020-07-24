@@ -78,6 +78,8 @@ export default {
           spinner: 'el-icon-loading',
           background: 'rgba(0, 0, 0, 0.7)'
         })
+        // 复习模式每页只加载5个单词
+        this.page.size = 5
         await this.initList()
         for (let i = 0; i < this.listItems.length; i++) {
           await this.getItemDetail(this.listItems[i].paraphraseId)
@@ -104,7 +106,7 @@ export default {
         await this.initList()
       }
     },
-    async initReviewListFun () {
+    async initStockListFun () {
       await this.getReviewListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
@@ -124,12 +126,10 @@ export default {
     },
     async initList () {
       this.listRefresh = true
-      if (this.isReview) {
-        if (this.reviewMode === 'autoReview') {
-          await this.initReviewListFun()
-          this.listRefresh = false
-          return
-        }
+      if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
+        await this.initStockListFun()
+        this.listRefresh = false
+        return
       }
       await this.initDefaultListFun()
       this.listRefresh = false
@@ -195,7 +195,7 @@ export default {
         console.error(e)
       }
     },
-    async autoReviewStart () {
+    async stockReviewStart () {
       this.autoPlayDialogVisible = false
       if (this.reviewAudioArr.length) {
         await this.showDetail(this.listItems[0].paraphraseId)
@@ -419,7 +419,7 @@ export default {
             <span>自动复习即将开始，请确认。</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="autoReviewStart">确 定</el-button>
+                <el-button type="primary" @click="stockReviewStart">确 定</el-button>
             </span>
         </el-dialog>
     </div>

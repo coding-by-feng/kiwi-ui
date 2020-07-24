@@ -28,6 +28,7 @@ export default {
         wordDetailVisible: false,
         paraphraseDetailVisible: false,
         paraphraseIsReview: false,
+        paraphraseIsRead: false,
         exampleDetailVisible: false,
         listId: 0,
         isShowParaphrase: false
@@ -255,6 +256,19 @@ export default {
       }
       this.list.status = 'list'
     },
+    async selectReviewMode (command) {
+      if (command.mode === 'stockReview') {
+        this.stockReview(command.id)
+      } else if (command.mode === 'totalReview') {
+        this.totalReview(command.id)
+      } else if (command.mode === 'stockRead') {
+        this.detail.paraphraseIsRead = true
+        this.stockRead(command.id)
+      } else if (command.mode === 'totalRead') {
+        this.detail.paraphraseIsRead = true
+        this.selectOneList(command.id, false)
+      }
+    },
     async listTypeClick (command) {
       if (this.list.status === 'detail') {
         this.visibleToggle()
@@ -276,30 +290,42 @@ export default {
         message: '操作成功'
       })
     },
-    autoReview (listId) {
+    stockReview (listId) {
       let query
-      this.list.reviewMode = 'autoReview'
+      this.list.reviewMode = 'stockReview'
       if ('word' === this.list.listType) {
-        query = { active: 'search', mode: 'autoReview', listId: listId, listType: this.list.listType }
+        query = { active: 'search', mode: 'stockReview', listId: listId, listType: this.list.listType }
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, true)
-        query = { active: 'starList', mode: 'autoReview', listId: listId, listType: this.list.listType }
+        query = { active: 'starList', mode: 'stockReview', listId: listId, listType: this.list.listType }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },
-    autoAllReview (listId) {
+    totalReview (listId) {
       let query
-      this.list.reviewMode = 'autoAllReview'
+      this.list.reviewMode = 'totalReview'
       if ('word' === this.list.listType) {
-        query = { active: 'search', mode: 'autoAllReview', listId: listId, listType: this.list.listType }
+        query = { active: 'search', mode: 'totalReview', listId: listId, listType: this.list.listType }
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, true)
-        query = { active: 'starList', mode: 'autoAllReview', listId: listId, listType: this.list.listType }
+        query = { active: 'starList', mode: 'totalReview', listId: listId, listType: this.list.listType }
+      }
+      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+    },
+    stockRead (listId) {
+      let query
+      this.list.reviewMode = 'stockRead'
+      if ('word' === this.list.listType) {
+        query = { active: 'search', mode: 'stockRead', listId: listId, listType: this.list.listType }
+      } else if ('paraphrase' === this.list.listType) {
+        this.selectOneList(listId, false)
+        query = { active: 'starList', mode: 'stockRead', listId: listId, listType: this.list.listType }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },
     closeAutoReview () {
       this.detail.paraphraseIsReview = false
+      this.detail.paraphraseIsRead = false
       this.detail.paraphraseDetailVisible = false
       let query = { active: 'starList' }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
@@ -341,7 +367,7 @@ export default {
                     <i class="el-icon-s-opportunity"></i>
                 </el-button>
                 <el-button
-                        v-show="detail.paraphraseIsReview"
+                        v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
                         size="mini"
                         type="primary"
                         @click="closeAutoReview">
@@ -366,18 +392,19 @@ export default {
             </el-table-column>
             <el-table-column>
                 <template slot-scope="scope">
-                    <el-button
+                    <el-dropdown
                             v-if="list.listType === 'paraphrase'"
                             size="mini"
-                            type="text"
-                            @click="autoReview(scope.row.id)">复习
-                    </el-button>
-                    <el-button
-                            v-if="list.listType === 'paraphrase'"
-                            size="mini"
-                            type="text"
-                            @click="autoAllReview(scope.row.id)">全量复习
-                    </el-button>
+                            split-button type="primary" @command="selectReviewMode">
+                        <i class="el-icon-headset"></i>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
+                            <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
+                            <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
+                            <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                    &nbsp;
                     <el-button
                             type="text"
                             size="mini"
