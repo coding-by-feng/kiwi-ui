@@ -24,6 +24,9 @@ export default {
       type: String
     }
   },
+  components: {
+    Countdown: $ => import('./Countdown')
+  },
   data () {
     return {
       page: {
@@ -48,7 +51,12 @@ export default {
       playWordIndex: 0,
       playStepIndex: 0,
       playCountOnce: 5,
-      currentPlayAudio: null
+      currentPlayAudio: null,
+
+      countdownMode: false,
+      countdownTime: new Date().getTime(),
+      countdownMin: 0.1,
+      countdownText: '30分钟'
     }
   },
   beforeCreate: function () {
@@ -81,6 +89,11 @@ export default {
           this.page.current++
           this.init()
         }
+      }
+    },
+    'countdownMode' (nval) {
+      if (nval) {
+        this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
       }
     }
   },
@@ -301,6 +314,20 @@ export default {
           console.error(e)
           this.$message.error(e)
         })
+    },
+    countdownSelectHandle (command) {
+      this.countdownText = command.text
+      this.countdownMin = command.m
+      this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
+    },
+    countdownEndFun () {
+      this.countdownMode && (this.isReviewStop = true)
+      this.countdownMode = !this.countdownMode
+    },
+    countdownEndReplay () {
+      this.isReviewStop = false
+      this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
+      this.currentPlayAudio.play()
     }
   }
 }
@@ -311,6 +338,39 @@ export default {
 
 <template>
     <div style="margin-top: 10px">
+        <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
+            <div>
+                <el-switch
+                        v-if="isReview"
+                        v-model="countdownMode"
+                        active-color="#409EFF"
+                        inactive-color="#909399">
+                </el-switch>
+                &nbsp;
+                <el-dropdown
+                        size="mini"
+                        split-button type="primary" @command="countdownSelectHandle">
+                    <i class="el-icon-stopwatch">&nbsp;</i>{{countdownText}}
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
+                        <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
+                        <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
+                        <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
+                        <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+                &nbsp;
+                <el-button
+                        v-if="!countdownMode && isReviewStop"
+                        type="primary"
+                        size="mini"
+                        @click="countdownEndReplay">
+                    <i class="el-icon-video-play"></i>
+                </el-button>
+                <Countdown v-if="countdownMode" :endTime="countdownTime"
+                           @endFun="countdownEndFun"></Countdown>
+            </div>
+        </el-card>
         <el-collapse v-for="item in listItems" accordion>
             <el-collapse-item :title="item.wordName" :name="item.wordId">
                 <div>
