@@ -41,7 +41,8 @@ export default {
         rememberLoading: false,
         forgetLoading: false,
         showTranslation: false,
-        hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示'
+        hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示',
+        showIndex: 0
       },
       listItems: [],
       listRefresh: false,
@@ -114,8 +115,6 @@ export default {
           spinner: 'el-icon-loading',
           background: 'rgba(0, 0, 0, 0.7)'
         })
-        // 复习模式每页只加载5个单词
-        this.page.size = this.playCountOnce
         await this.initList()
         for (let i = 0; i < this.listItems.length; i++) {
           await this.getItemDetail(this.listItems[i].paraphraseId)
@@ -133,7 +132,7 @@ export default {
         this.playWordIndex = 0
         this.playStepIndex = 0
         if (this.page.current > 1) {
-          await this.showDetail(this.listItems[0].paraphraseId)
+          await this.showDetail(this.listItems[0].paraphraseId, 0)
           this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
           this.currentPlayAudio.play()
         } else {
@@ -167,9 +166,14 @@ export default {
     async initList () {
       this.listRefresh = true
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
+        // 复习模式每页只加载5个单词
+        this.page.size = this.playCountOnce
         await this.initStockListFun()
         this.listRefresh = false
         return
+      } else if (this.reviewMode === 'totalReview' || this.reviewMode === 'totalRead') {
+        // 全量模式也只查5个
+        this.page.size = this.playCountOnce
       }
       await this.initDefaultListFun()
       this.listRefresh = false
@@ -177,7 +181,8 @@ export default {
     goBack () {
       this.$emit('tableVisibleToggle')
     },
-    async showDetail (paraphraseId) {
+    async showDetail (paraphraseId, index) {
+      this.detail.showIndex = index
       const loading = this.$loading({
         lock: true,
         text: 'Loading',
@@ -239,13 +244,13 @@ export default {
     async stockReviewStart () {
       this.autoPlayDialogVisible = false
       if (this.reviewAudioArr.length) {
-        await this.showDetail(this.listItems[0].paraphraseId)
+        await this.showDetail(this.listItems[0].paraphraseId, 0)
         this.currentPlayAudio = this.reviewAudioArr[0][0]
         this.currentPlayAudio.play()
       }
     },
     async recursiveReview () {
-      await this.showDetail(this.listItems[this.playWordIndex].paraphraseId)
+      await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
       this.currentPlayAudio.play()
     },
@@ -327,6 +332,28 @@ export default {
     async countdownEndReplay () {
       this.isReviewStop = false
       await this.init()
+    },
+    showPrevious () {
+      if (this.detail.showIndex === 0) {
+        this.$message.warning({
+          duration: 1000,
+          message: '已经是第一个'
+        })
+        return
+      }
+      this.detail.showIndex--
+      this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
+    },
+    showNext () {
+      if (this.detail.showIndex === this.page.size - 1) {
+        this.$message.warning({
+          duration: 1000,
+          message: '已经是最后一个'
+        })
+        return
+      }
+      this.detail.showIndex++
+      this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     }
   }
 }
@@ -370,7 +397,7 @@ export default {
                            @endFun="countdownEndFun"></Countdown>
             </div>
         </el-card>
-        <el-collapse v-for="item in listItems" accordion>
+        <el-collapse v-for="(item, index) in listItems" accordion>
             <el-collapse-item :title="item.wordName" :name="item.wordId">
                 <div>
                     <p>
@@ -386,7 +413,7 @@ export default {
                 </el-button>
                 <el-button type="text"
                            size="mini"
-                           @click="showDetail(item.paraphraseId)"><i class="el-icon-more-outline"></i>
+                           @click="showDetail(item.paraphraseId, index)"><i class="el-icon-more-outline"></i>
                 </el-button>
                 <el-button type="text"
                            size="mini"
@@ -475,9 +502,14 @@ export default {
                     </el-alert>
                 </div>
             </el-card>
-            <el-button type="primary" @click="handleDetailClose">确定</el-button>
+            <el-button type="primary" @click="showPrevious">
+                <i class="el-icon-caret-left"></i>
+            </el-button>
             <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">已记住</el-button>
             <el-button type="primary" v-loading="detail.forgetLoading" @click="forgetOneFun">已遗忘</el-button>
+            <el-button type="primary" @click="showNext">
+                <i class="el-icon-caret-right"></i>
+            </el-button>
         </el-dialog>
         <el-dialog
                 title="提示"
