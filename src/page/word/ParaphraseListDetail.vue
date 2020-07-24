@@ -3,8 +3,6 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 
 let that
-let index = 0
-let isClearOldAudio = false
 
 export default {
   name: 'wordStarListDetail',
@@ -46,8 +44,11 @@ export default {
       listRefresh: false,
       autoPlayDialogVisible: false,
       reviewAudioArr: [],
-      isStartReview: false,
-      isPlay: false
+      isReviewStop: false,
+      playWordIndex: 0,
+      playStepIndex: 0,
+      playCountOnce: 5,
+      currentPlayAudio: null
     }
   },
   beforeCreate: function () {
@@ -60,19 +61,40 @@ export default {
     'listId' () {
       this.init()
     },
-    'isPlay' () {
-
+    'playStepIndex' (nval) {
+      if (nval === 0) return
+      if (nval > 14) {
+        this.playStepIndex = 0
+        this.playWordIndex++
+        this.recursiveReview()
+      } else {
+        this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+        this.currentPlayAudio.play()
+      }
+    },
+    'playWordIndex' (nval) {
+      if (nval === 0) return
+      if (nval >= this.playCountOnce) {
+        this.playWordIndex = 0
+        this.reviewAudioArr = []
+        if (this.page.pages > this.page.current) {
+          this.page.current++
+          this.init()
+        }
+      }
     }
   },
-  computed: {
-    // reviewLoadingText () {
-    //   return `自动复习释义本单词已加载${that.reviewAudioArr.length}个，请稍等！`
-    // }
-  },
+  computed: {},
   methods: {
     ...paraphraseStarList,
     async init () {
       if (this.isReview) {
+        this.isReviewStop = true
+        this.reviewAudioArr = []
+        if (this.currentPlayAudio) {
+          this.currentPlayAudio.pause()
+          this.currentPlayAudio = null
+        }
         const loading = this.$loading({
           lock: true,
           text: '自动复习资源加载中',
@@ -80,7 +102,7 @@ export default {
           background: 'rgba(0, 0, 0, 0.7)'
         })
         // 复习模式每页只加载5个单词
-        this.page.size = 5
+        this.page.size = this.playCountOnce
         await this.initList()
         for (let i = 0; i < this.listItems.length; i++) {
           await this.getItemDetail(this.listItems[i].paraphraseId)
@@ -94,9 +116,13 @@ export default {
           await this.reviewDetail()
         }
         loading.close()
+        this.isReviewStop = false
+        this.playWordIndex = 0
+        this.playStepIndex = 0
         if (this.page.current > 1) {
-          this.reviewAudioArr[0][0].play()
           await this.showDetail(this.listItems[0].paraphraseId)
+          this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
+          this.currentPlayAudio.play()
         } else {
           this.autoPlayDialogVisible = !this.autoPlayDialogVisible
         }
@@ -170,13 +196,7 @@ export default {
       this.detail.dialogVisible = false
     },
     async pageChange () {
-      if (this.isReview) {
-        this.reviewAudioArr = []
-        isClearOldAudio = true
-        await this.init()
-      } else {
-        await this.initList()
-      }
+      await this.init()
     },
     doSuccess () {
       this.$message.success({
@@ -207,9 +227,14 @@ export default {
       this.autoPlayDialogVisible = false
       if (this.reviewAudioArr.length) {
         await this.showDetail(this.listItems[0].paraphraseId)
-        console.log(this.reviewAudioArr[0][0])
-        this.reviewAudioArr[0][0].play()
+        this.currentPlayAudio = this.reviewAudioArr[0][0]
+        this.currentPlayAudio.play()
       }
+    },
+    async recursiveReview () {
+      await this.showDetail(this.listItems[this.playWordIndex].paraphraseId)
+      this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+      this.currentPlayAudio.play()
     },
     createPronunciationAudio () {
       let pronunciation = new Audio()
@@ -220,8 +245,6 @@ export default {
       return pronunciation
     },
     async reviewDetail () {
-      console.log('reviewDetail，wordName=' + this.detail.paraphraseVO.wordName)
-      console.log(this.detail.paraphraseVO)
       let audioQueue = []
       audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
 
@@ -241,37 +264,13 @@ export default {
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
       audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
-      audioQueue.push(audioPlay.createAudioFromText('再读一遍释义：'))
-      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+      audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
 
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
-          // console.log('ended, that.reviewAudioArr[index].length=' + that.reviewAudioArr[index].length)
-          // console.log('ended, index=' + index)
-          // console.log('ended, j=' + j)
-          if (isClearOldAudio) {
-            // console.log('ClearOldAudio finish')
-            audioQueue = []
-            this.reviewAudioArr = []
-            isClearOldAudio = false
-            return
-          }
-          if (j < audioQueue.length - 1) {
-            audioQueue[j + 1].play()
-          } else if (j === audioQueue.length - 1) {
-            index++
-            if (index === that.listItems.length) {
-              that.reviewAudioArr = []
-              if (that.page.pages > that.page.current) {
-                that.page.current++
-                index = 0
-                that.init()
-              }
-            } else {
-              that.showDetail(that.listItems[index].paraphraseId)
-              that.reviewAudioArr[index][0].play()
-            }
+          if (!that.isReviewStop) {
+            that.playStepIndex++
           }
         }, false)
       }
@@ -279,7 +278,7 @@ export default {
       this.reviewAudioArr.push(audioQueue)
 
       this.$message.success({
-        duration: 1000,
+        duration: 2000,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
       })
     },
