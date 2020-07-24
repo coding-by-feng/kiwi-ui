@@ -184,6 +184,13 @@ export default {
       })
     },
     async playPronunciation (id) {
+      if (this.isReview) {
+        this.$message.warning({
+          duration: 1000,
+          message: '自动复习期间不允许播放音标'
+        })
+        return
+      }
       try {
         // let audio = this.pronunciationAudioMap.get(id)
         let audio = new Audio()
