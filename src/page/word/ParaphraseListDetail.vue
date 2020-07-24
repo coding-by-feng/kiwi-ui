@@ -45,7 +45,9 @@ export default {
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: false,
-      reviewAudioArr: []
+      reviewAudioArr: [],
+      isStartReview: false,
+      isPlay: false
     }
   },
   beforeCreate: function () {
@@ -57,11 +59,10 @@ export default {
   watch: {
     'listId' () {
       this.init()
+    },
+    'isPlay' () {
+
     }
-    // 'reviewAudioArr' () {
-    //   console.log('reviewAudioArr change')
-    //   this.reviewLoadingText = `自动复习释义本单词已加载${this.reviewAudioArr.length}个，请稍等！`
-    // }
   },
   computed: {
     // reviewLoadingText () {
@@ -240,7 +241,8 @@ export default {
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
       audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
-      audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+      audioQueue.push(audioPlay.createAudioFromText('再读一遍释义：'))
+      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
 
       for (let j = 0; j < audioQueue.length; j++) {
