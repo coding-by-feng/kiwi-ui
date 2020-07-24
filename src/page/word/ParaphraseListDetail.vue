@@ -55,7 +55,7 @@ export default {
 
       countdownMode: false,
       countdownTime: new Date().getTime(),
-      countdownMin: 0.1,
+      countdownMin: 30,
       countdownText: '30分钟'
     }
   },
@@ -291,7 +291,7 @@ export default {
       this.reviewAudioArr.push(audioQueue)
 
       this.$message.success({
-        duration: 2000,
+        duration: 1000,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
       })
     },
@@ -324,10 +324,9 @@ export default {
       this.countdownMode && (this.isReviewStop = true)
       this.countdownMode = !this.countdownMode
     },
-    countdownEndReplay () {
+    async countdownEndReplay () {
       this.isReviewStop = false
-      this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
-      this.currentPlayAudio.play()
+      await this.init()
     }
   }
 }
