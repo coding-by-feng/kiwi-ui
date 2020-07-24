@@ -62,7 +62,7 @@ export default {
     async init () {
       let mode = this.$route.query.mode
       let listType = this.$route.query.listType
-      if ('autoReview' === mode && 'word' === listType) {
+      if ('stockReview' === mode && 'word' === listType) {
         let listId = this.$route.query.listId
         if (listId) {
           const loading = this.$loading({
@@ -75,7 +75,7 @@ export default {
             loading.close()
             let wordIdList = response.data.data
             if (wordIdList && wordIdList.length) {
-              this.autoReview(wordIdList)
+              this.stockReview(wordIdList)
             }
           }).catch(e => {
             loading.close()
@@ -118,7 +118,7 @@ export default {
         }
       }
     },
-    async autoReview (wordIdList) {
+    async stockReview (wordIdList) {
       for (let i = 0; i < wordIdList.length; i++) {
         let wordId = wordIdList[i]
         await this.queryWordDetailById(wordId).then(response => {
@@ -140,9 +140,9 @@ export default {
       // tts.setAudioText('詹士锋个人测试')
       // tts.playTTS()
       await this.playDetail2Audio()
-      await this.autoReviewStart()
+      await this.stockReviewStart()
     },
-    autoReviewStart () {
+    stockReviewStart () {
       this.autoPlayDialogVisible = false
       // console.log(this.audioList)
       if (index === 0 && this.audioList.length) {
@@ -503,7 +503,7 @@ export default {
             <span>自动复习即将开始，请确认。</span>
             <span slot="footer" class="dialog-footer">
     <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="autoReviewStart">确 定</el-button>
+    <el-button type="primary" @click="stockReviewStart">确 定</el-button>
   </span>
         </el-dialog>
     </el-container>
