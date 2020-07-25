@@ -281,9 +281,9 @@ export default {
       audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
       audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
       audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
-      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
+      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
       audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
-      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish))
+      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
 
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
