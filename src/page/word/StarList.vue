@@ -241,8 +241,12 @@ export default {
     },
     goBack () {
       if (this.list.status === 'detail') {
-        this.visibleToggle()
-        this.list.status = 'list'
+        if (this.detail.paraphraseIsReview || this.detail.paraphraseIsRead) {
+          this.closeAutoReview()
+        } else {
+          this.visibleToggle()
+          this.list.status = 'list'
+        }
       } else {
         let queryTmp = { active: 'search' }
         let query
@@ -270,6 +274,7 @@ export default {
         this.detail.paraphraseIsRead = true
         this.selectOneList(command.id, false)
       } else if (command.mode === 'stockReviewChToEn') {
+        console.log('stockReviewChToEn')
         this.list.isChToEn = true
         this.stockReview(command.id)
       } else if (command.mode === 'totalReviewChToEn') {
@@ -302,10 +307,22 @@ export default {
       let query
       this.list.reviewMode = 'stockReview'
       if ('word' === this.list.listType) {
-        query = { active: 'search', mode: 'stockReview', listId: listId, listType: this.list.listType }
+        query = {
+          active: 'search',
+          mode: 'stockReview',
+          listId: listId,
+          listType: this.list.listType,
+          now: new Date().getTime()
+        }
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, true)
-        query = { active: 'starList', mode: 'stockReview', listId: listId, listType: this.list.listType }
+        query = {
+          active: 'starList',
+          mode: 'stockReview',
+          listId: listId,
+          listType: this.list.listType,
+          now: new Date().getTime()
+        }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },
@@ -313,10 +330,22 @@ export default {
       let query
       this.list.reviewMode = 'totalReview'
       if ('word' === this.list.listType) {
-        query = { active: 'search', mode: 'totalReview', listId: listId, listType: this.list.listType }
+        query = {
+          active: 'search',
+          mode: 'totalReview',
+          listId: listId,
+          listType: this.list.listType,
+          now: new Date().getTime()
+        }
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, true)
-        query = { active: 'starList', mode: 'totalReview', listId: listId, listType: this.list.listType }
+        query = {
+          active: 'starList',
+          mode: 'totalReview',
+          listId: listId,
+          listType: this.list.listType,
+          now: new Date().getTime()
+        }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },

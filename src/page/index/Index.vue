@@ -20,7 +20,6 @@ export default {
   computed: {
     isLogin () {
       let accessToken = getStore({ name: 'access_token' })
-      console.log('accessToken' + accessToken)
       return !!accessToken
     }
   },
@@ -35,6 +34,7 @@ export default {
     handleSelectMenu () {
     },
     tabClick (tab, event) {
+      console.log(tab.name)
       let lazyTmp = {}
       if (this.lazy === 'y') {
         lazyTmp = { lazy: this.lazy }
@@ -42,10 +42,11 @@ export default {
       let params
       let paramsTmp = {
         ...lazyTmp,
-        active: tab.name
+        active: tab.name,
+        now: new Date().getTime()
       }
       if (this.$route.query.word) {
-        params = { ...paramsTmp, word: this.$route.query.word }
+        params = { word: this.$route.query.word, ...paramsTmp }
       } else {
         params = { ...paramsTmp }
       }
