@@ -80,12 +80,12 @@ export default {
     'listId' () {
       this.init()
     },
-    'playStepIndex' (nval) {
-      if (nval === 0) return
-      if (this.isChToEn && nval === 5) {
+    'playStepIndex' (newVal) {
+      if (newVal === 0) return
+      if (this.isChToEn && newVal === 5) {
         sleep(3)
       }
-      if (nval > this.playCountPerWord) {
+      if (newVal > this.playCountPerWord) {
         this.playStepIndex = 0
         this.playWordIndex++
         this.recursiveReview()
@@ -94,9 +94,9 @@ export default {
         this.currentPlayAudio.play()
       }
     },
-    'playWordIndex' (nval) {
-      if (nval === 0) return
-      if (nval >= this.playCountOnce) {
+    'playWordIndex' (newVal) {
+      if (newVal === 0) return
+      if (newVal >= this.playCountOnce) {
         this.playWordIndex = 0
         this.reviewAudioArr = []
         if (this.page.pages > this.page.current) {
@@ -110,7 +110,7 @@ export default {
           if (lastPageRemainder === 0) {
             return
           }
-          if (nval === lastPageRemainder) {
+          if (newVal === lastPageRemainder) {
             this.$message.warning({
               duration: 3000,
               message: '当前复习列表已经复习完'
@@ -119,8 +119,8 @@ export default {
         }
       }
     },
-    'countdownMode' (nval) {
-      if (nval) {
+    'countdownMode' (newVal) {
+      if (newVal) {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
       }
     }
