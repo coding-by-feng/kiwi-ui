@@ -46,7 +46,7 @@ export default {
     }
   },
   async mounted () {
-    if (!(this.$route.query.lazy === 'y')) {
+    if (this.$route.query.lazy !== 'y') {
       await this.init()
     }
   },
@@ -97,7 +97,7 @@ export default {
     },
     visibleToggle () {
       this.tableVisible = !this.tableVisible
-      this.list.isChToEn = false
+      this.list.isChToEn = !this.list.isChToEn
       if (this.list.listType === 'word') {
         this.detail.wordDetailVisible = !this.detail.wordDetailVisible
       } else if (this.list.listType === 'paraphrase') {
@@ -274,11 +274,8 @@ export default {
         this.detail.paraphraseIsRead = true
         this.selectOneList(command.id, false)
       } else if (command.mode === 'stockReviewChToEn') {
-        console.log('stockReviewChToEn')
-        this.list.isChToEn = true
         this.stockReview(command.id)
       } else if (command.mode === 'totalReviewChToEn') {
-        this.list.isChToEn = true
         this.totalReview(command.id)
       }
     },
