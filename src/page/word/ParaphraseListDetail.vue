@@ -2,6 +2,11 @@
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 
+const sleep = function (time) {
+  let startTime = new Date().getTime() + time * 1000
+  while (new Date().getTime() < startTime) {}
+}
+
 let that
 
 export default {
@@ -77,6 +82,9 @@ export default {
     },
     'playStepIndex' (nval) {
       if (nval === 0) return
+      if (this.isChToEn && nval === 5) {
+        sleep(3)
+      }
       if (nval > this.playCountPerWord) {
         this.playStepIndex = 0
         this.playWordIndex++
@@ -126,7 +134,9 @@ export default {
         this.reviewAudioArr = []
         console.log('isChToEn=' + this.isChToEn)
         if (this.isChToEn) {
-          this.playCountPerWord = 18
+          this.playCountPerWord = 17
+        } else {
+          this.playCountPerWord = 14
         }
         if (this.currentPlayAudio) {
           this.currentPlayAudio.pause()
@@ -292,8 +302,7 @@ export default {
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
         audioQueue.push(audioPlay.createAudioFromText('再读一遍中文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromText('请在脑海回想对应的单词，数到0之后揭晓英文单词。'))
-        audioQueue.push(audioPlay.createAudioFromText('6、5、4、3、2、1、0'))
+        audioQueue.push(audioPlay.createAudioFromText('请在脑海回想对应的单词。'))
         audioQueue.push(audioPlay.createAudioFromText('对应的英文单词是'))
         audioQueue.push(this.createPronunciationAudio())
         audioQueue.push(this.createPronunciationAudio())
@@ -521,6 +530,17 @@ export default {
                 :visible.sync="detail.dialogVisible"
                 :before-close="handleDetailClose"
                 width="100%">
+            <el-button type="info" @click="showPrevious">
+                <i class="el-icon-caret-left"></i>
+            </el-button>
+            <el-button type="info" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
+            <el-button type="info" @click="handleDetailClose">
+                <i class="el-icon-close"></i>
+            </el-button>
+            <el-button type="info" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
+            <el-button type="info" @click="showNext">
+                <i class="el-icon-caret-right"></i>
+            </el-button>
             <el-card class="box-card">
                 <div slot="header">
                     <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
@@ -583,20 +603,9 @@ export default {
                     </el-alert>
                 </div>
             </el-card>
-            <el-button type="primary" @click="showPrevious">
-                <i class="el-icon-caret-left"></i>
-            </el-button>
-            <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
-            <el-button type="primary" @click="handleDetailClose">
-                <i class="el-icon-close"></i>
-            </el-button>
-            <el-button type="primary" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
-            <el-button type="primary" @click="showNext">
-                <i class="el-icon-caret-right"></i>
-            </el-button>
         </el-dialog>
         <el-dialog
-                title="提示"
+                :title="isChToEn ? '汉英模式' : '英汉墨水（默认）'"
                 :visible.sync="autoPlayDialogVisible"
                 width="300px">
             <span>自动复习即将开始，请确认。</span>
