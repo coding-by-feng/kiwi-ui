@@ -22,6 +22,10 @@ export default {
     },
     reviewMode: {
       type: String
+    },
+    isChToEn: {
+      type: Boolean,
+      default: false
     }
   },
   components: {
@@ -52,6 +56,7 @@ export default {
       playWordIndex: 0,
       playStepIndex: 0,
       playCountOnce: 5,
+      playCountPerWord: 14,
       currentPlayAudio: null,
 
       countdownMode: false,
@@ -72,7 +77,7 @@ export default {
     },
     'playStepIndex' (nval) {
       if (nval === 0) return
-      if (nval > 14) {
+      if (nval > this.playCountPerWord) {
         this.playStepIndex = 0
         this.playWordIndex++
         this.recursiveReview()
@@ -90,6 +95,20 @@ export default {
           this.page.current++
           this.init()
         }
+      } else {
+        // 最后一页条目数可能小于每页条目数
+        if (this.page.current === this.page.pages) {
+          let lastPageRemainder = this.page.total % this.page.size
+          if (lastPageRemainder === 0) {
+            return
+          }
+          if (nval === lastPageRemainder) {
+            this.$message.warning({
+              duration: 3000,
+              message: '当前复习列表已经复习完'
+            })
+          }
+        }
       }
     },
     'countdownMode' (nval) {
@@ -105,6 +124,10 @@ export default {
       if (this.isReview) {
         this.isReviewStop = true
         this.reviewAudioArr = []
+        console.log('isChToEn=' + this.isChToEn)
+        if (this.isChToEn) {
+          this.playCountPerWord = 18
+        }
         if (this.currentPlayAudio) {
           this.currentPlayAudio.pause()
           this.currentPlayAudio = null
@@ -264,26 +287,45 @@ export default {
     },
     async reviewDetail () {
       let audioQueue = []
-      audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
-
-      audioQueue.push(this.createPronunciationAudio())
-      audioQueue.push(this.createPronunciationAudio())
-
-      audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
-      let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-      audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
-      audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
-      audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
-
-      audioQueue.push(this.createPronunciationAudio())
-      audioQueue.push(this.createPronunciationAudio())
-
-      audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
-      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
-      audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
-      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
-      audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
-      audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+      if (this.isChToEn) {
+        audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText('再读一遍中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText('请在脑海回想对应的单词，数到0之后揭晓英文单词。'))
+        audioQueue.push(audioPlay.createAudioFromText('6、5、4、3、2、1、0'))
+        audioQueue.push(audioPlay.createAudioFromText('对应的英文单词是'))
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+        let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
+        audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+        audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
+        audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+      } else {
+        audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+        let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
+        audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+        audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
+        audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(this.createPronunciationAudio())
+        audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+      }
 
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
@@ -333,27 +375,66 @@ export default {
       this.isReviewStop = false
       await this.init()
     },
-    showPrevious () {
+    async showPrevious () {
       if (this.detail.showIndex === 0) {
-        this.$message.warning({
-          duration: 1000,
-          message: '已经是第一个'
-        })
-        return
+        if (this.isReview) {
+          this.$message.warning({
+            duration: 1000,
+            message: '当前已经是复习页第一个'
+          })
+          return
+        } else {
+          if (this.page.current === 1) {
+            this.$message.warning({
+              duration: 1000,
+              message: '当前已经是第一页第一个'
+            })
+            return
+          }
+          this.page.current--
+          await this.init()
+          this.detail.showIndex = this.page.size - 1
+        }
+      } else {
+        this.detail.showIndex--
       }
-      this.detail.showIndex--
-      this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
+      await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-    showNext () {
+    async showNext () {
       if (this.detail.showIndex === this.page.size - 1) {
-        this.$message.warning({
-          duration: 1000,
-          message: '已经是最后一个'
-        })
-        return
+        if (this.isReview) {
+          this.$message.warning({
+            duration: 1000,
+            message: '已经是当前复习页最后一个'
+          })
+          return
+        } else {
+          if (this.page.current === this.page.pages) {
+            this.$message.warning({
+              duration: 1000,
+              message: '当前已经是最后一页最后一个'
+            })
+            return
+          }
+          this.page.current++
+          await this.init()
+          this.detail.showIndex = 0
+        }
+      } else {
+        this.detail.showIndex++
       }
-      this.detail.showIndex++
-      this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
+      // 最后一页条目数可能小于每页条目数
+      if (this.page.current === this.page.pages) {
+        let lastPageRemainder = this.page.total % this.page.size
+        if (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder) {
+          this.$message.warning({
+            duration: 1000,
+            message: '当前已经是最后一页最后一个'
+          })
+          return
+        }
+      }
+      await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     }
   }
 }
@@ -505,8 +586,11 @@ export default {
             <el-button type="primary" @click="showPrevious">
                 <i class="el-icon-caret-left"></i>
             </el-button>
-            <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">已记住</el-button>
-            <el-button type="primary" v-loading="detail.forgetLoading" @click="forgetOneFun">已遗忘</el-button>
+            <el-button type="primary" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
+            <el-button type="primary" @click="handleDetailClose">
+                <i class="el-icon-close"></i>
+            </el-button>
+            <el-button type="primary" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
             <el-button type="primary" @click="showNext">
                 <i class="el-icon-caret-right"></i>
             </el-button>

@@ -22,7 +22,8 @@ export default {
         listName: '释义本',
         listType: 'paraphrase',
         status: 'list',
-        reviewMode: ''
+        reviewMode: '',
+        isChToEn: false
       },
       detail: {
         wordDetailVisible: false,
@@ -96,6 +97,7 @@ export default {
     },
     visibleToggle () {
       this.tableVisible = !this.tableVisible
+      this.list.isChToEn = false
       if (this.list.listType === 'word') {
         this.detail.wordDetailVisible = !this.detail.wordDetailVisible
       } else if (this.list.listType === 'paraphrase') {
@@ -267,6 +269,12 @@ export default {
       } else if (command.mode === 'totalRead') {
         this.detail.paraphraseIsRead = true
         this.selectOneList(command.id, false)
+      } else if (command.mode === 'stockReviewChToEn') {
+        this.list.isChToEn = true
+        this.stockReview(command.id)
+      } else if (command.mode === 'totalReviewChToEn') {
+        this.list.isChToEn = true
+        this.totalReview(command.id)
       }
     },
     async listTypeClick (command) {
@@ -400,6 +408,10 @@ export default {
                         <el-dropdown-menu slot="dropdown">
                             <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
                             <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
+                            <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: scope.row.id}">存量复习(汉英模式)
+                            </el-dropdown-item>
+                            <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: scope.row.id}">全量复习(汉英模式)
+                            </el-dropdown-item>
                             <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
                             <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
                         </el-dropdown-menu>
@@ -432,6 +444,7 @@ export default {
                 v-if="detail.paraphraseDetailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
                 :listId="detail.listId"
                 :isReview="detail.paraphraseIsReview"
+                :isChToEn="list.isChToEn"
                 :reviewMode="list.reviewMode"
                 :isShowParaphrase.sync="detail.isShowParaphrase"
                 @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
