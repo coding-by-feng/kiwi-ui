@@ -605,7 +605,7 @@ export default {
             </el-card>
         </el-dialog>
         <el-dialog
-                :title="isChToEn ? '汉英模式' : '英汉墨水（默认）'"
+                :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
                 :visible.sync="autoPlayDialogVisible"
                 width="300px">
             <span>自动复习即将开始，请确认。</span>
