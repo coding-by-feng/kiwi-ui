@@ -97,7 +97,6 @@ export default {
     },
     visibleToggle () {
       this.tableVisible = !this.tableVisible
-      this.list.isChToEn = !this.list.isChToEn
       if (this.list.listType === 'word') {
         this.detail.wordDetailVisible = !this.detail.wordDetailVisible
       } else if (this.list.listType === 'paraphrase') {
@@ -264,18 +263,24 @@ export default {
     },
     async selectReviewMode (command) {
       if (command.mode === 'stockReview') {
+        this.list.isChToEn = false
         this.stockReview(command.id)
       } else if (command.mode === 'totalReview') {
+        this.list.isChToEn = false
         this.totalReview(command.id)
       } else if (command.mode === 'stockRead') {
+        this.list.isChToEn = false
         this.detail.paraphraseIsRead = true
         this.stockRead(command.id)
       } else if (command.mode === 'totalRead') {
+        this.list.isChToEn = false
         this.detail.paraphraseIsRead = true
         this.selectOneList(command.id, false)
       } else if (command.mode === 'stockReviewChToEn') {
+        this.list.isChToEn = true
         this.stockReview(command.id)
       } else if (command.mode === 'totalReviewChToEn') {
+        this.list.isChToEn = true
         this.totalReview(command.id)
       }
     },
