@@ -2,6 +2,25 @@
 import { getStore } from '@/util/store'
 import website from '@/const/website'
 
+const isIos = function () {
+  if ('iPhone' === navigator.platform || 'iPod' === navigator.platform || 'iPad' === navigator.platform) {
+    return true
+  }
+  return false
+  // if ('Android' === navigator.platform) {
+  //   return 'Android'
+  // } else if ('iPhone' === navigator.platform || 'iPod' === navigator.platform || 'iPad' === navigator.platform) {
+  //   return 'iOS'
+  // }
+}
+
+const isSafari = function () {
+  if (navigator.userAgent.indexOf('Safari') > -1) {
+    return true
+  }
+  return false
+}
+
 export default {
   data () {
     return {
@@ -29,6 +48,16 @@ export default {
     //     this.tabsWidth = window.innerWidth - 20 + 'px'
     //   })()
     // }
+    console.log('navigator.platform=' + navigator.platform)
+    console.log('navigator.userAgent=' + navigator.userAgent)
+    if (isSafari()) {
+      this.$message({
+        type: 'error',
+        showClose: true,
+        duration: 5000,
+        message: '温馨提示：浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！'
+      })
+    }
   },
   methods: {
     handleSelectMenu () {

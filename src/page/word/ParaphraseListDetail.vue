@@ -165,6 +165,10 @@ export default {
         this.playWordIndex = 0
         this.playStepIndex = 0
         if (this.page.current > 1) {
+          this.$message.success({
+            duration: 2000,
+            message: '即将开始复习，请稍等！'
+          })
           await this.showDetail(this.listItems[0].paraphraseId, 0)
           this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
           this.currentPlayAudio.play()
@@ -277,6 +281,10 @@ export default {
     async stockReviewStart () {
       this.autoPlayDialogVisible = false
       if (this.reviewAudioArr.length) {
+        this.$message.success({
+          duration: 2000,
+          message: '即将开始复习，请稍等！'
+        })
         await this.showDetail(this.listItems[0].paraphraseId, 0)
         this.currentPlayAudio = this.reviewAudioArr[0][0]
         this.currentPlayAudio.play()
