@@ -609,10 +609,10 @@ export default {
                 :visible.sync="autoPlayDialogVisible"
                 width="300px">
             <span>自动复习即将开始，请确认。</span>
-            <span slot="footer" class="dialog-footer">
+            <spanactionVO.status slot="footer" class="dialog-footer">
                 <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
                 <el-button type="primary" @click="stockReviewStart">确 定</el-button>
-            </span>
+            </spanactionVO.status>
         </el-dialog>
     </div>
 </template>
