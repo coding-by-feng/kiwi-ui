@@ -2,14 +2,13 @@
 import { randomLenNum } from '@/util/util'
 import { mapGetters } from 'vuex'
 import { oneClickRegister } from '@/api/login'
-import router from '@/router/router'
 
 export default {
   name: 'userLogin',
   data () {
     return {
       loginForm: {
-        username: 'admin',
+        username: 'test',
         password: '123456',
         code: '',
         randomStr: ''
