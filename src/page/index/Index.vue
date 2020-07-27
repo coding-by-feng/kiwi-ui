@@ -15,7 +15,7 @@ const isIos = function () {
 }
 
 const isSafari = function () {
-  if (navigator.userAgent.indexOf('Safari') > -1) {
+  if (/Apple/.test(navigator.vendor)) {
     return true
   }
   return false
@@ -48,13 +48,11 @@ export default {
     //     this.tabsWidth = window.innerWidth - 20 + 'px'
     //   })()
     // }
-    console.log('navigator.platform=' + navigator.platform)
-    console.log('navigator.userAgent=' + navigator.userAgent)
     if (isSafari()) {
       this.$message({
         type: 'error',
         showClose: true,
-        duration: 5000,
+        duration: 10000,
         message: '温馨提示：浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！'
       })
     }
@@ -89,67 +87,67 @@ export default {
 </script>
 
 <style lang="scss">
-    .tab_nav {
-        position: absolute;
-        top: 0px;
-        left: 10px;
+.tab_nav {
+  position: absolute;
+  top: 0px;
+  left: 10px;
+}
+
+.platform-header {
+  height: 50px;
+  background: #545c64;
+  border-bottom: 1px solid #E2E2E2;
+  width: 100%;
+  position: absolute;
+  top: 0px;
+
+  .el-menu {
+    border-bottom: 1px solid #E2E2E2;
+
+    .el-menu-item {
+      height: 50px;
+
+      i {
+        margin-top: 20px;
+        margin-bottom: -15px;
+        font-size: 20px;
+        display: block;
+        line-height: 10px;
+        text-align: center;
+      }
+
+      span {
+        margin-top: -20px;
+        line-height: 20px;
+      }
     }
-
-    .platform-header {
-        height: 50px;
-        background: #545c64;
-        border-bottom: 1px solid #E2E2E2;
-        width: 100%;
-        position: absolute;
-        top: 0px;
-
-        .el-menu {
-            border-bottom: 1px solid #E2E2E2;
-
-            .el-menu-item {
-                height: 50px;
-
-                i {
-                    margin-top: 20px;
-                    margin-bottom: -15px;
-                    font-size: 20px;
-                    display: block;
-                    line-height: 10px;
-                    text-align: center;
-                }
-
-                span {
-                    margin-top: -20px;
-                    line-height: 20px;
-                }
-            }
-        }
-    }
+  }
+}
 </style>
 
 <template>
-    <div class="tab_nav" :style="{width: tabsWidth}">
-        <el-tabs type="border-card" :active-name="activeName" @tab-click="tabClick">
-            <el-tab-pane name="search">
-                <span slot="label"><i class="el-icon-search"></i></span>
-                <router-view name="search"></router-view>
-            </el-tab-pane>
-            <el-tab-pane name="starList" v-if="!lazy && isLogin">
-                <span slot="label"><i class="el-icon-tickets"></i></span>
-                <router-view name="starList"></router-view>
-            </el-tab-pane>
-            <el-tab-pane name="userCenter" v-if="!lazy && isLogin">
-                <span slot="label"><i class="el-icon-user"></i></span>
-                <router-view name="userCenter"></router-view>
-            </el-tab-pane>
-            <el-tab-pane name="login" v-if="!lazy && !isLogin">
-                <span slot="label"><i class="el-icon-user"></i></span>
-                <router-view name="userLogin"></router-view>
-            </el-tab-pane>
-            <el-tab-pane name="about" v-if="!lazy">
-                <span slot="label"><i class="el-icon-postcard"></i></span>
-                <router-view name="about"></router-view>
-            </el-tab-pane>
-        </el-tabs>
-    </div>
+  <div class="tab_nav" :style="{width: tabsWidth}">
+    <el-tabs type="border-card" :active-name="activeName" @tab-click="tabClick">
+      <el-tab-pane name="search">
+        <span slot="label"><i class="el-icon-search"></i></span>
+        <router-view name="search"></router-view>
+      </el-tab-pane>
+      <el-tab-pane name="starList" v-if="!lazy && isLogin">
+        <span slot="label"><i class="el-icon-tickets"></i></span>
+        <router-view name="starList"></router-view>
+      </el-tab-pane>
+      <el-tab-pane name="userCenter" v-if="!lazy && isLogin">
+        <span slot="label"><i class="el-icon-user"></i></span>
+        <router-view name="userCenter"></router-view>
+      </el-tab-pane>
+      <el-tab-pane name="login" v-if="!lazy && !isLogin">
+        <span slot="label"><i class="el-icon-user"></i></span>
+        <router-view name="userLogin"></router-view>
+      </el-tab-pane>
+      <el-tab-pane name="about" v-if="!lazy">
+        <span slot="label"><i class="el-icon-postcard"></i></span>
+        <router-view name="about"></router-view>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
 </template>
