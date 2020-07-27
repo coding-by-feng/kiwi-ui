@@ -99,7 +99,7 @@ export default {
           this.wordInfo = response.data.data
         } else {
           this.wordInfo = { wordName: '' }
-          this.defaultHint = '当前单词首次被查询，数据缺失，后台抓取服务已经启动，等候3~10秒之后刷新页面试试！(生僻单词可能抓取不到哦)'
+          this.defaultHint = '当前单词首次被查询，后台抓取服务已经启动，等候3~10秒之后刷新页面试试！(生僻单词可能抓取不到哦)'
         }
       }).catch(e => {
         console.error(e)
