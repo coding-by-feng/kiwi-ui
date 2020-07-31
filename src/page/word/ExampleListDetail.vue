@@ -38,7 +38,7 @@
 import exampleStarList from '@/api/exampleStarList'
 
 export default {
-  name: 'wordStarListDetail',
+  name: 'exampleStarListDetail',
   props: {
     tableVisibleToggle: {
       type: Function

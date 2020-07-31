@@ -10,7 +10,7 @@ const sleep = function (time) {
 let that
 
 export default {
-  name: 'wordStarListDetail',
+  name: 'paraphraseStarListDetail',
   props: {
     tableVisibleToggle: {
       type: Function
@@ -151,13 +151,13 @@ export default {
         await this.initList()
         for (let i = 0; i < this.listItems.length; i++) {
           await this.getItemDetail(this.listItems[i].paraphraseId)
-            .then(response => {
-              this.detail.paraphraseVO = response.data.data
-            })
-            .catch(e => {
-              loading.close()
-              console.error(e)
-            })
+              .then(response => {
+                this.detail.paraphraseVO = response.data.data
+              })
+              .catch(e => {
+                loading.close()
+                console.error(e)
+              })
           await this.reviewDetail()
         }
         loading.close()
@@ -227,25 +227,25 @@ export default {
         background: 'rgba(0, 0, 0, 0.7)'
       })
       await this.getItemDetail(paraphraseId)
-        .then(response => {
-          this.detail.paraphraseVO = response.data.data
-        })
-        .catch(e => {
-          console.error(e)
-        })
+          .then(response => {
+            this.detail.paraphraseVO = response.data.data
+          })
+          .catch(e => {
+            console.error(e)
+          })
       this.detail.dialogVisible = true
       loading.close()
     },
     async removeParaphraseStarListFun (paraphraseId) {
       this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: this.listId })
-        .then(response => {
-          this.doSuccess()
-          this.initList()
-        })
-        .catch(e => {
-          console.error(e)
-          this.$message.error(e)
-        })
+          .then(response => {
+            this.doSuccess()
+            this.initList()
+          })
+          .catch(e => {
+            console.error(e)
+            this.$message.error(e)
+          })
     },
     handleDetailClose () {
       this.detail.dialogVisible = false
@@ -361,23 +361,23 @@ export default {
     },
     rememberOneFun () {
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.listId)
-        .then(res => {
-          this.doSuccess()
-        })
-        .catch(e => {
-          console.error(e)
-          this.$message.error(e)
-        })
+          .then(res => {
+            this.doSuccess()
+          })
+          .catch(e => {
+            console.error(e)
+            this.$message.error(e)
+          })
     },
     forgetOneFun () {
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.listId)
-        .then(res => {
-          this.doSuccess()
-        })
-        .catch(e => {
-          console.error(e)
-          this.$message.error(e)
-        })
+          .then(res => {
+            this.doSuccess()
+          })
+          .catch(e => {
+            console.error(e)
+            this.$message.error(e)
+          })
     },
     countdownSelectHandle (command) {
       this.countdownText = command.text
@@ -461,166 +461,167 @@ export default {
 </style>
 
 <template>
-    <div style="margin-top: 10px">
-        <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
-            <div>
-                <el-switch
-                        v-if="isReview"
-                        v-model="countdownMode"
-                        active-color="#409EFF"
-                        inactive-color="#909399">
-                </el-switch>
-                &nbsp;
-                <el-dropdown
-                        size="mini"
-                        split-button type="primary" @command="countdownSelectHandle">
-                    <i class="el-icon-stopwatch">&nbsp;</i>{{countdownText}}
-                    <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
-                        <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
-                        <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
-                        <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
-                        <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                &nbsp;
-                <el-button
-                        v-if="!countdownMode && isReviewStop"
-                        type="primary"
-                        size="mini"
-                        @click="countdownEndReplay">
-                    <i class="el-icon-video-play"></i>
+  <div style="margin-top: 10px">
+    <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
+      <div>
+        <el-switch
+            v-if="isReview"
+            v-model="countdownMode"
+            active-color="#409EFF"
+            inactive-color="#909399">
+        </el-switch>
+        &nbsp;
+        <el-dropdown
+            size="mini"
+            split-button type="primary" @command="countdownSelectHandle">
+          <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
+            <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
+            <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
+            <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
+            <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        &nbsp;
+        <el-button
+            v-if="!countdownMode && isReviewStop"
+            type="primary"
+            size="mini"
+            @click="countdownEndReplay">
+          <i class="el-icon-video-play"></i>
+        </el-button>
+        <Countdown v-if="countdownMode" :endTime="countdownTime"
+                   @endFun="countdownEndFun"></Countdown>
+      </div>
+    </el-card>
+    <el-collapse v-for="(item, index) in listItems" accordion>
+      <el-collapse-item :title="item.wordName" :name="item.wordId">
+        <div>
+          <p>
+            {{ item.paraphraseEnglish }}
+          </p>
+          <div>
+            {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击灯泡显示' }}
+          </div>
+        </div>
+        <el-button type="text"
+                   size="mini"
+                   @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
+        </el-button>
+        <el-button type="text"
+                   size="mini"
+                   @click="showDetail(item.paraphraseId, index)"><i class="el-icon-more-outline"></i>
+        </el-button>
+        <el-button type="text"
+                   size="mini"
+                   @click="removeParaphraseStarListFun(item.paraphraseId)"><i
+            class="el-icon-remove-outline"></i>
+        </el-button>
+      </el-collapse-item>
+    </el-collapse>
+    <el-pagination
+        style="margin-top: 10px"
+        small
+        :page-size.sync="page.size"
+        :current-page.sync="page.current"
+        :page-count="page.pages"
+        :pager-count="5"
+        :page-sizes="[10,20,50,100]"
+        layout="prev,pager,next,jumper"
+        @size-change="pageChange"
+        @current-change="pageChange"
+        :total="page.total">
+    </el-pagination>
+    <el-dialog
+        :title="detail.paraphraseVO.wordName"
+        :visible.sync="detail.dialogVisible"
+        :before-close="handleDetailClose"
+        width="100%">
+      <el-button type="info" size="mini" @click="showPrevious">
+        <i class="el-icon-caret-left"></i>
+      </el-button>
+      <el-button type="info" size="mini" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
+      <el-button type="info" size="mini" @click="handleDetailClose">
+        <i class="el-icon-close"></i>
+      </el-button>
+      <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
+      <el-button type="info" size="mini" @click="showNext">
+        <i class="el-icon-caret-right"></i>
+      </el-button>
+      <el-card class="box-card">
+        <div slot="header">
+          <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+            <el-col>
+              <el-tag type="success">{{ detail.paraphraseVO.wordCharacter }}</el-tag>
+              <el-tag v-if="detail.paraphraseVO.wordLabel !== ''">
+                {{ detail.paraphraseVO.wordLabel }}
+              </el-tag>
+            </el-col>
+          </el-row>
+          <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+            <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+              <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+                {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                <i class="el-icon-video-play"></i>
+              </el-tag>
+            </el-col>
+          </el-row>
+          <el-alert
+              ref="paraphraseDetail"
+              type="info"
+              :description="detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt"
+              :closable="false"
+              effect="dark"
+              style="margin-top: 5px;"
+              center>
+            <div slot="title">
+              <p>{{ this.detail.paraphraseVO.paraphraseEnglish }}
+                <el-button type="text"
+                           @click="detail.showTranslation = !detail.showTranslation"
+                           size="mini">
+                  <i class="el-icon-s-opportunity" style="color: #FFFFFF"></i>
                 </el-button>
-                <Countdown v-if="countdownMode" :endTime="countdownTime"
-                           @endFun="countdownEndFun"></Countdown>
+              </p>
             </div>
-        </el-card>
-        <el-collapse v-for="(item, index) in listItems" accordion>
-            <el-collapse-item :title="item.wordName" :name="item.wordId">
-                <div>
-                    <p>
-                        {{item.paraphraseEnglish}}
-                    </p>
-                    <div>
-                        {{isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击灯泡显示'}}
-                    </div>
-                </div>
-                <el-button type="text"
-                           size="mini"
-                           @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
-                </el-button>
-                <el-button type="text"
-                           size="mini"
-                           @click="showDetail(item.paraphraseId, index)"><i class="el-icon-more-outline"></i>
-                </el-button>
-                <el-button type="text"
-                           size="mini"
-                           @click="removeParaphraseStarListFun(item.paraphraseId)"><i
-                        class="el-icon-remove-outline"></i>
-                </el-button>
-            </el-collapse-item>
-        </el-collapse>
-        <el-pagination
-                style="margin-top: 10px"
-                small
-                :page-size.sync="page.size"
-                :current-page.sync="page.current"
-                :page-count="page.pages"
-                :pager-count="5"
-                :page-sizes="[10,20,50,100]"
-                layout="prev,pager,next,jumper"
-                @size-change="pageChange"
-                @current-change="pageChange"
-                :total="page.total">
-        </el-pagination>
-        <el-dialog
-                :title="detail.paraphraseVO.wordName"
-                :visible.sync="detail.dialogVisible"
-                :before-close="handleDetailClose"
-                width="100%">
-            <el-button type="info" @click="showPrevious">
-                <i class="el-icon-caret-left"></i>
-            </el-button>
-            <el-button type="info" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
-            <el-button type="info" @click="handleDetailClose">
-                <i class="el-icon-close"></i>
-            </el-button>
-            <el-button type="info" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
-            <el-button type="info" @click="showNext">
-                <i class="el-icon-caret-right"></i>
-            </el-button>
-            <el-card class="box-card">
-                <div slot="header">
-                    <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
-                        <el-col>
-                            <el-tag type="success">{{detail.paraphraseVO.wordCharacter}}</el-tag>
-                            <el-tag v-if="detail.paraphraseVO.wordLabel !== ''">
-                                {{detail.paraphraseVO.wordLabel}}
-                            </el-tag>
-                        </el-col>
-                    </el-row>
-                    <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
-                        <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
-                            <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
-                                {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
-                                <i class="el-icon-video-play"></i>
-                            </el-tag>
-                        </el-col>
-                    </el-row>
-                    <el-alert
-                            ref="paraphraseDetail"
-                            type="info"
-                            :description="detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt"
-                            :closable="false"
-                            effect="dark"
-                            style="margin-top: 5px;"
-                            center>
-                        <div slot="title">
-                            <p>{{this.detail.paraphraseVO.paraphraseEnglish}}
-                                <el-button type="text"
-                                           @click="detail.showTranslation = !detail.showTranslation"
-                                           size="mini">
-                                    <i class="el-icon-s-opportunity" style="color: #FFFFFF"></i>
-                                </el-button>
-                            </p>
-                        </div>
-                    </el-alert>
-                </div>
-                <div v-if="detail.paraphraseVO.wordParaphraseExampleVOList && detail.paraphraseVO.wordParaphraseExampleVOList.length < 1">
-                    <el-alert
-                            type="info"
-                            title="该释义暂时没有例句"
-                            center
-                            effect="light"
-                            :closable="false">
-                    </el-alert>
-                </div>
-                <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.wordParaphraseExampleVOList">
-                    <el-alert
-                            type="info"
-                            center
-                            effect="light"
-                            :description="wordParaphraseExampleVO.exampleTranslate"
-                            :closable="false">
-                        <div slot="title">
-                            {{wordParaphraseExampleVO.exampleSentence}}
-                            <el-button type="text"><i
-                                    class="el-icon-circle-plus-outline outline_fix" style="color: #FFFFFF"></i>
-                            </el-button>
-                        </div>
-                    </el-alert>
-                </div>
-            </el-card>
-        </el-dialog>
-        <el-dialog
-                :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
-                :visible.sync="autoPlayDialogVisible"
-                width="300px">
-            <span>自动复习即将开始，请确认。</span>
-            <spanactionVO.status slot="footer" class="dialog-footer">
-                <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="stockReviewStart">确 定</el-button>
-            </spanactionVO.status>
-        </el-dialog>
-    </div>
+          </el-alert>
+        </div>
+        <div
+            v-if="detail.paraphraseVO.wordParaphraseExampleVOList && detail.paraphraseVO.wordParaphraseExampleVOList.length < 1">
+          <el-alert
+              type="info"
+              title="该释义暂时没有例句"
+              center
+              effect="light"
+              :closable="false">
+          </el-alert>
+        </div>
+        <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.wordParaphraseExampleVOList">
+          <el-alert
+              type="info"
+              center
+              effect="light"
+              :description="wordParaphraseExampleVO.exampleTranslate"
+              :closable="false">
+            <div slot="title">
+              {{ wordParaphraseExampleVO.exampleSentence }}
+              <el-button type="text"><i
+                  class="el-icon-circle-plus-outline outline_fix" style="color: #FFFFFF"></i>
+              </el-button>
+            </div>
+          </el-alert>
+        </div>
+      </el-card>
+    </el-dialog>
+    <el-dialog
+        :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
+        :visible.sync="autoPlayDialogVisible"
+        width="300px">
+      <span>自动复习即将开始，请确认。</span>
+      <spanactionVO.status slot="footer" class="dialog-footer">
+        <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="stockReviewStart">确 定</el-button>
+      </spanactionVO.status>
+    </el-dialog>
+  </div>
 </template>

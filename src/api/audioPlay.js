@@ -1,4 +1,7 @@
 export default {
+  isIos () {
+    return 'iPhone' === navigator.platform || 'iPod' === navigator.platform || 'iPad' === navigator.platform
+  },
   playWordDetail (wordInfo, audio) {
     let wordName = wordInfo.wordName + ''
     let wordAlphabet = ''
