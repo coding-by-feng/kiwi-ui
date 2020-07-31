@@ -153,12 +153,14 @@ export default {
     },
     async playPronunciation (id) {
       try {
-        // let audio = this.pronunciationAudioMap.get(id)
-        let audio = new Audio()
-        audio.pause()
-        audio.loop = false
+        let audio = document.getElementById('tempPronunciation')
+        // let audio = new Audio()
+        // document.body.appendChild(audio)
+        // audio.pause()
+        // audio.loop = false
+        // audio.type = 'audio/ogg'
         audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
-        await audio.play()
+        audio.play()
       } catch (e) {
         console.error(e)
       }
@@ -315,198 +317,206 @@ export default {
 </script>
 
 <style>
-    .row-bg {
-        padding-top: 10px;
-        background-color: #f9fafc;
-    }
+.row-bg {
+  padding-top: 10px;
+  background-color: #f9fafc;
+}
 
-    .box-card {
-        width: 100%;
-    }
+.box-card {
+  width: 100%;
+}
 
-    .outline_fix {
-        position: absolute;
-        right: 5px;
-        bottom: 5px;
-    }
+.outline_fix {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+}
 
-    .outline_fix_top_right {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-    }
+.outline_fix_top_right {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
 
-    .outline_fix_top_left {
-        position: absolute;
-        top: 5px;
-        left: 5px;
-    }
+.outline_fix_top_left {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+}
 
-    .outline_fix_bottom_left {
-        position: absolute;
-        bottom: 5px;
-        left: 5px;
-    }
+.outline_fix_bottom_left {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+}
 
-    .outline_fix_bottom_left_2 {
-        position: absolute;
-        bottom: 5px;
-        left: 25px;
-    }
+.outline_fix_bottom_left_2 {
+  position: absolute;
+  bottom: 5px;
+  left: 25px;
+}
 </style>
 
 <template>
-    <el-container>
-        <el-header>
-            <el-alert
-                    v-if="''===wordInfo.wordName"
-                    type="warning"
-                    :closable="false"
-                    effect="light"
-                    center>
-                <b>{{defaultHint}}</b>
-            </el-alert>
-            <el-alert
-                    v-if="''!==wordInfo.wordName"
-                    type="warning"
-                    :closable="false"
-                    effect="light"
-                    center>
+  <el-container>
+    <el-header>
+      <el-alert
+          v-if="''===wordInfo.wordName"
+          type="warning"
+          :closable="false"
+          effect="light"
+          center>
+        <b>{{ defaultHint }}</b>
+      </el-alert>
+      <el-alert
+          v-if="''!==wordInfo.wordName"
+          type="warning"
+          :closable="false"
+          effect="light"
+          center>
+        <div slot="title">
+          <div>
+            <audio id="tempPronunciation" v-show="false"
+                   src=""
+                   type="audio/ogg"
+                   preload="preload"
+                   controls="controls">
+            </audio>
+          </div>
+          <el-button type="text">
+            <i class="el-icon-remove outline_fix_bottom_left"
+               @click="removeByWordNameFun"
+               style="color: #76838f"></i>
+          </el-button>
+          <el-tooltip placement="top">
+            <div slot="content">如果单词数据有异常，可以点击下面删除单词，后台将重新抓取单词数据</div>
+            <el-button type="text">
+              <i class="el-icon-warning outline_fix_top_left"
+                 style="color: #76838f"></i>
+            </el-button>
+          </el-tooltip>
+          <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{ wordInfo.wordName }}</b>
+          <el-button type="text"><i
+              class="el-icon-video-play outline_fix_top_right"
+              style="color: #76838f"
+              @click="oneWordPlay"></i>
+          </el-button>
+          <el-button type="text"
+                     v-if="wordInfo.wordName.length>0"><i
+              :class="getWordCollectClass()"
+              style="color: #76838f"
+              @click="wordCollectClickFun()"></i>
+          </el-button>
+        </div>
+      </el-alert>
+    </el-header>
+    <el-main>
+      <div v-for="wordCharacterVO in wordInfo.wordCharacterVOList">
+        <el-row type="flex" class="row-bg" justify="end">
+          <el-col>
+            <el-tag type="success">{{ wordCharacterVO.wordCharacter }}</el-tag>
+            <el-tag v-if="wordCharacterVO.wordLabel != ''">{{ wordCharacterVO.wordLabel }}</el-tag>
+          </el-col>
+        </el-row>
+        <el-row type="flex" class="row-bg" justify="end">
+          <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
+            <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+              {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+              <i class="el-icon-video-play"></i>
+            </el-tag>
+          </el-col>
+        </el-row>
+        <div v-for="wordParaphraseVO in wordCharacterVO.wordParaphraseVOList" v>
+          <el-card class="box-card">
+            <div slot="header">
+              <el-alert
+                  type="info"
+                  :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击灯泡显示'"
+                  :closable="false"
+                  effect="dark"
+                  center>
                 <div slot="title">
+                  <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
+                       v-for="phraseVO in wordParaphraseVO.phraseList">
+                    <p>[ {{ phraseVO }} ]</p>
+                  </div>
+                  <p>{{ wordParaphraseVO.paraphraseEnglish }}
                     <el-button type="text">
-                        <i class="el-icon-remove outline_fix_bottom_left"
-                           @click="removeByWordNameFun"
-                           style="color: #76838f"></i>
+                      <i class="el-icon-s-opportunity"
+                         @click="isShowParaphrase = !isShowParaphrase"
+                         style="color: #FFFFFF"></i>
                     </el-button>
-                    <el-tooltip placement="top">
-                        <div slot="content">如果单词数据有异常，可以点击下面删除单词，后台将重新抓取单词数据</div>
-                        <el-button type="text">
-                            <i class="el-icon-warning outline_fix_top_left"
-                               style="color: #76838f"></i>
-                        </el-button>
-                    </el-tooltip>
-                    <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{wordInfo.wordName}}</b>
-                    <el-button type="text"><i
-                            class="el-icon-video-play outline_fix_top_right"
-                            style="color: #76838f"
-                            @click="oneWordPlay"></i>
-                    </el-button>
-                    <el-button type="text"
-                               v-if="wordInfo.wordName.length>0"><i
-                            :class="getWordCollectClass()"
-                            style="color: #76838f"
-                            @click="wordCollectClickFun()"></i>
-                    </el-button>
+                  </p>
+                  <el-button type="text"><i
+                      :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
+                      style="color: #FFFFFF"
+                      @click="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
+                  </el-button>
                 </div>
-            </el-alert>
-        </el-header>
-        <el-main>
-            <div v-for="wordCharacterVO in wordInfo.wordCharacterVOList">
-                <el-row type="flex" class="row-bg" justify="end">
-                    <el-col>
-                        <el-tag type="success">{{wordCharacterVO.wordCharacter}}</el-tag>
-                        <el-tag v-if="wordCharacterVO.wordLabel != ''">{{wordCharacterVO.wordLabel}}</el-tag>
-                    </el-col>
-                </el-row>
-                <el-row type="flex" class="row-bg" justify="end">
-                    <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
-                        <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
-                            {{wordPronunciationVO.soundmark}}[{{wordPronunciationVO.soundmarkType}}]
-                            <i class="el-icon-video-play"></i>
-                        </el-tag>
-                    </el-col>
-                </el-row>
-                <div v-for="wordParaphraseVO in wordCharacterVO.wordParaphraseVOList" v>
-                    <el-card class="box-card">
-                        <div slot="header">
-                            <el-alert
-                                    type="info"
-                                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击灯泡显示'"
-                                    :closable="false"
-                                    effect="dark"
-                                    center>
-                                <div slot="title">
-                                    <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
-                                         v-for="phraseVO in wordParaphraseVO.phraseList">
-                                        <p>[ {{phraseVO}} ]</p>
-                                    </div>
-                                    <p>{{wordParaphraseVO.paraphraseEnglish}}
-                                        <el-button type="text">
-                                            <i class="el-icon-s-opportunity"
-                                               @click="isShowParaphrase = !isShowParaphrase"
-                                               style="color: #FFFFFF"></i>
-                                        </el-button>
-                                    </p>
-                                    <el-button type="text"><i
-                                            :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
-                                            style="color: #FFFFFF"
-                                            @click="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
-                                    </el-button>
-                                </div>
-                            </el-alert>
-                        </div>
-                        <div v-if="wordParaphraseVO.wordParaphraseExampleVOList == null">
-                            <el-alert
-                                    type="info"
-                                    title="该释义暂时没有例句"
-                                    center
-                                    effect="light"
-                                    :closable="false">
-                            </el-alert>
-                        </div>
-                        <div v-for="wordParaphraseExampleVO in wordParaphraseVO.wordParaphraseExampleVOList">
-                            <el-alert
-                                    type="info"
-                                    center
-                                    effect="light"
-                                    :description="wordParaphraseExampleVO.exampleTranslate"
-                                    :closable="false">
-                                <div slot="title">
-                                    {{wordParaphraseExampleVO.exampleSentence}}
-                                    <el-button type="text"><i
-                                            class="el-icon-circle-plus-outline outline_fix"
-                                            style="color: #76838f"
-                                            @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
-                                    </el-button>
-                                </div>
-                            </el-alert>
-                        </div>
-                    </el-card>
-                    <el-divider></el-divider>
-                </div>
+              </el-alert>
             </div>
-            <el-dialog
-                    center
-                    :title="collect.dialogTitle"
-                    :visible.sync="collect.listSelectDialogVisible"
-                    :before-close="listSelectDialogHandleClose">
-                <el-table
-                        :data="collect.starListData"
-                        style="width: 100%">
-                    <el-table-column
-                            align="center">
-                        <template slot-scope="scope">
-                            <div slot="reference" class="name-wrapper">
-                                <el-button type="primary" @click="selectOneList(scope.row.id)">
-                                    {{scope.row.listName}}
-                                </el-button>
-                            </div>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </el-dialog>
-        </el-main>
-        <el-dialog
-                title="提示"
-                :visible.sync="autoPlayDialogVisible"
-                width="300px">
-            <span>自动复习即将开始，请确认。</span>
-            <span slot="footer" class="dialog-footer">
+            <div v-if="wordParaphraseVO.wordParaphraseExampleVOList == null">
+              <el-alert
+                  type="info"
+                  title="该释义暂时没有例句"
+                  center
+                  effect="light"
+                  :closable="false">
+              </el-alert>
+            </div>
+            <div v-for="wordParaphraseExampleVO in wordParaphraseVO.wordParaphraseExampleVOList">
+              <el-alert
+                  type="info"
+                  center
+                  effect="light"
+                  :description="wordParaphraseExampleVO.exampleTranslate"
+                  :closable="false">
+                <div slot="title">
+                  {{ wordParaphraseExampleVO.exampleSentence }}
+                  <el-button type="text"><i
+                      class="el-icon-circle-plus-outline outline_fix"
+                      style="color: #76838f"
+                      @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
+                  </el-button>
+                </div>
+              </el-alert>
+            </div>
+          </el-card>
+          <el-divider></el-divider>
+        </div>
+      </div>
+      <el-dialog
+          center
+          :title="collect.dialogTitle"
+          :visible.sync="collect.listSelectDialogVisible"
+          :before-close="listSelectDialogHandleClose">
+        <el-table
+            :data="collect.starListData"
+            style="width: 100%">
+          <el-table-column
+              align="center">
+            <template slot-scope="scope">
+              <div slot="reference" class="name-wrapper">
+                <el-button type="primary" @click="selectOneList(scope.row.id)">
+                  {{ scope.row.listName }}
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-dialog>
+    </el-main>
+    <el-dialog
+        title="提示"
+        :visible.sync="autoPlayDialogVisible"
+        width="300px">
+      <span>自动复习即将开始，请确认。</span>
+      <span slot="footer" class="dialog-footer">
     <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
     <el-button type="primary" @click="stockReviewStart">确 定</el-button>
   </span>
-        </el-dialog>
-    </el-container>
+    </el-dialog>
+  </el-container>
 </template>
 
 
