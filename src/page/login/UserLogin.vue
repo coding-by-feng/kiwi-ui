@@ -8,8 +8,8 @@ export default {
   data () {
     return {
       loginForm: {
-        username: 'test',
-        password: '123456',
+        username: '',
+        password: '',
         code: '',
         randomStr: ''
       },

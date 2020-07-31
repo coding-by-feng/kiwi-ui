@@ -1,4 +1,5 @@
 <script>
+import { getStore } from '@/util/store'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 
@@ -259,7 +260,7 @@ export default {
         message: '操作成功'
       })
     },
-    async playPronunciation (id) {
+    async playPronunciation (id, sourceUrl) {
       if (this.isReview) {
         this.$message.warning({
           duration: 1000,
@@ -270,9 +271,13 @@ export default {
       try {
         // let audio = this.pronunciationAudioMap.get(id)
         let audio = new Audio()
-        audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        let source = getStore({ name: 'pronunciation_source' })
+        if (source === '本地') {
+          audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        } else {
+          audio.src = sourceUrl
+        }
         audio.pause()
-        audio.loop = false
         await audio.play()
       } catch (e) {
         console.error(e)
@@ -561,7 +566,7 @@ export default {
           </el-row>
           <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
             <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
-              <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+              <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                 <i class="el-icon-video-play"></i>
               </el-tag>
