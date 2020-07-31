@@ -7,11 +7,6 @@ const isIos = function () {
     return true
   }
   return false
-  // if ('Android' === navigator.platform) {
-  //   return 'Android'
-  // } else if ('iPhone' === navigator.platform || 'iPod' === navigator.platform || 'iPad' === navigator.platform) {
-  //   return 'iOS'
-  // }
 }
 
 const isSafari = function () {

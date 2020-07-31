@@ -153,14 +153,13 @@ export default {
     },
     async playPronunciation (id) {
       try {
-        let audio = document.getElementById('tempPronunciation')
-        // let audio = new Audio()
+        let audio = new Audio()
         // document.body.appendChild(audio)
         // audio.pause()
         // audio.loop = false
         // audio.type = 'audio/ogg'
         audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
-        audio.play()
+        await audio.play()
       } catch (e) {
         console.error(e)
       }
@@ -375,14 +374,6 @@ export default {
           effect="light"
           center>
         <div slot="title">
-          <div>
-            <audio id="tempPronunciation" v-show="false"
-                   src=""
-                   type="audio/ogg"
-                   preload="preload"
-                   controls="controls">
-            </audio>
-          </div>
           <el-button type="text">
             <i class="el-icon-remove outline_fix_bottom_left"
                @click="removeByWordNameFun"

@@ -132,34 +132,34 @@ export default {
       }).then($ => {
         if (this.list.listType === 'word') {
           wordStarList.delById(row.id)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         } else if (this.list.listType === 'paraphrase') {
           paraphraseStarList.delById(row.id)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         } else if (this.list.listType === 'example') {
           exampleStarList.delById(row.id)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         }
       }).finally($ => {
         loading.close()
@@ -173,66 +173,66 @@ export default {
       if (this.edit.type === 'update') {
         if (this.list.listType === 'word') {
           await wordStarList.updateById(this.edit.form)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         } else if (this.list.listType === 'paraphrase') {
           await paraphraseStarList.updateById(this.edit.form)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         } else if (this.list.listType === 'example') {
           await exampleStarList.updateById(this.edit.form)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         }
       } else if (this.edit.type === 'add') {
         if (this.list.listType === 'word') {
           await wordStarList.save(this.edit.form)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         } else if (this.list.listType === 'paraphrase') {
           await paraphraseStarList.save(this.edit.form)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         } else if (this.list.listType === 'example') {
           await exampleStarList.save(this.edit.form)
-            .then(response => {
-              this.doSuccess()
-              this.init()
-            })
-            .catch(e => {
-              console.error(e)
-              this.$message.error(e)
-            })
+              .then(response => {
+                this.doSuccess()
+                this.init()
+              })
+              .catch(e => {
+                console.error(e)
+                this.$message.error(e)
+              })
         }
       }
       this.loading = false
@@ -376,132 +376,132 @@ export default {
 
 <template>
 
-    <div class="text item" v-loading="loading">
-        <el-page-header @back="goBack" title="">
-            <div slot="content">
-                <el-dropdown size="mini"
-                             split-button type="primary" @command="listTypeClick">
-                    {{this.list.listName}}
-                    <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
-                        <el-dropdown-item command="word">单词本</el-dropdown-item>
-                        <el-dropdown-item command="example">例句本</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                &nbsp;
-                <el-button type="primary"
-                           v-show="list.status==='list'"
-                           @click="handleOperate"
-                           size="mini">
-                    <i class="el-icon-folder-add"></i>
-                </el-button>
-                <el-button type="primary" @click="refresh"
-                           size="mini">
-                    <i class="el-icon-refresh"></i>
-                </el-button>
-                <el-button type="primary"
-                           v-show="list.status==='detail'"
-                           @click="detail.isShowParaphrase = !detail.isShowParaphrase"
-                           size="mini">
-                    <i class="el-icon-s-opportunity"></i>
-                </el-button>
-                <el-button
-                        v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
-                        size="mini"
-                        type="primary"
-                        @click="closeAutoReview">
-                    <i class="el-icon-switch-button"></i>
-                </el-button>
-            </div>
-        </el-page-header>
-        <el-table
-                v-show="tableVisible"
-                :data="list.starListData"
-                style="width: 100%">
-            <el-table-column>
-                <template slot-scope="scope">
-                    <div slot="reference" class="name-wrapper">
-                        <el-button type="primary"
-                                   size="mini"
-                                   @click="selectOneList(scope.row.id, false)">
-                            {{scope.row.listName}}
-                        </el-button>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column>
-                <template slot-scope="scope">
-                    <el-dropdown
-                            v-if="list.listType === 'paraphrase'"
-                            size="mini"
-                            split-button type="primary" @command="selectReviewMode">
-                        <i class="el-icon-headset"></i>
-                        <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
-                            <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
-                            <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: scope.row.id}">存量复习(汉英模式)
-                            </el-dropdown-item>
-                            <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: scope.row.id}">全量复习(汉英模式)
-                            </el-dropdown-item>
-                            <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
-                            <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </el-dropdown>
-                    &nbsp;
-                    <el-button
-                            type="text"
-                            size="mini"
-                            @click="handleEdit(scope.$index, scope.row)">
-                        <i class="el-icon-edit-outline"></i>
-                    </el-button>
-                    <el-button
-                            size="mini"
-                            type="text"
-                            :loading="loading"
-                            @click="handleDelete(scope.$index, scope.row)">
-                        <i class="el-icon-delete"></i>
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-        <WordListDetail
-                ref="wordDetail"
-                v-if="detail.wordDetailVisible && list.listType === 'word' && list.status === 'detail'"
-                :listId="detail.listId"
-                :isShowParaphrase.sync="detail.isShowParaphrase"
-                @tableVisibleToggle="visibleToggle"></WordListDetail>
-        <ParaphraseListDetail
-                ref="paraphraseDetail"
-                v-if="detail.paraphraseDetailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
-                :listId="detail.listId"
-                :isReview="detail.paraphraseIsReview"
-                :isChToEn="list.isChToEn"
-                :reviewMode="list.reviewMode"
-                :isShowParaphrase.sync="detail.isShowParaphrase"
-                @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
-        <ExampleListDetail
-                ref="exampleDetail"
-                v-if="detail.exampleDetailVisible && list.listType === 'example' && list.status === 'detail'"
-                :listId="detail.listId"
-                :isShowParaphrase.sync="detail.isShowParaphrase"
-                @tableVisibleToggle="visibleToggle"></ExampleListDetail>
-        <el-dialog
-                :title="edit.title"
-                :visible.sync="edit.dialogVisible"
-                width="30%"
-                :before-close="handleEditClose">
-            <el-form ref="form" :model="edit.form" label-width="80px">
-                <el-form-item label="名字">
-                    <el-input v-model="edit.form.listName"></el-input>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
+  <div class="text item" v-loading="loading">
+    <el-page-header @back="goBack" title="">
+      <div slot="content">
+        <el-dropdown size="mini"
+                     split-button type="primary" @command="listTypeClick">
+          {{ this.list.listName }}
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
+            <el-dropdown-item command="word">单词本</el-dropdown-item>
+            <el-dropdown-item command="example">例句本</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        &nbsp;
+        <el-button type="text"
+                   v-show="list.status==='list'"
+                   @click="handleOperate"
+                   size="mini">
+          <i class="el-icon-folder-add"></i>
+        </el-button>
+        <el-button type="text" @click="refresh"
+                   size="mini">
+          <i class="el-icon-refresh"></i>
+        </el-button>
+        <el-button type="text"
+                   v-show="list.status==='detail'"
+                   @click="detail.isShowParaphrase = !detail.isShowParaphrase"
+                   size="mini">
+          <i class="el-icon-s-opportunity"></i>
+        </el-button>
+        <el-button
+            v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
+            size="mini"
+            type="text"
+            @click="closeAutoReview">
+          <i class="el-icon-switch-button"></i>
+        </el-button>
+      </div>
+    </el-page-header>
+    <el-table
+        v-show="tableVisible"
+        :data="list.starListData"
+        style="width: 100%">
+      <el-table-column>
+        <template slot-scope="scope">
+          <div slot="reference" class="name-wrapper">
+            <el-button type="primary"
+                       size="mini"
+                       @click="selectOneList(scope.row.id, false)">
+              {{ scope.row.listName }}
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column>
+        <template slot-scope="scope">
+          <el-dropdown
+              v-if="list.listType === 'paraphrase' && list.status === 'list'"
+              size="mini"
+              split-button type="primary" @command="selectReviewMode">
+            <i class="el-icon-headset"></i>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: scope.row.id}">存量复习(汉英模式)
+              </el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: scope.row.id}">全量复习(汉英模式)
+              </el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+          &nbsp;
+          <el-button
+              type="text"
+              size="mini"
+              @click="handleEdit(scope.$index, scope.row)">
+            <i class="el-icon-edit-outline"></i>
+          </el-button>
+          <el-button
+              size="mini"
+              type="text"
+              :loading="loading"
+              @click="handleDelete(scope.$index, scope.row)">
+            <i class="el-icon-delete"></i>
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <WordListDetail
+        ref="wordDetail"
+        v-if="detail.wordDetailVisible && list.listType === 'word' && list.status === 'detail'"
+        :listId="detail.listId"
+        :isShowParaphrase.sync="detail.isShowParaphrase"
+        @tableVisibleToggle="visibleToggle"></WordListDetail>
+    <ParaphraseListDetail
+        ref="paraphraseDetail"
+        v-if="detail.paraphraseDetailVisible && list.listType === 'paraphrase' && list.status === 'detail'"
+        :listId="detail.listId"
+        :isReview="detail.paraphraseIsReview"
+        :isChToEn="list.isChToEn"
+        :reviewMode="list.reviewMode"
+        :isShowParaphrase.sync="detail.isShowParaphrase"
+        @tableVisibleToggle="visibleToggle"></ParaphraseListDetail>
+    <ExampleListDetail
+        ref="exampleDetail"
+        v-if="detail.exampleDetailVisible && list.listType === 'example' && list.status === 'detail'"
+        :listId="detail.listId"
+        :isShowParaphrase.sync="detail.isShowParaphrase"
+        @tableVisibleToggle="visibleToggle"></ExampleListDetail>
+    <el-dialog
+        :title="edit.title"
+        :visible.sync="edit.dialogVisible"
+        width="30%"
+        :before-close="handleEditClose">
+      <el-form ref="form" :model="edit.form" label-width="80px">
+        <el-form-item label="名字">
+          <el-input v-model="edit.form.listName"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
                 <el-button type="primary"
                            :loading="loading"
                            @click="handleEditSubmit">确定</el-button>
             </span>
-        </el-dialog>
+    </el-dialog>
 
-    </div>
+  </div>
 
 </template>
