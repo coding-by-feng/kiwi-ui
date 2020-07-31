@@ -5,7 +5,6 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
-// import tts from '../../api/tts'
 
 let that
 
@@ -151,14 +150,21 @@ export default {
         this.audioList[0].play()
       }
     },
-    async playPronunciation (id) {
+    async playPronunciation (id, sourceUrl) {
       try {
         let audio = new Audio()
         // document.body.appendChild(audio)
         // audio.pause()
         // audio.loop = false
         // audio.type = 'audio/ogg'
-        audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        let source = getStore({ name: 'pronunciation_source' })
+        if (source === '本地') {
+          audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+        } else {
+          audio.src = sourceUrl
+        }
+        console.log(audio.src)
+        audio.pause()
         await audio.play()
       } catch (e) {
         console.error(e)
@@ -411,7 +417,7 @@ export default {
         </el-row>
         <el-row type="flex" class="row-bg" justify="end">
           <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
-            <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId)">
+            <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
               {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
               <i class="el-icon-video-play"></i>
             </el-tag>
