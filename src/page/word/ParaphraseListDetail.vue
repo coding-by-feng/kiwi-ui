@@ -54,6 +54,7 @@ export default {
         hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示',
         showIndex: 0
       },
+      source: getStore({ name: 'pronunciation_source' }),
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: false,
@@ -271,8 +272,7 @@ export default {
       try {
         // let audio = this.pronunciationAudioMap.get(id)
         let audio = new Audio()
-        let source = getStore({ name: 'pronunciation_source' })
-        if (source === '本地') {
+        if (this.source === '本地') {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
           audio.src = sourceUrl
@@ -302,10 +302,13 @@ export default {
     },
     createPronunciationAudio () {
       let pronunciation = new Audio()
-      pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.wordPronunciationVOList[0].pronunciationId
+      if (this.source === '本地') {
+        pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.wordPronunciationVOList[0].pronunciationId
+      } else {
+        pronunciation.src = this.detail.paraphraseVO.wordPronunciationVOList[0].sourceUrl
+      }
       pronunciation.pause()
       pronunciation.loop = false
-      // document.body.appendChild(pronunciation)
       return pronunciation
     },
     async reviewDetail () {
