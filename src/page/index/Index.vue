@@ -43,14 +43,14 @@ export default {
     //     this.tabsWidth = window.innerWidth - 20 + 'px'
     //   })()
     // }
-    if (isSafari()) {
-      this.$message({
-        type: 'error',
-        showClose: true,
-        duration: 10000,
-        message: '温馨提示：浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！'
-      })
-    }
+    // if (isSafari()) {
+    //   this.$message({
+    //     type: 'error',
+    //     showClose: true,
+    //     duration: 10000,
+    //     message: '温馨提示：浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！'
+    //   })
+    // }
   },
   methods: {
     handleSelectMenu () {
