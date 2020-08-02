@@ -132,7 +132,7 @@ export default {
             </el-row>
         </el-form-item>
         <el-form-item style="width: 70%">
-            <el-button type="primary" @click="handleLogin">登录</el-button>
+            <el-button type="info" @click="handleLogin">登录</el-button>
             <el-button @click="handleRegister">一键注册</el-button>
         </el-form-item>
     </el-form>

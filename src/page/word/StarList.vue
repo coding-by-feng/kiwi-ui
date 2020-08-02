@@ -380,7 +380,7 @@ export default {
     <el-page-header @back="goBack" title="">
       <div slot="content">
         <el-dropdown size="mini"
-                     split-button type="primary" @command="listTypeClick">
+                     split-button type="info" @command="listTypeClick">
           {{ this.list.listName }}
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
@@ -421,7 +421,7 @@ export default {
       <el-table-column>
         <template slot-scope="scope">
           <div slot="reference" class="name-wrapper">
-            <el-button type="primary"
+            <el-button type="info"
                        size="mini"
                        @click="selectOneList(scope.row.id, false)">
               {{ scope.row.listName }}
@@ -434,7 +434,7 @@ export default {
           <el-dropdown
               v-if="list.listType === 'paraphrase' && list.status === 'list'"
               size="mini"
-              split-button type="primary" @command="selectReviewMode">
+              split-button type="info" @command="selectReviewMode">
             <i class="el-icon-headset"></i>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
@@ -496,7 +496,7 @@ export default {
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-                <el-button type="primary"
+                <el-button type="info"
                            :loading="loading"
                            @click="handleEditSubmit">确定</el-button>
             </span>

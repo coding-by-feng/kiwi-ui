@@ -494,7 +494,7 @@ export default {
               align="center">
             <template slot-scope="scope">
               <div slot="reference" class="name-wrapper">
-                <el-button type="primary" @click="selectOneList(scope.row.id)">
+                <el-button type="info" @click="selectOneList(scope.row.id)">
                   {{ scope.row.listName }}
                 </el-button>
               </div>
@@ -509,8 +509,8 @@ export default {
         width="300px">
       <span>自动复习即将开始，请确认。</span>
       <span slot="footer" class="dialog-footer">
-    <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="stockReviewStart">确 定</el-button>
+    <el-button @click="autoPlayDialogVisible = false">取消</el-button>
+    <el-button type="info" @click="stockReviewStart">确定</el-button>
   </span>
     </el-dialog>
   </el-container>
