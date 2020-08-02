@@ -13,7 +13,7 @@
         <p class="error403-body-con-message">You don't have permission</p>
         <div class="error403-btn-con">
           <el-button @click="goHome" size="large" style="width: 200px;" type="text">返回首页</el-button>
-          <el-button @click="backPage" size="large" style="width: 200px;margin-left: 40px;" type="primary">返回上一页</el-button>
+          <el-button @click="backPage" size="large" style="width: 200px;margin-left: 40px;" type="info">返回上一页</el-button>
         </div>
       </el-card>
     </div>

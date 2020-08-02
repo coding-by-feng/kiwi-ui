@@ -60,6 +60,7 @@ export default {
       autoPlayDialogVisible: false,
       reviewAudioArr: [],
       isReviewStop: false,
+      isReviewPause: false,
       playWordIndex: 0,
       playStepIndex: 0,
       playCountOnce: 5,
@@ -124,6 +125,15 @@ export default {
     'countdownMode' (newVal) {
       if (newVal) {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
+      }
+    },
+    'isReviewPause' (newVal) {
+      if (!newVal) {
+        this.isReviewStop = false
+        this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+        this.currentPlayAudio.play()
+      } else {
+        this.isReviewStop = true
       }
     }
   },
@@ -481,7 +491,7 @@ export default {
         &nbsp;
         <el-dropdown
             size="mini"
-            split-button type="primary" @command="countdownSelectHandle">
+            split-button type="info" @command="countdownSelectHandle">
           <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
@@ -494,7 +504,7 @@ export default {
         &nbsp;
         <el-button
             v-if="!countdownMode && isReviewStop"
-            type="primary"
+            type="info"
             size="mini"
             @click="countdownEndReplay">
           <i class="el-icon-video-play"></i>
@@ -542,21 +552,48 @@ export default {
         :total="page.total">
     </el-pagination>
     <el-dialog
-        :title="detail.paraphraseVO.wordName"
         :visible.sync="detail.dialogVisible"
-        :before-close="handleDetailClose"
+        :show-close="false"
         width="100%">
-      <el-button type="info" size="mini" @click="showPrevious">
-        <i class="el-icon-caret-left"></i>
-      </el-button>
-      <el-button type="info" size="mini" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
-      <el-button type="info" size="mini" @click="handleDetailClose">
-        <i class="el-icon-close"></i>
-      </el-button>
-      <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
-      <el-button type="info" size="mini" @click="showNext">
-        <i class="el-icon-caret-right"></i>
-      </el-button>
+      <div slot="title">
+        <el-tooltip placement="bottom-start">
+          <div slot="content">
+            复习播放暂停要等待当前句子读完，<br/>或者当前单词读完才会暂停哦。
+          </div>
+          <el-button type="text" style="color: #909399">
+            <i class="el-icon-question"></i>
+          </el-button>
+        </el-tooltip>
+        <el-button type="info" size="mini" @click="showPrevious">
+          <i class="el-icon-back"></i>
+        </el-button>
+        &nbsp;
+        <el-tag type="info" :hit="true">
+          <B style="font-size: larger ">{{ detail.paraphraseVO.wordName }}</B>
+        </el-tag>
+        &nbsp;
+        <el-button type="info" size="mini" @click="showNext">
+          <i class="el-icon-right"></i>
+        </el-button>
+      </div>
+      <div>
+        <el-button type="info" size="mini" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
+        <el-button type="info"
+                   @click="detail.showTranslation = !detail.showTranslation"
+                   size="mini">
+          <i class="el-icon-s-opportunity"></i>
+        </el-button>
+        <el-button type="info"
+                   v-if="isReview"
+                   @click="isReviewPause = !isReviewPause"
+                   size="mini">
+          <i :class="isReviewPause ? 'el-icon-video-play' : 'el-icon-video-pause'"></i>
+        </el-button>
+        <el-button type="info" size="mini" @click="handleDetailClose">
+          <i class="el-icon-close"></i>
+        </el-button>
+        <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
+      </div>
       <el-card class="box-card">
         <div slot="header">
           <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
@@ -584,12 +621,8 @@ export default {
               style="margin-top: 5px;"
               center>
             <div slot="title">
-              <p>{{ this.detail.paraphraseVO.paraphraseEnglish }}
-                <el-button type="text"
-                           @click="detail.showTranslation = !detail.showTranslation"
-                           size="mini">
-                  <i class="el-icon-s-opportunity" style="color: #FFFFFF"></i>
-                </el-button>
+              <p>
+                {{ this.detail.paraphraseVO.paraphraseEnglish }}
               </p>
             </div>
           </el-alert>
@@ -627,8 +660,8 @@ export default {
         width="300px">
       <span>自动复习即将开始，请确认。</span>
       <spanactionVO.status slot="footer" class="dialog-footer">
-        <el-button @click="autoPlayDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="stockReviewStart">确 定</el-button>
+        <el-button @click="autoPlayDialogVisible = false">取消</el-button>
+        <el-button type="info" @click="stockReviewStart">确定</el-button>
       </spanactionVO.status>
     </el-dialog>
   </div>

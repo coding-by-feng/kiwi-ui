@@ -13,7 +13,7 @@
                         width="180">
                     <template slot-scope="scope">
                         <div slot="reference" class="name-wrapper">
-                            <el-button type="primary" @click="selectOneWordList(scope.row.id)">{{scope.row.listName}}
+                            <el-button type="info" @click="selectOneWordList(scope.row.id)">{{scope.row.listName}}
                             </el-button>
                         </div>
                     </template>
