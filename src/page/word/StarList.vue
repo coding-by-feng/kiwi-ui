@@ -389,17 +389,17 @@ export default {
           </el-dropdown-menu>
         </el-dropdown>
         &nbsp;
-        <el-button type="text"
+        <el-button type="text" style="color: #909399"
                    v-show="list.status==='list'"
                    @click="handleOperate"
                    size="mini">
           <i class="el-icon-folder-add"></i>
         </el-button>
-        <el-button type="text" @click="refresh"
+        <el-button type="text" style="color: #909399" @click="refresh"
                    size="mini">
           <i class="el-icon-refresh"></i>
         </el-button>
-        <el-button type="text"
+        <el-button type="text" style="color: #909399"
                    v-show="list.status==='detail'"
                    @click="detail.isShowParaphrase = !detail.isShowParaphrase"
                    size="mini">
@@ -408,7 +408,7 @@ export default {
         <el-button
             v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
             size="mini"
-            type="text"
+            type="text" style="color: #909399"
             @click="closeAutoReview">
           <i class="el-icon-switch-button"></i>
         </el-button>
@@ -449,14 +449,14 @@ export default {
           </el-dropdown>
           &nbsp;
           <el-button
-              type="text"
+              type="text" style="color: #909399"
               size="mini"
               @click="handleEdit(scope.$index, scope.row)">
             <i class="el-icon-edit-outline"></i>
           </el-button>
           <el-button
               size="mini"
-              type="text"
+              type="text" style="color: #909399"
               :loading="loading"
               @click="handleDelete(scope.$index, scope.row)">
             <i class="el-icon-delete"></i>

@@ -12,8 +12,9 @@
         </div>
         <p class="error403-body-con-message">You don't have permission</p>
         <div class="error403-btn-con">
-          <el-button @click="goHome" size="large" style="width: 200px;" type="text">返回首页</el-button>
-          <el-button @click="backPage" size="large" style="width: 200px;margin-left: 40px;" type="info">返回上一页</el-button>
+          <el-button @click="goHome" size="large" style="width: 200px; color: #909399;" type="text">返回首页</el-button>
+          <el-button @click="backPage" size="large" style="width: 200px;margin-left: 40px;" type="info">返回上一页
+          </el-button>
         </div>
       </el-card>
     </div>
@@ -22,18 +23,18 @@
 
 <script>
 export default {
-  name: "Error403",
+  name: 'Error403',
   methods: {
-    backPage() {
-      this.$router.go(-1);
+    backPage () {
+      this.$router.go(-1)
     },
-    goHome() {
+    goHome () {
       this.$router.push({
-        path: "/"
-      });
+        path: '/'
+      })
     }
   }
-};
+}
 </script>
 <style lang="scss" scoped>
 @keyframes error403animation {
@@ -59,6 +60,7 @@ export default {
     transform: rotateZ(0deg);
   }
 }
+
 .error403 {
   &-body-con {
     width: 700px;
@@ -67,6 +69,7 @@ export default {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+
     &-title {
       text-align: center;
       font-size: 240px;
@@ -75,6 +78,7 @@ export default {
       height: 260px;
       line-height: 260px;
       margin-top: 40px;
+
       .error403-0-span {
         display: inline-block;
         position: relative;
@@ -84,6 +88,7 @@ export default {
         border: 20px solid #ed3f14;
         color: #ed3f14;
         margin-right: 10px;
+
         i {
           display: inline-block;
           font-size: 120px !important;
@@ -93,6 +98,7 @@ export default {
           transform: translate(-50%, -50%);
         }
       }
+
       .error403-key-span {
         display: inline-block;
         position: relative;
@@ -100,6 +106,7 @@ export default {
         height: 190px;
         border-radius: 50%;
         margin-right: 10px;
+
         i {
           display: inline-block;
           font-size: 190px !important;
@@ -111,6 +118,7 @@ export default {
         }
       }
     }
+
     &-message {
       display: block;
       text-align: center;
@@ -120,6 +128,7 @@ export default {
       color: #dddde2;
     }
   }
+
   &-btn-con {
     text-align: center;
     padding: 20px 0;
