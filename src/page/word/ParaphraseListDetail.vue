@@ -523,15 +523,15 @@ export default {
             {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击灯泡显示' }}
           </div>
         </div>
-        <el-button type="text"
+        <el-button type="text" style="color: #909399"
                    size="mini"
                    @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
         </el-button>
-        <el-button type="text"
+        <el-button type="text" style="color: #909399"
                    size="mini"
                    @click="showDetail(item.paraphraseId, index)"><i class="el-icon-more-outline"></i>
         </el-button>
-        <el-button type="text"
+        <el-button type="text" style="color: #909399"
                    size="mini"
                    @click="removeParaphraseStarListFun(item.paraphraseId)"><i
             class="el-icon-remove-outline"></i>
@@ -646,7 +646,7 @@ export default {
               :closable="false">
             <div slot="title">
               {{ wordParaphraseExampleVO.exampleSentence }}
-              <el-button type="text"><i
+              <el-button type="text" style="color: #909399"><i
                   class="el-icon-circle-plus-outline outline_fix" style="color: #FFFFFF"></i>
               </el-button>
             </div>

@@ -10,15 +10,15 @@
                         {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面灯泡显示' }}
                     </div>
                 </div>
-                <el-button type="text"
+                <el-button type="text" style="color: #909399"
                            size="mini"
                            @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
                 </el-button>
-                <el-button type="text"
+                <el-button type="text" style="color: #909399"
                            size="mini"
                            @click="showDetail(item.wordName)"><i class="el-icon-more-outline"></i>
                 </el-button>
-                <el-button type="text"
+                <el-button type="text" style="color: #909399"
                            size="mini"
                            @click="removeWordStarListFun(item.wordId)"><i class="el-icon-remove-outline"></i>
                 </el-button>

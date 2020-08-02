@@ -3,11 +3,13 @@
     <div class="error404-body-con">
       <el-card class="box-card">
         <div class="error404-body-con-title">4
-          <span>0</span>4</div>
+          <span>0</span>4
+        </div>
         <p class="error404-body-con-message">YOU&nbsp;&nbsp;LOOK&nbsp;&nbsp;LOST</p>
         <div class="error404-btn-con">
-          <el-button @click="goHome" size="large" style="width: 200px;" type="text">返回首页</el-button>
-          <el-button @click="backPage" size="large" style="width: 200px;margin-left: 40px;" type="info">返回上一页</el-button>
+          <el-button @click="goHome" size="large" style="width: 200px; color: #909399;" type="text">返回首页</el-button>
+          <el-button @click="backPage" size="large" style="width: 200px;margin-left: 40px;" type="info">返回上一页
+          </el-button>
         </div>
       </el-card>
     </div>
@@ -16,18 +18,18 @@
 
 <script>
 export default {
-  name: "Error404",
+  name: 'Error404',
   methods: {
-    backPage() {
-      this.$router.go(-1);
+    backPage () {
+      this.$router.go(-1)
     },
-    goHome() {
+    goHome () {
       this.$router.push({
-        path: "/"
-      });
+        path: '/'
+      })
     }
   }
-};
+}
 </script>
 <style lang="scss" scoped>
 @keyframes error404animation {
@@ -50,6 +52,7 @@ export default {
     transform: rotateZ(0deg);
   }
 }
+
 .error404 {
   &-body-con {
     width: 700px;
@@ -58,6 +61,7 @@ export default {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+
     &-title {
       text-align: center;
       font-size: 240px;
@@ -66,6 +70,7 @@ export default {
       height: 260px;
       line-height: 260px;
       margin-top: 40px;
+
       span {
         display: inline-block;
         color: #19be6b;
@@ -73,6 +78,7 @@ export default {
         animation: error404animation 3s ease 0s infinite alternate;
       }
     }
+
     &-message {
       display: block;
       text-align: center;
@@ -82,6 +88,7 @@ export default {
       color: #dddde2;
     }
   }
+
   &-btn-con {
     text-align: center;
     padding: 20px 0;

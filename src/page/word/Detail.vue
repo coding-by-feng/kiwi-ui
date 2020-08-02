@@ -380,25 +380,25 @@ export default {
           effect="light"
           center>
         <div slot="title">
-          <el-button type="text">
+          <el-button type="text" style="color: #909399">
             <i class="el-icon-remove outline_fix_bottom_left"
                @click="removeByWordNameFun"
                style="color: #76838f"></i>
           </el-button>
           <el-tooltip placement="top">
             <div slot="content">如果单词数据有异常，可以点击下面删除单词，后台将重新抓取单词数据</div>
-            <el-button type="text">
+            <el-button type="text" style="color: #909399">
               <i class="el-icon-warning outline_fix_top_left"
                  style="color: #76838f"></i>
             </el-button>
           </el-tooltip>
           <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{ wordInfo.wordName }}</b>
-          <el-button type="text"><i
+          <el-button type="text" style="color: #909399"><i
               class="el-icon-video-play outline_fix_top_right"
               style="color: #76838f"
               @click="oneWordPlay"></i>
           </el-button>
-          <el-button type="text"
+          <el-button type="text" style="color: #909399"
                      v-if="wordInfo.wordName.length>0"><i
               :class="getWordCollectClass()"
               style="color: #76838f"
@@ -438,13 +438,13 @@ export default {
                     <p>[ {{ phraseVO }} ]</p>
                   </div>
                   <p>{{ wordParaphraseVO.paraphraseEnglish }}
-                    <el-button type="text">
+                    <el-button type="text" style="color: #909399">
                       <i class="el-icon-s-opportunity"
                          @click="isShowParaphrase = !isShowParaphrase"
                          style="color: #FFFFFF"></i>
                     </el-button>
                   </p>
-                  <el-button type="text"><i
+                  <el-button type="text" style="color: #909399"><i
                       :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                       style="color: #FFFFFF"
                       @click="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
@@ -470,7 +470,7 @@ export default {
                   :closable="false">
                 <div slot="title">
                   {{ wordParaphraseExampleVO.exampleSentence }}
-                  <el-button type="text"><i
+                  <el-button type="text" style="color: #909399"><i
                       class="el-icon-circle-plus-outline outline_fix"
                       style="color: #76838f"
                       @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
