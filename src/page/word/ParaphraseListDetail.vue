@@ -558,7 +558,7 @@ export default {
         :show-close="false"
         width="100%">
       <div slot="title">
-        <el-tooltip placement="bottom-start">
+        <el-tooltip placement="bottom-start" v-if="false">
           <div slot="content">
             复习播放暂停要等待当前句子读完，<br/>或者当前单词读完才会暂停哦。
           </div>
