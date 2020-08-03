@@ -127,13 +127,15 @@ export default {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
       }
     },
-    'isReviewPause' (newVal) {
+    async 'isReviewPause' (newVal) {
       if (!newVal) {
         this.isReviewStop = false
         this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-        this.currentPlayAudio.play()
+        await this.currentPlayAudio.play()
       } else {
         this.isReviewStop = true
+        this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+        await this.currentPlayAudio.pause()
       }
     }
   },
