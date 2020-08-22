@@ -313,6 +313,9 @@ export default {
       this.currentPlayAudio.play()
     },
     createPronunciationAudio () {
+      if (!this.detail.paraphraseVO.wordPronunciationVOList) {
+        return audioPlay.createAudioFromText('音标缺失')
+      }
       let pronunciation = new Audio()
       if (this.source === '本地') {
         pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.wordPronunciationVOList[0].pronunciationId
@@ -623,9 +626,9 @@ export default {
               style="margin-top: 5px;"
               center>
             <div slot="title">
-              <p>
+              <div style="word-wrap:break-word; overflow:hidden;">
                 {{ this.detail.paraphraseVO.paraphraseEnglish }}
-              </p>
+              </div>
             </div>
           </el-alert>
         </div>
