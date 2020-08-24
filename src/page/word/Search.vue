@@ -1,29 +1,31 @@
 <template>
-    <div>
-        <el-row type="flex" justify="center" style="padding-top:25px;">
-            <el-col :span="12">
-                <el-autocomplete
-                        ref="auto"
-                        v-model="word"
-                        :style="{width: searchInputWidth}"
-                        :fetch-suggestions="querySearch"
-                        placeholder="输入单词"
-                        :trigger-on-focus="false"
-                        @keyup.enter.native="onSubmit"
-                        @select="querySelect">
-                    <el-button slot="prepend"
-                               v-if="lazy"
-                               icon="el-icon-switch-button"
-                               @click="closeLazy"></el-button>
-                    <el-button slot="append" icon="el-icon-search" @click="onSubmit()"></el-button>
-                </el-autocomplete>
-            </el-col>
-        </el-row>
-        <el-divider></el-divider>
-        <el-row justify="center">
-            <router-view name="detail"></router-view>
-        </el-row>
-    </div>
+  <div>
+    <el-row type="flex" justify="center" style="padding-top:25px;">
+      <el-col>
+        <el-autocomplete
+            ref="auto"
+            v-model="word"
+            :style="{width: searchInputWidth}"
+            :fetch-suggestions="querySearch"
+            placeholder="输入单词"
+            size="mini"
+            :trigger-on-focus="false"
+            @keyup.enter.native="onSubmit"
+            @select="querySelect">
+          <el-button slot="prepend"
+                     size="mini"
+                     v-if="lazy"
+                     icon="el-icon-switch-button"
+                     @click="closeLazy"></el-button>
+          <el-button slot="append" icon="el-icon-search" @click="onSubmit()"></el-button>
+        </el-autocomplete>
+      </el-col>
+    </el-row>
+    <el-divider></el-divider>
+    <el-row justify="center">
+      <router-view name="detail"></router-view>
+    </el-row>
+  </div>
 </template>
 
 <script>
@@ -33,7 +35,7 @@ export default {
   data () {
     return {
       word: this.$route.query.word ? this.$route.query.word : '',
-      searchInputWidth: document.body.clientWidth / 2 + 'px',
+      searchInputWidth: document.body.clientWidth / 1.5 + 'px',
       lazy: this.$route.query.lazy === 'y'
     }
   },
