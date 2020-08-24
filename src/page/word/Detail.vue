@@ -441,7 +441,7 @@ export default {
                   <el-button type="text" style="color: #909399"><i
                       :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                       style="color: #FFFFFF"
-                      @click="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
+                      @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
                   </el-button>
                 </div>
               </el-alert>
