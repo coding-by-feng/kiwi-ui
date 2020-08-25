@@ -265,6 +265,14 @@ export default {
       this.detail.dialogVisible = false
     },
     handleShowDetail () {
+      if (this.isReview) {
+        this.$message.warning({
+          duration: 1000,
+          message: '自动复习期间不允许调整到单词详情'
+        })
+        return
+      }
+
       this.detail.dialogVisible = false
       this.$router.push({
         path: '/index/vocabulary/detail',
@@ -568,14 +576,6 @@ export default {
         :show-close="false"
         width="100%">
       <div slot="title">
-        <el-tooltip placement="bottom-start" v-if="false">
-          <div slot="content">
-            复习播放暂停要等待当前句子读完，<br/>或者当前单词读完才会暂停哦。
-          </div>
-          <el-button type="text" style="color: #909399">
-            <i class="el-icon-question"></i>
-          </el-button>
-        </el-tooltip>
         <el-button type="info" size="mini" @click="showPrevious">
           <i class="el-icon-back"></i>
         </el-button>
