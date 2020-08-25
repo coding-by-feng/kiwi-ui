@@ -264,6 +264,13 @@ export default {
     handleDetailClose () {
       this.detail.dialogVisible = false
     },
+    handleShowDetail () {
+      this.detail.dialogVisible = false
+      this.$router.push({
+        path: '/index/vocabulary/detail',
+        query: { active: 'search', word: this.detail.paraphraseVO.wordName }
+      })
+    },
     async pageChange () {
       await this.init()
     },
@@ -593,6 +600,9 @@ export default {
                    @click="isReviewPause = !isReviewPause"
                    size="mini">
           <i :class="isReviewPause ? 'el-icon-video-play' : 'el-icon-video-pause'"></i>
+        </el-button>
+        <el-button type="info" size="mini" @click="handleShowDetail">
+          <i class="el-icon-open"></i>
         </el-button>
         <el-button type="info" size="mini" @click="handleDetailClose">
           <i class="el-icon-close"></i>
