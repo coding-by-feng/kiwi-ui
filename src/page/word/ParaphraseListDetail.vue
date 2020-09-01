@@ -251,15 +251,23 @@ export default {
       loading.close()
     },
     async removeParaphraseStarListFun (paraphraseId) {
-      this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: this.listId })
-          .then(response => {
-            this.doSuccess()
-            this.initList()
-          })
-          .catch(e => {
-            console.error(e)
-            this.$message.error(e)
-          })
+
+      this.$confirm('即将进行删除, 是否继续?', '删除操作', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then($ => {
+        this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: this.listId })
+            .then(response => {
+              this.doSuccess()
+              this.initList()
+            })
+            .catch(e => {
+              this.$message.error(e)
+            })
+      }).finally($ => {
+        loading.close()
+      })
     },
     handleDetailClose () {
       this.detail.dialogVisible = false
