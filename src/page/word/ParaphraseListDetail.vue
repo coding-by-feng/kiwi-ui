@@ -60,9 +60,9 @@ export default {
       autoPlayDialogVisible: false,
       reviewAudioArr: [],
       isReviewStop: false,
-      isReviewPause: false,
       playWordIndex: 0,
       playStepIndex: 0,
+      playStepFinish: false,
       playCountOnce: 5,
       playCountPerWord: 14,
       currentPlayAudio: null,
@@ -127,17 +127,18 @@ export default {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
       }
     },
-    async 'isReviewPause' (newVal) {
-      if (!newVal) {
-        this.isReviewStop = false
-        this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-        await this.currentPlayAudio.play()
-      } else {
-        this.isReviewStop = true
-        this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-        await this.currentPlayAudio.pause()
-      }
-    }
+    // async 'isReviewRestart' (newVal) {
+    //   if (!newVal) {
+    //     this.isReviewStop = false
+    //     this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+    //     this.autoPlayDialogVisible = true
+    //     // await this.currentPlayAudio.play()
+    //   } else {
+    //     this.isReviewStop = true
+    //     this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+    //     await this.currentPlayAudio.pause()
+    //   }
+    // }
   },
   computed: {},
   methods: {
@@ -146,7 +147,6 @@ export default {
       if (this.isReview) {
         this.isReviewStop = true
         this.reviewAudioArr = []
-        console.log('isChToEn=' + this.isChToEn)
         if (this.isChToEn) {
           this.playCountPerWord = 17
         } else {
@@ -158,7 +158,7 @@ export default {
         }
         const loading = this.$loading({
           lock: true,
-          text: '自动复习资源加载中',
+          text: `第${this.page.current}页自动复习资源加载中`,
           spinner: 'el-icon-loading',
           background: 'rgba(0, 0, 0, 0.7)'
         })
@@ -320,11 +320,8 @@ export default {
     },
     async stockReviewStart () {
       this.autoPlayDialogVisible = false
+
       if (this.reviewAudioArr.length) {
-        this.$message.success({
-          duration: 2000,
-          message: '即将开始复习，请稍等！'
-        })
         await this.showDetail(this.listItems[0].paraphraseId, 0)
         this.currentPlayAudio = this.reviewAudioArr[0][0]
         this.currentPlayAudio.play()
@@ -391,10 +388,17 @@ export default {
       }
 
       for (let j = 0; j < audioQueue.length; j++) {
+        audioQueue[j].addEventListener('play', function () {
+          that.playStepFinish = false
+        }, false)
         audioQueue[j].addEventListener('ended', function () {
           if (!that.isReviewStop) {
             that.playStepIndex++
           }
+          that.playStepFinish = true
+        }, false)
+        audioQueue[j].addEventListener('error', function () {
+          alert('播放异常，请点击恢复播放！')
         }, false)
       }
 
@@ -605,11 +609,13 @@ export default {
         </el-button>
         <el-button type="info"
                    v-if="isReview"
-                   @click="isReviewPause = !isReviewPause"
+                   @click="init"
                    size="mini">
-          <i :class="isReviewPause ? 'el-icon-video-play' : 'el-icon-video-pause'"></i>
+          恢复播放
         </el-button>
-        <el-button type="info" size="mini" @click="handleShowDetail">
+        <el-button type="info"
+                   v-if="!isReview"
+                   size="mini" @click="handleShowDetail">
           <i class="el-icon-open"></i>
         </el-button>
         <el-button type="info" size="mini" @click="handleDetailClose">
