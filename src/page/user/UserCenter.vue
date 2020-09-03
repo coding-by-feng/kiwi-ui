@@ -37,6 +37,7 @@ export default {
         type: 'local'
       })
       this.user.pronunciationSource = command
+      window.location.reload()
     }
   }
 }
