@@ -264,21 +264,28 @@ export default {
     async selectReviewMode (command) {
       if (command.mode === 'stockReview') {
         this.list.isChToEn = false
-        this.stockReview(command.id)
+        this.multiModeReview(command.id, 'stockReview')
+      } else if (command.mode === 'enhanceReview') {
+        this.list.isChToEn = false
+        this.multiModeReview(command.id, 'enhanceReview')
       } else if (command.mode === 'totalReview') {
         this.list.isChToEn = false
         this.totalReview(command.id)
       } else if (command.mode === 'stockRead') {
         this.list.isChToEn = false
         this.detail.paraphraseIsRead = true
-        this.stockRead(command.id)
+        this.multiModeRead(command.id, 'stockRead')
+      } else if (command.mode === 'enhanceRead') {
+        this.list.isChToEn = false
+        this.detail.paraphraseIsRead = true
+        this.multiModeRead(command.id, 'enhanceRead')
       } else if (command.mode === 'totalRead') {
         this.list.isChToEn = false
         this.detail.paraphraseIsRead = true
         this.selectOneList(command.id, false)
       } else if (command.mode === 'stockReviewChToEn') {
         this.list.isChToEn = true
-        this.stockReview(command.id)
+        this.multiModeReview(command.id, 'stockReview')
       } else if (command.mode === 'totalReviewChToEn') {
         this.list.isChToEn = true
         this.totalReview(command.id)
@@ -305,13 +312,13 @@ export default {
         message: '操作成功'
       })
     },
-    stockReview (listId) {
+    multiModeReview (listId, mode) {
       let query
-      this.list.reviewMode = 'stockReview'
+      this.list.reviewMode = mode
       if ('word' === this.list.listType) {
         query = {
           active: 'search',
-          mode: 'stockReview',
+          mode: mode,
           listId: listId,
           listType: this.list.listType,
           now: new Date().getTime()
@@ -320,7 +327,7 @@ export default {
         this.selectOneList(listId, true)
         query = {
           active: 'starList',
-          mode: 'stockReview',
+          mode: mode,
           listId: listId,
           listType: this.list.listType,
           now: new Date().getTime()
@@ -351,14 +358,14 @@ export default {
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },
-    stockRead (listId) {
+    multiModeRead (listId, mode) {
       let query
-      this.list.reviewMode = 'stockRead'
+      this.list.reviewMode = mode
       if ('word' === this.list.listType) {
-        query = { active: 'search', mode: 'stockRead', listId: listId, listType: this.list.listType }
+        query = { active: 'search', mode: mode, listId: listId, listType: this.list.listType }
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, false)
-        query = { active: 'starList', mode: 'stockRead', listId: listId, listType: this.list.listType }
+        query = { active: 'starList', mode: mode, listId: listId, listType: this.list.listType }
       }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
     },
@@ -438,12 +445,14 @@ export default {
             <i class="el-icon-headset"></i>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'enhanceReview', id: scope.row.id}">强化复习</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: scope.row.id}">存量复习(汉英模式)
               </el-dropdown-item>
               <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: scope.row.id}">全量复习(汉英模式)
               </el-dropdown-item>
               <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'enhanceRead', id: scope.row.id}">强化阅读</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>

@@ -63,7 +63,6 @@ export default {
       isReviewStop: false,
       playWordIndex: 0,
       playStepIndex: 0,
-      playStepFinish: false,
       playCountOnce: 5,
       playCountPerWord: 14,
       currentPlayAudio: null,
@@ -220,6 +219,15 @@ export default {
         console.error(e)
       })
     },
+    async initEnhanceListFun () {
+      await this.getEnhanceListItems(this.page, this.listId).then(response => {
+        this.listItems = response.data.data.records
+        this.page.pages = response.data.data.pages
+        this.page.total = response.data.data.total
+      }).catch(e => {
+        console.error(e)
+      })
+    },
     async initDefaultListFun () {
       await this.getListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
@@ -240,6 +248,12 @@ export default {
       } else if (this.reviewMode === 'totalReview' || this.reviewMode === 'totalRead') {
         // 全量模式也只查5个
         this.page.size = this.playCountOnce
+      } else if (this.reviewMode === 'enhanceReview' || this.reviewMode === 'enhanceRead') {
+        // 复习模式每页只加载5个单词
+        this.page.size = this.playCountOnce
+        await this.initEnhanceListFun()
+        this.listRefresh = false
+        return
       }
       await this.initDefaultListFun()
       this.listRefresh = false
@@ -415,22 +429,10 @@ export default {
       }
 
       for (let j = 0; j < audioQueue.length; j++) {
-        audioQueue[j].addEventListener('play', function () {
-          that.playStepFinish = false
-        }, false)
         audioQueue[j].addEventListener('ended', function () {
           if (!that.isReviewStop) {
             that.playStepIndex++
           }
-          that.playStepFinish = true
-        }, false)
-        audioQueue[j].addEventListener('error', function () {
-          that.$message.warning({
-            duration: 0,
-            showClose: true,
-            message: '复习播放异常，如果已经停止播放请点击恢复播放',
-            center: true
-          })
         }, false)
       }
 
@@ -443,6 +445,16 @@ export default {
     },
     rememberOneFun () {
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.listId)
+          .then(res => {
+            this.doSuccess()
+          })
+          .catch(e => {
+            console.error(e)
+            this.$message.error(e)
+          })
+    },
+    keepInMindFun () {
+      this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.listId)
           .then(res => {
             this.doSuccess()
           })
@@ -633,7 +645,12 @@ export default {
         </el-button>
       </div>
       <div>
-        <el-button type="info" size="mini" v-loading="detail.rememberLoading" @click="rememberOneFun">记住</el-button>
+        <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
+                   v-loading="detail.rememberLoading" @click="rememberOneFun">记住
+        </el-button>
+        <el-button v-if="reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead'" type="info" size="mini"
+                   v-loading="detail.rememberLoading" @click="keepInMindFun">牢记
+        </el-button>
         <el-button type="info"
                    @click="detail.showTranslation = !detail.showTranslation"
                    size="mini">
@@ -719,7 +736,16 @@ export default {
         :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
         :visible.sync="autoPlayDialogVisible"
         width="300px">
-      <span>自动复习即将开始，请确认。</span>
+      <el-alert
+          :closable="false"
+          type="warning">
+        复习期间最好不要切换App，最多可以在浏览器内部新开窗口；
+      </el-alert>
+      <el-alert
+          :closable="false"
+          type="warning">
+        如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
+      </el-alert>
       <spanactionVO.status slot="footer" class="dialog-footer">
         <el-button @click="autoPlayDialogVisible = false">取消</el-button>
         <el-button type="info" @click="stockReviewStart">确定</el-button>
