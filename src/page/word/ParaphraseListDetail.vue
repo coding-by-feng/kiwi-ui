@@ -55,6 +55,7 @@ export default {
         showIndex: 0
       },
       source: getStore({ name: 'pronunciation_source' }),
+      reviewType: getStore({ name: 'review_type' }),
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: false,
@@ -145,17 +146,31 @@ export default {
     ...paraphraseStarList,
     async init () {
       if (this.isReview) {
+
+        // clean data
         this.isReviewStop = true
         this.reviewAudioArr = []
-        if (this.isChToEn) {
-          this.playCountPerWord = 17
-        } else {
-          this.playCountPerWord = 14
-        }
+        this.listItems = []
+        this.detail.paraphraseVO = {}
         if (this.currentPlayAudio) {
           this.currentPlayAudio.pause()
           this.currentPlayAudio = null
         }
+
+        if (this.isChToEn) {
+          if (this.reviewType === '2') {
+            this.playCountPerWord = 17
+          } else {
+            this.playCountPerWord = 11
+          }
+        } else {
+          if (this.reviewType === '2') {
+            this.playCountPerWord = 14
+          } else {
+            this.playCountPerWord = 8
+          }
+        }
+
         const loading = this.$loading({
           lock: true,
           text: `第${this.page.current}页自动复习资源加载中`,
@@ -349,41 +364,53 @@ export default {
     async reviewDetail () {
       let audioQueue = []
       if (this.isChToEn) {
-        audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词中文释义是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词中文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromText('再读一遍中文释义是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一遍中文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
         audioQueue.push(audioPlay.createAudioFromText('请在脑海回想对应的单词。'))
         audioQueue.push(audioPlay.createAudioFromText('对应的英文单词是'))
         audioQueue.push(this.createPronunciationAudio())
         audioQueue.push(this.createPronunciationAudio())
-        audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
         let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
         audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
-        audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
         audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
         audioQueue.push(this.createPronunciationAudio())
         audioQueue.push(this.createPronunciationAudio())
-        audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
-        audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
       } else {
-        audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
         audioQueue.push(this.createPronunciationAudio())
         audioQueue.push(this.createPronunciationAudio())
-        audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
         let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
         audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
-        audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
         audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
         audioQueue.push(this.createPronunciationAudio())
         audioQueue.push(this.createPronunciationAudio())
-        audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
-        audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
       }
 
@@ -398,7 +425,12 @@ export default {
           that.playStepFinish = true
         }, false)
         audioQueue[j].addEventListener('error', function () {
-          alert('播放异常，请点击恢复播放！')
+          that.$message.warning({
+            duration: 0,
+            showClose: true,
+            message: '复习播放异常，如果已经停止播放请点击恢复播放',
+            center: true
+          })
         }, false)
       }
 
