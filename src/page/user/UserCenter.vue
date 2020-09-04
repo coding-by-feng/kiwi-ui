@@ -57,6 +57,13 @@ export default {
       window.location.reload()
     },
     tranReviewType (val) {
+      if (undefined === val) {
+        setStore({
+          name: 'review_type',
+          content: '2',
+          type: 'local'
+        })
+      }
       if (val === '1') {
         return '去除中文导播'
       } else if (val === '2') {

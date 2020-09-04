@@ -56,6 +56,20 @@ export default {
     })
   },
 
+  getEnhanceListItems (page, listId) {
+    return request({
+      url: `/wordBiz/word/paraphrase/star/list/getRememberListItems/${page.size}/${page.current}`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'post',
+      params: {
+        listId: listId
+      }
+    })
+  },
+
   getItemDetail (paraphraseId) {
     return request({
       url: `/wordBiz/word/paraphrase/star/list/getItemDetail/${paraphraseId}`,
@@ -117,6 +131,21 @@ export default {
   rememberOne (paraphraseId, listId) {
     return request({
       url: `/wordBiz/word/paraphrase/star/list/rememberOne`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'post',
+      params: {
+        paraphraseId: paraphraseId,
+        listId: listId
+      }
+    })
+  },
+
+  keepInMind (paraphraseId, listId) {
+    return request({
+      url: `/wordBiz/word/paraphrase/star/list/keepInMind`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
