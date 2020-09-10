@@ -679,6 +679,7 @@ export default {
           <i class="el-icon-s-opportunity"></i>
         </el-button>
         <el-button type="info"
+                   v-if="isReview"
                    @click="detail.isSleepMode = !detail.isSleepMode"
                    size="mini">
           <i class="el-icon-thumb"></i>
