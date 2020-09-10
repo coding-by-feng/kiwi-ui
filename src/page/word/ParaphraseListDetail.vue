@@ -54,7 +54,8 @@ export default {
         forgetLoading: false,
         showTranslation: false,
         hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示',
-        showIndex: 0
+        showIndex: 0,
+        isSleepMode: false
       },
       source: getStore({ name: 'pronunciation_source' }),
       reviewType: getStore({ name: 'review_type' }),
@@ -649,7 +650,7 @@ export default {
         top="0vh"
         width="100%">
       <div slot="title">
-        <div :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
+        <div v-if="detail.isSleepMode" :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
              @dblclick="rememberInSleepMode">
           <div style="color: #eeeeee">双击该区域记住或牢记当前单词</div>
         </div>
@@ -676,6 +677,11 @@ export default {
                    @click="detail.showTranslation = !detail.showTranslation"
                    size="mini">
           <i class="el-icon-s-opportunity"></i>
+        </el-button>
+        <el-button type="info"
+                   @click="detail.isSleepMode = !detail.isSleepMode"
+                   size="mini">
+          <i class="el-icon-thumb"></i>
         </el-button>
         <el-button type="info"
                    v-if="isReview"
