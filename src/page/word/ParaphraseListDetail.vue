@@ -446,7 +446,6 @@ export default {
       })
     },
     rememberInSleepMode () {
-      console.log('rememberInSleepMode')
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         this.rememberOneFun()
       } else {
