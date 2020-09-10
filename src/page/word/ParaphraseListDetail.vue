@@ -39,6 +39,8 @@ export default {
   },
   data () {
     return {
+      innerHeight: window.innerHeight + 'px',
+      innerWidth: window.innerWidth + 'px',
       page: {
         current: 1,
         size: 10,
@@ -443,6 +445,14 @@ export default {
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
       })
     },
+    rememberInSleepMode () {
+      console.log('rememberInSleepMode')
+      if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
+        this.rememberOneFun()
+      } else {
+        this.keepInMindFun()
+      }
+    },
     rememberOneFun () {
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.listId)
           .then(res => {
@@ -552,6 +562,12 @@ export default {
 </script>
 
 <style scoped>
+.pin {
+  width: 100%;
+  height: 100%;
+  background: yellow;
+  position: absolute;
+}
 </style>
 
 <template>
@@ -628,10 +644,16 @@ export default {
         :total="page.total">
     </el-pagination>
     <el-dialog
+        ref="detailDialog"
         :visible.sync="detail.dialogVisible"
         :show-close="false"
+        top="0vh"
         width="100%">
       <div slot="title">
+        <div :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
+             @dblclick="rememberInSleepMode">
+          <div style="color: #eeeeee">双击该区域记住或牢记当前单词</div>
+        </div>
         <el-button type="info" size="mini" @click="showPrevious">
           <i class="el-icon-back"></i>
         </el-button>

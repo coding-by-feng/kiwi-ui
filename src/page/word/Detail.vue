@@ -61,6 +61,9 @@ export default {
     ...paraphraseStarList,
     ...exampleStarList,
     async init () {
+      // clean data
+      this.showCharacterId = 0
+
       let mode = this.$route.query.mode
       let listType = this.$route.query.listType
       if ('stockReview' === mode && 'word' === listType) {
