@@ -720,7 +720,8 @@ export default {
               </el-tag>
             </el-col>
           </el-row>
-          <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+          <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end"
+                  style="background-color: #8c939d;padding-top: 5px;">
             <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
               <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
@@ -728,7 +729,8 @@ export default {
               </el-tag>
             </el-col>
           </el-row>
-          <div v-if="detail.paraphraseVO.isOverlength" v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+          <div v-if="detail.paraphraseVO.isOverlength"
+               v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
             <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
               <el-col>
                 <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
@@ -747,6 +749,10 @@ export default {
               style="margin-top: 5px;"
               center>
             <div slot="title">
+              <div v-for="phrase in detail.paraphraseVO.phraseList">
+                <el-tag type="warning">{{ phrase }}</el-tag>
+              </div>
+              <br/>
               <div style="word-wrap:break-word; overflow:hidden;">
                 {{ this.detail.paraphraseVO.paraphraseEnglish }}
               </div>
