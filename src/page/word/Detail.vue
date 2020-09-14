@@ -15,6 +15,7 @@ export default {
   components: {},
   data () {
     return {
+      dialogHelpVisible: false,
       isShowParaphrase: true,
       pronunciationAudioMap: new Map(),
       devSwitch: false,
@@ -187,9 +188,9 @@ export default {
     getParaphraseCollectClass (id) {
       let collectListId = this.collect.paraphraseCollectMap.get(id)
       if (collectListId != null) {
-        return 'el-icon-remove-outline outline_fix'
+        return 'el-icon-remove-outline outline_fix_top_right'
       }
-      return 'el-icon-circle-plus-outline outline_fix'
+      return 'el-icon-circle-plus-outline outline_fix_top_right'
     },
     checkIsLogin () {
       if (!this.isLogin) {
@@ -392,7 +393,7 @@ export default {
           effect="light"
           center>
         <div slot="title">
-          <div class="outline_fix_bottom_left">
+          <div class="outline_fix_top_right">
             <el-dropdown size="mini" type="info" @command="selectShowCharacter">
               <i class="el-icon-s-operation"></i>
               <el-dropdown-menu slot="dropdown">
@@ -406,16 +407,13 @@ export default {
               </el-dropdown-menu>
             </el-dropdown>
           </div>
-          <el-tooltip placement="top">
-            <div slot="content">数据来自Cambridge</div>
-            <el-button type="text">
-              <i class="el-icon-warning outline_fix_top_left"
-                 style="color: #76838f"></i>
-            </el-button>
-          </el-tooltip>
+          <el-button type="text" @click="dialogHelpVisible = !dialogHelpVisible">
+            <i class="el-icon-warning outline_fix_top_left"
+               style="color: #76838f"></i>
+          </el-button>
           <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{ wordInfo.wordName }}</b>
           <el-button type="text" style="color: #909399"><i
-              class="el-icon-video-play outline_fix_top_right"
+              class="el-icon-video-play outline_fix_bottom_left"
               style="color: #76838f"
               @click="oneWordPlay"></i>
           </el-button>
@@ -465,6 +463,7 @@ export default {
                         style="color: #FFFFFF"
                         @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
                     </el-button>
+                    <span class="outline_fix">{{ wordParaphraseVO.codes }}</span>
                   </div>
                 </el-alert>
               </div>
@@ -530,6 +529,20 @@ export default {
     <el-button type="info" @click="stockReviewStart">确定</el-button>
   </span>
     </el-dialog>
+
+    <el-dialog :visible.sync="dialogHelpVisible">
+      <div>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/0pLFIb.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/oMHBFL.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/Wq2qTN.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/VWqzbU.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/cyFH8N.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/I8AzBk.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/1uQxX1.png"/>
+        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/mia7qz.png"/>
+      </div>
+    </el-dialog>
+
   </el-container>
 </template>
 
