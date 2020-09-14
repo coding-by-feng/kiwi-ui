@@ -322,6 +322,15 @@ export default {
     async pageChange () {
       await this.init()
     },
+    switchSleepMode () {
+      this.detail.isSleepMode = !this.detail.isSleepMode
+      if (this.detail.isSleepMode) {
+        this.$message.warning({
+          duration: 3000,
+          message: '点击灰色区域记住或牢记当前复习单词！'
+        })
+      }
+    },
     doSuccess () {
       this.$message.success({
         duration: 1000,
@@ -643,6 +652,8 @@ export default {
         @current-change="pageChange"
         :total="page.total">
     </el-pagination>
+
+    <!--释义详情弹窗-->
     <el-dialog
         ref="detailDialog"
         :visible.sync="detail.dialogVisible"
@@ -651,8 +662,7 @@ export default {
         width="100%">
       <div slot="title">
         <div v-if="detail.isSleepMode" :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
-             @dblclick="rememberInSleepMode">
-          <div style="color: #eeeeee">双击该区域记住或牢记当前单词</div>
+             @click.stop="rememberInSleepMode">
         </div>
         <el-button type="info" size="mini" @click="showPrevious">
           <i class="el-icon-back"></i>
@@ -680,7 +690,7 @@ export default {
         </el-button>
         <el-button type="info"
                    v-if="isReview"
-                   @click="detail.isSleepMode = !detail.isSleepMode"
+                   @click="switchSleepMode"
                    size="mini">
           <i class="el-icon-thumb"></i>
         </el-button>
@@ -710,7 +720,7 @@ export default {
               </el-tag>
             </el-col>
           </el-row>
-          <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+          <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
             <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
               <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
@@ -718,6 +728,16 @@ export default {
               </el-tag>
             </el-col>
           </el-row>
+          <div v-if="detail.paraphraseVO.isOverlength" v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+            <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+              <el-col>
+                <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
+                  {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                  <i class="el-icon-video-play"></i>
+                </el-tag>
+              </el-col>
+            </el-row>
+          </div>
           <el-alert
               ref="paraphraseDetail"
               type="info"
@@ -730,6 +750,7 @@ export default {
               <div style="word-wrap:break-word; overflow:hidden;">
                 {{ this.detail.paraphraseVO.paraphraseEnglish }}
               </div>
+              <span class="outline_fix">{{ this.detail.paraphraseVO.codes }}</span>
             </div>
           </el-alert>
         </div>
