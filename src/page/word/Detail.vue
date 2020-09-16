@@ -111,10 +111,10 @@ export default {
       })
     },
     async initPronunciation () {
-      if (this.wordInfo.wordCharacterVOList) {
-        let wordCharacterVOList = this.wordInfo.wordCharacterVOList
-        for (let i = 0; i < wordCharacterVOList.length; i++) {
-          let pronunciationVOList = wordCharacterVOList[i].wordPronunciationVOList
+      if (this.wordInfo.characterVOList) {
+        let characterVOList = this.wordInfo.characterVOList
+        for (let i = 0; i < characterVOList.length; i++) {
+          let pronunciationVOList = characterVOList[i].pronunciationVOList
           for (let j = 0; j < pronunciationVOList.length; j++) {
             let audio = new Audio()
             audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
@@ -398,10 +398,10 @@ export default {
               <i class="el-icon-s-operation"></i>
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item command="0">All</el-dropdown-item>
-                <div v-for="wordCharacterVO in wordInfo.wordCharacterVOList">
+                <div v-for="wordCharacterVO in wordInfo.characterVOList">
                   <el-dropdown-item :command="wordCharacterVO.characterId">{{
-                      wordCharacterVO.wordCharacter
-                    }}&nbsp;{{ wordCharacterVO.wordLabel }}
+                      wordCharacterVO.characterCode
+                    }}&nbsp;{{ wordCharacterVO.tag }}
                   </el-dropdown-item>
                 </div>
               </el-dropdown-menu>
@@ -427,23 +427,23 @@ export default {
       </el-alert>
     </el-header>
     <el-main>
-      <div v-for="wordCharacterVO in wordInfo.wordCharacterVOList" v-if="showCharacter">
+      <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
         <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
           <el-row type="flex" class="row-bg" justify="end">
             <el-col>
-              <el-tag type="success">{{ wordCharacterVO.wordCharacter }}</el-tag>
-              <el-tag v-if="wordCharacterVO.wordLabel != ''">{{ wordCharacterVO.wordLabel }}</el-tag>
+              <el-tag type="success">{{ wordCharacterVO.characterCode }}</el-tag>
+              <el-tag v-if="wordCharacterVO.tag != ''">{{ wordCharacterVO.tag }}</el-tag>
             </el-col>
           </el-row>
           <el-row type="flex" class="row-bg" justify="end">
-            <el-col v-for="wordPronunciationVO in wordCharacterVO.wordPronunciationVOList">
+            <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
               <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                 <i class="el-icon-video-play"></i>
               </el-tag>
             </el-col>
           </el-row>
-          <div v-for="wordParaphraseVO in wordCharacterVO.wordParaphraseVOList" v>
+          <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList" v>
             <el-card class="box-card">
               <div slot="header" @click="isShowParaphrase = !isShowParaphrase">
                 <el-alert
@@ -463,11 +463,12 @@ export default {
                         style="color: #FFFFFF"
                         @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
                     </el-button>
-                    <span class="outline_fix">{{ wordParaphraseVO.codes }}</span>
+                    <span v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
+                          class="outline_fix_top_left">{{ wordParaphraseVO.codes }}</span>
                   </div>
                 </el-alert>
               </div>
-              <div v-if="wordParaphraseVO.wordParaphraseExampleVOList == null">
+              <div v-if="wordParaphraseVO.paraphraseExampleVOList == null">
                 <el-alert
                     type="info"
                     title="该释义暂时没有例句"
@@ -476,7 +477,7 @@ export default {
                     :closable="false">
                 </el-alert>
               </div>
-              <div v-for="wordParaphraseExampleVO in wordParaphraseVO.wordParaphraseExampleVOList">
+              <div v-for="wordParaphraseExampleVO in wordParaphraseVO.paraphraseExampleVOList">
                 <el-alert
                     type="info"
                     center

@@ -374,14 +374,14 @@ export default {
       this.currentPlayAudio.play()
     },
     createPronunciationAudio () {
-      if (!this.detail.paraphraseVO.wordPronunciationVOList) {
+      if (!this.detail.paraphraseVO.pronunciationVOList) {
         return audioPlay.createAudioFromText('音标缺失')
       }
       let pronunciation = new Audio()
       if (this.source === '本地') {
-        pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.wordPronunciationVOList[0].pronunciationId
+        pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.pronunciationVOList[0].pronunciationId
       } else {
-        pronunciation.src = this.detail.paraphraseVO.wordPronunciationVOList[0].sourceUrl
+        pronunciation.src = this.detail.paraphraseVO.pronunciationVOList[0].sourceUrl
       }
       pronunciation.pause()
       pronunciation.loop = false
@@ -722,7 +722,7 @@ export default {
           </el-row>
           <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end"
                   style="background-color: #8c939d;padding-top: 5px;">
-            <el-col v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+            <el-col v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
               <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                 <i class="el-icon-video-play"></i>
@@ -730,7 +730,7 @@ export default {
             </el-col>
           </el-row>
           <div v-if="detail.paraphraseVO.isOverlength"
-               v-for="wordPronunciationVO in detail.paraphraseVO.wordPronunciationVOList">
+               v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
             <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
               <el-col>
                 <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
@@ -756,12 +756,12 @@ export default {
               <div style="word-wrap:break-word; overflow:hidden;">
                 {{ this.detail.paraphraseVO.paraphraseEnglish }}
               </div>
-              <span class="outline_fix">{{ this.detail.paraphraseVO.codes }}</span>
+              <span class="outline_fix_top_left">{{ this.detail.paraphraseVO.codes }}</span>
             </div>
           </el-alert>
         </div>
         <div
-            v-if="detail.paraphraseVO.wordParaphraseExampleVOList && detail.paraphraseVO.wordParaphraseExampleVOList.length < 1">
+            v-if="detail.paraphraseVO.paraphraseExampleVOList && detail.paraphraseVO.paraphraseExampleVOList.length < 1">
           <el-alert
               type="info"
               title="该释义暂时没有例句"
@@ -770,7 +770,7 @@ export default {
               :closable="false">
           </el-alert>
         </div>
-        <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.wordParaphraseExampleVOList">
+        <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.paraphraseExampleVOList">
           <el-alert
               type="info"
               center
