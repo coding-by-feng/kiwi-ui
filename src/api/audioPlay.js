@@ -8,19 +8,19 @@ export default {
     for (let i = 0; i < wordName.length; i++) {
       wordAlphabet += wordName.substring(i, i + 1).toUpperCase() + '。\n'
     }
-    let wordCharacterVOList = wordInfo.wordCharacterVOList
+    let characterVOList = wordInfo.characterVOList
     let wordOtherText = ''
     let textStart = '接下来播报的单词是:'
-    for (let i = 0; i < wordCharacterVOList.length; i++) {
-      let wordCharacterVO = wordCharacterVOList[i]
+    for (let i = 0; i < characterVOList.length; i++) {
+      let wordCharacterVO = characterVOList[i]
       wordOtherText += '词性' + wordCharacterVO.wordCharacter + '。'
       if (!wordCharacterVO.wordLabel && '' !== wordCharacterVO.wordLabel) {
         wordOtherText += '词性标签是：' + wordCharacterVO.wordLabel + '。'
       }
-      let wordParaphraseVOList = wordCharacterVO.wordParaphraseVOList
-      wordOtherText += '词义有' + wordParaphraseVOList.length + '个。'
-      for (let j = 0; j < wordParaphraseVOList.length; j++) {
-        let wordParaphraseVO = wordParaphraseVOList[j]
+      let paraphraseVOList = wordCharacterVO.paraphraseVOList
+      wordOtherText += '词义有' + paraphraseVOList.length + '个。'
+      for (let j = 0; j < paraphraseVOList.length; j++) {
+        let wordParaphraseVO = paraphraseVOList[j]
         wordOtherText += `词义${j + 1}的英文解释为：${wordParaphraseVO.paraphraseEnglish}。`
         wordOtherText += `再读一遍英文解释：${wordParaphraseVO.paraphraseEnglish}。`
         wordOtherText += `对应的中文词义是：${wordParaphraseVO.meaningChinese}。`
@@ -35,7 +35,7 @@ export default {
      ${wordName}。
     再读一次拼写：${wordAlphabet}。
      ${wordName}。
-    单词的词性有${wordCharacterVOList.length}个。
+    单词的词性有${characterVOList.length}个。
     ${wordOtherText}
     `
     this.playText(text, audio)
@@ -47,19 +47,19 @@ export default {
     for (let i = 0; i < wordName.length; i++) {
       wordAlphabet += wordName.substring(i, i + 1).toUpperCase() + '。\n'
     }
-    let wordCharacterVOList = wordInfo.wordCharacterVOList
+    let characterVOList = wordInfo.characterVOList
     let wordOtherText = ''
     let textStart = '接下来播报的单词是:'
-    for (let i = 0; i < wordCharacterVOList.length; i++) {
-      let wordCharacterVO = wordCharacterVOList[i]
+    for (let i = 0; i < characterVOList.length; i++) {
+      let wordCharacterVO = characterVOList[i]
       wordOtherText += '词性' + wordCharacterVO.wordCharacter + '。'
       if (!wordCharacterVO.wordLabel && '' !== wordCharacterVO.wordLabel) {
         wordOtherText += '词性标签是：' + wordCharacterVO.wordLabel + '。'
       }
-      let wordParaphraseVOList = wordCharacterVO.wordParaphraseVOList
-      wordOtherText += '词义有' + wordParaphraseVOList.length + '个。'
-      for (let j = 0; j < wordParaphraseVOList.length; j++) {
-        let wordParaphraseVO = wordParaphraseVOList[j]
+      let paraphraseVOList = wordCharacterVO.paraphraseVOList
+      wordOtherText += '词义有' + paraphraseVOList.length + '个。'
+      for (let j = 0; j < paraphraseVOList.length; j++) {
+        let wordParaphraseVO = paraphraseVOList[j]
         wordOtherText += `词义${j + 1}的英文解释为：${wordParaphraseVO.paraphraseEnglish}。`
         wordOtherText += `再读一遍英文解释：${wordParaphraseVO.paraphraseEnglish}。`
         wordOtherText += `对应的中文词义是：${wordParaphraseVO.meaningChinese}。`
