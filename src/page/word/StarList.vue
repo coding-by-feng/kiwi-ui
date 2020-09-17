@@ -1,7 +1,59 @@
 <script>
+import { getStore, setStore } from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
+
+function emptyExampleStars () {
+  setStore({
+    name: 'example_stars',
+    content: null,
+    type: 'local'
+  })
+}
+
+function emptyParaphraseStars () {
+  setStore({
+    name: 'paraphrase_stars',
+    content: null,
+    type: 'local'
+  })
+}
+
+function emptyWordStars () {
+  setStore({
+    name: 'word_stars',
+    content: null,
+    type: 'local'
+  })
+}
+
+function cacheWordList (list) {
+  if (list && list.length > 0)
+    setStore({
+      name: 'word_stars',
+      content: list,
+      type: 'local'
+    })
+}
+
+function cacheParaphraseList (list) {
+  if (list && list.length > 0)
+    setStore({
+      name: 'paraphrase_stars',
+      content: list,
+      type: 'local'
+    })
+}
+
+function cacheExampleList (list) {
+  if (list && list.length > 0)
+    setStore({
+      name: 'example_stars',
+      content: list,
+      type: 'local'
+    })
+}
 
 export default {
   components: {
@@ -56,27 +108,40 @@ export default {
         this.list.listType = this.$route.query.listType
       }
       if (this.list.listType === 'word') {
-        await wordStarList.getWordStarList().then(response => {
-          this.list.starListData = response.data.data
-        }).catch(e => {
-          console.error(e)
-        })
+        this.list.starListData = getStore({ name: 'word_stars' })
+        if (!this.list.starListData || this.list.starListData.length < 1) {
+          await wordStarList.getWordStarList().then(response => {
+            this.list.starListData = response.data.data
+            cacheWordList(this.list.starListData)
+          }).catch(e => {
+            console.error(e)
+          })
+        }
       } else if (this.list.listType === 'paraphrase') {
-        await paraphraseStarList.getParaphraseStarList().then(response => {
-          this.list.starListData = response.data.data
-        }).catch(e => {
-          console.error(e)
-        })
+        this.list.starListData = getStore({ name: 'paraphrase_stars' })
+        if (!this.list.starListData || this.list.starListData.length < 1) {
+          await paraphraseStarList.getParaphraseStarList().then(response => {
+            this.list.starListData = response.data.data
+            cacheParaphraseList(this.list.starListData)
+          }).catch(e => {
+            console.error(e)
+          })
+        }
       } else if (this.list.listType === 'example') {
-        await exampleStarList.getExampleStarList().then(response => {
-          this.list.starListData = response.data.data
-        }).catch(e => {
-          console.error(e)
-        })
+        this.list.starListData = getStore({ name: 'example_stars' })
+        if (!this.list.starListData || this.list.starListData.length < 1) {
+          await exampleStarList.getExampleStarList().then(response => {
+            this.list.starListData = response.data.data
+            cacheExampleList(this.list.starListData)
+          }).catch(e => {
+            console.error(e)
+          })
+        }
       }
       this.loading = false
     },
     async refresh () {
+      console.log('refresh')
       if (this.list.status === 'list') {
         await this.init()
       } else {
@@ -131,6 +196,8 @@ export default {
         type: 'warning'
       }).then($ => {
         if (this.list.listType === 'word') {
+          emptyWordStars()
+
           wordStarList.delById(row.id)
               .then(response => {
                 this.doSuccess()
@@ -141,6 +208,8 @@ export default {
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'paraphrase') {
+          emptyParaphraseStars()
+
           paraphraseStarList.delById(row.id)
               .then(response => {
                 this.doSuccess()
@@ -151,6 +220,8 @@ export default {
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'example') {
+          emptyExampleStars()
+
           exampleStarList.delById(row.id)
               .then(response => {
                 this.doSuccess()
@@ -172,6 +243,8 @@ export default {
       this.loading = true
       if (this.edit.type === 'update') {
         if (this.list.listType === 'word') {
+          emptyWordStars()
+
           await wordStarList.updateById(this.edit.form)
               .then(response => {
                 this.doSuccess()
@@ -182,6 +255,8 @@ export default {
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'paraphrase') {
+          emptyParaphraseStars()
+
           await paraphraseStarList.updateById(this.edit.form)
               .then(response => {
                 this.doSuccess()
@@ -192,6 +267,8 @@ export default {
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'example') {
+          emptyExampleStars()
+
           await exampleStarList.updateById(this.edit.form)
               .then(response => {
                 this.doSuccess()
@@ -204,6 +281,8 @@ export default {
         }
       } else if (this.edit.type === 'add') {
         if (this.list.listType === 'word') {
+          emptyWordStars()
+
           await wordStarList.save(this.edit.form)
               .then(response => {
                 this.doSuccess()
@@ -214,6 +293,8 @@ export default {
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'paraphrase') {
+          emptyParaphraseStars()
+
           await paraphraseStarList.save(this.edit.form)
               .then(response => {
                 this.doSuccess()
@@ -224,6 +305,8 @@ export default {
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'example') {
+          emptyExampleStars()
+
           await exampleStarList.save(this.edit.form)
               .then(response => {
                 this.doSuccess()

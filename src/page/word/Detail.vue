@@ -1,5 +1,5 @@
 <script>
-import { getStore } from '@/util/store'
+import { getStore, setStore } from '@/util/store'
 import wordSearch from '@/api/wordSearch'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
@@ -32,6 +32,9 @@ export default {
         type: '',
         listSelectDialogVisible: false,
         starListData: [],
+        paraphraseStars: getStore({ name: 'paraphrase_stars' }),
+        wordStars: getStore({ name: 'word_stars' }),
+        exampleStars: getStore({ name: 'example_stars' }),
         paraphraseCollectMap: new Map(),
         dialogTitle: '',
         collectId: 0
@@ -224,45 +227,77 @@ export default {
       if (!this.checkIsLogin()) {
         return
       }
-      await this.getWordStarList().then(response => {
-        this.collect.starListData = response.data.data
-        this.collect.type = 'word'
-        this.collect.listSelectDialogVisible = true
-        this.collect.dialogTitle = '选择想要保存的单词本'
-      }).catch(e => {
-        console.error(e)
-        this.$message.error('单词本数据加载异常')
-      })
+      // 例句本从缓存读取，提高性能
+      if (this.collect.wordStars && this.collect.wordStars.length > 0) {
+        this.collect.wordStars = getStore({ name: 'word_stars' })
+      } else {
+        await this.getWordStarList().then(response => {
+          this.collect.wordStars = response.data.data
+          setStore({
+            name: 'word_stars',
+            content: response.data.data,
+            type: 'local'
+          })
+        }).catch(e => {
+          console.error(e)
+          this.$message.error('单词本数据加载异常')
+        })
+      }
+      this.collect.starListData = this.collect.wordStars
+      this.collect.type = 'word'
+      this.collect.listSelectDialogVisible = true
+      this.collect.dialogTitle = '选择想要保存的单词本'
     },
     async paraphraseCollectClickFun (paraphraseId) {
       if (!this.checkIsLogin()) {
         return
       }
       this.collect.collectId = paraphraseId
-      await this.getParaphraseStarList().then(response => {
-        this.collect.starListData = response.data.data
-        this.collect.type = 'paraphrase'
-        this.collect.listSelectDialogVisible = true
-        this.collect.dialogTitle = '选择想要保存的释义本'
-      }).catch(e => {
-        console.error(e)
-        this.$message.error('释义本本数据加载异常')
-      })
+      if (this.collect.paraphraseStars && this.collect.paraphraseStars.length > 0) {
+        this.collect.paraphraseStars = getStore({ name: 'paraphrase_stars' })
+      } else {
+        await this.getParaphraseStarList().then(response => {
+          this.collect.paraphraseStars = response.data.data
+          setStore({
+            name: 'paraphrase_stars',
+            content: response.data.data,
+            type: 'local'
+          })
+        }).catch(e => {
+          console.error(e)
+          this.$message.error('释义本本数据加载异常')
+        })
+      }
+      this.collect.starListData = this.collect.paraphraseStars
+      this.collect.type = 'paraphrase'
+      this.collect.listSelectDialogVisible = true
+      this.collect.dialogTitle = '选择想要保存的释义本'
     },
     async exampleCollectClickFun (exampleId) {
       if (!this.checkIsLogin()) {
         return
       }
       this.collect.collectId = exampleId
-      await this.getExampleStarList().then(response => {
-        this.collect.starListData = response.data.data
-        this.collect.type = 'example'
-        this.collect.listSelectDialogVisible = true
-        this.collect.dialogTitle = '选择想要保存的例句本'
-      }).catch(e => {
-        console.error(e)
-        this.$message.error('例句本数据加载异常')
-      })
+      // 例句本从缓存读取，提高性能
+      if (this.collect.exampleStars && this.collect.exampleStars.length > 0) {
+        this.collect.exampleStars = getStore({ name: 'example_stars' })
+      } else {
+        await this.getExampleStarList().then(response => {
+          this.collect.exampleStars = response.data.data
+          setStore({
+            name: 'example_stars',
+            content: response.data.data,
+            type: 'local'
+          })
+        }).catch(e => {
+          console.error(e)
+          this.$message.error('例句本数据加载异常')
+        })
+      }
+      this.collect.starListData = this.collect.exampleStars
+      this.collect.type = 'example'
+      this.collect.listSelectDialogVisible = true
+      this.collect.dialogTitle = '选择想要保存的例句本'
     },
     listSelectDialogHandleClose () {
       this.collect.listSelectDialogVisible = false
