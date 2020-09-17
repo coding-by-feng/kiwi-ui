@@ -75,7 +75,9 @@ export default {
         listType: 'paraphrase',
         status: 'list',
         reviewMode: '',
-        isChToEn: false
+        isChToEn: false,
+        // 编辑模式
+        editMode: false
       },
       detail: {
         wordDetailVisible: false,
@@ -141,7 +143,6 @@ export default {
       this.loading = false
     },
     async refresh () {
-      console.log('refresh')
       if (this.list.status === 'list') {
         await this.init()
       } else {
@@ -485,9 +486,13 @@ export default {
                    size="mini">
           <i class="el-icon-folder-add"></i>
         </el-button>
-        <el-button type="text" style="color: #909399" @click="refresh"
+        <el-button v-if="!list.editMode" type="text" style="color: #909399" @click="list.editMode=true"
                    size="mini">
-          <i class="el-icon-refresh"></i>
+          <i class="el-icon-edit"></i>
+        </el-button>
+        <el-button v-if="list.editMode" type="text" style="color: #909399" @click="list.editMode=false"
+                   size="mini">
+          <i class="el-icon-headset"></i>
         </el-button>
         <el-button type="text" style="color: #909399"
                    v-show="list.status==='detail'"
@@ -522,7 +527,7 @@ export default {
       <el-table-column>
         <template slot-scope="scope">
           <el-dropdown
-              v-if="list.listType === 'paraphrase' && list.status === 'list'"
+              v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode"
               size="mini"
               split-button type="info" @command="selectReviewMode">
             <i class="el-icon-headset"></i>
@@ -541,12 +546,14 @@ export default {
           </el-dropdown>
           &nbsp;
           <el-button
+              v-if="list.editMode"
               type="text" style="color: #909399"
               size="mini"
               @click="handleEdit(scope.$index, scope.row)">
             <i class="el-icon-edit-outline"></i>
           </el-button>
           <el-button
+              v-if="list.editMode"
               size="mini"
               type="text" style="color: #909399"
               :loading="loading"
