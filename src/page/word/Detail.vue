@@ -12,7 +12,9 @@ let index = 0
 
 export default {
   name: 'wel',
-  components: {},
+  components: {
+    Countdown: $ => import('./Countdown')
+  },
   data () {
     return {
       dialogHelpVisible: false,
@@ -35,7 +37,9 @@ export default {
         collectId: 0
       },
       showCharacterId: 0,
-      showCharacter: true
+      showCharacter: true,
+      isQueryNotResult: false,
+      countdownTime: 0
     }
   },
   beforeCreate: function () {
@@ -45,6 +49,9 @@ export default {
     isLogin () {
       let accessToken = getStore({ name: 'access_token' })
       return !!accessToken
+    },
+    getDateOn8Sec () {
+      return new Date().getTime() + 1000 * 10
     }
   },
   async mounted () {
@@ -102,9 +109,13 @@ export default {
       await this.queryWordDetail(word).then(response => {
         if (response.data.code) {
           this.wordInfo = response.data.data
+          this.isQueryNotResult = false
         } else {
+          if (this.countdownTime < 1) {
+            this.isQueryNotResult = true
+          }
           this.wordInfo = { wordName: '' }
-          this.defaultHint = '当前单词首次被查询，后台抓取服务已经启动，等候3~10秒之后刷新页面试试！(生僻单词可能抓取不到哦)'
+          this.defaultHint = '该单词在数据库缺失，后台抓取服务已自动去抓取，10秒将自动刷新页面！(有些个可能抓取不到哦)'
         }
       }).catch(e => {
         console.error(e)
@@ -328,6 +339,11 @@ export default {
           })
         }
       })
+    },
+    countdownEndFun () {
+      this.init()
+      this.isQueryNotResult = false
+      this.countdownTime++
     }
   }
 }
@@ -427,6 +443,9 @@ export default {
       </el-alert>
     </el-header>
     <el-main>
+      <Countdown v-if="isQueryNotResult"
+                 :onlySec="true"
+                 :endTime="getDateOn8Sec" @endFun="countdownEndFun"></Countdown>
       <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
         <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
           <el-row type="flex" class="row-bg" justify="end">

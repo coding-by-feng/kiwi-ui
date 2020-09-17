@@ -1,5 +1,5 @@
 <template>
-    <span style="color: #333333">{{this.time}}</span>
+  <span style="color: #333333">{{ this.time }}</span>
 </template>
 
 <script>
@@ -7,10 +7,14 @@ export default {
   name: 'Countdown',
   props: {
     endTime: {
-      type: [Number],
+      type: [Number, String],
       default: null
     },
-    endFun: Function
+    endFun: Function,
+    onlySec: {
+      type: [Boolean],
+      default: false
+    }
   },
   data () {
     return {
@@ -48,15 +52,22 @@ export default {
         this.time = '倒计时已关闭'
         this.isTimeout = true
         this.$emit('endFun')
+        this.$destroy()
       } else {
-        let d = parseInt(leftTime / (24 * 60 * 60))
-        let h = parseInt(leftTime / (60 * 60) % 24)
-        let m = parseInt(leftTime / 60 % 60)
-        let s = parseInt(leftTime % 60)
-        // let h = this.format(parseInt(leftTime / (60 * 60) % 24))
-        // let m = this.format(parseInt(leftTime / 60 % 60))
-        // let s = this.format(parseInt(leftTime % 60))
-        this.time = `${d}天${h}小时${m}分${s}秒`
+        if (!this.onlySec) {
+          let d = parseInt(leftTime / (24 * 60 * 60))
+          let h = parseInt(leftTime / (60 * 60) % 24)
+          let m = parseInt(leftTime / 60 % 60)
+          let s = parseInt(leftTime % 60)
+          // let h = this.format(parseInt(leftTime / (60 * 60) % 24))
+          // let m = this.format(parseInt(leftTime / 60 % 60))
+          // let s = this.format(parseInt(leftTime % 60))
+          this.time = `${d}天${h}小时${m}分${s}秒`
+        } else {
+          console.log(leftTime)
+          let s = parseInt(leftTime % 60)
+          this.time = `${s}秒`
+        }
       }
     },
     format (time) {
