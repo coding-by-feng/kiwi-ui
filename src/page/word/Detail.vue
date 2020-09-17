@@ -458,10 +458,10 @@ export default {
                       <p>[ {{ phraseVO }} ]</p>
                     </div>
                     <p>{{ wordParaphraseVO.paraphraseEnglish }}</p>
-                    <el-button type="text" style="color: #909399"><i
-                        :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
-                        style="color: #FFFFFF"
-                        @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
+                    <el-button type="text" style="color: #909399">
+                      <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
+                         style="color: #FFFFFF;"
+                         @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
                     </el-button>
                     <span v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
                           class="outline_fix_top_left">{{ wordParaphraseVO.codes }}</span>
