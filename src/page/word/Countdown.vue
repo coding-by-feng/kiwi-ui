@@ -64,7 +64,6 @@ export default {
           // let s = this.format(parseInt(leftTime % 60))
           this.time = `${d}天${h}小时${m}分${s}秒`
         } else {
-          console.log(leftTime)
           let s = parseInt(leftTime % 60)
           this.time = `${s}秒`
         }
