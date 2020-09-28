@@ -119,6 +119,7 @@ export default {
           if (newVal === lastPageRemainder) {
             this.$message.warning({
               duration: 3000,
+              center: true,
               message: '当前复习列表已经复习完'
             })
           }
@@ -179,25 +180,31 @@ export default {
           spinner: 'el-icon-loading',
           background: 'rgba(0, 0, 0, 0.7)'
         })
-        await this.initList()
-        for (let i = 0; i < this.listItems.length; i++) {
-          await this.getItemDetail(this.listItems[i].paraphraseId)
-              .then(response => {
-                this.detail.paraphraseVO = response.data.data
-              })
-              .catch(e => {
-                loading.close()
-                console.error(e)
-              })
-          await this.reviewDetail()
+        try {
+          await this.initList()
+          for (let i = 0; i < this.listItems.length; i++) {
+            await this.getItemDetail(this.listItems[i].paraphraseId)
+                .then(response => {
+                  this.detail.paraphraseVO = response.data.data
+                })
+                .catch(e => {
+                  loading.close()
+                  console.error(e)
+                })
+            await this.reviewDetail()
+          }
+        } catch (e) {
+          alert(e)
+        } finally {
+          loading.close()
         }
-        loading.close()
         this.isReviewStop = false
         this.playWordIndex = 0
         this.playStepIndex = 0
         if (this.page.current > 1) {
           this.$message.success({
             duration: 2000,
+            center: true,
             message: '即将开始复习，请稍等！'
           })
           await this.showDetail(this.listItems[0].paraphraseId, 0)
@@ -207,9 +214,6 @@ export default {
           this.autoPlayDialogVisible = !this.autoPlayDialogVisible
         }
       } else {
-        if (this.listId < 1) {
-          return
-        }
         await this.initList()
       }
     },
@@ -308,6 +312,7 @@ export default {
       if (this.isReview) {
         this.$message.warning({
           duration: 1000,
+          center: true,
           message: '自动复习期间不允许调整到单词详情'
         })
         return
@@ -327,6 +332,7 @@ export default {
       if (this.detail.isSleepMode) {
         this.$message.warning({
           duration: 3000,
+          center: true,
           message: '点击灰色区域记住或牢记当前复习单词！'
         })
       }
@@ -334,6 +340,7 @@ export default {
     doSuccess () {
       this.$message.success({
         duration: 1000,
+        center: true,
         message: '操作成功'
       })
     },
@@ -452,6 +459,7 @@ export default {
 
       this.$message.success({
         duration: 1000,
+        center: true,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
       })
     },
@@ -510,6 +518,7 @@ export default {
         if (this.isReview) {
           this.$message.warning({
             duration: 1000,
+            center: true,
             message: '当前已经是复习页第一个'
           })
           return
@@ -517,6 +526,7 @@ export default {
           if (this.page.current === 1) {
             this.$message.warning({
               duration: 1000,
+              center: true,
               message: '当前已经是第一页第一个'
             })
             return
@@ -535,6 +545,7 @@ export default {
         if (this.isReview) {
           this.$message.warning({
             duration: 1000,
+            center: true,
             message: '已经是当前复习页最后一个'
           })
           return
@@ -542,6 +553,7 @@ export default {
           if (this.page.current === this.page.pages) {
             this.$message.warning({
               duration: 1000,
+              center: true,
               message: '当前已经是最后一页最后一个'
             })
             return
@@ -559,6 +571,7 @@ export default {
         if (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder) {
           this.$message.warning({
             duration: 1000,
+            center: true,
             message: '当前已经是最后一页最后一个'
           })
           return
@@ -626,10 +639,6 @@ export default {
         </div>
         <el-button type="text" style="color: #909399"
                    size="mini"
-                   @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
-        </el-button>
-        <el-button type="text" style="color: #909399"
-                   size="mini"
                    @click="showDetail(item.paraphraseId, index)"><i class="el-icon-more-outline"></i>
         </el-button>
         <el-button type="text" style="color: #909399"
@@ -657,7 +666,6 @@ export default {
     <el-dialog
         ref="detailDialog"
         :visible.sync="detail.dialogVisible"
-        :show-close="false"
         top="0vh"
         width="100%">
       <div slot="title">
@@ -698,14 +706,15 @@ export default {
                    v-if="isReview"
                    @click="init"
                    size="mini">
-          恢复播放
+          <i class="el-icon-refresh"></i>
         </el-button>
         <el-button type="info"
                    v-if="!isReview"
                    size="mini" @click="handleShowDetail">
           <i class="el-icon-open"></i>
         </el-button>
-        <el-button type="info" size="mini" @click="handleDetailClose">
+        <el-button v-if="false"
+                   type="info" size="mini" @click="handleDetailClose">
           <i class="el-icon-close"></i>
         </el-button>
         <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>

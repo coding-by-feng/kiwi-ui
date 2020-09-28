@@ -117,6 +117,7 @@ export default {
     doSuccess () {
       this.$message.success({
         duration: 1000,
+        center: true,
         message: '操作成功'
       })
     }

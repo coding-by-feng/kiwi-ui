@@ -99,17 +99,23 @@ export default {
       }
     }
   },
+  computed: {
+    isSmallWindow () {
+      return window.innerWidth <= 400
+    }
+  },
   async mounted () {
     if (this.$route.query.lazy !== 'y') {
-      await this.init()
+      await this.init(false)
     }
   },
   methods: {
-    async init () {
+    async init (isUpdateCache) {
       if (this.$route.query.listType) {
         this.list.listType = this.$route.query.listType
       }
       if (this.list.listType === 'word') {
+        if (isUpdateCache) emptyWordStars()
         this.list.starListData = getStore({ name: 'word_stars' })
         if (!this.list.starListData || this.list.starListData.length < 1) {
           await wordStarList.getWordStarList().then(response => {
@@ -120,6 +126,7 @@ export default {
           })
         }
       } else if (this.list.listType === 'paraphrase') {
+        if (isUpdateCache) emptyParaphraseStars()
         this.list.starListData = getStore({ name: 'paraphrase_stars' })
         if (!this.list.starListData || this.list.starListData.length < 1) {
           await paraphraseStarList.getParaphraseStarList().then(response => {
@@ -130,6 +137,7 @@ export default {
           })
         }
       } else if (this.list.listType === 'example') {
+        if (isUpdateCache) emptyExampleStars()
         this.list.starListData = getStore({ name: 'example_stars' })
         if (!this.list.starListData || this.list.starListData.length < 1) {
           await exampleStarList.getExampleStarList().then(response => {
@@ -144,7 +152,7 @@ export default {
     },
     async refresh () {
       if (this.list.status === 'list') {
-        await this.init()
+        await this.init(true)
       } else {
         if (this.list.listType === 'word') {
           await this.$refs.wordDetail.initList()
@@ -197,36 +205,30 @@ export default {
         type: 'warning'
       }).then($ => {
         if (this.list.listType === 'word') {
-          emptyWordStars()
-
           wordStarList.delById(row.id)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'paraphrase') {
-          emptyParaphraseStars()
-
           paraphraseStarList.delById(row.id)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'example') {
-          emptyExampleStars()
-
           exampleStarList.delById(row.id)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
@@ -244,36 +246,30 @@ export default {
       this.loading = true
       if (this.edit.type === 'update') {
         if (this.list.listType === 'word') {
-          emptyWordStars()
-
           await wordStarList.updateById(this.edit.form)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'paraphrase') {
-          emptyParaphraseStars()
-
           await paraphraseStarList.updateById(this.edit.form)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'example') {
-          emptyExampleStars()
-
           await exampleStarList.updateById(this.edit.form)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
@@ -282,36 +278,30 @@ export default {
         }
       } else if (this.edit.type === 'add') {
         if (this.list.listType === 'word') {
-          emptyWordStars()
-
           await wordStarList.save(this.edit.form)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'paraphrase') {
-          emptyParaphraseStars()
-
           await paraphraseStarList.save(this.edit.form)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
                 this.$message.error(e)
               })
         } else if (this.list.listType === 'example') {
-          emptyExampleStars()
-
           await exampleStarList.save(this.edit.form)
               .then(response => {
                 this.doSuccess()
-                this.init()
+                this.init(true)
               })
               .catch(e => {
                 console.error(e)
@@ -388,11 +378,12 @@ export default {
       } else if (command === 'example') {
         this.list.listName = '例句本'
       }
-      await this.init()
+      await this.init(false)
     },
     doSuccess () {
       this.$message.success({
         duration: 1000,
+        center: true,
         message: '操作成功'
       })
     },
@@ -480,27 +471,90 @@ export default {
           </el-dropdown-menu>
         </el-dropdown>
         &nbsp;
-        <el-button type="text" style="color: #909399"
+        <el-dropdown
+            v-if="list.listType === 'paraphrase' && list.status === 'list'"
+            size="mini"
+            split-button type="info" @command="selectReviewMode">
+          <i class="el-icon-video-camera"></i>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习最近收藏</el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习最近收藏</el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习最近收藏</el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习最近收藏(汉英)
+            </el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习最近收藏(汉英)
+            </el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读最近收藏</el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读最近收藏</el-dropdown-item>
+            <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读最近收藏</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        <b v-if="!isSmallWindow">&nbsp;</b>
+        <br v-if="isSmallWindow"/>
+        <br v-if="isSmallWindow"/>
+        <div v-if="isSmallWindow" style="box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)">
+          <el-button type="text" style="color: #909399"
+                     @click="refresh"
+                     size="mini">
+            <i class="el-icon-refresh"></i>
+          </el-button>
+          <el-button type="text" style="color: #909399"
+                     v-show="list.status==='list'"
+                     @click="handleOperate"
+                     size="mini">
+            <i class="el-icon-folder-add"></i>
+          </el-button>
+          <el-button v-if="!list.editMode" type="text" style="color: #909399" @click="list.editMode=true"
+                     size="mini">
+            <i class="el-icon-edit"></i>
+          </el-button>
+          <el-button v-if="list.editMode" type="text" style="color: #909399" @click="list.editMode=false"
+                     size="mini">
+            <i class="el-icon-headset"></i>
+          </el-button>
+          <el-button type="text" style="color: #909399"
+                     v-show="list.status==='detail'"
+                     @click="detail.isShowParaphrase = !detail.isShowParaphrase"
+                     size="mini">
+            <i class="el-icon-s-opportunity"></i>
+          </el-button>
+          <el-button
+              v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
+              size="mini"
+              type="text" style="color: #909399"
+              @click="closeAutoReview">
+            <i class="el-icon-switch-button"></i>
+          </el-button>
+        </div>
+        <el-button v-if="!isSmallWindow" type="text" style="color: #909399"
+                   @click="refresh"
+                   size="mini">
+          <i class="el-icon-refresh"></i>
+        </el-button>
+        <el-button v-if="!isSmallWindow" type="text" style="color: #909399"
                    v-show="list.status==='list'"
                    @click="handleOperate"
                    size="mini">
           <i class="el-icon-folder-add"></i>
         </el-button>
-        <el-button v-if="!list.editMode" type="text" style="color: #909399" @click="list.editMode=true"
+        <el-button v-if="!isSmallWindow && !list.editMode" type="text" style="color: #909399"
+                   @click="list.editMode=true"
                    size="mini">
           <i class="el-icon-edit"></i>
         </el-button>
-        <el-button v-if="list.editMode" type="text" style="color: #909399" @click="list.editMode=false"
+        <el-button v-if="!isSmallWindow && list.editMode" type="text" style="color: #909399"
+                   @click="list.editMode=false"
                    size="mini">
           <i class="el-icon-headset"></i>
         </el-button>
-        <el-button type="text" style="color: #909399"
+        <el-button v-if="!isSmallWindow" type="text" style="color: #909399"
                    v-show="list.status==='detail'"
                    @click="detail.isShowParaphrase = !detail.isShowParaphrase"
                    size="mini">
           <i class="el-icon-s-opportunity"></i>
         </el-button>
         <el-button
+            v-if="!isSmallWindow"
             v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
             size="mini"
             type="text" style="color: #909399"
