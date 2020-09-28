@@ -17,7 +17,12 @@
                      v-if="lazy"
                      icon="el-icon-switch-button"
                      @click="closeLazy"></el-button>
-          <el-button slot="append" icon="el-icon-search" @click="onSubmit()"></el-button>
+          <el-button slot="prepend"
+                     size="mini"
+                     v-if="!lazy"
+                     icon="el-icon-brush"
+                     @click="brush"></el-button>
+          <el-button v-if="getWindowWidth > 400" slot="append" icon="el-icon-search" @click="onSubmit()"></el-button>
         </el-autocomplete>
       </el-col>
     </el-row>
@@ -37,6 +42,11 @@ export default {
       word: this.$route.query.word ? this.$route.query.word : '',
       searchInputWidth: document.body.clientWidth / 1.5 + 'px',
       lazy: this.$route.query.lazy === 'y'
+    }
+  },
+  computed: {
+    getWindowWidth () {
+      return window.innerWidth
     }
   },
   mounted () {},
@@ -71,6 +81,10 @@ export default {
     },
     handleClose (key, keyPath) {
       // console.log(key, keyPath)
+    },
+    brush () {
+      this.word = ''
+      this.$refs.auto.focus()
     },
     closeLazy () {
       let queryTmp = {}

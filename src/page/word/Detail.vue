@@ -21,7 +21,7 @@ export default {
       isShowParaphrase: true,
       pronunciationAudioMap: new Map(),
       devSwitch: false,
-      defaultHint: '',
+      defaultHint: null,
       wordInfo: {
         wordName: ''
       },
@@ -55,6 +55,15 @@ export default {
     },
     getDateOn8Sec () {
       return new Date().getTime() + 1000 * 10
+    },
+    getWordNameStyle () {
+      if (this.getWindowWidth < 350) {
+        return `font-family: 'Helvetica Neue'; font-size: large;`
+      }
+      return `font-family: 'Helvetica Neue'; font-size: xx-large;`
+    },
+    getWindowWidth () {
+      return window.innerWidth
     }
   },
   async mounted () {
@@ -113,12 +122,13 @@ export default {
         if (response.data.code) {
           this.wordInfo = response.data.data
           this.isQueryNotResult = false
+          this.defaultHint = null
         } else {
           if (this.countdownTime < 1) {
             this.isQueryNotResult = true
           }
           this.wordInfo = { wordName: '' }
-          this.defaultHint = '该单词在数据库缺失，后台抓取服务已自动去抓取，10秒将自动刷新页面！(有些个可能抓取不到哦)'
+          this.defaultHint = '单词抓取中，10秒后将刷新'
         }
       }).catch(e => {
         console.error(e)
@@ -210,6 +220,7 @@ export default {
       if (!this.isLogin) {
         this.$message.warning({
           duration: 1000,
+          center: true,
           message: '请先登录在进行收藏操作'
         })
         return false
@@ -356,6 +367,7 @@ export default {
     doSuccess () {
       this.$message.success({
         duration: 1000,
+        center: true,
         message: '操作成功'
       })
     },
@@ -429,53 +441,48 @@ export default {
 <template>
   <el-container>
     <el-header>
-      <el-alert
-          v-if="''===wordInfo.wordName"
-          type="warning"
-          :closable="false"
-          effect="light"
-          center>
-        <b>{{ defaultHint }}</b>
-      </el-alert>
-      <el-alert
-          v-if="''!==wordInfo.wordName"
-          type="warning"
-          :closable="false"
-          effect="light"
-          center>
-        <div slot="title">
-          <div class="outline_fix_top_right">
-            <el-dropdown size="mini" type="info" @command="selectShowCharacter">
-              <i class="el-icon-s-operation"></i>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item command="0">All</el-dropdown-item>
-                <div v-for="wordCharacterVO in wordInfo.characterVOList">
-                  <el-dropdown-item :command="wordCharacterVO.characterId">{{
-                      wordCharacterVO.characterCode
-                    }}&nbsp;{{ wordCharacterVO.tag }}
-                  </el-dropdown-item>
-                </div>
-              </el-dropdown-menu>
-            </el-dropdown>
+      <div>
+        <p v-if="defaultHint && defaultHint.length>0" style="color: #ed3f14">{{ defaultHint }}</p>
+        <el-alert
+            v-if="''!==wordInfo.wordName"
+            type="warning"
+            :closable="false"
+            effect="light"
+            center>
+          <div slot="title">
+            <div class="outline_fix_top_right">
+              <el-dropdown size="mini" type="info" @command="selectShowCharacter">
+                <i class="el-icon-s-operation"></i>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item command="0">All</el-dropdown-item>
+                  <div v-for="wordCharacterVO in wordInfo.characterVOList">
+                    <el-dropdown-item :command="wordCharacterVO.characterId">{{
+                        wordCharacterVO.characterCode
+                      }}&nbsp;{{ wordCharacterVO.tag }}
+                    </el-dropdown-item>
+                  </div>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </div>
+            <el-button type="text" @click="dialogHelpVisible = !dialogHelpVisible">
+              <i class="el-icon-warning outline_fix_top_left"
+                 style="color: #76838f"></i>
+            </el-button>
+            <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
+            <el-button type="text" style="color: #909399"><i
+                class="el-icon-video-play outline_fix_bottom_left"
+                style="color: #76838f"
+                @click="oneWordPlay"></i>
+            </el-button>
+            <el-button type="text" style="color: #909399"
+                       v-if="wordInfo.wordName.length>0"><i
+                :class="getWordCollectClass()"
+                style="color: #76838f"
+                @click="wordCollectClickFun()"></i>
+            </el-button>
           </div>
-          <el-button type="text" @click="dialogHelpVisible = !dialogHelpVisible">
-            <i class="el-icon-warning outline_fix_top_left"
-               style="color: #76838f"></i>
-          </el-button>
-          <b style="font-family: 'Helvetica Neue'; font-size: xx-large">{{ wordInfo.wordName }}</b>
-          <el-button type="text" style="color: #909399"><i
-              class="el-icon-video-play outline_fix_bottom_left"
-              style="color: #76838f"
-              @click="oneWordPlay"></i>
-          </el-button>
-          <el-button type="text" style="color: #909399"
-                     v-if="wordInfo.wordName.length>0"><i
-              :class="getWordCollectClass()"
-              style="color: #76838f"
-              @click="wordCollectClickFun()"></i>
-          </el-button>
-        </div>
-      </el-alert>
+        </el-alert>
+      </div>
     </el-header>
     <el-main>
       <Countdown v-if="isQueryNotResult"
@@ -489,7 +496,8 @@ export default {
               <el-tag v-if="wordCharacterVO.tag != ''">{{ wordCharacterVO.tag }}</el-tag>
             </el-col>
           </el-row>
-          <el-row type="flex" class="row-bg" justify="end">
+          <el-row v-if="getWindowWidth >= 400"
+                  type="flex" class="row-bg" justify="end">
             <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
               <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
@@ -497,6 +505,17 @@ export default {
               </el-tag>
             </el-col>
           </el-row>
+          <div v-if="getWindowWidth <= 400"
+               v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
+            <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+              <el-col>
+                <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
+                  {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                  <i class="el-icon-video-play"></i>
+                </el-tag>
+              </el-col>
+            </el-row>
+          </div>
           <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList" v>
             <el-card class="box-card">
               <div slot="header" @click="isShowParaphrase = !isShowParaphrase">
