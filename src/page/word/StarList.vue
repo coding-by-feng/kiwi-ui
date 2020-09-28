@@ -71,7 +71,7 @@ export default {
       },
       list: {
         starListData: [],
-        listName: '释义本',
+        listName: '释',
         listType: 'paraphrase',
         status: 'list',
         reviewMode: '',
@@ -180,14 +180,14 @@ export default {
       }
     },
     handleOperate () {
-      this.edit.title = this.list.listName + '增加'
+      this.edit.title = this.list.listName + '-增加'
       this.edit.type = 'add'
       this.edit.form.id = null
       this.edit.form.listName = ''
       this.edit.dialogVisible = true
     },
     handleEdit (index, row) {
-      this.edit.title = this.list.listName + '修改'
+      this.edit.title = this.list.listName + '-修改'
       this.edit.type = 'update'
       this.edit.form.id = row.id
       this.edit.dialogVisible = true
@@ -372,11 +372,11 @@ export default {
       this.list.status = 'list'
       this.list.listType = command
       if (command === 'word') {
-        this.list.listName = '单词本'
+        this.list.listName = '单'
       } else if (command === 'paraphrase') {
-        this.list.listName = '释义本'
+        this.list.listName = '释'
       } else if (command === 'example') {
-        this.list.listName = '例句本'
+        this.list.listName = '例'
       }
       await this.init(false)
     },
@@ -451,6 +451,19 @@ export default {
       let query = { active: 'starList' }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
       window.location.reload()
+    },
+    selectOperate (command) {
+      if (command === 'refresh') {
+        this.refresh()
+      } else if (command === 'handleOperate') {
+        this.handleOperate()
+      } else if (command === 'switchMode') {
+        this.list.editMode = !this.list.editMode
+      } else if (command === 'switchShow') {
+        this.detail.isShowParaphrase = !this.detail.isShowParaphrase
+      } else if (command === 'goBack') {
+        this.goBack()
+      }
     }
   }
 }
@@ -459,110 +472,49 @@ export default {
 <template>
 
   <div class="text item" v-loading="loading">
-    <el-page-header @back="goBack" title="">
-      <div slot="content">
-        <el-dropdown size="mini"
-                     split-button type="info" @command="listTypeClick">
-          {{ this.list.listName }}
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
-            <el-dropdown-item command="word">单词本</el-dropdown-item>
-            <el-dropdown-item command="example">例句本</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        &nbsp;
-        <el-dropdown
-            v-if="list.listType === 'paraphrase' && list.status === 'list'"
-            size="mini"
-            split-button type="info" @command="selectReviewMode">
-          <i class="el-icon-video-camera"></i>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习最近收藏</el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习最近收藏</el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习最近收藏</el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习最近收藏(汉英)
-            </el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习最近收藏(汉英)
-            </el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读最近收藏</el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读最近收藏</el-dropdown-item>
-            <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读最近收藏</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <b v-if="!isSmallWindow">&nbsp;</b>
-        <br v-if="isSmallWindow"/>
-        <br v-if="isSmallWindow"/>
-        <div v-if="isSmallWindow" style="box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)">
-          <el-button type="text" style="color: #909399"
-                     @click="refresh"
-                     size="mini">
-            <i class="el-icon-refresh"></i>
-          </el-button>
-          <el-button type="text" style="color: #909399"
-                     v-show="list.status==='list'"
-                     @click="handleOperate"
-                     size="mini">
-            <i class="el-icon-folder-add"></i>
-          </el-button>
-          <el-button v-if="!list.editMode" type="text" style="color: #909399" @click="list.editMode=true"
-                     size="mini">
-            <i class="el-icon-edit"></i>
-          </el-button>
-          <el-button v-if="list.editMode" type="text" style="color: #909399" @click="list.editMode=false"
-                     size="mini">
-            <i class="el-icon-headset"></i>
-          </el-button>
-          <el-button type="text" style="color: #909399"
-                     v-show="list.status==='detail'"
-                     @click="detail.isShowParaphrase = !detail.isShowParaphrase"
-                     size="mini">
-            <i class="el-icon-s-opportunity"></i>
-          </el-button>
-          <el-button
-              v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
-              size="mini"
-              type="text" style="color: #909399"
-              @click="closeAutoReview">
-            <i class="el-icon-switch-button"></i>
-          </el-button>
-        </div>
-        <el-button v-if="!isSmallWindow" type="text" style="color: #909399"
-                   @click="refresh"
-                   size="mini">
-          <i class="el-icon-refresh"></i>
-        </el-button>
-        <el-button v-if="!isSmallWindow" type="text" style="color: #909399"
-                   v-show="list.status==='list'"
-                   @click="handleOperate"
-                   size="mini">
-          <i class="el-icon-folder-add"></i>
-        </el-button>
-        <el-button v-if="!isSmallWindow && !list.editMode" type="text" style="color: #909399"
-                   @click="list.editMode=true"
-                   size="mini">
-          <i class="el-icon-edit"></i>
-        </el-button>
-        <el-button v-if="!isSmallWindow && list.editMode" type="text" style="color: #909399"
-                   @click="list.editMode=false"
-                   size="mini">
-          <i class="el-icon-headset"></i>
-        </el-button>
-        <el-button v-if="!isSmallWindow" type="text" style="color: #909399"
-                   v-show="list.status==='detail'"
-                   @click="detail.isShowParaphrase = !detail.isShowParaphrase"
-                   size="mini">
-          <i class="el-icon-s-opportunity"></i>
-        </el-button>
-        <el-button
-            v-if="!isSmallWindow"
-            v-show="detail.paraphraseIsReview || detail.paraphraseIsRead"
-            size="mini"
-            type="text" style="color: #909399"
-            @click="closeAutoReview">
-          <i class="el-icon-switch-button"></i>
-        </el-button>
-      </div>
-    </el-page-header>
+    <div>
+      <el-dropdown size="mini"
+                   split-button type="info" @command="listTypeClick">
+        {{ this.list.listName }}
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
+          <el-dropdown-item command="word">单词本</el-dropdown-item>
+          <el-dropdown-item command="example">例句本</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      &nbsp;
+      <el-dropdown
+          v-if="list.listType === 'paraphrase' && list.status === 'list'"
+          size="mini"
+          split-button type="info" @command="selectReviewMode">
+        <i class="el-icon-video-camera"></i>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习最近收藏</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习最近收藏</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习最近收藏</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习最近收藏(汉英)
+          </el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习最近收藏(汉英)
+          </el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读最近收藏</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读最近收藏</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读最近收藏</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      &nbsp;
+      <el-dropdown
+          size="mini"
+          split-button type="info" @command="selectOperate">
+        <i class="el-icon-menu"></i>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="goBack">返回</el-dropdown-item>
+          <el-dropdown-item command="refresh">刷新</el-dropdown-item>
+          <el-dropdown-item command="handleOperate" v-show="list.status==='list'">新增</el-dropdown-item>
+          <el-dropdown-item command="switchMode">切换模式</el-dropdown-item>
+          <el-dropdown-item command="switchShow" v-show="list.status==='detail'">显示or隐藏释义</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+    </div>
     <el-table
         v-show="tableVisible"
         :data="list.starListData"
