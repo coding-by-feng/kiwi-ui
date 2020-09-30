@@ -472,7 +472,8 @@ export default {
 <template>
 
   <div class="text item" v-loading="loading">
-    <div>
+    <div align="left">
+      &nbsp;
       <el-dropdown size="mini"
                    split-button type="info" @command="listTypeClick">
         {{ this.list.listName }}
@@ -483,6 +484,9 @@ export default {
         </el-dropdown-menu>
       </el-dropdown>
       &nbsp;
+      <span v-if="!isSmallWindow">
+        &nbsp;
+      </span>
       <el-dropdown
           v-if="list.listType === 'paraphrase' && list.status === 'list'"
           size="mini"
@@ -502,6 +506,9 @@ export default {
         </el-dropdown-menu>
       </el-dropdown>
       &nbsp;
+      <span v-if="!isSmallWindow">
+        &nbsp;
+      </span>
       <el-dropdown
           size="mini"
           split-button type="info" @command="selectOperate">
@@ -532,6 +539,9 @@ export default {
       </el-table-column>
       <el-table-column>
         <template slot-scope="scope">
+          <span v-if="!isSmallWindow">
+            &nbsp;
+          </span>
           <el-dropdown
               v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode"
               size="mini"
