@@ -23,7 +23,7 @@ export default {
   <div>
     <el-card class="box-card">
       <div class="text item">
-        <img width="20%" src="@/assets/wx_gourp_scan_code.jpg">
+        <img width="60%" src="@/assets/wx_gourp_scan_code.jpg">
         <p>作者博客：<a href="http://www.fengorz.me" style="color: #42b983" target="view_window">http://fengorz.me</a></p>
         <p>作者微信：my_dream_it</p>
         <p>作者邮箱：feng_orz@163.com</p>
