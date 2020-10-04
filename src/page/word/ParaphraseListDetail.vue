@@ -55,7 +55,8 @@ export default {
         showTranslation: false,
         hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示',
         showIndex: 0,
-        isSleepMode: false
+        isSleepMode: false,
+        listId: null
       },
       source: getStore({ name: 'pronunciation_source' }),
       reviewType: getStore({ name: 'review_type' }),
@@ -279,6 +280,8 @@ export default {
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
+            // 如果是复习最近收藏
+            this.detail.listId = this.listItems[this.detail.showIndex].listId
           })
           .catch(e => {
             console.error(e)
@@ -286,14 +289,13 @@ export default {
       this.detail.dialogVisible = true
       loading.close()
     },
-    async removeParaphraseStarListFun (paraphraseId) {
-
+    async removeParaphraseStarListFun (paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then($ => {
-        this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: this.listId })
+        this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: listId })
             .then(response => {
               this.doSuccess()
               this.initList()
@@ -471,7 +473,7 @@ export default {
       }
     },
     rememberOneFun () {
-      this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.listId)
+      this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(res => {
             this.doSuccess()
           })
@@ -481,7 +483,7 @@ export default {
           })
     },
     keepInMindFun () {
-      this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.listId)
+      this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(res => {
             this.doSuccess()
           })
@@ -491,7 +493,7 @@ export default {
           })
     },
     forgetOneFun () {
-      this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.listId)
+      this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(res => {
             this.doSuccess()
           })
@@ -643,7 +645,7 @@ export default {
         </el-button>
         <el-button type="text" style="color: #909399"
                    size="mini"
-                   @click="removeParaphraseStarListFun(item.paraphraseId)"><i
+                   @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"><i
             class="el-icon-remove-outline"></i>
         </el-button>
       </el-collapse-item>
