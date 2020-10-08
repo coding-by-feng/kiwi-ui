@@ -7,6 +7,10 @@ const sleep = function (time) {
   let startTime = new Date().getTime() + time * 1000
   while (new Date().getTime() < startTime) {}
 }
+const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
+const carryChModeCh2EnAudioCount = 17
+const ridChModeEh2ChAudioCount = 9 // 去除中文英汉模式播放的Audio数
+const carryChModeEh2ChAudioCount = 16
 
 let that
 
@@ -68,7 +72,7 @@ export default {
       playWordIndex: 0,
       playStepIndex: 0,
       playCountOnce: 5,
-      playCountPerWord: 14,
+      playCountPerWord: 0,
       currentPlayAudio: null,
 
       countdownMode: false,
@@ -163,15 +167,15 @@ export default {
 
         if (this.isChToEn) {
           if (this.reviewType === '2') {
-            this.playCountPerWord = 17
+            this.playCountPerWord = carryChModeCh2EnAudioCount
           } else {
-            this.playCountPerWord = 11
+            this.playCountPerWord = ridChModeCh2EnAudioCount
           }
         } else {
           if (this.reviewType === '2') {
-            this.playCountPerWord = 14
+            this.playCountPerWord = carryChModeEh2ChAudioCount
           } else {
-            this.playCountPerWord = 8
+            this.playCountPerWord = ridChModeEh2ChAudioCount
           }
         }
 
@@ -440,6 +444,9 @@ export default {
         audioQueue.push(this.createPronunciationAudio())
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一次中文释义：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
