@@ -19,6 +19,7 @@ export default {
     return {
       dialogHelpVisible: false,
       isShowParaphrase: true,
+      isShowExample: true,
       pronunciationAudioMap: new Map(),
       devSwitch: false,
       defaultHint: null,
@@ -469,7 +470,17 @@ export default {
                  style="color: #76838f"></i>
             </el-button>
             <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
-            <el-button type="text" style="color: #909399"><i
+            <el-button v-if="isShowExample" type="text" style="color: #909399"><i
+                class="el-icon-sell outline_fix_bottom_left"
+                style="color: #76838f"
+                @click="isShowExample = false"></i>
+            </el-button>
+            <el-button v-if="!isShowExample" type="text" style="color: #909399"><i
+                class="el-icon-sold-out outline_fix_bottom_left"
+                style="color: #76838f"
+                @click="isShowExample = true"></i>
+            </el-button>
+            <el-button v-if="false" type="text" style="color: #909399"><i
                 class="el-icon-video-play outline_fix_bottom_left"
                 style="color: #76838f"
                 @click="oneWordPlay"></i>
@@ -541,31 +552,41 @@ export default {
                   </div>
                 </el-alert>
               </div>
-              <div v-if="wordParaphraseVO.paraphraseExampleVOList == null">
-                <el-alert
-                    type="info"
-                    title="该释义暂时没有例句"
-                    center
-                    effect="light"
-                    :closable="false">
-                </el-alert>
-              </div>
-              <div v-for="wordParaphraseExampleVO in wordParaphraseVO.paraphraseExampleVOList">
-                <el-alert
-                    type="info"
-                    center
-                    effect="light"
-                    :description="wordParaphraseExampleVO.exampleTranslate"
-                    :closable="false">
-                  <div slot="title">
-                    {{ wordParaphraseExampleVO.exampleSentence }}
-                    <el-button type="text" style="color: #909399"><i
-                        class="el-icon-circle-plus-outline outline_fix"
-                        style="color: #76838f"
-                        @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
-                    </el-button>
-                  </div>
-                </el-alert>
+              <el-alert
+                  v-if="!isShowExample"
+                  type="info"
+                  title="例句已隐藏"
+                  center
+                  effect="light"
+                  :closable="false">
+              </el-alert>
+              <div v-if="isShowExample">
+                <div v-if="wordParaphraseVO.paraphraseExampleVOList == null">
+                  <el-alert
+                      type="info"
+                      title="该释义暂时没有例句"
+                      center
+                      effect="light"
+                      :closable="false">
+                  </el-alert>
+                </div>
+                <div v-for="wordParaphraseExampleVO in wordParaphraseVO.paraphraseExampleVOList">
+                  <el-alert
+                      type="info"
+                      center
+                      effect="light"
+                      :description="wordParaphraseExampleVO.exampleTranslate"
+                      :closable="false">
+                    <div slot="title">
+                      {{ wordParaphraseExampleVO.exampleSentence }}
+                      <el-button type="text" style="color: #909399"><i
+                          class="el-icon-circle-plus-outline outline_fix"
+                          style="color: #76838f"
+                          @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
+                      </el-button>
+                    </div>
+                  </el-alert>
+                </div>
               </div>
             </el-card>
             <el-divider></el-divider>
