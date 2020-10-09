@@ -402,13 +402,18 @@ export default {
     },
     async reviewDetail () {
       let audioQueue = []
+      let meaningChinese = this.detail.paraphraseVO.meaningChinese
+      if (this.detail.paraphraseVO.meaningChinese) {
+        meaningChinese = meaningChinese.replaceAll('…', '什么什么')
+        meaningChinese = meaningChinese.replaceAll('...', '什么什么')
+      }
       if (this.isChToEn) {
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('再读一遍中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
         audioQueue.push(audioPlay.createAudioFromText('请在脑海回想对应的单词。'))
         audioQueue.push(audioPlay.createAudioFromText('对应的英文单词是'))
         audioQueue.push(this.createPronunciationAudio())
@@ -444,13 +449,13 @@ export default {
         audioQueue.push(this.createPronunciationAudio())
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('再读一次中文释义：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText('再读一次中文释义：'))
+        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
         audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
