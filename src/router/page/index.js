@@ -10,6 +10,10 @@ export default [{
   name: '主页',
   redirect: '/index/vocabulary'
 }, {
+  path: '/lazy',
+  name: '懒加载',
+  redirect: '/lazy/vocabulary/detail'
+}, {
   path: '/index',
   component: $ => import('@/page/index/Index'),
   query: { active: 'search' },
@@ -21,6 +25,20 @@ export default [{
       userLogin: UserLogin,
       userCenter: UserCenter,
       about: About
+    },
+    children: [{
+      path: 'detail',
+      components: { detail: Detail }
+    }]
+  }]
+}, {
+  path: '/lazy',
+  component: $ => import('@/page/index/IndexLazy'),
+  query: { active: 'search' },
+  children: [{
+    path: 'vocabulary',
+    components: {
+      search: Search
     },
     children: [{
       path: 'detail',

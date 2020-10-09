@@ -41,7 +41,7 @@ export default {
     return {
       word: this.$route.query.word ? this.$route.query.word : '',
       searchInputWidth: document.body.clientWidth / 1.5 + 'px',
-      lazy: this.$route.query.lazy === 'y'
+      lazy: this.$route.path.indexOf('lazy') > -1
     }
   },
   computed: {
@@ -70,11 +70,12 @@ export default {
       // cb(results);
     },
     querySelect (item) {
-      this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: item.value } })
+      console.log('querySelect')
+      this.$router.push({ path: this.$route.path, query: { active: 'search', word: item.value } })
     },
     onSubmit () {
       this.$refs.auto.close()
-      this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: this.word } })
+      this.$router.push({ path: this.$route.path, query: { active: 'search', word: this.word } })
     },
     handleOpen (key, keyPath) {
       // console.log(key, keyPath)

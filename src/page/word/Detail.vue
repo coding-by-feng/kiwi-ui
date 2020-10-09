@@ -65,6 +65,12 @@ export default {
     },
     getWindowWidth () {
       return window.innerWidth
+    },
+    isSmallWindow () {
+      return window.innerWidth <= 400
+    },
+    isLargeWindow () {
+      return window.innerWidth >= 800
     }
   },
   async mounted () {
@@ -73,6 +79,7 @@ export default {
   },
   watch: {
     '$route' () {
+      console.log('route changed')
       this.init()
     }
   },
@@ -82,6 +89,7 @@ export default {
     ...paraphraseStarList,
     ...exampleStarList,
     async init () {
+      console.log('Detail init')
       // clean data
       this.showCharacterId = 0
 
@@ -505,9 +513,17 @@ export default {
             <el-col>
               <el-tag type="success">{{ wordCharacterVO.characterCode }}</el-tag>
               <el-tag v-if="wordCharacterVO.tag != ''">{{ wordCharacterVO.tag }}</el-tag>
+              &nbsp;
+              <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
+                <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
+                  {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                  <i class="el-icon-video-play"></i>
+                </el-tag>
+                &nbsp;
+              </span>
             </el-col>
           </el-row>
-          <el-row v-if="getWindowWidth >= 400"
+          <el-row v-if="!isSmallWindow && !isLargeWindow"
                   type="flex" class="row-bg" justify="end">
             <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
               <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
@@ -516,7 +532,7 @@ export default {
               </el-tag>
             </el-col>
           </el-row>
-          <div v-if="getWindowWidth <= 400"
+          <div v-if="isSmallWindow"
                v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
             <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
               <el-col>
