@@ -105,9 +105,7 @@ export default {
     }
   },
   async mounted () {
-    if (this.$route.query.lazy !== 'y') {
-      await this.init(false)
-    }
+    await this.init(false)
   },
   methods: {
     async init (isUpdateCache) {

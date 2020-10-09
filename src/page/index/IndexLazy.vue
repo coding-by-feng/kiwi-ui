@@ -20,15 +20,10 @@ export default {
   data () {
     return {
       tabsWidth: window.innerWidth - 20 + 'px',
-      activeName: this.$route.query.active ? this.$route.query.active : 'search',
       query: this.$route.query
     }
   },
-  watch: {
-    $route: function () {
-      this.activeName = this.$route.query.active
-    }
-  },
+  watch: {},
   computed: {
     isLogin () {
       let accessToken = getStore({ name: 'access_token' })
@@ -48,26 +43,6 @@ export default {
         duration: 10000,
         message: '温馨提示：浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！'
       })
-    }
-  },
-  methods: {
-    handleSelectMenu () {
-    },
-    tabClick (tab, event) {
-      let params
-      let paramsTmp = {
-        active: tab.name,
-        now: new Date().getTime()
-      }
-      if (this.$route.query.word) {
-        params = { word: this.$route.query.word, ...paramsTmp }
-      } else {
-        params = { ...paramsTmp }
-      }
-      let isActiveChange = JSON.stringify(this.query) === JSON.stringify(params)
-      if (!isActiveChange) {
-        this.$router.push({ path: website.noAuthPath.detail, query: params })
-      }
     }
   }
 }
@@ -114,26 +89,10 @@ export default {
 
 <template>
   <div class="tab_nav" :style="{width: tabsWidth}">
-    <el-tabs type="border-card" :active-name="activeName" @tab-click="tabClick">
+    <el-tabs type="border-card" active-name="search">
       <el-tab-pane name="search">
         <span slot="label"><i class="el-icon-search"></i></span>
         <router-view name="search"></router-view>
-      </el-tab-pane>
-      <el-tab-pane name="starList" v-if="isLogin">
-        <span slot="label"><i class="el-icon-tickets"></i></span>
-        <router-view name="starList"></router-view>
-      </el-tab-pane>
-      <el-tab-pane name="userCenter" v-if="isLogin">
-        <span slot="label"><i class="el-icon-user"></i></span>
-        <router-view name="userCenter"></router-view>
-      </el-tab-pane>
-      <el-tab-pane name="login" v-if="!isLogin">
-        <span slot="label"><i class="el-icon-user"></i></span>
-        <router-view name="userLogin"></router-view>
-      </el-tab-pane>
-      <el-tab-pane name="about">
-        <span slot="label"><i class="el-icon-postcard"></i></span>
-        <router-view name="about"></router-view>
       </el-tab-pane>
     </el-tabs>
   </div>
