@@ -52,6 +52,7 @@ export default {
         pages: 0
       },
       detail: {
+        loading: false,
         paraphraseVO: {},
         dialogVisible: false,
         rememberLoading: false,
@@ -66,7 +67,7 @@ export default {
       reviewType: getStore({ name: 'review_type' }),
       listItems: [],
       listRefresh: false,
-      autoPlayDialogVisible: false,
+      autoPlayDialogVisible: 0,
       reviewAudioArr: [],
       isReviewStop: false,
       playWordIndex: 0,
@@ -154,7 +155,6 @@ export default {
     ...paraphraseStarList,
     async init () {
       if (this.isReview) {
-
         // clean data
         this.isReviewStop = true
         this.reviewAudioArr = []
@@ -187,17 +187,7 @@ export default {
         })
         try {
           await this.initList()
-          for (let i = 0; i < this.listItems.length; i++) {
-            await this.getItemDetail(this.listItems[i].paraphraseId)
-                .then(response => {
-                  this.detail.paraphraseVO = response.data.data
-                })
-                .catch(e => {
-                  loading.close()
-                  console.error(e)
-                })
-            await this.reviewDetail()
-          }
+          await this.initNextReviewDetail(true)
         } catch (e) {
           alert(e)
         } finally {
@@ -207,16 +197,18 @@ export default {
         this.playWordIndex = 0
         this.playStepIndex = 0
         if (this.page.current > 1) {
+          this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
           this.$message.success({
             duration: 2000,
             center: true,
             message: '即将开始复习，请稍等！'
           })
+        }
+        // 手动触发过的直接播放即可
+        if (this.autoPlayDialogVisible > 0) {
           await this.showDetail(this.listItems[0].paraphraseId, 0)
           this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
           this.currentPlayAudio.play()
-        } else {
-          this.autoPlayDialogVisible = !this.autoPlayDialogVisible
         }
       } else {
         await this.initList()
@@ -272,6 +264,21 @@ export default {
     },
     goBack () {
       this.$emit('tableVisibleToggle')
+    },
+    async initNextReviewDetail (isGetDetail) {
+      this.detail.loading = true
+      if (isGetDetail) {
+        await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
+            .then(response => {
+              this.detail.paraphraseVO = response.data.data
+            })
+            .catch(e => {
+              loading.close()
+              console.error(e)
+            })
+      }
+      await this.reviewDetail()
+      this.detail.loading = false
     },
     async showDetail (paraphraseId, index) {
       this.detail.showIndex = index
@@ -357,8 +364,7 @@ export default {
       }
     },
     async stockReviewStart () {
-      this.autoPlayDialogVisible = false
-
+      this.autoPlayDialogVisible++
       if (this.reviewAudioArr.length) {
         await this.showDetail(this.listItems[0].paraphraseId, 0)
         this.currentPlayAudio = this.reviewAudioArr[0][0]
@@ -367,6 +373,7 @@ export default {
     },
     async recursiveReview () {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
+      await this.initNextReviewDetail(false)
       this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
       this.currentPlayAudio.play()
     },
@@ -663,6 +670,7 @@ export default {
     <!--释义详情弹窗-->
     <el-dialog
         ref="detailDialog"
+        v-loading="detail.loading"
         :visible.sync="detail.dialogVisible"
         top="0vh"
         width="100%">
@@ -788,7 +796,8 @@ export default {
     </el-dialog>
     <el-dialog
         :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
-        :visible.sync="autoPlayDialogVisible"
+        :visible="autoPlayDialogVisible === 0 && isReview"
+        :show-close="false"
         width="300px">
       <el-alert
           :closable="false"
@@ -800,10 +809,9 @@ export default {
           type="warning">
         如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
       </el-alert>
-      <spanactionVO.status slot="footer" class="dialog-footer">
-        <el-button @click="autoPlayDialogVisible = false">取消</el-button>
+      <div slot="footer" class="dialog-footer">
         <el-button type="info" @click="stockReviewStart">确定</el-button>
-      </spanactionVO.status>
+      </div>
     </el-dialog>
   </div>
 </template>

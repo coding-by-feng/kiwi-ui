@@ -155,7 +155,7 @@ export default {
         if (this.list.listType === 'word') {
           await this.$refs.wordDetail.initList()
         } else if (this.list.listType === 'paraphrase') {
-          await this.$refs.paraphraseDetail.initList()
+          await this.$refs.paraphraseDetail.init()
         } else if (this.list.listType === 'example') {
           await this.$refs.exampleDetail.initList()
         }
