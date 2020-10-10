@@ -57,7 +57,7 @@ export default {
         rememberLoading: false,
         forgetLoading: false,
         showTranslation: false,
-        hideTranslationPrompt: '释义已经隐藏，点击上方灯泡显示',
+        hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
         showIndex: 0,
         isSleepMode: false,
         listId: null
@@ -275,12 +275,6 @@ export default {
     },
     async showDetail (paraphraseId, index) {
       this.detail.showIndex = index
-      const loading = this.$loading({
-        lock: true,
-        text: 'Loading',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
@@ -291,7 +285,6 @@ export default {
             console.error(e)
           })
       this.detail.dialogVisible = true
-      loading.close()
     },
     async removeParaphraseStarListFun (paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
@@ -315,15 +308,6 @@ export default {
       this.detail.dialogVisible = false
     },
     handleShowDetail () {
-      if (this.isReview) {
-        this.$message.warning({
-          duration: 1000,
-          center: true,
-          message: '自动复习期间不允许调整到单词详情'
-        })
-        return
-      }
-
       this.detail.dialogVisible = false
       this.$router.push({
         path: '/index/vocabulary/detail',
@@ -648,7 +632,7 @@ export default {
             {{ item.paraphraseEnglish }}
           </p>
           <div>
-            {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏，点击灯泡显示' }}
+            {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏' }}
           </div>
         </div>
         <el-button type="text" style="color: #909399"
@@ -706,11 +690,6 @@ export default {
                    v-loading="detail.rememberLoading" @click="keepInMindFun">牢记
         </el-button>
         <el-button type="info"
-                   @click="detail.showTranslation = !detail.showTranslation"
-                   size="mini">
-          <i class="el-icon-s-opportunity"></i>
-        </el-button>
-        <el-button type="info"
                    v-if="isReview"
                    @click="switchSleepMode"
                    size="mini">
@@ -723,13 +702,8 @@ export default {
           <i class="el-icon-refresh"></i>
         </el-button>
         <el-button type="info"
-                   v-if="!isReview"
                    size="mini" @click="handleShowDetail">
           <i class="el-icon-open"></i>
-        </el-button>
-        <el-button v-if="false"
-                   type="info" size="mini" @click="handleDetailClose">
-          <i class="el-icon-close"></i>
         </el-button>
         <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
       </div>
@@ -763,25 +737,27 @@ export default {
               </el-col>
             </el-row>
           </div>
-          <el-alert
-              ref="paraphraseDetail"
-              type="info"
-              :description="detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt"
-              :closable="false"
-              effect="dark"
-              style="margin-top: 5px;"
-              center>
-            <div slot="title">
-              <div v-for="phrase in detail.paraphraseVO.phraseList">
-                <el-tag type="warning">{{ phrase }}</el-tag>
+          <div @click="detail.showTranslation = !detail.showTranslation">
+            <el-alert
+                ref="paraphraseDetail"
+                type="info"
+                :description="detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt"
+                :closable="false"
+                effect="dark"
+                style="margin-top: 5px;"
+                center>
+              <div slot="title">
+                <div v-for="phrase in detail.paraphraseVO.phraseList">
+                  <el-tag type="warning">{{ phrase }}</el-tag>
+                </div>
+                <br/>
+                <div style="word-wrap:break-word; overflow:hidden;">
+                  {{ this.detail.paraphraseVO.paraphraseEnglish }}
+                </div>
+                <span class="outline_fix_top_left">{{ this.detail.paraphraseVO.codes }}</span>
               </div>
-              <br/>
-              <div style="word-wrap:break-word; overflow:hidden;">
-                {{ this.detail.paraphraseVO.paraphraseEnglish }}
-              </div>
-              <span class="outline_fix_top_left">{{ this.detail.paraphraseVO.codes }}</span>
-            </div>
-          </el-alert>
+            </el-alert>
+          </div>
         </div>
         <div
             v-if="detail.paraphraseVO.paraphraseExampleVOList && detail.paraphraseVO.paraphraseExampleVOList.length < 1">
