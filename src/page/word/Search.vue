@@ -71,11 +71,17 @@ export default {
     },
     querySelect (item) {
       console.log('querySelect')
-      this.$router.push({ path: this.$route.path, query: { active: 'search', word: item.value } })
+      this.$router.push({
+        path: this.$route.path,
+        query: { active: 'search', word: item.value, now: new Date().getTime() }
+      })
     },
     onSubmit () {
       this.$refs.auto.close()
-      this.$router.push({ path: this.$route.path, query: { active: 'search', word: this.word } })
+      this.$router.push({
+        path: this.$route.path,
+        query: { active: 'search', word: this.word, now: new Date().getTime() }
+      })
     },
     handleOpen (key, keyPath) {
       // console.log(key, keyPath)

@@ -1,3 +1,5 @@
+import Index from '@/page/index/Index'
+import IndexLazy from '@/page/index/IndexLazy'
 import Search from '@/page/word/Search'
 import Detail from '@/page/word/Detail'
 import StarList from '@/page/word/StarList'
@@ -8,14 +10,14 @@ import About from '@/page/about/Index'
 export default [{
   path: '/',
   name: '主页',
-  redirect: '/index/vocabulary'
+  redirect: '/index/vocabulary/detail'
 }, {
   path: '/lazy',
   name: '懒加载',
   redirect: '/lazy/vocabulary/detail'
 }, {
   path: '/index',
-  component: $ => import('@/page/index/Index'),
+  component: Index,
   query: { active: 'search' },
   children: [{
     path: 'vocabulary',
@@ -33,7 +35,7 @@ export default [{
   }]
 }, {
   path: '/lazy',
-  component: $ => import('@/page/index/IndexLazy'),
+  component: IndexLazy,
   query: { active: 'search' },
   children: [{
     path: 'vocabulary',

@@ -489,7 +489,7 @@ export default {
       this.$message.success({
         duration: 2000,
         center: true,
-        message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕`
+        message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
       })
     },
     rememberInSleepMode () {
