@@ -91,7 +91,6 @@ export default {
     ...paraphraseStarList,
     ...exampleStarList,
     async init () {
-      console.log('Detail init')
       // clean data
       this.showCharacterId = 0
 
@@ -483,9 +482,8 @@ export default {
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item command="0">All</el-dropdown-item>
                   <div v-for="wordCharacterVO in wordInfo.characterVOList">
-                    <el-dropdown-item :command="wordCharacterVO.characterId">{{
-                        wordCharacterVO.characterCode
-                      }}&nbsp;{{ wordCharacterVO.tag }}
+                    <el-dropdown-item :command="wordCharacterVO.characterId">
+                      {{ wordCharacterVO.characterCode }}&nbsp;{{ wordCharacterVO.tag }}
                     </el-dropdown-item>
                   </div>
                 </el-dropdown-menu>
@@ -525,7 +523,7 @@ export default {
           <el-row type="flex" class="row-bg" justify="end">
             <el-col>
               <el-tag type="success">{{ wordCharacterVO.characterCode }}</el-tag>
-              <el-tag v-if="wordCharacterVO.tag != ''">{{ wordCharacterVO.tag }}</el-tag>
+              <el-tag v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">{{ wordCharacterVO.tag }}</el-tag>
               &nbsp;
               <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
                 <el-tag
@@ -626,7 +624,7 @@ export default {
                   :closable="false">
               </el-alert>
               <div v-if="isShowExample">
-                <div v-if="wordParaphraseVO.paraphraseExampleVOList == null">
+                <div v-if="wordParaphraseVO.exampleVOList == null">
                   <el-alert
                       type="info"
                       title="该释义暂时没有例句"
@@ -635,7 +633,7 @@ export default {
                       :closable="false">
                   </el-alert>
                 </div>
-                <div v-for="wordParaphraseExampleVO in wordParaphraseVO.paraphraseExampleVOList">
+                <div v-for="wordParaphraseExampleVO in wordParaphraseVO.exampleVOList">
                   <el-alert
                       type="info"
                       center
