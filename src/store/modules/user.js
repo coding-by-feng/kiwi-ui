@@ -76,6 +76,21 @@ const user = {
           commit('setExpiresIn', '')
           commit('setUserName', '')
           commit('clearLock')
+          setStore({
+            name: 'example_stars',
+            content: null,
+            type: 'local'
+          })
+          setStore({
+            name: 'paraphrase_stars',
+            content: null,
+            type: 'local'
+          })
+          setStore({
+            name: 'word_stars',
+            content: null,
+            type: 'local'
+          })
           resolve()
         }).catch(error => {
           reject(error)

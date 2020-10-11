@@ -20,6 +20,8 @@ export default {
       dialogHelpVisible: false,
       isShowParaphrase: true,
       isShowExample: true,
+      isUKPronunciationPlaying: false,
+      isUSPronunciationPlaying: false,
       pronunciationAudioMap: new Map(),
       devSwitch: false,
       defaultHint: null,
@@ -189,8 +191,18 @@ export default {
         this.audioList[0].play()
       }
     },
-    async playPronunciation (id, sourceUrl) {
+    async playPronunciation (id, sourceUrl, soundmarkType) {
       try {
+        if (soundmarkType) {
+          if (this.isUKPronunciationPlaying || this.isUSPronunciationPlaying) {
+            return
+          }
+          if (soundmarkType === 'UK') {
+            this.isUKPronunciationPlaying = true
+          } else {
+            this.isUSPronunciationPlaying = true
+          }
+        }
         let audio = new Audio()
         // document.body.appendChild(audio)
         // audio.pause()
@@ -202,11 +214,17 @@ export default {
         } else {
           audio.src = sourceUrl
         }
-        console.log(audio.src)
         audio.pause()
         await audio.play()
       } catch (e) {
         console.error(e)
+      } finally {
+        setTimeout(() => {
+          if (soundmarkType) {
+            this.isUSPronunciationPlaying = false
+            this.isUKPronunciationPlaying = false
+          }
+        }, 1)
       }
     },
     handleChange (val) {
@@ -488,11 +506,6 @@ export default {
                 style="color: #76838f"
                 @click="isShowExample = true"></i>
             </el-button>
-            <el-button v-if="false" type="text" style="color: #909399"><i
-                class="el-icon-video-play outline_fix_bottom_left"
-                style="color: #76838f"
-                @click="oneWordPlay"></i>
-            </el-button>
             <el-button type="text" style="color: #909399"
                        v-if="wordInfo.wordName.length>0"><i
                 :class="getWordCollectClass()"
@@ -515,9 +528,21 @@ export default {
               <el-tag v-if="wordCharacterVO.tag != ''">{{ wordCharacterVO.tag }}</el-tag>
               &nbsp;
               <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-                <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
+                <el-tag
+                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                  <i class="el-icon-video-play"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                     v-show="!isUKPronunciationPlaying"
+                     class="el-icon-video-play"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                     v-show="!isUSPronunciationPlaying"
+                     class="el-icon-video-play"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                     v-show="isUKPronunciationPlaying"
+                     class="el-icon-loading"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                     v-show="isUSPronunciationPlaying"
+                     class="el-icon-loading"></i>
                 </el-tag>
                 &nbsp;
               </span>
@@ -526,9 +551,21 @@ export default {
           <el-row v-if="!isSmallWindow && !isLargeWindow"
                   type="flex" class="row-bg" justify="end">
             <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-              <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
+              <el-tag
+                  @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                <i class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                   v-show="!isUKPronunciationPlaying"
+                   class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                   v-show="!isUSPronunciationPlaying"
+                   class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                   v-show="isUKPronunciationPlaying"
+                   class="el-icon-loading"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                   v-show="isUSPronunciationPlaying"
+                   class="el-icon-loading"></i>
               </el-tag>
             </el-col>
           </el-row>
@@ -536,14 +573,26 @@ export default {
                v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
             <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
               <el-col>
-                <el-tag @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl)">
+                <el-tag
+                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                  <i class="el-icon-video-play"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                     v-show="!isUKPronunciationPlaying"
+                     class="el-icon-video-play"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                     v-show="!isUSPronunciationPlaying"
+                     class="el-icon-video-play"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                     v-show="isUKPronunciationPlaying"
+                     class="el-icon-loading"></i>
+                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                     v-show="isUSPronunciationPlaying"
+                     class="el-icon-loading"></i>
                 </el-tag>
               </el-col>
             </el-row>
           </div>
-          <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList" v>
+          <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList">
             <el-card class="box-card">
               <div slot="header" @click="isShowParaphrase = !isShowParaphrase">
                 <el-alert
