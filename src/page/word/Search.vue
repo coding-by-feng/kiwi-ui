@@ -39,7 +39,7 @@ import wordSearch from '@/api/wordSearch'
 export default {
   data () {
     return {
-      word: this.$route.query.word ? this.$route.query.word : '',
+      word: this.$route.query.word ? decodeURI(this.$route.query.word) : '',
       searchInputWidth: document.body.clientWidth / 1.5 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1
     }
@@ -52,15 +52,20 @@ export default {
   mounted () {},
   watch: {
     $route: function () {
-      this.word = this.$route.query.word
+      this.word = decodeURI(this.$route.query.word)
       this.lazy = this.$route.query.lazy
     }
   },
   methods: {
     ...wordSearch,
     querySearch (queryString, callback) {
+      var real = queryString.trimLeft()
+      if (real === '') {
+        return
+      }
+      console.log(real)
       // var results = fuzzyQueryWord(queryString);
-      this.fuzzyQueryWord(queryString, 1, 20).then(response => {
+      this.fuzzyQueryWord(real, 1, 20).then(response => {
         callback(response.data.data)
       }).catch(e => {
         console.error(e)
@@ -70,17 +75,25 @@ export default {
       // cb(results);
     },
     querySelect (item) {
-      console.log('querySelect')
+      var real = item.value.trimLeft()
+      if (real === '') {
+        return
+      }
       this.$router.push({
         path: this.$route.path,
-        query: { active: 'search', word: item.value, now: new Date().getTime() }
+        query: { active: 'search', word: encodeURI(real), now: new Date().getTime() }
       })
     },
     onSubmit () {
+      console.log('onSubmit')
+      var real = this.word.trimLeft()
+      if (real === '') {
+        return
+      }
       this.$refs.auto.close()
       this.$router.push({
         path: this.$route.path,
-        query: { active: 'search', word: this.word, now: new Date().getTime() }
+        query: { active: 'search', word: encodeURI(real), now: new Date().getTime() }
       })
     },
     handleOpen (key, keyPath) {
