@@ -54,7 +54,7 @@ export default {
         pages: 0
       },
       detail: {
-        loading: false,
+        loading: true,
         paraphraseVO: {},
         dialogVisible: false,
         rememberLoading: false,
@@ -101,7 +101,7 @@ export default {
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
       }
-      if (newVal > this.playCountPerWord) {
+      if (newVal > this.playCountPerWord - 1) {
         this.playStepIndex = 0
         this.playWordIndex++
         this.recursiveReview()
@@ -527,7 +527,11 @@ export default {
           if (!that.isReviewStop) {
             that.playStepIndex++
           }
-        }, false)
+        })
+        audioQueue[j].addEventListener('play', function () {   //开始播放时触发
+          console.log('that.reviewAudioArr.length=' + that.reviewAudioArr[0].length)
+          console.log('that.playCountPerWord=' + that.playCountPerWord)
+        })
       }
 
       this.reviewAudioArr.push(audioQueue)
