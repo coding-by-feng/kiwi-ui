@@ -59,11 +59,10 @@ export default {
   methods: {
     ...wordSearch,
     querySearch (queryString, callback) {
-      var real = queryString.trimLeft()
+      let real = queryString.trimLeft()
       if (real === '') {
         return
       }
-      console.log(real)
       // var results = fuzzyQueryWord(queryString);
       this.fuzzyQueryWord(real, 1, 20).then(response => {
         callback(response.data.data)
@@ -75,7 +74,7 @@ export default {
       // cb(results);
     },
     querySelect (item) {
-      var real = item.value.trimLeft()
+      let real = item.value.trimLeft()
       if (real === '') {
         return
       }
@@ -85,8 +84,7 @@ export default {
       })
     },
     onSubmit () {
-      console.log('onSubmit')
-      var real = this.word.trimLeft()
+      let real = this.word.trimLeft()
       if (real === '') {
         return
       }
