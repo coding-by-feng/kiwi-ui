@@ -52,7 +52,7 @@ export default {
   mounted () {},
   watch: {
     $route: function () {
-      this.word = decodeURI(this.$route.query.word)
+      this.word = this.$route.query.word ? decodeURI(this.$route.query.word) : ''
       this.lazy = this.$route.query.lazy
     }
   },

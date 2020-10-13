@@ -9,7 +9,9 @@ export default {
       user: {
         userName: getStore({ name: 'user_name' }),
         pronunciationSource: getStore({ name: 'pronunciation_source' }),
-        reviewType: getStore({ name: 'review_type' })
+        reviewType: getStore({ name: 'review_type' }),
+        spellType: getStore({ name: 'spell_type' }),
+        enParaType: getStore({ name: 'enPara_type' })
       }
     }
   },
@@ -24,6 +26,13 @@ export default {
     if (!this.user.reviewType) {
       setStore({
         name: 'review_type',
+        content: '2',
+        type: 'local'
+      })
+    }
+    if (!this.user.spellType) {
+      setStore({
+        name: 'spell_type',
         content: '2',
         type: 'local'
       })
@@ -56,6 +65,24 @@ export default {
       this.user.reviewType = command
       window.location.reload()
     },
+    spellTypeChange (command) {
+      setStore({
+        name: 'spell_type',
+        content: command,
+        type: 'local'
+      })
+      this.user.spellType = command
+      window.location.reload()
+    },
+    enParaTypeChange (command) {
+      setStore({
+        name: 'enPara_type',
+        content: command,
+        type: 'local'
+      })
+      this.user.enParaType = command
+      window.location.reload()
+    },
     tranReviewType (val) {
       if (undefined === val) {
         setStore({
@@ -68,6 +95,36 @@ export default {
         return '去除中文导播'
       } else if (val === '2') {
         return '附带中文导播'
+      }
+      return '异常'
+    },
+    tranEnParaType (val) {
+      if (undefined === val) {
+        setStore({
+          name: 'enPara_type',
+          content: '2',
+          type: 'local'
+        })
+      }
+      if (val === '1') {
+        return '去除英文释义'
+      } else if (val === '2') {
+        return '附带英文释义'
+      }
+      return '异常'
+    },
+    tranSpellType (val) {
+      if (undefined === val) {
+        setStore({
+          name: 'review_type',
+          content: '2',
+          type: 'local'
+        })
+      }
+      if (val === '1') {
+        return '去除单词拼写'
+      } else if (val === '2') {
+        return '附带单词拼写'
       }
       return '异常'
     }
@@ -99,10 +156,28 @@ export default {
     <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="reviewTypeChange">
-      {{ `复习模式：${tranReviewType(user.reviewType)}` }}
+      {{ `复习模式（导播）：${tranReviewType(user.reviewType)}` }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="'1'">去除中文导播</el-dropdown-item>
         <el-dropdown-item :command="'2'">附带中文导播</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="spellTypeChange">
+      {{ `复习模式（字母拼写播报）：${tranSpellType(user.spellType)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="'1'">去除单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="'2'">附带单词拼写</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="enParaTypeChange">
+      {{ `复习模式（英文释义播报）：${tranEnParaType(user.enParaType)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="'1'">去除英文释义</el-dropdown-item>
+        <el-dropdown-item :command="'2'">附带英文释义</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>
