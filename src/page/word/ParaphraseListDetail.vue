@@ -10,9 +10,9 @@ const sleep = function (time) {
 
 const runUpCh2EnCount = 5 // 需要回想时间
 const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
-const carryChModeCh2EnAudioCount = 17
+const carryChModeCh2EnAudioCount = 17 // 附带中文汉英模式播放的Audio数
 const ridChModeEh2ChAudioCount = 9 // 去除中文英汉模式播放的Audio数
-const carryChModeEh2ChAudioCount = 16
+const carryChModeEh2ChAudioCount = 16 // 附带中文英汉模式播放的Audio数
 
 let that
 
@@ -107,6 +107,10 @@ export default {
         this.recursiveReview()
         this.detail.loading = true
       } else {
+        // console.log('this.playWordIndex' + this.playWordIndex)
+        // console.log('this.playStepIndex' + this.playStepIndex)
+        // console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
+        // console.log(this.playCountPerWord)
         this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
         this.currentPlayAudio.play()
       }
@@ -133,6 +137,7 @@ export default {
               center: true,
               message: '当前复习列表已经复习完'
             })
+            this.detail.loading = false
           }
         }
       }
@@ -192,7 +197,6 @@ export default {
         this.reviewAudioArr = []
         this.listItems = []
         this.detail.paraphraseVO = {}
-        this.detail.loading = false
         if (this.currentPlayAudio) {
           this.currentPlayAudio.pause()
           this.currentPlayAudio = null
@@ -208,6 +212,7 @@ export default {
           await this.initList()
           await this.initNextReviewDetail(true)
         } catch (e) {
+          alert(e)
           await this.init()
           return
         } finally {
@@ -298,7 +303,6 @@ export default {
             })
       }
       await this.reviewDetail(this.detail.paraphraseVO.wordCharacter === 'phrase')
-      this.detail.loading = false
     },
     async showDetail (paraphraseId, index) {
       this.detail.showIndex = index
@@ -524,18 +528,38 @@ export default {
 
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
+          console.log('end')
+          that.detail.loading = true
           if (!that.isReviewStop) {
             that.playStepIndex++
           }
         })
-        audioQueue[j].addEventListener('play', function () {   //开始播放时触发
-          console.log('that.reviewAudioArr.length=' + that.reviewAudioArr[0].length)
-          console.log('that.playCountPerWord=' + that.playCountPerWord)
+        // audioQueue[j].addEventListener('play', function () {   //开始播放时触发
+        //   console.log('play')
+        //   that.detail.loading = false
+        // })
+        audioQueue[j].addEventListener('playing', function () {   //开始播放时触发
+          console.log('playing')
+          that.detail.loading = false
         })
+        // audioQueue[j].addEventListener('loadstart', function () {
+        //   console.log('loadstart' + j)
+        // })
+        // audioQueue[j].addEventListener('progress', function () {
+        //   console.log('progress')
+        //   that.detail.loading = true
+        // })
+        // audioQueue[j].addEventListener('waiting', function () {
+        //   console.log('waiting')
+        //   that.detail.loading = true
+        // })
+        // audioQueue[j].addEventListener('stalled', function () {
+        //   console.log('stalled')
+        //   that.detail.loading = true
+        // })
       }
 
       this.reviewAudioArr.push(audioQueue)
-      this.detail.loading = false
       this.$message.success({
         duration: 2000,
         center: true,
