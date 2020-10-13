@@ -11,8 +11,11 @@ const sleep = function (time) {
 const runUpCh2EnCount = 5 // 需要回想时间
 const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
 const carryChModeCh2EnAudioCount = 17 // 附带中文汉英模式播放的Audio数
-const ridChModeEh2ChAudioCount = 9 // 去除中文英汉模式播放的Audio数
+const ridChModeEh2ChAudioCount = 10 // 去除中文英汉模式播放的Audio数
 const carryChModeEh2ChAudioCount = 16 // 附带中文英汉模式播放的Audio数
+const playWordLoadCountOnce = 1 // 一次播放加载的单词个数
+const playCountOnce = 5 // 复习模式每页加载的单词个数
+const readCountOnce = 10 // 阅读模式每页加载的单词个数
 
 let that
 
@@ -49,7 +52,7 @@ export default {
       innerWidth: window.innerWidth + 'px',
       page: {
         current: 1,
-        size: 10,
+        size: readCountOnce,
         total: 0,
         pages: 0
       },
@@ -69,6 +72,8 @@ export default {
       isUSPronunciationPlaying: false,
       source: getStore({ name: 'pronunciation_source' }),
       reviewType: getStore({ name: 'review_type' }),
+      spellType: getStore({ name: 'spell_type' }),
+      enParaType: getStore({ name: 'enPara_type' }),
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: 0,
@@ -76,7 +81,6 @@ export default {
       isReviewStop: false,
       playWordIndex: -1,
       playStepIndex: -1,
-      playCountOnce: 5,
       playCountPerWord: 0,
       currentPlayAudio: null,
 
@@ -107,17 +111,18 @@ export default {
         this.recursiveReview()
         this.detail.loading = true
       } else {
-        // console.log('this.playWordIndex' + this.playWordIndex)
-        // console.log('this.playStepIndex' + this.playStepIndex)
-        // console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
-        // console.log(this.playCountPerWord)
+        console.log('this.playWordIndex' + this.playWordIndex)
+        console.log('this.playStepIndex' + this.playStepIndex)
+        console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
+        console.log('this.reviewAudioArr[0].length' + this.reviewAudioArr[0].length)
+        console.log(this.playCountPerWord)
         this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
         this.currentPlayAudio.play()
       }
     },
     'playWordIndex' (newVal) {
       if (newVal === 0) return
-      if (newVal >= this.playCountOnce) {
+      if (newVal >= playCountOnce) {
         this.playWordIndex = 0
         this.reviewAudioArr = []
         if (this.page.pages > this.page.current) {
@@ -161,35 +166,49 @@ export default {
     // }
   },
   computed: {
-    getCarryChModeCh2EnAudioCount () {
-      if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-        return carryChModeCh2EnAudioCount - 6
-      }
-      return carryChModeCh2EnAudioCount
-    },
-    getRidChModeCh2EnAudioCount () {
-      if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-        return ridChModeCh2EnAudioCount - 6
-      }
-      return ridChModeCh2EnAudioCount
-    },
-    getCarryChModeEh2ChAudioCount () {
-      if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-        return carryChModeEh2ChAudioCount - 4
-      }
-      return carryChModeEh2ChAudioCount
-    },
-    getRidChModeEh2ChAudioCount () {
-      if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-        return ridChModeEh2ChAudioCount - 4
-      }
-      return ridChModeEh2ChAudioCount
-    }
+    // getCarryChModeCh2EnAudioCount () {
+    //   let tmp = carryChModeCh2EnAudioCount
+    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
+    //     tmp -= 6
+    //   } else if (this.spellType === '1') {
+    //     tmp -= 6
+    //   }
+    //   return tmp
+    // },
+    // getRidChModeCh2EnAudioCount () {
+    //   let tmp = ridChModeCh2EnAudioCount
+    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
+    //     tmp -= 6
+    //   } else if (this.spellType === '1') {
+    //     tmp -= 4
+    //   }
+    //   return tmp
+    // },
+    // getCarryChModeEh2ChAudioCount () {
+    //   let tmp = carryChModeEh2ChAudioCount
+    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
+    //     tmp -= 4
+    //   } else if (this.spellType === '1') {
+    //     tmp -= 6
+    //   }
+    //   return tmp
+    // },
+    // getRidChModeEh2ChAudioCount () {
+    //   let tmp = ridChModeEh2ChAudioCount
+    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
+    //     tmp -= 4
+    //   } else if (this.spellType === '1') {
+    //     tmp -= 4
+    //   }
+    //   return tmp
+    // }
   },
   methods: {
     ...paraphraseStarList,
     async init () {
       if (this.isReview) {
+        // stop playing
+        this.stopPlaying()
         // clean data
         this.playWordIndex = 0
         this.playStepIndex = 0
@@ -270,16 +289,16 @@ export default {
       this.listRefresh = true
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         // 复习模式每页只加载5个单词
-        this.page.size = this.playCountOnce
+        this.page.size = playCountOnce
         await this.initStockListFun()
         this.listRefresh = false
         return
       } else if (this.reviewMode === 'totalReview' || this.reviewMode === 'totalRead') {
         // 全量模式也只查5个
-        this.page.size = this.playCountOnce
+        this.page.size = playCountOnce
       } else if (this.reviewMode === 'enhanceReview' || this.reviewMode === 'enhanceRead') {
         // 复习模式每页只加载5个单词
-        this.page.size = this.playCountOnce
+        this.page.size = playCountOnce
         await this.initEnhanceListFun()
         this.listRefresh = false
         return
@@ -302,7 +321,7 @@ export default {
               console.error(e)
             })
       }
-      await this.reviewDetail(this.detail.paraphraseVO.wordCharacter === 'phrase')
+      await this.reviewDetail(this.detail.paraphraseVO.wordCharacter === 'phrase' || this.spellType === '1')
     },
     async showDetail (paraphraseId, index) {
       this.detail.showIndex = index
@@ -391,7 +410,8 @@ export default {
         } else {
           audio.src = sourceUrl
         }
-        audio.pause()
+        audio.preload = 'auto'
+        // audio.pause()
         await audio.play()
       } catch (e) {
         console.error(e)
@@ -408,7 +428,7 @@ export default {
       this.autoPlayDialogVisible++
       if (this.reviewAudioArr.length) {
         await this.showDetail(this.listItems[0].paraphraseId, 0)
-        this.calPlayCountPerWord()
+        // this.calPlayCountPerWord()
         this.currentPlayAudio = this.reviewAudioArr[0][0]
         this.currentPlayAudio.play()
       }
@@ -416,22 +436,24 @@ export default {
     async recursiveReview () {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       // 每个单词播放前要计算播放audio数量，词组和单词不一样
-      this.calPlayCountPerWord()
+      // this.calPlayCountPerWord()
       await this.initNextReviewDetail(false)
       this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
       this.currentPlayAudio.play()
     },
-    createPronunciationAudio () {
+    createPronunciationAudio (isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
         return audioPlay.createAudioFromText('音标缺失')
       }
       let pronunciation = new Audio()
+      let first = isUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[1]
       if (this.source === '本地') {
-        pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + this.detail.paraphraseVO.pronunciationVOList[0].pronunciationId
+        pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
-        pronunciation.src = this.detail.paraphraseVO.pronunciationVOList[0].sourceUrl
+        pronunciation.src = first.sourceUrl
       }
-      pronunciation.pause()
+      // pronunciation.pause()
+      pronunciation.preload = 'auto'
       pronunciation.loop = false
       return pronunciation
     },
@@ -458,12 +480,12 @@ export default {
           audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio())
+          audioQueue.push(this.createPronunciationAudio(true))
         }
 
         if (!isNotReviewSpell) {
-          if (this.reviewType === '2') {}
-          audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
           audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
           if (this.reviewType === '2')
@@ -474,15 +496,17 @@ export default {
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
           audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio())
+          audioQueue.push(this.createPronunciationAudio(true))
         }
 
-        if (this.reviewType === '2')
+        if (this.enParaType === '2') {
+          if (this.reviewType === '2') {}
           audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        }
       } else {
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
@@ -493,7 +517,7 @@ export default {
           audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio())
+          audioQueue.push(this.createPronunciationAudio(true))
         }
 
         if (!isNotReviewSpell) {
@@ -509,26 +533,30 @@ export default {
         // 如果是没有音标的词组
         if (!isNotReviewSpell) {
           audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio())
+          audioQueue.push(this.createPronunciationAudio(true))
         }
 
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
         audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        if (this.enParaType === '2') {
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        }
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText('再读一次中文释义：'))
         audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        if (this.enParaType === '2') {
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+        }
       }
 
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
-          console.log('end')
+          // console.log('end')
           that.detail.loading = true
           if (!that.isReviewStop) {
             that.playStepIndex++
@@ -537,13 +565,52 @@ export default {
         // audioQueue[j].addEventListener('play', function () {   //开始播放时触发
         //   console.log('play')
         //   that.detail.loading = false
+        //   that.$message.success({
+        //     showClose: true,
+        //     center: true,
+        //     message: `play${j}`
+        //   })
         // })
-        audioQueue[j].addEventListener('playing', function () {   //开始播放时触发
-          console.log('playing')
+        audioQueue[j].addEventListener('playing', function () {
+          // console.log('playing')
           that.detail.loading = false
+          // that.$message.success({
+          //   showClose: true,
+          //   center: true,
+          //   message: `playing${j}`
+          // })
         })
         // audioQueue[j].addEventListener('loadstart', function () {
-        //   console.log('loadstart' + j)
+        //   // console.log('loadstart' + j)
+        //   that.$message.success({
+        //     showClose: true,
+        //     center: true,
+        //     message: `loadstart${j}`
+        //   })
+        // })
+        // audioQueue[j].addEventListener('progress', function () {
+        //   // console.log('loadstart' + j)
+        //   that.$message.success({
+        //     showClose: true,
+        //     center: true,
+        //     message: `progress${j}`
+        //   })
+        // })
+        // audioQueue[j].addEventListener('waiting', function () {
+        //   // console.log('loadstart' + j)
+        //   that.$message.success({
+        //     showClose: true,
+        //     center: true,
+        //     message: `waiting${j}`
+        //   })
+        // })
+        // audioQueue[j].addEventListener('stalled', function () {
+        //   // console.log('loadstart' + j)
+        //   that.$message.success({
+        //     showClose: true,
+        //     center: true,
+        //     message: `stalled${j}`
+        //   })
         // })
         // audioQueue[j].addEventListener('progress', function () {
         //   console.log('progress')
@@ -560,11 +627,31 @@ export default {
       }
 
       this.reviewAudioArr.push(audioQueue)
+      this.playCountPerWord = audioQueue.length
       this.$message.success({
         duration: 2000,
         center: true,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
       })
+    },
+    stopPlaying () {
+      if (this.playWordIndex < 0 || this.playStepIndex < 0) return
+      if (this.reviewAudioArr[this.playWordIndex]) {
+        if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
+          this.reviewAudioArr[this.playWordIndex][this.playStepIndex].pause()
+        }
+      }
+    },
+    skipCurrentReview () {
+      this.$message.success({
+        duration: 2000,
+        center: true,
+        message: `单词${this.detail.paraphraseVO.wordName}已跳过！`
+      })
+
+      this.stopPlaying()
+      // 跳过当前单词的复习
+      this.playStepIndex = this.playCountPerWord
     },
     rememberInSleepMode () {
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
@@ -574,6 +661,7 @@ export default {
       }
     },
     rememberOneFun () {
+      this.skipCurrentReview()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(res => {
             this.doSuccess()
@@ -584,6 +672,7 @@ export default {
           })
     },
     keepInMindFun () {
+      this.skipCurrentReview()
       this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(res => {
             this.doSuccess()
@@ -682,21 +771,21 @@ export default {
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-    calPlayCountPerWord () {
-      if (this.isChToEn) {
-        if (this.reviewType === '2') {
-          this.playCountPerWord = this.getCarryChModeCh2EnAudioCount
-        } else {
-          this.playCountPerWord = this.getRidChModeCh2EnAudioCount
-        }
-      } else {
-        if (this.reviewType === '2') {
-          this.playCountPerWord = this.getCarryChModeCh2EnAudioCount
-        } else {
-          this.playCountPerWord = this.getRidChModeEh2ChAudioCount
-        }
-      }
-    }
+    // calPlayCountPerWord () {
+    //   if (this.isChToEn) {
+    //     if (this.reviewType === '2') {
+    //       this.playCountPerWord = this.getCarryChModeCh2EnAudioCount
+    //     } else {
+    //       this.playCountPerWord = this.getRidChModeCh2EnAudioCount
+    //     }
+    //   } else {
+    //     if (this.reviewType === '2') {
+    //       this.playCountPerWord = this.getCarryChModeCh2EnAudioCount
+    //     } else {
+    //       this.playCountPerWord = this.getRidChModeEh2ChAudioCount
+    //     }
+    //   }
+    // }
   }
 }
 </script>
