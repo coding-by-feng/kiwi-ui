@@ -87,7 +87,14 @@ export default {
       countdownMode: false,
       countdownTime: new Date().getTime(),
       countdownMin: 30,
-      countdownText: '30分钟'
+      countdownText: '30分钟',
+
+      // 唯一标识，用来判断复习模式是否长时间停滞
+      cmp: new Date().getTime(),
+      // 唯一标识的副本，用于判断
+      counterpart: null,
+      cmpListening: null,
+      notDistinctCount: 0
     }
   },
   beforeCreate: function () {
@@ -95,6 +102,9 @@ export default {
   },
   async mounted () {
     await this.init()
+  },
+  destroyed () {
+    clearInterval(this.cmpListening)
   },
   watch: {
     'listId' () {
@@ -258,9 +268,33 @@ export default {
           this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
           this.currentPlayAudio.play()
         }
+
+        // 启动断播监听，一旦网络卡住太久重新刷新，5秒监听一次
+        await this.initCmpListening()
       } else {
         await this.initList()
       }
+    },
+    async initCmpListening () {
+      if (this.cmpListening) {
+        clearInterval(this.cmpListening)
+        this.cmpListening = null
+        this.notDistinctCount = null
+      }
+      this.cmpListening = setInterval(() => {
+        console.log('cmpListening')
+        let counterpartTmp = this.cmp
+        if (counterpartTmp === this.counterpart) {
+          if (this.notDistinctCount > 2) {
+            this.init()
+            return
+          }
+          this.notDistinctCount++
+        } else {
+          this.counterpart = counterpartTmp
+          this.notDistinctCount = 0
+        }
+      }, 10000)
     },
     async initStockListFun () {
       await this.getReviewListItems(this.page, this.listId).then(response => {
@@ -569,6 +603,7 @@ export default {
       for (let j = 0; j < audioQueue.length; j++) {
         audioQueue[j].addEventListener('ended', function () {
           // console.log('end')
+          that.cmp = new Date().getTime()
           that.detail.loading = true
           if (!that.isReviewStop) {
             that.playStepIndex++
