@@ -105,19 +105,23 @@ export default {
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
       }
-      if (newVal > this.playCountPerWord - 1) {
-        this.playStepIndex = 0
-        this.playWordIndex++
-        this.recursiveReview()
-        this.detail.loading = true
-      } else {
-        console.log('this.playWordIndex' + this.playWordIndex)
-        console.log('this.playStepIndex' + this.playStepIndex)
-        console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
-        console.log('this.reviewAudioArr[0].length' + this.reviewAudioArr[0].length)
-        console.log(this.playCountPerWord)
-        this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-        this.currentPlayAudio.play()
+      try {
+        if (newVal > this.playCountPerWord - 1) {
+          this.playStepIndex = 0
+          this.playWordIndex++
+          this.recursiveReview()
+          this.detail.loading = true
+        } else {
+          console.log('this.playWordIndex' + this.playWordIndex)
+          console.log('this.playStepIndex' + this.playStepIndex)
+          console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
+          console.log('this.reviewAudioArr[0].length' + this.reviewAudioArr[0].length)
+          console.log(this.playCountPerWord)
+          this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+          this.currentPlayAudio.play()
+        }
+      } catch (e) {
+        alert(e)
       }
     },
     'playWordIndex' (newVal) {
@@ -315,6 +319,10 @@ export default {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
               this.detail.paraphraseVO = response.data.data
+              console.log('initNextReviewDetail')
+              if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
+                this.detail.paraphraseVO.wordCharacter = 'phrase'
+              }
             })
             .catch(e => {
               loading.close()
@@ -328,6 +336,10 @@ export default {
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
+            console.log('showDetail')
+            if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
+              this.detail.paraphraseVO.wordCharacter = 'phrase'
+            }
             // 如果是复习最近收藏
             this.detail.listId = this.listItems[this.detail.showIndex].listId
           })
@@ -643,6 +655,9 @@ export default {
       }
     },
     skipCurrentReview () {
+      if (this.playWordIndex !== this.detail.showIndex) {
+        return
+      }
       this.$message.success({
         duration: 2000,
         center: true,
