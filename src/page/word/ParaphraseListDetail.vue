@@ -286,6 +286,8 @@ export default {
         let counterpartTmp = this.cmp
         if (counterpartTmp === this.counterpart) {
           if (this.notDistinctCount > 2) {
+            // 自动刷新进入复习需要手动触发
+            this.autoPlayDialogVisible = 0
             this.init()
             return
           }

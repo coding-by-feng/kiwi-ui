@@ -19,7 +19,7 @@ export default {
     if (!this.user.pronunciationSource) {
       setStore({
         name: 'pronunciation_source',
-        content: 'Cambridge',
+        content: '本地',
         type: 'local'
       })
     }
