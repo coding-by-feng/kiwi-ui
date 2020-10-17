@@ -270,7 +270,7 @@ export default {
         }
 
         // 启动断播监听，一旦网络卡住太久重新刷新，5秒监听一次
-        await this.initCmpListening()
+        // await this.initCmpListening()
       } else {
         await this.initList()
       }
@@ -494,7 +494,8 @@ export default {
         return audioPlay.createAudioFromText('音标缺失')
       }
       let pronunciation = new Audio()
-      let first = isUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[1]
+      let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
+      let first = isUS && isExistUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[0]
       if (this.source === '本地') {
         pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
@@ -609,6 +610,14 @@ export default {
           that.detail.loading = true
           if (!that.isReviewStop) {
             that.playStepIndex++
+          }
+        })
+        audioQueue[j].addEventListener('error', function () {
+          // console.log('end')
+          that.cmp = new Date().getTime()
+          that.detail.loading = true
+          if (!that.isReviewStop) {
+            that.playWordIndex++
           }
         })
         // audioQueue[j].addEventListener('play', function () {   //开始播放时触发
