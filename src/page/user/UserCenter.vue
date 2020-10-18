@@ -11,7 +11,8 @@ export default {
         pronunciationSource: getStore({ name: 'pronunciation_source' }),
         reviewType: getStore({ name: 'review_type' }),
         spellType: getStore({ name: 'spell_type' }),
-        enParaType: getStore({ name: 'enPara_type' })
+        enParaType: getStore({ name: 'enPara_type' }),
+        bgm: getStore({ name: 'bgm' })
       }
     }
   },
@@ -20,6 +21,13 @@ export default {
       setStore({
         name: 'pronunciation_source',
         content: '本地',
+        type: 'local'
+      })
+    }
+    if (!this.user.bgm) {
+      setStore({
+        name: 'bgm',
+        content: '1',
         type: 'local'
       })
     }
@@ -72,6 +80,15 @@ export default {
         type: 'local'
       })
       this.user.spellType = command
+      window.location.reload()
+    },
+    bgmChange (command) {
+      setStore({
+        name: 'bgm',
+        content: command,
+        type: 'local'
+      })
+      this.user.bgm = command
       window.location.reload()
     },
     enParaTypeChange (command) {
@@ -127,6 +144,27 @@ export default {
         return '附带单词拼写'
       }
       return '异常'
+    },
+    tranBGM (val) {
+      if (undefined === val) {
+        setStore({
+          name: 'bgm',
+          content: '1',
+          type: 'local'
+        })
+      }
+      if (val === '1') {
+        return '【白噪音】雨声/小溪/炉火/猫咪'
+      } else if (val === '2') {
+        return '【白噪音】篝火'
+      } else if (val === '3') {
+        return '致抑郁轻音乐（慎点）'
+      } else if (val === '4') {
+        return '粤语老歌'
+      } else if (val === null) {
+        return '关闭'
+      }
+      return '异常'
     }
   }
 }
@@ -151,6 +189,18 @@ export default {
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
         <el-dropdown-item command="本地">本地</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="bgmChange">
+      {{ `背景音乐：${tranBGM(user.bgm)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="'1'">【白噪音】雨声/小溪/炉火/猫咪</el-dropdown-item>
+        <el-dropdown-item :command="'2'">【白噪音】篝火</el-dropdown-item>
+        <el-dropdown-item :command="'3'"> 致抑郁轻音乐（慎点）</el-dropdown-item>
+        <el-dropdown-item :command="'4'"> 粤语老歌</el-dropdown-item>
+        <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
