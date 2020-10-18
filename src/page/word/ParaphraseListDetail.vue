@@ -78,6 +78,7 @@ export default {
       listRefresh: false,
       autoPlayDialogVisible: 0,
       reviewAudioArr: [],
+      reviewAudioCandidates: [],
       isReviewStop: false,
       playWordIndex: -1,
       playStepIndex: -1,
@@ -138,7 +139,7 @@ export default {
           this.currentPlayAudio.play()
         }
       } catch (e) {
-        alert(e)
+        // alert(e)
       }
     },
     'playWordIndex' (newVal) {
@@ -172,19 +173,7 @@ export default {
       if (newVal) {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
       }
-    },
-    // async 'isReviewRestart' (newVal) {
-    //   if (!newVal) {
-    //     this.isReviewStop = false
-    //     this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-    //     this.autoPlayDialogVisible = true
-    //     // await this.currentPlayAudio.play()
-    //   } else {
-    //     this.isReviewStop = true
-    //     this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-    //     await this.currentPlayAudio.pause()
-    //   }
-    // }
+    }
   },
   computed: {
     // getCarryChModeCh2EnAudioCount () {
@@ -252,7 +241,7 @@ export default {
           await this.initList()
           await this.initNextReviewDetail(true)
         } catch (e) {
-          alert(e)
+          // alert(e)
           await this.init()
           return
         } finally {
@@ -459,14 +448,14 @@ export default {
           }
         }
         // let audio = this.pronunciationAudioMap.get(id)
-        let audio = new Audio()
+        let audio = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : new Audio()
         if (this.source === '本地') {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
           audio.src = sourceUrl
         }
-        audio.preload = 'auto'
-        // audio.pause()
+        audio.pause()
+        audio.loop = false
         await audio.play()
       } catch (e) {
         console.error(e)
@@ -498,19 +487,18 @@ export default {
     },
     createPronunciationAudio (isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
-        return audioPlay.createAudioFromText('音标缺失')
+        return audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '音标缺失')
       }
-      let pronunciation = new Audio()
+      let pronunciation = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
       let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
       let first = isUS && isExistUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[0]
+      pronunciation.loop = false
+      pronunciation.pause()
       if (this.source === '本地') {
         pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
         pronunciation.src = first.sourceUrl
       }
-      // pronunciation.pause()
-      pronunciation.preload = 'auto'
-      pronunciation.loop = false
       return pronunciation
     },
     async reviewDetail (isNotReviewSpell) {
@@ -522,18 +510,18 @@ export default {
       }
       if (this.isChToEn) {
         if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '接下来复习的单词中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
         if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('再读一遍中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromText('请在脑海回想对应的单词。'))
-        audioQueue.push(audioPlay.createAudioFromText('对应的英文单词是'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '请在脑海回想对应的单词。'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '对应的英文单词是'))
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -541,12 +529,12 @@ export default {
 
         if (!isNotReviewSpell) {
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '单词的拼写是：'))
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
-          audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次拼写：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
         }
 
         // 如果是没有音标的词组
@@ -557,20 +545,20 @@ export default {
 
         if (this.enParaType === '2') {
           if (this.reviewType === '2') {}
-          audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
         }
       } else {
         if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('接下来复习的单词是：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '接下来复习的单词是：'))
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -578,12 +566,12 @@ export default {
 
         if (!isNotReviewSpell) {
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('单词的拼写是：'))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '单词的拼写是：'))
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('再读一次拼写：'))
-          audioQueue.push(audioPlay.createAudioFromText(wordAlphabet))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次拼写：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
         }
 
         // 如果是没有音标的词组
@@ -593,103 +581,107 @@ export default {
         }
 
         if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
         if (this.enParaType === '2') {
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
         }
         if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText('再读一次中文释义：'))
-        audioQueue.push(audioPlay.createAudioFromText(meaningChinese))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次中文释义：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
         if (this.enParaType === '2') {
           if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText('再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.detail.paraphraseVO.paraphraseEnglish, true))
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
         }
       }
 
-      for (let j = 0; j < audioQueue.length; j++) {
-        audioQueue[j].addEventListener('ended', function () {
-          // console.log('end')
-          that.cmp = new Date().getTime()
-          that.detail.loading = true
-          if (!that.isReviewStop) {
-            that.playStepIndex++
-          }
-        })
-        audioQueue[j].addEventListener('error', function () {
-          // console.log('end')
-          that.cmp = new Date().getTime()
-          that.detail.loading = true
-          if (!that.isReviewStop) {
-            that.playWordIndex++
-          }
-        })
-        // audioQueue[j].addEventListener('play', function () {   //开始播放时触发
-        //   console.log('play')
-        //   that.detail.loading = false
-        //   that.$message.success({
-        //     showClose: true,
-        //     center: true,
-        //     message: `play${j}`
-        //   })
-        // })
-        audioQueue[j].addEventListener('playing', function () {
-          // console.log('playing')
-          that.detail.loading = false
-          // that.$message.success({
-          //   showClose: true,
-          //   center: true,
-          //   message: `playing${j}`
-          // })
-        })
-        // audioQueue[j].addEventListener('loadstart', function () {
-        //   // console.log('loadstart' + j)
-        //   that.$message.success({
-        //     showClose: true,
-        //     center: true,
-        //     message: `loadstart${j}`
-        //   })
-        // })
-        // audioQueue[j].addEventListener('progress', function () {
-        //   // console.log('loadstart' + j)
-        //   that.$message.success({
-        //     showClose: true,
-        //     center: true,
-        //     message: `progress${j}`
-        //   })
-        // })
-        // audioQueue[j].addEventListener('waiting', function () {
-        //   // console.log('loadstart' + j)
-        //   that.$message.success({
-        //     showClose: true,
-        //     center: true,
-        //     message: `waiting${j}`
-        //   })
-        // })
-        // audioQueue[j].addEventListener('stalled', function () {
-        //   // console.log('loadstart' + j)
-        //   that.$message.success({
-        //     showClose: true,
-        //     center: true,
-        //     message: `stalled${j}`
-        //   })
-        // })
-        // audioQueue[j].addEventListener('progress', function () {
-        //   console.log('progress')
-        //   that.detail.loading = true
-        // })
-        // audioQueue[j].addEventListener('waiting', function () {
-        //   console.log('waiting')
-        //   that.detail.loading = true
-        // })
-        // audioQueue[j].addEventListener('stalled', function () {
-        //   console.log('stalled')
-        //   that.detail.loading = true
-        // })
-      }
+      // for (let j = 0; j < audioQueue.length; j++) {
+      // audioQueue[j].addEventListener('ended', function () {
+      //   // console.log('end')
+      //   that.cmp = new Date().getTime()
+      //   console.log('ended======>')
+      //   that.reviewAudioCandidates.push(this)
+      //   that.detail.loading = true
+      //   if (!that.isReviewStop) {
+      //     that.playStepIndex++
+      //   }
+      // })
+      // audioQueue[j].addEventListener('error', function () {
+      //   // console.log('end')
+      //   that.cmp = new Date().getTime()
+      //   console.log('error======>')
+      //   that.reviewAudioCandidates.push(this)
+      //   that.detail.loading = true
+      //   if (!that.isReviewStop) {
+      //     that.playWordIndex++
+      //   }
+      // })
+      // audioQueue[j].addEventListener('play', function () {   //开始播放时触发
+      //   console.log('play')
+      //   that.detail.loading = false
+      //   that.$message.success({
+      //     showClose: true,
+      //     center: true,
+      //     message: `play${j}`
+      //   })
+      // })
+      // audioQueue[j].addEventListener('playing', function () {
+      //   // console.log('playing')
+      //   that.detail.loading = false
+      //   // that.$message.success({
+      //   //   showClose: true,
+      //   //   center: true,
+      //   //   message: `playing${j}`
+      //   // })
+      // })
+      // audioQueue[j].addEventListener('loadstart', function () {
+      //   // console.log('loadstart' + j)
+      //   that.$message.success({
+      //     showClose: true,
+      //     center: true,
+      //     message: `loadstart${j}`
+      //   })
+      // })
+      // audioQueue[j].addEventListener('progress', function () {
+      //   // console.log('loadstart' + j)
+      //   that.$message.success({
+      //     showClose: true,
+      //     center: true,
+      //     message: `progress${j}`
+      //   })
+      // })
+      // audioQueue[j].addEventListener('waiting', function () {
+      //   // console.log('loadstart' + j)
+      //   that.$message.success({
+      //     showClose: true,
+      //     center: true,
+      //     message: `waiting${j}`
+      //   })
+      // })
+      // audioQueue[j].addEventListener('stalled', function () {
+      //   // console.log('loadstart' + j)
+      //   that.$message.success({
+      //     showClose: true,
+      //     center: true,
+      //     message: `stalled${j}`
+      //   })
+      // })
+      // audioQueue[j].addEventListener('progress', function () {
+      //   console.log('progress')
+      //   that.detail.loading = true
+      // })
+      // audioQueue[j].addEventListener('waiting', function () {
+      //   console.log('waiting')
+      //   that.detail.loading = true
+      // })
+      // audioQueue[j].addEventListener('stalled', function () {
+      //   console.log('stalled')
+      //   that.detail.loading = true
+      // })
+      // }
 
       this.reviewAudioArr.push(audioQueue)
       this.playCountPerWord = audioQueue.length
@@ -698,6 +690,30 @@ export default {
         center: true,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
       })
+    },
+    createNewAudio () {
+      let audio = new Audio()
+      audio.addEventListener('ended', function () {
+        // console.log('end')
+        that.cmp = new Date().getTime()
+        that.reviewAudioCandidates.push(this)
+        that.detail.loading = true
+        if (!that.isReviewStop) {
+          that.playStepIndex++
+        }
+      })
+      audio.addEventListener('error', function () {
+        that.cmp = new Date().getTime()
+        that.reviewAudioCandidates.push(this)
+        that.detail.loading = true
+        if (!that.isReviewStop) {
+          that.playWordIndex++
+        }
+      })
+      audio.addEventListener('playing', function () {
+        that.detail.loading = false
+      })
+      return audio
     },
     stopPlaying () {
       if (this.playWordIndex < 0 || this.playStepIndex < 0) return
