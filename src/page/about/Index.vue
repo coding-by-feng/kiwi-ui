@@ -28,7 +28,6 @@ export default {
         <p>作者微信：my_dream_it</p>
         <p>作者邮箱：feng_orz@163.com</p>
         <p>粤ICP备2020080500号</p>
-        <p style="color: red" v-show="true">浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！</p>
       </div>
     </el-card>
   </div>

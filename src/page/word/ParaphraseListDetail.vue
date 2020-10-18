@@ -934,7 +934,7 @@ export default {
     <el-dialog
         ref="detailDialog"
         :visible.sync="detail.dialogVisible"
-        top="0vh"
+        fullscreen
         width="100%">
       <div slot="title">
         <div v-if="detail.isSleepMode" :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
