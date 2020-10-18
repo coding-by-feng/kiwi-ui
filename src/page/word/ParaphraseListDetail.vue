@@ -104,7 +104,14 @@ export default {
     await this.init()
   },
   destroyed () {
-    clearInterval(this.cmpListening)
+    if (this.cmpListening)
+      clearInterval(this.cmpListening)
+    if (this.isReview && this.reviewAudioArr && this.reviewAudioArr.length > 0) {
+      let audio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+      if (audio)
+        audio.pause()
+      this.reviewAudioArr = null
+    }
   },
   watch: {
     'listId' () {
