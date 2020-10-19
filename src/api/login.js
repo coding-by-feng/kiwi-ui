@@ -43,10 +43,15 @@ export const logout = $ => {
   })
 }
 
-export const oneClickRegister = $ => {
+export const oneClickRegister = (code, randomStr) => {
   return request({
     url: '/admin/sys/user/oneClickRegister',
-    method: 'get'
+    method: 'get',
+    headers: {
+      'isToken': false,
+      'Authorization': 'Basic dm9jYWJ1bGFyeTplbmhhbmNlcg=='
+    },
+    params: { code: code, randomStr: randomStr }
   })
 }
 

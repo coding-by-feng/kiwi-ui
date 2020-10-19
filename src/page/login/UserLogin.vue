@@ -46,8 +46,8 @@ export default {
       this.loginForm.code = ''
       this.loginForm.randomStr = randomLenNum(this.code.len, true)
       this.code.type === 'text'
-        ? (this.code.value = randomLenNum(this.code.len))
-        : (this.code.src = `/code?randomStr=${this.loginForm.randomStr}`)
+          ? (this.code.value = randomLenNum(this.code.len))
+          : (this.code.src = `/code?randomStr=${this.loginForm.randomStr}`)
       return this.code.src
     },
     showPassword () {
@@ -75,7 +75,7 @@ export default {
       })
     },
     handleRegister () {
-      oneClickRegister().then(res => {
+      oneClickRegister(this.loginForm.code, this.loginForm.randomStr).then(res => {
         this.$message.success({
           duration: 3000,
           message: '注册成功，密码默认123456,请直接登录'
@@ -90,50 +90,50 @@ export default {
 </script>
 
 <template>
-    <el-form class="login-form"
-             style="width: 400px;"
-             status-icon
-             ref="loginForm"
-             :model="loginForm"
-             label-width="80px">
-        <el-form-item prop="username" label="账号：" style="width: 80%">
-            <el-input size="small"
-                      v-model="loginForm.username"
-                      placeholder="请输入账号">
-                <i class="icon-yonghu"></i>
-            </el-input>
-        </el-form-item>
-        <el-form-item prop="password" label="密码：" style="width: 80%">
-            <el-input size="small"
-                      :type="passwordType"
-                      v-model="loginForm.password"
-                      placeholder="请输入密码">
-            </el-input>
-        </el-form-item>
-        <el-form-item prop="code" label="验证码：" style="width: 100%">
-            <el-row :span="24">
-                <el-col :span="10">
-                    <el-input size="small"
-                              @keyup.enter.native="handleLogin"
-                              :maxlength="code.len"
-                              v-model="loginForm.code"
-                              auto-complete="off"
-                              placeholder="请输入验证码">
-                        <i class="icon-yanzhengma"></i>
-                    </el-input>
-                </el-col>
-                <el-col :span="10">
-                    <div class="login-code">
-                        <img :src="code.src"
-                             class="login-code-img"
-                             @click="refreshCode" alt="点击刷新"/>
-                    </div>
-                </el-col>
-            </el-row>
-        </el-form-item>
-        <el-form-item style="width: 70%">
-            <el-button type="info" @click="handleLogin">登录</el-button>
-            <el-button @click="handleRegister">一键注册</el-button>
-        </el-form-item>
-    </el-form>
+  <el-form class="login-form"
+           style="width: 400px;"
+           status-icon
+           ref="loginForm"
+           :model="loginForm"
+           label-width="80px">
+    <el-form-item prop="username" label="账号：" style="width: 80%">
+      <el-input size="small"
+                v-model="loginForm.username"
+                placeholder="请输入账号">
+        <i class="icon-yonghu"></i>
+      </el-input>
+    </el-form-item>
+    <el-form-item prop="password" label="密码：" style="width: 80%">
+      <el-input size="small"
+                :type="passwordType"
+                v-model="loginForm.password"
+                placeholder="请输入密码">
+      </el-input>
+    </el-form-item>
+    <el-form-item prop="code" label="验证码：" style="width: 100%">
+      <el-row :span="24">
+        <el-col :span="10">
+          <el-input size="small"
+                    @keyup.enter.native="handleLogin"
+                    :maxlength="code.len"
+                    v-model="loginForm.code"
+                    auto-complete="off"
+                    placeholder="请输入验证码">
+            <i class="icon-yanzhengma"></i>
+          </el-input>
+        </el-col>
+        <el-col :span="10">
+          <div class="login-code">
+            <img :src="code.src"
+                 class="login-code-img"
+                 @click="refreshCode" alt="点击刷新"/>
+          </div>
+        </el-col>
+      </el-row>
+    </el-form-item>
+    <el-form-item style="width: 70%">
+      <el-button type="info" @click="handleLogin">登录</el-button>
+      <el-button @click="handleRegister">一键注册</el-button>
+    </el-form-item>
+  </el-form>
 </template>

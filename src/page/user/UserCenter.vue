@@ -113,7 +113,7 @@ export default {
       } else if (val === '2') {
         return '附带中文导播'
       }
-      return '异常'
+      return '默认'
     },
     tranEnParaType (val) {
       if (undefined === val) {
@@ -128,7 +128,7 @@ export default {
       } else if (val === '2') {
         return '附带英文释义'
       }
-      return '异常'
+      return '默认'
     },
     tranSpellType (val) {
       if (undefined === val) {
@@ -143,7 +143,7 @@ export default {
       } else if (val === '2') {
         return '附带单词拼写'
       }
-      return '异常'
+      return '默认'
     },
     tranBGM (val) {
       if (undefined === val) {
@@ -164,7 +164,7 @@ export default {
       } else if (val === null) {
         return '关闭'
       }
-      return '异常'
+      return '默认'
     }
   }
 }
@@ -185,7 +185,7 @@ export default {
     <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="pronunciationSourceChange">
-      {{ '发音来源：' + user.pronunciationSource }}
+      {{ '发音来源：' + (user.pronunciationSource ? user.pronunciationSource : '默认') }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
         <el-dropdown-item command="本地">本地</el-dropdown-item>
