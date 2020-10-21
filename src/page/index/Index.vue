@@ -22,7 +22,7 @@ export default {
       tabsWidth: window.innerWidth - 20 + 'px',
       activeName: this.$route.query.active ? this.$route.query.active : 'search',
       query: this.$route.query,
-      bgm: !getStore({ name: 'bgm' }) ? '1' : getStore({ name: 'bgm' })
+      bgm: getStore({ name: 'bgm' })
     }
   },
   watch: {

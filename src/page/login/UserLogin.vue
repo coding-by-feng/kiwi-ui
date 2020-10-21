@@ -8,7 +8,7 @@ export default {
   data () {
     return {
       loginForm: {
-        username: 'test',
+        username: '',
         password: '123456',
         code: '',
         randomStr: ''
@@ -83,6 +83,7 @@ export default {
         this.passwordType = 'text'
         this.loginForm.username = res.data.data.username
         this.loginForm.password = res.data.data.password
+        this.refreshCode()
       })
     }
   }
@@ -91,10 +92,10 @@ export default {
 
 <template>
   <el-form class="login-form"
-           style="width: 400px;"
            status-icon
            ref="loginForm"
            :model="loginForm"
+           size="mini"
            label-width="80px">
     <el-form-item prop="username" label="账号：" style="width: 80%">
       <el-input size="small"
@@ -131,9 +132,7 @@ export default {
         </el-col>
       </el-row>
     </el-form-item>
-    <el-form-item style="width: 70%">
-      <el-button type="info" @click="handleLogin">登录</el-button>
-      <el-button @click="handleRegister">一键注册</el-button>
-    </el-form-item>
+    <el-button type="info" @click="handleLogin">登录</el-button>
+    <el-button @click="handleRegister">一键获取用户</el-button>
   </el-form>
 </template>
