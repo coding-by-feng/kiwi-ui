@@ -247,7 +247,7 @@ export default {
         this.$message.warning({
           duration: 1000,
           center: true,
-          message: '请先登录在进行收藏操作'
+          message: '请先登录再进行收藏操作'
         })
         return false
       }
