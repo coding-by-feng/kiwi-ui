@@ -251,8 +251,6 @@ export default {
           loading.close()
         }
         this.isReviewStop = false
-        this.playWordIndex = 0
-        this.playStepIndex = 0
         if (this.page.current > 1) {
           this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
           this.$message.success({
@@ -265,7 +263,12 @@ export default {
         // 手动触发过的直接播放即可
         if (this.autoPlayDialogVisible > 0) {
           await this.showDetail(this.listItems[0].paraphraseId, 0)
-          this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playWordIndex]
+          console.log('------------')
+          console.log(this.playWordIndex)
+          console.log(this.reviewAudioArr)
+          this.playWordIndex = 0
+          this.playStepIndex = 0
+          this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
           this.currentPlayAudio.play()
         }
 
@@ -478,6 +481,8 @@ export default {
     async stockReviewStart () {
       this.autoPlayDialogVisible++
       if (this.reviewAudioArr.length) {
+        this.playWordIndex = 0
+        this.playStepIndex = 0
         await this.showDetail(this.listItems[0].paraphraseId, 0)
         // this.calPlayCountPerWord()
         this.currentPlayAudio = this.reviewAudioArr[0][0]
@@ -758,7 +763,6 @@ export default {
         } else {
           this.detail.sleepClickFirstTime = new Date().getTime()
         }
-        console.log('diff=' + diff)
         if (diff > 500) {
           return
         }
