@@ -66,7 +66,9 @@ export default {
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
         showIndex: 0,
         isSleepMode: false,
-        listId: null
+        listId: null,
+        sleepClickFirstTime: null,
+        sleepClickSecondTime: null,
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -744,7 +746,23 @@ export default {
       // 跳过当前单词的复习
       this.playStepIndex = this.playCountPerWord
     },
-    rememberInSleepMode () {
+    async rememberInSleepMode (isSleep) {
+      // 如果是睡眠模式
+      if (isSleep) {
+        let diff = 1000
+        if (this.detail.sleepClickFirstTime) {
+          this.detail.sleepClickSecondTime = new Date().getTime()
+          diff = this.detail.sleepClickSecondTime - this.detail.sleepClickFirstTime
+          this.detail.sleepClickFirstTime = null
+          this.detail.sleepClickSecondTime = null
+        } else {
+          this.detail.sleepClickFirstTime = new Date().getTime()
+        }
+        console.log('diff=' + diff)
+        if (diff > 500) {
+          return
+        }
+      }
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         this.rememberOneFun()
       } else {
@@ -973,7 +991,7 @@ export default {
         width="100%">
       <div slot="title">
         <div v-if="detail.isSleepMode" :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
-             @click.stop="rememberInSleepMode">
+             @click.stop="rememberInSleepMode(true)">
         </div>
         <el-button type="info" size="mini" @click="showPrevious">
           <i class="el-icon-back"></i>
