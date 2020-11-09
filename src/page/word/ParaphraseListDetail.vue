@@ -162,6 +162,7 @@ export default {
             this.$message.warning({
               duration: 3000,
               center: true,
+              offset: 200,
               message: '当前复习列表已经复习完'
             })
             this.detail.loading = false
@@ -255,6 +256,7 @@ export default {
           this.$message.success({
             duration: 2000,
             center: true,
+            offset: 200,
             message: '即将开始复习，请稍等！'
           })
         }
@@ -417,6 +419,7 @@ export default {
         this.$message.warning({
           duration: 3000,
           center: true,
+          offset: 200,
           message: '点击灰色区域记住或牢记当前复习单词！'
         })
       }
@@ -425,6 +428,7 @@ export default {
       this.$message.success({
         duration: 1000,
         center: true,
+        offset: 200,
         message: '操作成功'
       })
     },
@@ -432,6 +436,7 @@ export default {
       if (this.isReview) {
         this.$message.warning({
           duration: 1000,
+          offset: 200,
           message: '自动复习期间不允许播放音标'
         })
         return
@@ -688,6 +693,7 @@ export default {
       this.$message.success({
         duration: 2000,
         center: true,
+        offset: 200,
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
       })
     },
@@ -730,6 +736,7 @@ export default {
       this.$message.success({
         duration: 2000,
         center: true,
+        offset: 200,
         message: `单词${this.detail.paraphraseVO.wordName}已跳过！`
       })
 
@@ -795,6 +802,7 @@ export default {
           this.$message.warning({
             duration: 1000,
             center: true,
+            offset: 200,
             message: '当前已经是复习页第一个'
           })
           return
@@ -803,6 +811,7 @@ export default {
             this.$message.warning({
               duration: 1000,
               center: true,
+              offset: 200,
               message: '当前已经是第一页第一个'
             })
             return
@@ -822,6 +831,7 @@ export default {
           this.$message.warning({
             duration: 1000,
             center: true,
+            offset: 200,
             message: '已经是当前复习页最后一个'
           })
           return
@@ -830,6 +840,7 @@ export default {
             this.$message.warning({
               duration: 1000,
               center: true,
+              offset: 200,
               message: '当前已经是最后一页最后一个'
             })
             return
@@ -848,6 +859,7 @@ export default {
           this.$message.warning({
             duration: 1000,
             center: true,
+            offset: 200,
             message: '当前已经是最后一页最后一个'
           })
           return
