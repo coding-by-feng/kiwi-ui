@@ -245,6 +245,7 @@ export default {
           await this.initNextReviewDetail(true)
         } catch (e) {
           // alert(e)
+          sleep(5)
           await this.init()
           return
         } finally {
