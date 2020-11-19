@@ -60,7 +60,7 @@ export default {
     ...wordSearch,
     querySearch (queryString, callback) {
       let real = queryString.trimLeft()
-      if (real === '') {
+      if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
         return
       }
       // var results = fuzzyQueryWord(queryString);

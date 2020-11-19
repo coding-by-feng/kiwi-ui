@@ -814,6 +814,7 @@ export default {
     countdownEndFun () {
       this.countdownMode && (this.isReviewStop = true)
       this.countdownMode = !this.countdownMode
+      window.location.reload()
     },
     async countdownEndReplay () {
       this.isReviewStop = false
