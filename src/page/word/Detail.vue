@@ -45,7 +45,11 @@ export default {
       showCharacterId: 0,
       showCharacter: true,
       isQueryNotResult: false,
-      countdownTime: 0
+      countdownTime: 0,
+
+      showWordSelect: false,
+      wordInfoList: [],
+      isTabActivate: false
     }
   },
   beforeCreate: function () {
@@ -81,7 +85,7 @@ export default {
   },
   watch: {
     '$route' () {
-      console.log('route changed')
+      this.initTabActivate()
       this.init()
     }
   },
@@ -90,7 +94,13 @@ export default {
     ...wordStarList,
     ...paraphraseStarList,
     ...exampleStarList,
+    async initTabActivate () {
+      // 标记当前Tab被激活显示
+      let active = this.$route.query.active
+      this.isTabActivate = !active || active === 'search'
+    },
     async init () {
+      await this.initTabActivate()
       // clean data
       this.showCharacterId = 0
 
@@ -129,10 +139,15 @@ export default {
         return
       }
       await this.queryWordDetail(word).then(response => {
-        if (response.data.code) {
-          this.wordInfo = response.data.data
-          this.isQueryNotResult = false
-          this.defaultHint = null
+        if (response.data.code && response.data.data && response.data.data.length > 0) {
+          if (response.data.data.length > 1) {
+            this.wordInfoList = response.data.data
+            this.showWordSelect = true
+          } else {
+            this.wordInfo = response.data.data[0]
+            this.isQueryNotResult = false
+            this.defaultHint = null
+          }
         } else {
           if (this.countdownTime < 1) {
             this.isQueryNotResult = true
@@ -143,6 +158,12 @@ export default {
       }).catch(e => {
         console.error(e)
       })
+    },
+    agileShowDetail (wordInfo) {
+      this.wordInfo = wordInfo
+      this.isQueryNotResult = false
+      this.defaultHint = null
+      this.showWordSelect = false
     },
     async initPronunciation () {
       if (this.wordInfo.characterVOList) {
@@ -467,6 +488,31 @@ export default {
 <template>
   <el-container>
     <el-header>
+      <div v-if="isTabActivate">
+        <div style="position: fixed; top: 5px; right: 15px; z-index: 999;">
+          <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true">
+            返回搜索列表
+          </el-button>
+        </div>
+        <el-dialog
+            :title="decodeURI($route.query.word)"
+            :visible.sync="showWordSelect">
+          <el-collapse>
+            <el-collapse-item v-for="word in wordInfoList">
+              <template slot="title">
+                &nbsp;
+                <el-button type="info" size="mini" @click="agileShowDetail(word)">{{ word.wordName }}</el-button>
+                &nbsp;
+              </template>
+              <div v-for="characterVO in word.characterVOList">
+                <div v-for="paraphraseVO in characterVO.paraphraseVOList">
+                  {{ paraphraseVO.meaningChinese }}
+                </div>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
+        </el-dialog>
+      </div>
       <div>
         <p v-if="defaultHint && defaultHint.length>0" style="color: #ed3f14">{{ defaultHint }}</p>
         <el-alert

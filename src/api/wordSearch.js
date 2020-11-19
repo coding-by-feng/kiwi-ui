@@ -19,7 +19,7 @@ export default {
 
   queryWordDetail (word) {
     return request({
-      url: '/wordBiz/word/main/query/' + word,
+      url: '/wordBiz/word/main/query/gate/' + word,
       headers: {
         isToken: false
       },
