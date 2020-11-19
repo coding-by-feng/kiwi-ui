@@ -494,6 +494,36 @@ export default {
             返回搜索列表
           </el-button>
         </div>
+        <div style="position: fixed; bottom: 5px; right: 30px; z-index: 999;">
+          <el-button @click="dialogHelpVisible = !dialogHelpVisible" size="mini">
+            <i class="el-icon-warning"
+               style="color: #76838f;"></i>
+          </el-button>
+          &nbsp;
+          <el-dropdown size="mini" @command="selectShowCharacter" placement="top">
+            <el-button size="mini" class="el-icon-s-operation"></el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="0">All</el-dropdown-item>
+              <div v-for="wordCharacterVO in wordInfo.characterVOList">
+                <el-dropdown-item :command="wordCharacterVO.characterId">
+                  {{ wordCharacterVO.characterCode }}&nbsp;{{ wordCharacterVO.tag }}
+                </el-dropdown-item>
+              </div>
+            </el-dropdown-menu>
+          </el-dropdown>
+          &nbsp;
+          <el-button style="color: #909399" size="mini">
+            <i class="el-icon-sell"
+               style="color: #76838f"
+               @click="isShowExample = !isShowExample"></i>
+          </el-button>
+          <el-button size="mini" style="color: #909399"
+                     v-if="wordInfo.wordName.length>0">
+            <i class="el-icon-circle-plus-outline"
+               style="color: #76838f"
+               @click="wordCollectClickFun()"></i>
+          </el-button>
+        </div>
         <el-dialog
             :title="decodeURI($route.query.word)"
             :visible.sync="showWordSelect">
@@ -522,40 +552,7 @@ export default {
             effect="light"
             center>
           <div slot="title">
-            <div class="outline_fix_top_right">
-              <el-dropdown size="mini" type="info" @command="selectShowCharacter">
-                <i class="el-icon-s-operation"></i>
-                <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item command="0">All</el-dropdown-item>
-                  <div v-for="wordCharacterVO in wordInfo.characterVOList">
-                    <el-dropdown-item :command="wordCharacterVO.characterId">
-                      {{ wordCharacterVO.characterCode }}&nbsp;{{ wordCharacterVO.tag }}
-                    </el-dropdown-item>
-                  </div>
-                </el-dropdown-menu>
-              </el-dropdown>
-            </div>
-            <el-button type="text" @click="dialogHelpVisible = !dialogHelpVisible">
-              <i class="el-icon-warning outline_fix_top_left"
-                 style="color: #76838f"></i>
-            </el-button>
             <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
-            <el-button v-if="isShowExample" type="text" style="color: #909399"><i
-                class="el-icon-sell outline_fix_bottom_left"
-                style="color: #76838f"
-                @click="isShowExample = false"></i>
-            </el-button>
-            <el-button v-if="!isShowExample" type="text" style="color: #909399"><i
-                class="el-icon-sold-out outline_fix_bottom_left"
-                style="color: #76838f"
-                @click="isShowExample = true"></i>
-            </el-button>
-            <el-button type="text" style="color: #909399"
-                       v-if="wordInfo.wordName.length>0"><i
-                :class="getWordCollectClass()"
-                style="color: #76838f"
-                @click="wordCollectClickFun()"></i>
-            </el-button>
           </div>
         </el-alert>
       </div>
