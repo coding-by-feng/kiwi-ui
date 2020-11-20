@@ -50,7 +50,7 @@ export default {
 
       showWordSelect: false,
       wordInfoList: [],
-      isTabActivate: false
+      isTabActivate: true
     }
   },
   beforeCreate: function () {
@@ -86,7 +86,6 @@ export default {
   },
   watch: {
     '$route' () {
-      this.keyword = this.$route.query.word
       this.initTabActivate()
       if (this.isTabActivate) {
         this.init()
@@ -137,9 +136,13 @@ export default {
     async initDetail (w) {
       let word = w
       if (this.$route.query.word) {
-        word = this.$route.query.word
+        word = decodeURI(this.$route.query.word)
       }
-      if (word === this.wordInfo.wordName || !word || word === this.keyword) {
+      if (word === this.wordInfo.wordName || !word) {
+        return
+      }
+      // 搜索中文时不要重复用同样的参数调用相同的接口
+      if (/.*[\u4e00-\u9fa5]+.*$/.test(word) && word === this.keyword) {
         return
       }
       await this.queryWordDetail(word).then(response => {
@@ -159,6 +162,7 @@ export default {
           this.wordInfo = { wordName: '' }
           this.defaultHint = '单词抓取中，10秒后将刷新'
         }
+        this.keyword = word
       }).catch(e => {
         console.error(e)
       })
