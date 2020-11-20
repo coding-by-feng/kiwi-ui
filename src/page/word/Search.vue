@@ -61,6 +61,7 @@ export default {
     querySearch (queryString, callback) {
       let real = queryString.trimLeft()
       if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
+        callback([{ value: '请按回车或搜索按钮' }])
         return
       }
       // var results = fuzzyQueryWord(queryString);

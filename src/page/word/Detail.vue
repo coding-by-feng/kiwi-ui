@@ -25,6 +25,7 @@ export default {
       pronunciationAudioMap: new Map(),
       devSwitch: false,
       defaultHint: null,
+      keyword: '',
       wordInfo: {
         wordName: ''
       },
@@ -85,8 +86,11 @@ export default {
   },
   watch: {
     '$route' () {
+      this.keyword = this.$route.query.word
       this.initTabActivate()
-      this.init()
+      if (this.isTabActivate) {
+        this.init()
+      }
     }
   },
   methods: {
@@ -98,9 +102,9 @@ export default {
       // 标记当前Tab被激活显示
       let active = this.$route.query.active
       this.isTabActivate = !active || active === 'search'
+      this.showWordSelect = false
     },
     async init () {
-      await this.initTabActivate()
       // clean data
       this.showCharacterId = 0
 
@@ -135,7 +139,7 @@ export default {
       if (this.$route.query.word) {
         word = this.$route.query.word
       }
-      if (word === this.wordInfo.wordName || !word) {
+      if (word === this.wordInfo.wordName || !word || word === this.keyword) {
         return
       }
       await this.queryWordDetail(word).then(response => {
@@ -536,6 +540,7 @@ export default {
               </template>
               <div v-for="characterVO in word.characterVOList">
                 <div v-for="paraphraseVO in characterVO.paraphraseVOList">
+                  <i class="el-icon-caret-right"></i>
                   {{ paraphraseVO.meaningChinese }}
                 </div>
               </div>
