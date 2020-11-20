@@ -100,7 +100,7 @@ export default {
     async initTabActivate () {
       // 标记当前Tab被激活显示
       let active = this.$route.query.active
-      this.isTabActivate = !active || active === 'search'
+      this.isTabActivate = active && active === 'search'
       this.showWordSelect = false
     },
     async init () {
@@ -149,7 +149,10 @@ export default {
         if (response.data.code && response.data.data && response.data.data.length > 0) {
           if (response.data.data.length > 1) {
             this.wordInfoList = response.data.data
-            this.showWordSelect = true
+            this.initTabActivate()
+            if (this.isTabActivate) {
+              this.showWordSelect = true
+            }
           } else {
             this.wordInfo = response.data.data[0]
             this.isQueryNotResult = false
