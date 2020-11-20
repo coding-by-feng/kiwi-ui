@@ -5,6 +5,7 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
+import { isMobile } from '@/util/util'
 
 let that
 
@@ -17,6 +18,7 @@ export default {
   },
   data () {
     return {
+      windowInnerHeight: window.innerHeight,
       dialogHelpVisible: false,
       isShowParaphrase: true,
       isShowExample: true,
@@ -25,7 +27,7 @@ export default {
       pronunciationAudioMap: new Map(),
       devSwitch: false,
       defaultHint: null,
-      keyword: '',
+      keyword: null,
       wordInfo: {
         wordName: ''
       },
@@ -46,6 +48,7 @@ export default {
       showCharacterId: 0,
       showCharacter: true,
       isQueryNotResult: false,
+      isShowYoudao: false,
       countdownTime: 0,
 
       showWordSelect: false,
@@ -78,6 +81,13 @@ export default {
     },
     isLargeWindow () {
       return window.innerWidth >= 800
+    },
+    getYoudaoQueryUrl () {
+      if (isMobile()) {
+        return `https://m.youdao.com/dict?le=eng&q=${this.keyword}`
+      } else {
+        return `https://dict.youdao.com/w/${this.keyword}/#keyfrom=dict2.top`
+      }
     }
   },
   async mounted () {
@@ -100,7 +110,7 @@ export default {
     async initTabActivate () {
       // 标记当前Tab被激活显示
       let active = this.$route.query.active
-      this.isTabActivate = active && active === 'search'
+      this.isTabActivate = !active || active === 'search'
       this.showWordSelect = false
     },
     async init () {
@@ -142,9 +152,15 @@ export default {
         return
       }
       // 搜索中文时不要重复用同样的参数调用相同的接口
-      if (/.*[\u4e00-\u9fa5]+.*$/.test(word) && word === this.keyword) {
-        return
+      if (/.*[\u4e00-\u9fa5]+.*$/.test(word)) {
+        if (word === this.keyword) {
+          return
+        }
+      } else {
+        // 关键词改变时清空搜索列表
+        this.wordInfoList = []
       }
+
       await this.queryWordDetail(word).then(response => {
         if (response.data.code && response.data.data && response.data.data.length > 0) {
           if (response.data.data.length > 1) {
@@ -158,12 +174,17 @@ export default {
             this.isQueryNotResult = false
             this.defaultHint = null
           }
+          this.isShowYoudao = false
         } else {
+          this.isShowYoudao = true
           if (this.countdownTime < 1) {
             this.isQueryNotResult = true
+            this.defaultHint = '单词未收录，正在收录，10秒后将刷新'
+          } else {
+            this.isQueryNotResult = false
+            this.defaultHint = '单词数据从Cambridge抓取不到'
           }
           this.wordInfo = { wordName: '' }
-          this.defaultHint = '单词抓取中，10秒后将刷新'
         }
         this.keyword = word
       }).catch(e => {
@@ -502,7 +523,8 @@ export default {
       <div v-if="isTabActivate">
         <div style="position: fixed; top: 5px; right: 15px; z-index: 999;">
           <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true">
-            返回搜索列表
+            <i class="el-icon-s-unfold"
+               style="color: #76838f;"></i>
           </el-button>
         </div>
         <div style="position: fixed; bottom: 5px; right: 30px; z-index: 999;">
@@ -541,15 +563,14 @@ export default {
           <el-collapse>
             <el-collapse-item v-for="word in wordInfoList">
               <template slot="title">
-                &nbsp;
                 <el-button type="info" size="mini" @click="agileShowDetail(word)">{{ word.wordName }}</el-button>
                 &nbsp;
               </template>
-              <div v-for="characterVO in word.characterVOList">
-                <div v-for="paraphraseVO in characterVO.paraphraseVOList">
+              <div v-for="characterVO in word.characterVOList" style="margin-bottom: -10px;">
+                <p v-for="paraphraseVO in characterVO.paraphraseVOList">
                   <i class="el-icon-caret-right"></i>
                   {{ paraphraseVO.meaningChinese }}
-                </div>
+                </p>
               </div>
             </el-collapse-item>
           </el-collapse>
@@ -573,6 +594,12 @@ export default {
       <Countdown v-if="isQueryNotResult"
                  :onlySec="true"
                  :endTime="getDateOn8Sec" @endFun="countdownEndFun"></Countdown>
+      <el-divider v-if="isQueryNotResult"></el-divider>
+      <iframe v-if="isShowYoudao && keyword" :src="getYoudaoQueryUrl"
+              frameborder="1"
+              width="100%"
+              :height="windowInnerHeight"
+              scrolling="auto"></iframe>
       <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
         <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
           <el-row type="flex" class="row-bg" justify="end">
