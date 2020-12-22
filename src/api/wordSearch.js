@@ -1,4 +1,5 @@
 import request from '@/router/axios'
+import util from '@/util/util'
 
 export default {
 
@@ -17,14 +18,23 @@ export default {
     })
   },
 
-  queryWordDetail (word) {
+  queryWordDetail (word, current, size) {
+    let url
+    if (util.isEmptyStr(word)) {
+      url = `/wordBiz/word/main/query/gate`
+    } else {
+      url = `/wordBiz/word/main/query/gate/${word}`
+    }
     return request({
-      url: '/wordBiz/word/main/query/gate/' + word,
+      url: url,
       headers: {
         isToken: false
       },
-      method: 'get',
-      params: {}
+      method: 'post',
+      params: {
+        current: current,
+        size: size
+      }
     })
   },
 
