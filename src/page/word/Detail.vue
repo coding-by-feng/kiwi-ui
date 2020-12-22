@@ -18,6 +18,7 @@ export default {
   },
   data () {
     return {
+      loading: false,
       windowInnerHeight: window.innerHeight,
       dialogHelpVisible: false,
       isShowParaphrase: true,
@@ -50,10 +51,16 @@ export default {
       isQueryNotResult: false,
       isShowYoudao: false,
       countdownTime: 0,
+      isForceRequest: true,
 
       showWordSelect: false,
       wordInfoList: [],
-      isTabActivate: true
+      isTabActivate: true,
+
+      current: 0,
+      size: 10,
+      pages: 0,
+      total: 0
     }
   },
   beforeCreate: function () {
@@ -151,40 +158,49 @@ export default {
       if (word === this.wordInfo.wordName || !word) {
         return
       }
-      // 搜索中文时不要重复用同样的参数调用相同的接口
-      if (/.*[\u4e00-\u9fa5]+.*$/.test(word)) {
-        if (word === this.keyword) {
-          return
+      // 倒计时第二次刷新页面时要重新请求数据
+      if (this.countdownTime < 1 && !this.isForceRequest) {
+        // 搜索中文时不要重复用同样的参数调用相同的接口
+        if (/.*[\u4e00-\u9fa5]+.*$/.test(word)) {
+          if (word === this.keyword) {
+            return
+          }
+        } else {
+          // 关键词改变时清空搜索列表
+          this.wordInfoList = []
         }
-      } else {
-        // 关键词改变时清空搜索列表
-        this.wordInfoList = []
       }
 
-      await this.queryWordDetail(word).then(response => {
-        if (response.data.code && response.data.data && response.data.data.length > 0) {
-          if (response.data.data.length > 1) {
-            this.wordInfoList = response.data.data
+      await this.queryWordDetail(word, this.current, this.size).then(response => {
+        if (response.data.code && response.data.data.records && response.data.data.records.length > 0) {
+          if (response.data.data.records.length > 1) {
+            this.wordInfoList = response.data.data.records
             this.initTabActivate()
             if (this.isTabActivate) {
               this.showWordSelect = true
             }
           } else {
-            this.wordInfo = response.data.data[0]
+            this.wordInfo = response.data.data.records[0]
             this.isQueryNotResult = false
             this.defaultHint = null
           }
           this.isShowYoudao = false
+          this.pages = response.data.data.pages
+          this.total = response.data.data.total
+          this.isForceRequest = false
         } else {
           this.isShowYoudao = true
           if (this.countdownTime < 1) {
             this.isQueryNotResult = true
-            this.defaultHint = '单词未收录，正在收录，10秒后将刷新'
+            this.defaultHint = '单词未收录，正在收录'
+            this.isForceRequest = true
           } else {
             this.isQueryNotResult = false
             this.defaultHint = '单词数据从Cambridge抓取不到'
+            this.isForceRequest = false
           }
           this.wordInfo = { wordName: '' }
+          this.countdownTime = 0
         }
         this.keyword = word
       }).catch(e => {
@@ -467,10 +483,22 @@ export default {
       })
     },
     countdownEndFun () {
-      this.init()
-      this.isQueryNotResult = false
       this.countdownTime++
-    }
+      this.isQueryNotResult = false
+      this.isForceRequest = true
+      this.init()
+    },
+    async pageChange () {
+      this.loading = true
+      this.isForceRequest = true
+      try {
+        await this.init()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loading = false
+      }
+    },
   }
 }
 
@@ -545,19 +573,20 @@ export default {
             </el-dropdown-menu>
           </el-dropdown>
           &nbsp;
-          <el-button style="color: #909399" size="mini">
+          <el-button style="color: #909399" size="mini"
+                     @click="isShowExample = !isShowExample">
             <i class="el-icon-sell"
-               style="color: #76838f"
-               @click="isShowExample = !isShowExample"></i>
+               style="color: #76838f"></i>
           </el-button>
           <el-button size="mini" style="color: #909399"
-                     v-if="wordInfo.wordName.length>0">
+                     v-if="wordInfo.wordName.length>0"
+                     @click="wordCollectClickFun()">
             <i class="el-icon-circle-plus-outline"
-               style="color: #76838f"
-               @click="wordCollectClickFun()"></i>
+               style="color: #76838f"></i>
           </el-button>
         </div>
         <el-dialog
+            v-loading="loading"
             :title="decodeURI($route.query.word)"
             :visible.sync="showWordSelect">
           <el-collapse>
@@ -574,6 +603,19 @@ export default {
               </div>
             </el-collapse-item>
           </el-collapse>
+          <el-pagination
+              style="margin-top: 10px"
+              small
+              :page-size.sync="size"
+              :current-page.sync="current"
+              :page-count="pages"
+              :pager-count="5"
+              :page-sizes="[10,20,50,100]"
+              layout="prev,pager,next"
+              @size-change="pageChange"
+              @current-change="pageChange"
+              :total="total">
+          </el-pagination>
         </el-dialog>
       </div>
       <div>
@@ -604,7 +646,9 @@ export default {
         <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
           <el-row type="flex" class="row-bg" justify="end">
             <el-col>
-              <el-tag type="success">{{ wordCharacterVO.characterCode }}</el-tag>
+              <el-tag type="success" v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
+                {{ wordCharacterVO.characterCode }}
+              </el-tag>
               <el-tag v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">{{ wordCharacterVO.tag }}</el-tag>
               &nbsp;
               <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
