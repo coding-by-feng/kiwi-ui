@@ -41,7 +41,7 @@ export default {
     if (!this.user.spellType) {
       setStore({
         name: 'spell_type',
-        content: '2',
+        content: '1',
         type: 'local'
       })
     }
