@@ -34,14 +34,14 @@ export default {
     if (!this.user.reviewType) {
       setStore({
         name: 'review_type',
-        content: '2',
+        content: '1',
         type: 'local'
       })
     }
     if (!this.user.spellType) {
       setStore({
         name: 'spell_type',
-        content: '1',
+        content: '2',
         type: 'local'
       })
     }
