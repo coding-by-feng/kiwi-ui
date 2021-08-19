@@ -159,8 +159,6 @@ export default {
         return '【白噪音】篝火'
       } else if (val === '3') {
         return '致抑郁轻音乐（慎点）'
-      } else if (val === '4') {
-        return '粤语老歌'
       } else if (val === null) {
         return '关闭'
       }
