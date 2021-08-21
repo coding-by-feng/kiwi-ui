@@ -61,7 +61,10 @@ export default {
         now: new Date().getTime()
       }
       if (this.$route.query.word) {
-        params = { word: this.$route.query.word, ...paramsTmp }
+        params = {
+          word: this.$route.query.word,
+          ...paramsTmp
+        }
       } else {
         params = { ...paramsTmp }
       }

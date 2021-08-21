@@ -1,6 +1,8 @@
 <script>
 import website from '@/const/website'
 import { getStore, setStore } from '@/util/store'
+import review from '@/api/review'
+import KIWI_CONSTS from '@/const/kiwiConsts'
 
 export default {
   name: 'userCenter',
@@ -12,11 +14,14 @@ export default {
         reviewType: getStore({ name: 'review_type' }),
         spellType: getStore({ name: 'spell_type' }),
         enParaType: getStore({ name: 'enPara_type' }),
-        bgm: getStore({ name: 'bgm' })
+        bgm: getStore({ name: 'bgm' }),
+        keepInMindCount: 0,
+        rememberCount: 0,
+        reviewCount: 0
       }
     }
   },
-  mounted () {
+  async mounted () {
     if (!this.user.pronunciationSource) {
       setStore({
         name: 'pronunciation_source',
@@ -44,6 +49,13 @@ export default {
         content: '2',
         type: 'local'
       })
+    }
+
+    this.refresh()
+  },
+  watch: {
+    $route: function () {
+      this.refresh()
     }
   },
   methods: {
@@ -159,10 +171,24 @@ export default {
         return '【白噪音】篝火'
       } else if (val === '3') {
         return '致抑郁轻音乐（慎点）'
-      } else if (val === null) {
+      } else {
         return '关闭'
       }
       return '默认'
+    },
+    refresh () {
+      review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.KEEP_IN_MIND)
+          .then(response => {
+            this.user.keepInMindCount = response.data.data.reviewCount
+          })
+      review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.REMEMBER)
+          .then(response => {
+            this.user.rememberCount = response.data.data.reviewCount
+          })
+      review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.REVIEW)
+          .then(response => {
+            this.user.reviewCount = response.data.data.reviewCount
+          })
     }
   }
 }
@@ -181,6 +207,15 @@ export default {
       </el-button>
     </p>
     <el-divider></el-divider>
+    <span>今日已记住单词个数：</span>
+    <el-tag type="info" size="mini">{{ user.rememberCount }}</el-tag>
+    <br>
+    <span>今日已复习单词次数：</span>
+    <el-tag type="info" size="mini">{{ user.reviewCount }}</el-tag>
+    <br>
+    <span>今日已牢记单词个数：</span>
+    <el-tag type="info" size="mini">{{ user.keepInMindCount }}</el-tag>
+    <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="pronunciationSourceChange">
       {{ '发音来源：' + (user.pronunciationSource ? user.pronunciationSource : '默认') }}
@@ -197,7 +232,6 @@ export default {
         <el-dropdown-item :command="'1'">【白噪音】雨声/小溪/炉火/猫咪</el-dropdown-item>
         <el-dropdown-item :command="'2'">【白噪音】篝火</el-dropdown-item>
         <el-dropdown-item :command="'3'"> 致抑郁轻音乐（慎点）</el-dropdown-item>
-        <el-dropdown-item :command="'4'"> 粤语老歌</el-dropdown-item>
         <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
