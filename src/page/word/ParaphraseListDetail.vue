@@ -2,6 +2,7 @@
 import { getStore } from '@/util/store'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
+import review from '@/api/review'
 
 const sleep = function (time) {
   let startTime = new Date().getTime() + time * 1000
@@ -302,7 +303,14 @@ export default {
         }
       }, 10000)
     },
+    async getReviewBreakpointPageNumber () {
+      await review.getReviewBreakpointPageNumber(this.listId)
+          .then(response => {
+            this.page.current = response.data.data
+          })
+    },
     async initStockListFun () {
+      await this.getReviewBreakpointPageNumber()
       await this.getReviewListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
@@ -312,6 +320,7 @@ export default {
       })
     },
     async initEnhanceListFun () {
+      await this.getReviewBreakpointPageNumber()
       await this.getEnhanceListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
@@ -339,6 +348,7 @@ export default {
         return
       } else if (this.reviewMode === 'totalReview' || this.reviewMode === 'totalRead') {
         // 全量模式也只查5个
+        await this.getReviewBreakpointPageNumber()
         this.page.size = playCountOnce
       } else if (this.reviewMode === 'enhanceReview' || this.reviewMode === 'enhanceRead') {
         // 复习模式每页只加载5个单词

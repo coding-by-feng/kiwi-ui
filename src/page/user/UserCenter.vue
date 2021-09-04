@@ -55,7 +55,10 @@ export default {
   },
   watch: {
     $route: function () {
-      this.refresh()
+      let active = this.$route.query.active
+      if (active === 'userCenter') {
+        this.refresh()
+      }
     }
   },
   methods: {
