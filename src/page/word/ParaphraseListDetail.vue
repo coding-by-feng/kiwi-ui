@@ -279,6 +279,7 @@ export default {
       } else {
         await this.initList()
       }
+      this.autoPlayDialogVisible++
     },
     async initCmpListening () {
       if (this.cmpListening) {
@@ -304,10 +305,14 @@ export default {
       }, 10000)
     },
     async getReviewBreakpointPageNumber () {
-      await review.getReviewBreakpointPageNumber(this.listId)
-          .then(response => {
-            this.page.current = response.data.data
-          })
+      console.log('this.autoPlayDialogVisible')
+      console.log(this.autoPlayDialogVisible)
+      if (this.autoPlayDialogVisible < 1) {
+        await review.getReviewBreakpointPageNumber(this.listId)
+            .then(response => {
+              this.page.current = response.data.data
+            })
+      }
     },
     async initStockListFun () {
       await this.getReviewBreakpointPageNumber()
