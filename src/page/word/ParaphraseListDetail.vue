@@ -57,6 +57,7 @@ export default {
         total: 0,
         pages: 0
       },
+      isShowPagination: true,
       detail: {
         loading: true,
         paraphraseVO: {},
@@ -80,6 +81,7 @@ export default {
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: 0,
+      isFirstIncome: true,
       reviewAudioArr: [],
       reviewAudioCandidates: [],
       isReviewStop: false,
@@ -263,7 +265,7 @@ export default {
           })
         }
         // 手动触发过的直接播放即可
-        if (this.autoPlayDialogVisible > 0) {
+        if (this.autoPlayDialogVisible > 1) {
           await this.showDetail(this.listItems[0].paraphraseId, 0)
           console.log('------------')
           console.log(this.playWordIndex)
@@ -279,7 +281,7 @@ export default {
       } else {
         await this.initList()
       }
-      this.autoPlayDialogVisible++
+      this.isFirstIncome = false
     },
     async initCmpListening () {
       if (this.cmpListening) {
@@ -305,12 +307,14 @@ export default {
       }, 10000)
     },
     async getReviewBreakpointPageNumber () {
-      console.log('this.autoPlayDialogVisible')
-      console.log(this.autoPlayDialogVisible)
-      if (this.autoPlayDialogVisible < 1) {
+      if (this.isFirstIncome) {
         await review.getReviewBreakpointPageNumber(this.listId)
             .then(response => {
               this.page.current = response.data.data
+              this.isShowPagination = false
+              setTimeout(() => {
+                this.isShowPagination = true
+              }, 1)
             })
       }
     },
@@ -320,6 +324,7 @@ export default {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
         this.page.total = response.data.data.total
+        this.page.current = response.data.data.current
       }).catch(e => {
         console.error(e)
       })
@@ -330,6 +335,7 @@ export default {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
         this.page.total = response.data.data.total
+        this.page.current = response.data.data.current
       }).catch(e => {
         console.error(e)
       })
@@ -339,6 +345,7 @@ export default {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
         this.page.total = response.data.data.total
+        this.page.current = response.data.data.current
       }).catch(e => {
         console.error(e)
       })
@@ -991,6 +998,7 @@ export default {
       </el-collapse-item>
     </el-collapse>
     <el-pagination
+        v-if="isShowPagination"
         style="margin-top: 10px"
         small
         :page-size.sync="page.size"
