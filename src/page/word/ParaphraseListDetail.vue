@@ -255,7 +255,7 @@ export default {
           loading.close()
         }
         this.isReviewStop = false
-        if (this.page.current > 1) {
+        if (!this.isFirstIncome) {
           this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
           this.$message.success({
             duration: 2000,
@@ -281,7 +281,6 @@ export default {
       } else {
         await this.initList()
       }
-      this.isFirstIncome = false
     },
     async initCmpListening () {
       if (this.cmpListening) {
@@ -439,6 +438,7 @@ export default {
       })
     },
     async pageChange () {
+      this.isFirstIncome = false
       await this.init()
     },
     switchSleepMode () {
@@ -502,6 +502,7 @@ export default {
       }
     },
     async stockReviewStart () {
+      this.isFirstIncome = false
       this.autoPlayDialogVisible++
       if (this.reviewAudioArr.length) {
         this.playWordIndex = 0
@@ -1165,13 +1166,13 @@ export default {
     </el-dialog>
     <el-dialog
         :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
-        :visible="autoPlayDialogVisible === 0 && isReview"
+        :visible="isFirstIncome && isReview"
         :show-close="false"
         width="300px">
       <el-alert
           :closable="false"
           type="warning">
-        复习期间最好不要切换App，最多可以在浏览器内部新开窗口；
+        复习期间最好不要切换App
       </el-alert>
       <el-alert
           :closable="false"
@@ -1179,8 +1180,8 @@ export default {
         如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
       </el-alert>
       <div slot="footer" class="dialog-footer">
-        <el-button type="info" @click="stockReviewStart">确定</el-button>
-      </div>
+        <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
+     </div>
     </el-dialog>
   </div>
 </template>
