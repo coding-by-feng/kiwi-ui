@@ -757,6 +757,16 @@ export default {
       if (this.reviewAudioArr[this.playWordIndex]) {
         if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
           this.reviewAudioArr[this.playWordIndex][this.playStepIndex].pause()
+          this.isReviewStop = true
+        }
+      }
+    },
+    rePlaying () {
+      if (this.playWordIndex < 0 || this.playStepIndex < 0) return
+      if (this.reviewAudioArr[this.playWordIndex]) {
+        if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
+          this.reviewAudioArr[this.playWordIndex][this.playStepIndex].play()
+          this.isReviewStop = false
         }
       }
     },
@@ -1047,6 +1057,18 @@ export default {
                    @click="switchSleepMode"
                    size="mini">
           <i class="el-icon-thumb"></i>
+        </el-button>
+        <el-button type="info"
+                   v-if="isReview && !isReviewStop"
+                   @click="stopPlaying"
+                   size="mini">
+          <i class="el-icon-video-pause"></i>
+        </el-button>
+        <el-button type="info"
+                   v-if="isReview && isReviewStop"
+                   @click="rePlaying"
+                   size="mini">
+          <i class="el-icon-video-play"></i>
         </el-button>
         <el-button type="info"
                    v-if="isReview"
