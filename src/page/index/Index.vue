@@ -140,6 +140,10 @@ export default {
         <router-view name="about"></router-view>
       </el-tab-pane>
     </el-tabs>
+    <el-card class="box-card">
+      <a href="https://beian.miit.gov.cn" style="color: #409EFF">粤ICP备2020080500号</a>
+      <p>&nbsp;</p>
+    </el-card>
     <el-card class="box-card" v-if="bgm">
       <iframe v-if="bgm==='1'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
               src="//music.163.com/outchain/player?type=0&id=5295155138&auto=0&height=430"></iframe>
