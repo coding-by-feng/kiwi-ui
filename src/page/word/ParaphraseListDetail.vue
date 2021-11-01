@@ -148,6 +148,7 @@ export default {
       }
     },
     'playWordIndex' (newVal) {
+      this.isReviewStop = false
       if (newVal === 0) return
       if (newVal >= playCountOnce) {
         this.playWordIndex = 0
