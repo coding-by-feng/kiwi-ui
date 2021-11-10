@@ -12,9 +12,9 @@ const sleep = function (time) {
 const runUpCh2EnCount = 5 // 需要回想时间
 const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
 const carryChModeCh2EnAudioCount = 17 // 附带中文汉英模式播放的Audio数
-const ridChModeEh2ChAudioCount = 10 // 去除中文英汉模式播放的Audio数
-const carryChModeEh2ChAudioCount = 16 // 附带中文英汉模式播放的Audio数
-const playWordLoadCountOnce = 1 // 一次播放加载的单词个数
+const ridChModeEh2ChAudioCount = 22 // 去除中文英汉模式播放的Audio数
+const carryChModeEh2ChAudioCount = 40 // 附带中文英汉模式播放的Audio数
+const playWordLoadCountOnce = 1 // 一播放加载的单词个数
 const playCountOnce = 5 // 复习模式每页加载的单词个数
 const readCountOnce = 10 // 阅读模式每页加载的单词个数
 
@@ -545,6 +545,46 @@ export default {
         meaningChinese = meaningChinese.replaceAll('…', '什么什么')
         meaningChinese = meaningChinese.replaceAll('...', '什么什么')
       }
+
+      function createWordSpellAudio () {
+        if (!isNotReviewSpell) {
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '单词的拼写是：'))
+          let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次拼写：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
+        }
+      }
+
+      function createWordParaphraseAudio () {
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '中文释义是：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
+        if (this.enParaType === '2') {
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
+        }
+        if (this.reviewType === '2')
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次中文释义：'))
+        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
+        if (this.enParaType === '2') {
+          if (this.reviewType === '2')
+            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
+        }
+      }
+
+      function createWordSelfAudio () {
+        // 如果是没有音标的词组
+        if (!isNotReviewSpell) {
+          audioQueue.push(this.createPronunciationAudio())
+          audioQueue.push(this.createPronunciationAudio(true))
+        }
+      }
+
       if (this.isChToEn) {
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '接下来复习的单词中文释义是：'))
@@ -601,38 +641,15 @@ export default {
           audioQueue.push(this.createPronunciationAudio(true))
         }
 
-        if (!isNotReviewSpell) {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '单词的拼写是：'))
-          let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次拼写：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
-        }
-
-        // 如果是没有音标的词组
-        if (!isNotReviewSpell) {
-          audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio(true))
-        }
-
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
-        if (this.enParaType === '2') {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
-        }
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次中文释义：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
-        if (this.enParaType === '2') {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
-        }
+        createWordSpellAudio.call(this)
+        createWordSelfAudio.call(this)
+        createWordSpellAudio.call(this)
+        createWordSpellAudio.call(this)
+        createWordSelfAudio.call(this)
+        createWordParaphraseAudio.call(this)
+        createWordSpellAudio.call(this)
+        createWordSelfAudio.call(this)
+        createWordParaphraseAudio.call(this)
       }
 
       // for (let j = 0; j < audioQueue.length; j++) {
