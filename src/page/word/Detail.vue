@@ -196,7 +196,7 @@ export default {
             this.isForceRequest = true
           } else {
             this.isQueryNotResult = false
-            this.defaultHint = '单词数据从Cambridge抓取不到'
+            this.defaultHint = '单词数据从Cambridge抓取不到，请联系作者'
             this.isForceRequest = false
           }
           this.wordInfo = { wordName: '' }

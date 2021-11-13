@@ -146,11 +146,11 @@ export default {
     </el-card>
     <el-card class="box-card" v-if="bgm">
       <iframe v-if="bgm==='1'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-              src="//music.163.com/outchain/player?type=0&id=5295155138&auto=0&height=430"></iframe>
+              src="https://music.163.com/outchain/player?type=0&id=5295155138&auto=0&height=430"></iframe>
       <iframe v-if="bgm==='2'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-              src="//music.163.com/outchain/player?type=0&id=5295152134&auto=0&height=430"></iframe>
+              src="https://music.163.com/outchain/player?type=0&id=5295152134&auto=0&height=430"></iframe>
       <iframe v-if="bgm==='3'" frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height=450
-              src="//music.163.com/outchain/player?type=0&id=5296399530&auto=1&height=430"></iframe>
+              src="https://music.163.com/outchain/player?type=0&id=5296399530&auto=1&height=430"></iframe>
     </el-card>
   </div>
 </template>
