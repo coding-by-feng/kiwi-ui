@@ -307,7 +307,7 @@ export default {
       }, 10000)
     },
     async getReviewBreakpointPageNumber () {
-      if (this.isFirstIncome) {
+      if (this.isFirstIncome && this.isReview) {
         await review.getReviewBreakpointPageNumber(this.listId)
             .then(response => {
               this.page.current = response.data.data
@@ -1221,7 +1221,7 @@ export default {
       </el-alert>
       <div slot="footer" class="dialog-footer">
         <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
-     </div>
+      </div>
     </el-dialog>
   </div>
 </template>
