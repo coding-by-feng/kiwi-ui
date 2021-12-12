@@ -124,6 +124,7 @@ export default {
       this.init()
     },
     'playStepIndex' (newVal) {
+      console.log('playStepIndex=' + newVal)
       if (newVal === 0) return
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
@@ -529,8 +530,6 @@ export default {
       let pronunciation = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
       let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
       let first = isUS && isExistUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[0]
-      pronunciation.loop = false
-      pronunciation.pause()
       if (this.source === '本地') {
         pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
@@ -748,8 +747,9 @@ export default {
     },
     createNewAudio () {
       let audio = new Audio()
+      audio.loop = false
       audio.addEventListener('ended', function () {
-        // console.log('end')
+        console.log('end')
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
         that.detail.loading = true
@@ -758,6 +758,7 @@ export default {
         }
       })
       audio.addEventListener('error', function () {
+        console.log('error')
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
         that.detail.loading = true
@@ -766,7 +767,14 @@ export default {
         }
       })
       audio.addEventListener('playing', function () {
+        console.log('playing')
         that.detail.loading = false
+      })
+      audio.addEventListener('play', function () {
+        console.log('play')
+      })
+      audio.addEventListener('pause', function () {
+        console.log('pause')
       })
       return audio
     },
