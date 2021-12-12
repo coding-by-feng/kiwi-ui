@@ -25,7 +25,7 @@ export default {
     if (!this.user.pronunciationSource) {
       setStore({
         name: 'pronunciation_source',
-        content: '本地',
+        content: 'Cambridge',
         type: 'local'
       })
     }
@@ -224,7 +224,7 @@ export default {
       {{ '发音来源：' + (user.pronunciationSource ? user.pronunciationSource : '默认') }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
-        <el-dropdown-item command="本地">本地</el-dropdown-item>
+        <el-dropdown-item command="Local">本地</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
