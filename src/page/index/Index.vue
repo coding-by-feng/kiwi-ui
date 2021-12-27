@@ -139,18 +139,20 @@ export default {
         <span slot="label"><i class="el-icon-postcard"></i></span>
         <router-view name="about"></router-view>
       </el-tab-pane>
+      <el-tab-pane name="bgm">
+        <span slot="label"><i class="el-icon-headset"></i></span>`
+        <span v-if="!bgm">背景音乐已关闭，请在个人中心打开</span>
+        <el-card class="box-card" v-if="bgm">
+          <iframe v-if="bgm==='1'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
+                  src="https://music.163.com/outchain/player?type=0&id=57330170&auto=1&height=430"></iframe>
+          <iframe v-if="bgm==='2'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
+                  src="https://music.163.com/outchain/player?type=0&id=5295152134&auto=0&height=430"></iframe>
+        </el-card>
+      </el-tab-pane>
     </el-tabs>
     <el-card class="box-card">
       <a href="https://beian.miit.gov.cn" style="color: #409EFF">粤ICP备2020080500号</a>
       <p>&nbsp;</p>
-    </el-card>
-    <el-card class="box-card" v-if="bgm">
-      <iframe v-if="bgm==='1'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-              src="https://music.163.com/outchain/player?type=0&id=5295155138&auto=0&height=430"></iframe>
-      <iframe v-if="bgm==='2'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-              src="https://music.163.com/outchain/player?type=0&id=5295152134&auto=0&height=430"></iframe>
-      <iframe v-if="bgm==='3'" frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height=450
-              src="https://music.163.com/outchain/player?type=0&id=5296399530&auto=1&height=430"></iframe>
     </el-card>
   </div>
 </template>
