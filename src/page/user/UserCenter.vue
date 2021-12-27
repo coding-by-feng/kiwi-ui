@@ -169,7 +169,7 @@ export default {
         })
       }
       if (val === '1') {
-        return '【白噪音】雨声/小溪/炉火/猫咪'
+        return '【轻音乐】我的世界'
       } else if (val === '2') {
         return '【白噪音】篝火'
       } else if (val === '3') {
@@ -224,7 +224,7 @@ export default {
       {{ '发音来源：' + (user.pronunciationSource ? user.pronunciationSource : '默认') }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
-        <el-dropdown-item command="Local">本地</el-dropdown-item>
+        <el-dropdown-item command="Local">Local</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
@@ -232,9 +232,8 @@ export default {
                  split-button type="info" @command="bgmChange">
       {{ `背景音乐：${tranBGM(user.bgm)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="'1'">【白噪音】雨声/小溪/炉火/猫咪</el-dropdown-item>
+        <el-dropdown-item :command="'1'">【轻音乐】我的世界</el-dropdown-item>
         <el-dropdown-item :command="'2'">【白噪音】篝火</el-dropdown-item>
-        <el-dropdown-item :command="'3'"> 致抑郁轻音乐（慎点）</el-dropdown-item>
         <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
