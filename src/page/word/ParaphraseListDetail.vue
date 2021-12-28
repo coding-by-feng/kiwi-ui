@@ -1009,7 +1009,10 @@ export default {
             @click="countdownEndReplay">
           <i class="el-icon-video-play"></i>
         </el-button>
-        <Countdown v-if="countdownMode" :endTime="countdownTime"
+      </div>
+      <div v-if="countdownMode">
+        <br/>
+        <Countdown :endTime="countdownTime"
                    @endFun="countdownEndFun"></Countdown>
       </div>
     </el-card>

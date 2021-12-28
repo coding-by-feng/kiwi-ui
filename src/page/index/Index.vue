@@ -140,7 +140,7 @@ export default {
         <router-view name="about"></router-view>
       </el-tab-pane>
       <el-tab-pane name="bgm">
-        <span slot="label"><i class="el-icon-headset"></i></span>`
+        <span slot="label"><i class="el-icon-headset"></i></span>
         <span v-if="!bgm">背景音乐已关闭，请在个人中心打开</span>
         <el-card class="box-card" v-if="bgm">
           <iframe v-if="bgm==='1'" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
