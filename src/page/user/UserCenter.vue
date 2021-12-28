@@ -206,7 +206,7 @@ export default {
       {{ user.userName }}
       <el-divider direction="vertical"></el-divider>
       <el-button type="info" size="mini" @click="handleLoginOut">
-        <i class="el-icon-switch-button"></i>
+        Logout
       </el-button>
     </p>
     <el-divider></el-divider>
@@ -240,7 +240,7 @@ export default {
     <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="reviewTypeChange">
-      {{ `复习模式（导播）：${tranReviewType(user.reviewType)}` }}
+      {{ `导播：${tranReviewType(user.reviewType)}` }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="'1'">去除中文导播</el-dropdown-item>
         <el-dropdown-item :command="'2'">附带中文导播</el-dropdown-item>
@@ -249,7 +249,7 @@ export default {
     <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="spellTypeChange">
-      {{ `复习模式（字母拼写播报）：${tranSpellType(user.spellType)}` }}
+      {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="'1'">去除单词拼写</el-dropdown-item>
         <el-dropdown-item :command="'2'">附带单词拼写</el-dropdown-item>
@@ -258,7 +258,7 @@ export default {
     <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="enParaTypeChange">
-      {{ `复习模式（英文释义播报）：${tranEnParaType(user.enParaType)}` }}
+      {{ `英文释义播报：${tranEnParaType(user.enParaType)}` }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="'1'">去除英文释义</el-dropdown-item>
         <el-dropdown-item :command="'2'">附带英文释义</el-dropdown-item>

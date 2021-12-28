@@ -515,8 +515,8 @@ export default {
           <el-dropdown-item command="goBack">返回</el-dropdown-item>
           <el-dropdown-item command="refresh">刷新</el-dropdown-item>
           <el-dropdown-item command="handleOperate" v-show="list.status==='list'">新增</el-dropdown-item>
-          <el-dropdown-item command="switchMode" v-show="list.status==='list'">切换模式</el-dropdown-item>
-          <el-dropdown-item command="switchShow" v-show="list.status==='detail'">显示or隐藏释义</el-dropdown-item>
+          <el-dropdown-item command="switchMode" v-show="list.status==='list'">切换</el-dropdown-item>
+          <el-dropdown-item command="switchShow" v-show="list.status==='detail'">切换</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
