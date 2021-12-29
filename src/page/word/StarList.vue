@@ -449,19 +449,6 @@ export default {
       let query = { active: 'starList' }
       this.$router.push({ path: '/index/vocabulary/detail', query: query })
       window.location.reload()
-    },
-    selectOperate (command) {
-      if (command === 'refresh') {
-        this.refresh()
-      } else if (command === 'handleOperate') {
-        this.handleOperate()
-      } else if (command === 'switchMode') {
-        this.list.editMode = !this.list.editMode
-      } else if (command === 'switchShow') {
-        this.detail.isShowParaphrase = !this.detail.isShowParaphrase
-      } else if (command === 'goBack') {
-        this.goBack()
-      }
     }
   }
 }
@@ -470,10 +457,37 @@ export default {
 <template>
 
   <div class="text item" v-loading="loading">
-    <div align="left">
-      &nbsp;
-      <el-dropdown size="mini"
-                   split-button type="info" @command="listTypeClick">
+    <div style="position: fixed; bottom: 5px; right: 30px; z-index: 99;">
+      <el-button size="mini" @click="goBack">
+        <i class="el-icon-back"
+           style="color: #76838f;"></i>
+      </el-button>
+      <el-button size="mini" @click="refresh">
+        <i class="el-icon-refresh"
+           style="color: #76838f;"></i>
+      </el-button>
+      <el-button size="mini" @click="handleOperate">
+        <i class="el-icon-folder-add"
+           style="color: #76838f;"></i>
+      </el-button>
+      <el-button size="mini" v-if="list.status==='list'"
+                 @click="list.editMode = !list.editMode">
+        <i class="el-icon-unlock" v-if="!list.editMode"
+           style="color: #76838f;"></i>
+        <i class="el-icon-lock" v-if="list.editMode"
+           style="color: #76838f;"></i>
+      </el-button>
+      <el-button size="mini" v-if="list.status==='detail'"
+                 @click="detail.isShowParaphrase = !detail.isShowParaphrase">
+        <i class="el-icon-lock" v-if="detail.isShowParaphrase"
+           style="color: #76838f;"></i>
+        <i class="el-icon-unlock" v-if="!detail.isShowParaphrase"
+           style="color: #76838f;"></i>
+      </el-button>
+    </div>
+    <div style="position: fixed; top: 60px; right: 12px; z-index: 99;">
+      <el-dropdown size="mini" plain
+                   split-button @command="listTypeClick">
         {{ this.list.listName }}
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
@@ -482,13 +496,11 @@ export default {
         </el-dropdown-menu>
       </el-dropdown>
       &nbsp;
-      <span v-if="!isSmallWindow">
-        &nbsp;
-      </span>
       <el-dropdown
           v-if="list.listType === 'paraphrase' && list.status === 'list'"
           size="mini"
-          split-button type="info" @command="selectReviewMode">
+          plain
+          split-button @command="selectReviewMode">
         <i class="el-icon-video-camera"></i>
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习最近收藏</el-dropdown-item>
@@ -507,18 +519,6 @@ export default {
       <span v-if="!isSmallWindow">
         &nbsp;
       </span>
-      <el-dropdown
-          size="mini"
-          split-button type="info" @command="selectOperate">
-        <i class="el-icon-menu"></i>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="goBack">返回</el-dropdown-item>
-          <el-dropdown-item command="refresh">刷新</el-dropdown-item>
-          <el-dropdown-item command="handleOperate" v-show="list.status==='list'">新增</el-dropdown-item>
-          <el-dropdown-item command="switchMode" v-show="list.status==='list'">切换</el-dropdown-item>
-          <el-dropdown-item command="switchShow" v-show="list.status==='detail'">切换</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
     </div>
     <el-table
         v-show="tableVisible"
