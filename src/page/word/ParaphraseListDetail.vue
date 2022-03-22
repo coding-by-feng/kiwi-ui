@@ -3,6 +3,7 @@ import { getStore } from '@/util/store'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
+import kiwiConst from '@/const/kiwiConsts'
 
 const sleep = function (time) {
   let startTime = new Date().getTime() + time * 1000
@@ -544,6 +545,13 @@ export default {
         meaningChinese = meaningChinese.replaceAll('…', '什么什么')
         meaningChinese = meaningChinese.replaceAll('...', '什么什么')
       }
+      if (!this.detail.paraphraseVO.meaningChinese || this.detail.paraphraseVO.meaningChinese === '') {
+        meaningChinese = '中文释义缺失'
+      }
+      let paraphraseEnglish = this.detail.paraphraseVO.paraphraseEnglish
+      if (!paraphraseEnglish || this.detail.paraphraseVO.paraphraseEnglish === '') {
+        paraphraseEnglish = '英文释义缺失'
+      }
 
       function createWordSpellAudio () {
         if (!isNotReviewSpell) {
@@ -564,7 +572,7 @@ export default {
         if (this.enParaType === '2') {
           if (this.reviewType === '2')
             audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
         }
         if (this.reviewType === '2')
           audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次中文释义：'))
@@ -572,7 +580,7 @@ export default {
         if (this.enParaType === '2') {
           if (this.reviewType === '2')
             audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
         }
       }
 
@@ -622,10 +630,10 @@ export default {
         if (this.enParaType === '2') {
           if (this.reviewType === '2') {}
           audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
           if (this.reviewType === '2')
             audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
         }
       } else {
         if (this.reviewType === '2')
@@ -650,91 +658,6 @@ export default {
         createWordSelfAudio.call(this)
         createWordParaphraseAudio.call(this)
       }
-
-      // for (let j = 0; j < audioQueue.length; j++) {
-      // audioQueue[j].addEventListener('ended', function () {
-      //   // console.log('end')
-      //   that.cmp = new Date().getTime()
-      //   console.log('ended======>')
-      //   that.reviewAudioCandidates.push(this)
-      //   that.detail.loading = true
-      //   if (!that.isReviewStop) {
-      //     that.playStepIndex++
-      //   }
-      // })
-      // audioQueue[j].addEventListener('error', function () {
-      //   // console.log('end')
-      //   that.cmp = new Date().getTime()
-      //   console.log('error======>')
-      //   that.reviewAudioCandidates.push(this)
-      //   that.detail.loading = true
-      //   if (!that.isReviewStop) {
-      //     that.playWordIndex++
-      //   }
-      // })
-      // audioQueue[j].addEventListener('play', function () {   //开始播放时触发
-      //   console.log('play')
-      //   that.detail.loading = false
-      //   that.$message.success({
-      //     showClose: true,
-      //     center: true,
-      //     message: `play${j}`
-      //   })
-      // })
-      // audioQueue[j].addEventListener('playing', function () {
-      //   // console.log('playing')
-      //   that.detail.loading = false
-      //   // that.$message.success({
-      //   //   showClose: true,
-      //   //   center: true,
-      //   //   message: `playing${j}`
-      //   // })
-      // })
-      // audioQueue[j].addEventListener('loadstart', function () {
-      //   // console.log('loadstart' + j)
-      //   that.$message.success({
-      //     showClose: true,
-      //     center: true,
-      //     message: `loadstart${j}`
-      //   })
-      // })
-      // audioQueue[j].addEventListener('progress', function () {
-      //   // console.log('loadstart' + j)
-      //   that.$message.success({
-      //     showClose: true,
-      //     center: true,
-      //     message: `progress${j}`
-      //   })
-      // })
-      // audioQueue[j].addEventListener('waiting', function () {
-      //   // console.log('loadstart' + j)
-      //   that.$message.success({
-      //     showClose: true,
-      //     center: true,
-      //     message: `waiting${j}`
-      //   })
-      // })
-      // audioQueue[j].addEventListener('stalled', function () {
-      //   // console.log('loadstart' + j)
-      //   that.$message.success({
-      //     showClose: true,
-      //     center: true,
-      //     message: `stalled${j}`
-      //   })
-      // })
-      // audioQueue[j].addEventListener('progress', function () {
-      //   console.log('progress')
-      //   that.detail.loading = true
-      // })
-      // audioQueue[j].addEventListener('waiting', function () {
-      //   console.log('waiting')
-      //   that.detail.loading = true
-      // })
-      // audioQueue[j].addEventListener('stalled', function () {
-      //   console.log('stalled')
-      //   that.detail.loading = true
-      // })
-      // }
 
       this.reviewAudioArr.push(audioQueue)
       this.playCountPerWord = audioQueue.length
