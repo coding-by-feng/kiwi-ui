@@ -11,8 +11,19 @@ export default {
       user: {
         userName: getStore({ name: 'user_name' }),
         pronunciationSource: getStore({ name: 'pronunciation_source' }),
+
+        /**
+         * 导播模式，是否附带中文导播
+         * 1：去除中文导播
+         * 2：附带中文导播
+         */
         reviewType: getStore({ name: 'review_type' }),
         spellType: getStore({ name: 'spell_type' }),
+        /**
+         * 是否播报英文释义
+         * 1：去除英文释义
+         * 2：附带英文释义
+         */
         enParaType: getStore({ name: 'enPara_type' }),
         bgm: getStore({ name: 'bgm' }),
         keepInMindCount: 0,
@@ -181,14 +192,17 @@ export default {
     },
     refresh () {
       review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.KEEP_IN_MIND)
+      review.getVO(KIWI_CONSTS.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
           .then(response => {
             this.user.keepInMindCount = response.data.data.reviewCount
           })
       review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.REMEMBER)
+      review.getVO(KIWI_CONSTS.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
           .then(response => {
             this.user.rememberCount = response.data.data.reviewCount
           })
       review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.REVIEW)
+      review.getVO(KIWI_CONSTS.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
           .then(response => {
             this.user.reviewCount = response.data.data.reviewCount
           })
@@ -266,4 +280,5 @@ export default {
     </el-dropdown>
   </div>
 </template>
+
 
