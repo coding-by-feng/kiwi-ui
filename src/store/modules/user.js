@@ -91,6 +91,31 @@ const user = {
             content: null,
             type: 'local'
           })
+          setStore({
+            name: 'pronunciation_source',
+            content: null,
+            type: 'local'
+          })
+          setStore({
+            name: 'bgm',
+            content: null,
+            type: 'local'
+          })
+          setStore({
+            name: 'review_type',
+            content: null,
+            type: 'local'
+          })
+          setStore({
+            name: 'spell_type',
+            content: null,
+            type: 'local'
+          })
+         setStore({
+            name: 'is_play_example',
+            content: null,
+            type: 'local'
+          })
           resolve()
         }).catch(error => {
           reject(error)

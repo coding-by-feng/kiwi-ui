@@ -2,7 +2,7 @@
 import website from '@/const/website'
 import { getStore, setStore } from '@/util/store'
 import review from '@/api/review'
-import KIWI_CONSTS from '@/const/kiwiConsts'
+import kiwiConst from '@/const/kiwiConsts'
 
 export default {
   name: 'userCenter',
@@ -25,6 +25,12 @@ export default {
          * 2：附带英文释义
          */
         enParaType: getStore({ name: 'enPara_type' }),
+        /**
+         * 是否播报例句
+         * 1：去除英文释义
+         * 2：附带英文释义
+         */
+        isPlayExample: getStore({ name: 'is_play_example' }),
         bgm: getStore({ name: 'bgm' }),
         keepInMindCount: 0,
         rememberCount: 0,
@@ -32,11 +38,11 @@ export default {
       }
     }
   },
-  async mounted () {
+  mounted () {
     if (!this.user.pronunciationSource) {
       setStore({
         name: 'pronunciation_source',
-        content: 'Cambridge',
+        content: kiwiConst.PRONUNCIATION_SOURCE.LOCAL,
         type: 'local'
       })
     }
@@ -50,14 +56,21 @@ export default {
     if (!this.user.reviewType) {
       setStore({
         name: 'review_type',
-        content: '1',
+        content: kiwiConst.REVIEW_TYPE.ONLY_ENGLISH,
         type: 'local'
       })
     }
     if (!this.user.spellType) {
       setStore({
         name: 'spell_type',
-        content: '2',
+        content: kiwiConst.SPELL_TYPE.ENABLE,
+        type: 'local'
+      })
+    }
+    if (!this.user.isPlayExample) {
+      setStore({
+        name: 'is_play_example',
+        content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
         type: 'local'
       })
     }
@@ -126,17 +139,26 @@ export default {
       this.user.enParaType = command
       window.location.reload()
     },
+    isPlayExampleChange (command) {
+      setStore({
+        name: 'enPara_type',
+        content: command,
+        type: 'local'
+      })
+      this.user.enParaType = command
+      window.location.reload()
+    },
     tranReviewType (val) {
       if (undefined === val) {
         setStore({
           name: 'review_type',
-          content: '2',
+          content: kiwiConst.REVIEW_TYPE.WITH_CHINESE,
           type: 'local'
         })
       }
-      if (val === '1') {
+      if (val === kiwiConst.REVIEW_TYPE.ONLY_ENGLISH) {
         return '去除中文导播'
-      } else if (val === '2') {
+      } else if (val === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
         return '附带中文导播'
       }
       return '默认'
@@ -145,64 +167,78 @@ export default {
       if (undefined === val) {
         setStore({
           name: 'enPara_type',
-          content: '2',
+          content: kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE,
           type: 'local'
         })
       }
-      if (val === '1') {
+      if (val === kiwiConst.ENGLISH_PARAPHRASE_TYPE.DISABLE) {
         return '去除英文释义'
-      } else if (val === '2') {
+      } else if (val === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
         return '附带英文释义'
       }
-      return '默认'
+      return '附带英文释义'
+    },
+    tranIsPlayExample (val) {
+      if (undefined === val) {
+        setStore({
+          name: 'is_play_example',
+          content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
+          type: 'local'
+        })
+      }
+      if (val === kiwiConst.IS_PLAY_EXAMPLE.ENABLE) {
+        return '开启'
+      } else if (val === kiwiConst.IS_PLAY_EXAMPLE.DISABLE) {
+        return '关闭'
+      }
+      return '开启'
     },
     tranSpellType (val) {
       if (undefined === val) {
         setStore({
           name: 'review_type',
-          content: '2',
+          content: kiwiConst.SPELL_TYPE.ENABLE,
           type: 'local'
         })
       }
-      if (val === '1') {
+      if (val === kiwiConst.SPELL_TYPE.DISABLE) {
         return '去除单词拼写'
-      } else if (val === '2') {
+      } else if (val === kiwiConst.SPELL_TYPE.ENABLE) {
         return '附带单词拼写'
       }
-      return '默认'
+      return '附带单词拼写'
     },
     tranBGM (val) {
       if (undefined === val) {
         setStore({
           name: 'bgm',
-          content: '1',
+          content: 1,
           type: 'local'
         })
       }
-      if (val === '1') {
+      if (val === 1) {
         return '【轻音乐】我的世界'
-      } else if (val === '2') {
+      } else if (val === 2) {
         return '【白噪音】篝火'
-      } else if (val === '3') {
+      } else if (val === 3) {
         return '致抑郁轻音乐（慎点）'
       } else {
         return '关闭'
       }
-      return '默认'
     },
     refresh () {
-      review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.KEEP_IN_MIND)
-      review.getVO(KIWI_CONSTS.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
+      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
+      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
           .then(response => {
             this.user.keepInMindCount = response.data.data.reviewCount
           })
-      review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.REMEMBER)
-      review.getVO(KIWI_CONSTS.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
+      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
+      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
           .then(response => {
             this.user.rememberCount = response.data.data.reviewCount
           })
-      review.getVO(KIWI_CONSTS.Review_Daily_Counter_Type.REVIEW)
-      review.getVO(KIWI_CONSTS.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
           .then(response => {
             this.user.reviewCount = response.data.data.reviewCount
           })
@@ -246,8 +282,8 @@ export default {
                  split-button type="info" @command="bgmChange">
       {{ `背景音乐：${tranBGM(user.bgm)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="'1'">【轻音乐】我的世界</el-dropdown-item>
-        <el-dropdown-item :command="'2'">【白噪音】篝火</el-dropdown-item>
+        <el-dropdown-item :command="1">【轻音乐】我的世界</el-dropdown-item>
+        <el-dropdown-item :command="2">【白噪音】篝火</el-dropdown-item>
         <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
@@ -256,8 +292,8 @@ export default {
                  split-button type="info" @command="reviewTypeChange">
       {{ `导播：${tranReviewType(user.reviewType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="'1'">去除中文导播</el-dropdown-item>
-        <el-dropdown-item :command="'2'">附带中文导播</el-dropdown-item>
+        <el-dropdown-item :command="1">去除中文导播</el-dropdown-item>
+        <el-dropdown-item :command="2">附带中文导播</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
@@ -265,8 +301,8 @@ export default {
                  split-button type="info" @command="spellTypeChange">
       {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="'1'">去除单词拼写</el-dropdown-item>
-        <el-dropdown-item :command="'2'">附带单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="1">去除单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="2">附带单词拼写</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
@@ -274,8 +310,17 @@ export default {
                  split-button type="info" @command="enParaTypeChange">
       {{ `英文释义播报：${tranEnParaType(user.enParaType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="'1'">去除英文释义</el-dropdown-item>
-        <el-dropdown-item :command="'2'">附带英文释义</el-dropdown-item>
+        <el-dropdown-item :command="1">去除英文释义</el-dropdown-item>
+        <el-dropdown-item :command="2">附带英文释义</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="isPlayExampleChange">
+      {{ `是否播放例句：${tranIsPlayExample(user.isPlayExample)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="1">开启</el-dropdown-item>
+        <el-dropdown-item :command="2">关闭</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>

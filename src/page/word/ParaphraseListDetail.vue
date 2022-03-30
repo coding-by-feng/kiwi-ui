@@ -79,6 +79,7 @@ export default {
       reviewType: getStore({ name: 'review_type' }),
       spellType: getStore({ name: 'spell_type' }),
       enParaType: getStore({ name: 'enPara_type' }),
+      isPlayExample: getStore({ name: 'is_play_example' }),
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: 0,
@@ -184,44 +185,7 @@ export default {
       }
     }
   },
-  computed: {
-    // getCarryChModeCh2EnAudioCount () {
-    //   let tmp = carryChModeCh2EnAudioCount
-    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-    //     tmp -= 6
-    //   } else if (this.spellType === '1') {
-    //     tmp -= 6
-    //   }
-    //   return tmp
-    // },
-    // getRidChModeCh2EnAudioCount () {
-    //   let tmp = ridChModeCh2EnAudioCount
-    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-    //     tmp -= 6
-    //   } else if (this.spellType === '1') {
-    //     tmp -= 4
-    //   }
-    //   return tmp
-    // },
-    // getCarryChModeEh2ChAudioCount () {
-    //   let tmp = carryChModeEh2ChAudioCount
-    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-    //     tmp -= 4
-    //   } else if (this.spellType === '1') {
-    //     tmp -= 6
-    //   }
-    //   return tmp
-    // },
-    // getRidChModeEh2ChAudioCount () {
-    //   let tmp = ridChModeEh2ChAudioCount
-    //   if (this.detail.paraphraseVO.wordCharacter === 'phrase') {
-    //     tmp -= 4
-    //   } else if (this.spellType === '1') {
-    //     tmp -= 4
-    //   }
-    //   return tmp
-    // }
-  },
+  computed: {},
   methods: {
     ...paraphraseStarList,
     async init () {
@@ -383,9 +347,8 @@ export default {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
               this.detail.paraphraseVO = response.data.data
-              console.log('initNextReviewDetail')
               if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
-                this.detail.paraphraseVO.wordCharacter = 'phrase'
+                this.detail.paraphraseVO.wordCharacter = kiwiConst.WORD_CHARACTER.PHRASE
               }
             })
             .catch(e => {
@@ -393,16 +356,16 @@ export default {
               console.error(e)
             })
       }
-      await this.reviewDetail(this.detail.paraphraseVO.wordCharacter === 'phrase' || this.spellType === '1')
+      await this.reviewDetail(this.detail.paraphraseVO.wordCharacter === kiwiConst.WORD_CHARACTER.PHRASE
+          || this.spellType === kiwiConst.SPELL_TYPE.DISABLE)
     },
     async showDetail (paraphraseId, index) {
       this.detail.showIndex = index
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
-            console.log('showDetail')
             if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
-              this.detail.paraphraseVO.wordCharacter = 'phrase'
+              this.detail.paraphraseVO.wordCharacter = kiwiConst.WORD_CHARACTER.PHRASE
             }
             // 如果是复习最近收藏
             this.detail.listId = this.listItems[this.detail.showIndex].listId
@@ -526,9 +489,9 @@ export default {
     },
     createPronunciationAudio (isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
-        return audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '音标缺失')
+        return audioPlay.createAudioFromText(this.getAudio(), '音标缺失')
       }
-      let pronunciation = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
+      let pronunciation = this.getAudio()
       let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
       let first = isUS && isExistUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[0]
       if (this.source === '本地') {
@@ -537,6 +500,9 @@ export default {
         pronunciation.src = first.sourceUrl
       }
       return pronunciation
+    },
+    getAudio: function () {
+      return this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
     },
     async reviewDetail (isNotReviewSpell) {
       let audioQueue = []
@@ -555,32 +521,57 @@ export default {
 
       function createWordSpellAudio () {
         if (!isNotReviewSpell) {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '单词的拼写是：'))
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '单词的拼写是：'))
+          }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次拼写：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一次拼写：'))
+          }
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
         }
       }
 
       function createWordParaphraseAudio () {
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
-        if (this.enParaType === '2') {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
+        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '中文释义是：'))
         }
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次中文释义：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
-        if (this.enParaType === '2') {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
+        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '英文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+        }
+        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一次中文释义：'))
+        }
+        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一遍英文释义：'))
+          }
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+        }
+      }
+
+      function createExampleAudio () {
+        if (this.isPlayExample !== kiwiConst.IS_PLAY_EXAMPLE.ENABLE) {
+          return
+        }
+        let exampleVOList = this.detail.paraphraseVO.exampleVOList
+        console.log('exampleVOList = ' + exampleVOList)
+        if (exampleVOList && meaningChinese && meaningChinese.length > 0) {
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '播报单词的例句：'))
+          }
+          for (let i = 0; i < exampleVOList.length; i++) {
+            if (i > 1) {
+              break
+            }
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleTranslate))
+          }
         }
       }
 
@@ -593,32 +584,36 @@ export default {
       }
 
       if (this.isChToEn) {
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '接下来复习的单词中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍中文释义是：'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '请在脑海回想对应的单词。'))
-        audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '对应的英文单词是'))
+        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '接下来复习的单词中文释义是：'))
+        }
+        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一遍中文释义是：'))
+        }
+        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '请在脑海回想对应的单词。'))
+        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '对应的英文单词是'))
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
         }
 
         if (!isNotReviewSpell) {
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '单词的拼写是：'))
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '单词的拼写是：'))
+          }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一次拼写：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一次拼写：'))
+          }
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
         }
 
         // 如果是没有音标的词组
@@ -627,22 +622,25 @@ export default {
           audioQueue.push(this.createPronunciationAudio(true))
         }
 
-        if (this.enParaType === '2') {
-          if (this.reviewType === '2') {}
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
-          if (this.reviewType === '2')
-            audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '再读一遍英文释义：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), paraphraseEnglish, true))
+        if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '英文释义是：'))
+          }
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一遍英文释义：'))
+          }
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
         }
       } else {
-        if (this.reviewType === '2')
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), '接下来复习的单词是：'))
+        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '接下来复习的单词是：'))
+        }
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromText(this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -657,6 +655,9 @@ export default {
         createWordSpellAudio.call(this)
         createWordSelfAudio.call(this)
         createWordParaphraseAudio.call(this)
+        createExampleAudio.call(this)
+        createExampleAudio.call(this)
+        createExampleAudio.call(this)
       }
 
       this.reviewAudioArr.push(audioQueue)
@@ -872,22 +873,7 @@ export default {
         }
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
-    },
-    // calPlayCountPerWord () {
-    //   if (this.isChToEn) {
-    //     if (this.reviewType === '2') {
-    //       this.playCountPerWord = this.getCarryChModeCh2EnAudioCount
-    //     } else {
-    //       this.playCountPerWord = this.getRidChModeCh2EnAudioCount
-    //     }
-    //   } else {
-    //     if (this.reviewType === '2') {
-    //       this.playCountPerWord = this.getCarryChModeCh2EnAudioCount
-    //     } else {
-    //       this.playCountPerWord = this.getRidChModeEh2ChAudioCount
-    //     }
-    //   }
-    // }
+    }
   }
 }
 </script>
@@ -902,7 +888,7 @@ export default {
 </style>
 
 <template>
-  <div style="margin-top: 10px">
+  <div style="margin-top: 30px">
     <div style="z-index: 1;">
       <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
         <div>
@@ -1147,12 +1133,7 @@ export default {
         <el-alert
             :closable="false"
             type="warning">
-          复习期间最好不要切换App
-        </el-alert>
-        <el-alert
-            :closable="false"
-            type="warning">
-          如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
+          复习期间如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
         </el-alert>
         <div slot="footer" class="dialog-footer">
           <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
