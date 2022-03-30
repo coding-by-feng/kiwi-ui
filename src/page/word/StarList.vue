@@ -485,7 +485,7 @@ export default {
            style="color: #76838f;"></i>
       </el-button>
     </div>
-    <div style="position: fixed; top: 60px; right: 12px; z-index: 99;">
+    <div style="position: fixed; top: 60px; left: 35px; z-index: 99;">
       <el-dropdown size="mini" plain
                    split-button @command="listTypeClick">
         {{ this.list.listName }}
