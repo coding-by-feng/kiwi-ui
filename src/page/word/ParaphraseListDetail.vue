@@ -569,8 +569,8 @@ export default {
             if (i > 1) {
               break
             }
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleSentence))
             audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleTranslate))
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleSentence))
           }
         }
       }
@@ -760,7 +760,7 @@ export default {
     rememberOneFun () {
       this.skipCurrentReview()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
-          .then(res => {
+          .then(() => {
             this.doSuccess()
           })
           .catch(e => {
@@ -771,7 +771,7 @@ export default {
     keepInMindFun () {
       this.skipCurrentReview()
       this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
-          .then(res => {
+          .then(() => {
             this.doSuccess()
           })
           .catch(e => {
@@ -781,7 +781,7 @@ export default {
     },
     forgetOneFun () {
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
-          .then(res => {
+          .then(() => {
             this.doSuccess()
           })
           .catch(e => {
