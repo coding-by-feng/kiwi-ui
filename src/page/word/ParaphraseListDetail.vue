@@ -447,7 +447,7 @@ export default {
           }
         }
         // let audio = this.pronunciationAudioMap.get(id)
-        let audio = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : new Audio()
+        let audio = this.getAudio()
         if (this.source === '本地') {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
@@ -671,6 +671,7 @@ export default {
     },
     createNewAudio () {
       let audio = new Audio()
+      audio.volume = 0.7
       audio.loop = false
       audio.addEventListener('ended', function () {
         console.log('end')

@@ -82,15 +82,19 @@ export default {
     // let url = 'https://tts.baidu.com/text2audio?lan=zh&ie=UTF-8&text=' + encodeURI(text)
     // let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
     audio.src = 'https://api.voicerss.org/?key=d2d13085141645ac87b12729dbb7ebe6&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
+    audio.volume = 1
   },
 
   /* Refactor the code */
 
   createAudioFromText (audio, text, isEnglish) {
-    let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
+    let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
     if (isEnglish) {
       // url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
       url = 'https://api.voicerss.org/?key=d2d13085141645ac87b12729dbb7ebe6&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
+      audio.volume = 1
+    } else {
+      audio.volume = 0.7
     }
     console.log('text ' + text)
     console.log('url ' + url)
