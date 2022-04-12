@@ -570,7 +570,7 @@ export default {
               break
             }
             audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleTranslate))
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleSentence, true))
           }
         }
       }
