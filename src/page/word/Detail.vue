@@ -816,14 +816,13 @@ export default {
 
     <el-dialog :visible.sync="dialogHelpVisible">
       <div>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/0pLFIb.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/oMHBFL.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/Wq2qTN.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/VWqzbU.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/cyFH8N.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/I8AzBk.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/1uQxX1.png"/>
-        <img width="100%" src="https://gitee.com/fengorz/oss/raw/master/uPic/mia7qz.png"/>
+        <img width="100%" src="wordCharacter1.png"/>
+        <img width="100%" src="wordCharacter2.png"/>
+        <img width="100%" src="wordCharacter3.png"/>
+        <img width="100%" src="wordCharacter4.png"/>
+        <img width="100%" src="wordCharacter5.png"/>
+        <img width="100%" src="wordCharacter6.png"/>
+        <img width="100%" src="wordCharacter7.png"/>
       </div>
     </el-dialog>
 
