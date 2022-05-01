@@ -151,6 +151,7 @@ export default {
       }
     },
     'playWordIndex' (newVal) {
+      console.log('playWordIndex this.page.current = ' + this.page.current)
       this.isReviewStop = false
       if (newVal === 0) return
       if (newVal >= playCountOnce) {
@@ -505,8 +506,17 @@ export default {
       return this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
     },
     async reviewDetail (isNotReviewSpell) {
+      let reviewCount = 0
+      await review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+          .then(response => {
+            reviewCount = response.data.data.reviewCount
+          })
+      console.log('reviewCount = ' + reviewCount)
+
       let audioQueue = []
       let meaningChinese = this.detail.paraphraseVO.meaningChinese
+      let wordCharacter = this.detail.paraphraseVO.wordCharacter
+
       if (this.detail.paraphraseVO.meaningChinese) {
         meaningChinese = meaningChinese.replaceAll('…', '什么什么')
         meaningChinese = meaningChinese.replaceAll('...', '什么什么')
@@ -522,36 +532,37 @@ export default {
       function createWordSpellAudio () {
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '单词的拼写是：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '单词的拼写是：'))
           }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一次拼写：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一次拼写：'))
           }
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
         }
       }
 
       function createWordParaphraseAudio () {
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '中文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '英文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
         }
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一次中文释义：'))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一次中文释义：'))
         }
-        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一遍英文释义：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
         }
       }
 
@@ -563,14 +574,15 @@ export default {
         console.log('exampleVOList = ' + exampleVOList)
         if (exampleVOList && meaningChinese && meaningChinese.length > 0) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '播报单词的例句：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '播报单词的例句：'))
           }
           for (let i = 0; i < exampleVOList.length; i++) {
             if (i > 1) {
               break
             }
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleTranslate))
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), exampleVOList[i].exampleSentence, true))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), exampleVOList[i].exampleTranslate))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), exampleVOList[i].exampleSentence, true))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), exampleVOList[i].exampleSentence, true))
           }
         }
       }
@@ -585,20 +597,20 @@ export default {
 
       if (this.isChToEn) {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '接下来复习的单词中文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '接下来复习的单词中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一遍中文释义是：'))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一遍中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '请在脑海回想对应的单词。'))
-        audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '对应的英文单词是'))
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '请在脑海回想对应的单词。'))
+        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '对应的英文单词是'))
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -606,14 +618,14 @@ export default {
 
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '单词的拼写是：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '单词的拼写是：'))
           }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一次拼写：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一次拼写：'))
           }
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
         }
 
         // 如果是没有音标的词组
@@ -624,23 +636,23 @@ export default {
 
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '英文释义是：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '英文释义是：'))
           }
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '再读一遍英文释义：'))
+            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
         }
       } else {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), '接下来复习的单词是：'))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '接下来复习的单词是：'))
         }
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromText(this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -683,7 +695,8 @@ export default {
         }
       })
       audio.addEventListener('error', function () {
-        console.log('error')
+        console.log('error src=' + this.src)
+        that.$message.error('音频数据加载异常')
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
         that.detail.loading = true

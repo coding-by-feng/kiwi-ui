@@ -1,5 +1,7 @@
 export default {
 
+  DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS: 60,
+
   PRONUNCIATION_SOURCE: {
     CAMBRIDGE: 'Cambridge',
     LOCAL: 'Local'
@@ -56,6 +58,17 @@ export default {
    */
   WORD_CHARACTER: {
     PHRASE: 'phrase'
-  }
+  },
+
+  WORD_CHARACTER_TRANSLATE_MAP: new Map()
+    .set('adjective', '形容词')
+    .set('adj', '形容词')
+    .set('noun', '名词')
+    .set('verb', '动词')
+    .set('adverb', '副词')
+    .set('conjunction', '连词')
+    .set('plural', '名词复数形式')
+    .set('preposition', '介词或者前置词')
+    .set('phrase', '短语')
 
 }
