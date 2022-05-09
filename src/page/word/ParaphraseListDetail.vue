@@ -381,16 +381,16 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then($ => {
+      }).then(() => {
         this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: listId })
-            .then(response => {
+            .then(() => {
               this.doSuccess()
               this.initList()
             })
             .catch(e => {
               this.$message.error(e)
             })
-      }).finally($ => {
+      }).finally(() => {
         loading.close()
       })
     },
