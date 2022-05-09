@@ -315,6 +315,8 @@ export default {
         if (this.detail.paraphraseIsReview || this.detail.paraphraseIsRead) {
           this.closeAutoReview()
         } else {
+          this.detail.paraphraseIsReview = false
+          this.detail.paraphraseIsRead = false
           this.visibleToggle()
           this.list.status = 'list'
         }
