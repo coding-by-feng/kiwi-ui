@@ -11,7 +11,7 @@ export default {
       },
       method: 'post',
       params: {
-        wordName: word,
+        wordName: util.convertWord(word),
         current: current,
         size: size
       }
@@ -23,7 +23,7 @@ export default {
     if (util.isEmptyStr(word)) {
       url = `/wordBiz/word/main/query/gate`
     } else {
-      url = `/wordBiz/word/main/query/gate/${word}`
+      url = `/wordBiz/word/main/query/gate/${util.convertWord(word)}`
     }
     return request({
       url: url,
@@ -51,7 +51,7 @@ export default {
 
   removeByWordName (wordName) {
     return request({
-      url: '/wordBiz/word/main/removeByWordName/' + wordName,
+      url: '/wordBiz/word/main/removeByWordName/' + util.convertWord(wordName),
       headers: {
         isToken: true
       },
