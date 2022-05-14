@@ -83,17 +83,17 @@ export default {
 
   playText (text, audio) {
     // let url = 'https://tts.baidu.com/text2audio?lan=zh&ie=UTF-8&text=' + encodeURI(text)
-    // let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
-    audio.src = 'https://api.voicerss.org/?key=9d8f999bc1b74fbbae1936d68640f604&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
+    // let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.198ca2d166d2128734bd6b7c66caee0a.2592000.1655087994.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
+    audio.src = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
     audio.volume = 1
   },
 
   playTextPlus (reviewCount, text, audio) {
     if (reviewCount > kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS) {
-      audio.src = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
+      audio.src = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.198ca2d166d2128734bd6b7c66caee0a.2592000.1655087994.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
       audio.volume = 0.7
     } else {
-      audio.src = 'https://api.voicerss.org/?key=9d8f999bc1b74fbbae1936d68640f604&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
+      audio.src = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
       audio.volume = 1
     }
   },
@@ -101,10 +101,10 @@ export default {
   /* Refactor the code */
 
   createAudioFromText (audio, text, isEnglish) {
-    let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
+    let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.198ca2d166d2128734bd6b7c66caee0a.2592000.1655087994.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
     if (isEnglish) {
-      // url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
-      url = 'https://api.voicerss.org/?key=9d8f999bc1b74fbbae1936d68640f604&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
+      // url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.198ca2d166d2128734bd6b7c66caee0a.2592000.1655087994.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
+      url = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
       audio.volume = 1
     } else {
       audio.volume = 0.7
@@ -117,12 +117,12 @@ export default {
     return audio
   },
   createAudioFromTextPlus (reviewCount, audio, text, isEnglish) {
-    let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=25.02b51e265b36772c244fd1b73f5d3d1c.315360000.1908631038.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
+    let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=24.198ca2d166d2128734bd6b7c66caee0a.2592000.1655087994.282335-20116041&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
     if (isEnglish) {
       if (reviewCount > kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS) {
         audio.volume = 0.7
       } else {
-        url = 'https://api.voicerss.org/?key=9d8f999bc1b74fbbae1936d68640f604&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
+        url = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
         audio.volume = 1
       }
     } else {

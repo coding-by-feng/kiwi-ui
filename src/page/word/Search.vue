@@ -37,7 +37,7 @@
 import wordSearch from '@/api/wordSearch'
 
 export default {
-  data () {
+  data() {
     return {
       word: this.$route.query.word ? decodeURI(this.$route.query.word) : '',
       searchInputWidth: document.body.clientWidth / 1.5 + 'px',
@@ -45,11 +45,12 @@ export default {
     }
   },
   computed: {
-    getWindowWidth () {
+    getWindowWidth() {
       return window.innerWidth
     }
   },
-  mounted () {},
+  mounted() {
+  },
   watch: {
     $route: function () {
       this.word = this.$route.query.word ? decodeURI(this.$route.query.word) : ''
@@ -58,10 +59,10 @@ export default {
   },
   methods: {
     ...wordSearch,
-    querySearch (queryString, callback) {
+    querySearch(queryString, callback) {
       let real = queryString.trimLeft()
       if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
-        callback([{ value: '请按回车或搜索按钮' }])
+        callback([{value: '请按回车或搜索按钮'}])
         return
       }
       // var results = fuzzyQueryWord(queryString);
@@ -74,17 +75,17 @@ export default {
       // 调用 callback 返回建议列表的数据
       // cb(results);
     },
-    querySelect (item) {
+    querySelect(item) {
       let real = item.value.trimLeft()
       if (real === '') {
         return
       }
       this.$router.push({
         path: this.$route.path,
-        query: { active: 'search', word: encodeURI(real), now: new Date().getTime() }
+        query: {active: 'search', word: encodeURI(real), now: new Date().getTime()}
       })
     },
-    onSubmit () {
+    onSubmit() {
       let real = this.word.trimLeft()
       if (real === '') {
         return
@@ -92,29 +93,29 @@ export default {
       this.$refs.auto.close()
       this.$router.push({
         path: this.$route.path,
-        query: { active: 'search', word: encodeURI(real), now: new Date().getTime() }
+        query: {active: 'search', word: encodeURI(real), now: new Date().getTime()}
       })
     },
-    handleOpen (key, keyPath) {
+    handleOpen(key, keyPath) {
       // console.log(key, keyPath)
     },
-    handleClose (key, keyPath) {
+    handleClose(key, keyPath) {
       // console.log(key, keyPath)
     },
-    brush () {
+    brush() {
       this.word = ''
       this.$refs.auto.focus()
     },
-    closeLazy () {
+    closeLazy() {
       let queryTmp = {}
       if (this.word) {
-        queryTmp = { word: this.word }
+        queryTmp = {word: this.word}
       }
       let query = {
         active: 'search',
         ...queryTmp
       }
-      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      this.$router.push({path: '/index/vocabulary/detail', query: query})
     }
   }
 }

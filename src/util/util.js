@@ -114,8 +114,16 @@ export function isEmptyStr (obj) {
   return obj === undefined || obj === null || obj.trim() === ''
 }
 
+export function convertWord (word) {
+  if (!isEmptyStr(word)) {
+    return word.replaceAll('/', ')(');
+  }
+  return word;
+}
+
 export default {
   isObjectValueEqual,
   isMobile,
-  isEmptyStr
+  isEmptyStr,
+  convertWord
 }
