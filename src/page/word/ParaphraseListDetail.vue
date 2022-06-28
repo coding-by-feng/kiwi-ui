@@ -997,6 +997,12 @@ export default {
           <el-button type="info" size="mini" @click="showNext">
             <i class="el-icon-right"></i>
           </el-button>
+          <el-button type="info"
+                     v-if="isReview"
+                     size="mini"
+                     @click="skipCurrentReview">
+            <i class="el-icon-document-checked"></i>
+          </el-button>
         </div>
         <div>
           <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
