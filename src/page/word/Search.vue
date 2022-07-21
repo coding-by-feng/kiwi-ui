@@ -66,7 +66,7 @@ export default {
         return
       }
       // var results = fuzzyQueryWord(queryString);
-      this.fuzzyQueryWord(real, 1, 20).then(response => {
+      this.fuzzyQueryWord(real, 1, 50).then(response => {
         callback(response.data.data)
       }).catch(e => {
         console.error(e)

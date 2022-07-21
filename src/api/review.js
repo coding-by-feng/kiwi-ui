@@ -3,9 +3,31 @@ import kiwiConst from '@/const/kiwiConsts'
 
 export default {
 
-  getVO (type) {
+  getReviewCounterVO (type) {
     return request({
-      url: `/wordBiz/word/review/getVO/${type}`,
+      url: `/wordBiz/word/review/getReviewCounterVO/${type}`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'get'
+    })
+  },
+
+  increaseCounter (type) {
+    return request({
+      url: `/wordBiz/word/review/increaseCounter/${type}`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'get'
+    })
+  },
+
+  getAllReviewCounterVO () {
+    return request({
+      url: `/wordBiz/word/review/getAllReviewCounterVO`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
