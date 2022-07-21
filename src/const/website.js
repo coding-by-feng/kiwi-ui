@@ -40,7 +40,5 @@ export default {
         ]
     },
 
-    baiduTtsToken: "24.1464c329f0bba04ea149e2dc1dcdebf0.2592000.1658851309.282335-26553439",
-    voicerssToken_163: "02df0a8f48b641548ec4224c24ebff0e",
-    voicerssToken_132: "0e3c0a35570543249f743f74c027ef8b"
+    baiduTtsToken: "25.3b0d762028ad25e2f786cbc2d42ec7dc.315360000.1973768906.282335-20116041",
 }

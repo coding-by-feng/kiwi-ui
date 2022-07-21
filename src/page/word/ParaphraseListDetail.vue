@@ -1,5 +1,5 @@
 <script>
-import { getStore } from '@/util/store'
+import {getStore} from '@/util/store'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
@@ -7,7 +7,8 @@ import kiwiConst from '@/const/kiwiConsts'
 
 const sleep = function (time) {
   let startTime = new Date().getTime() + time * 1000
-  while (new Date().getTime() < startTime) {}
+  while (new Date().getTime() < startTime) {
+  }
 }
 
 const runUpCh2EnCount = 5 // 需要回想时间
@@ -48,7 +49,7 @@ export default {
   components: {
     Countdown: $ => import('./Countdown')
   },
-  data () {
+  data() {
     return {
       innerHeight: window.innerHeight + 'px',
       innerWidth: window.innerWidth + 'px',
@@ -75,11 +76,11 @@ export default {
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
-      source: getStore({ name: 'pronunciation_source' }),
-      reviewType: getStore({ name: 'review_type' }),
-      spellType: getStore({ name: 'spell_type' }),
-      enParaType: getStore({ name: 'enPara_type' }),
-      isPlayExample: getStore({ name: 'is_play_example' }),
+      source: getStore({name: 'pronunciation_source'}),
+      reviewType: getStore({name: 'review_type'}),
+      spellType: getStore({name: 'spell_type'}),
+      enParaType: getStore({name: 'enPara_type'}),
+      isPlayExample: getStore({name: 'is_play_example'}),
       listItems: [],
       listRefresh: false,
       autoPlayDialogVisible: 0,
@@ -108,10 +109,10 @@ export default {
   beforeCreate: function () {
     that = this
   },
-  async mounted () {
+  async mounted() {
     await this.init()
   },
-  destroyed () {
+  destroyed() {
     if (this.cmpListening)
       clearInterval(this.cmpListening)
     if (this.isReview && this.reviewAudioArr && this.reviewAudioArr.length > 0) {
@@ -122,10 +123,10 @@ export default {
     }
   },
   watch: {
-    'listId' () {
+    'listId'() {
       this.init()
     },
-    'playStepIndex' (newVal) {
+    'playStepIndex'(newVal) {
       console.log('playStepIndex=' + newVal)
       if (newVal === 0) return
       if (this.isChToEn && newVal === runUpCh2EnCount) {
@@ -150,7 +151,7 @@ export default {
         // alert(e)
       }
     },
-    'playWordIndex' (newVal) {
+    'playWordIndex'(newVal) {
       console.log('playWordIndex this.page.current = ' + this.page.current)
       this.isReviewStop = false
       if (newVal === 0) return
@@ -180,7 +181,7 @@ export default {
         }
       }
     },
-    'countdownMode' (newVal) {
+    'countdownMode'(newVal) {
       if (newVal) {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
       }
@@ -189,7 +190,7 @@ export default {
   computed: {},
   methods: {
     ...paraphraseStarList,
-    async init () {
+    async init() {
       if (this.isReview) {
         // stop playing
         this.stopPlaying()
@@ -250,7 +251,7 @@ export default {
         await this.initList()
       }
     },
-    async initCmpListening () {
+    async initCmpListening() {
       if (this.cmpListening) {
         clearInterval(this.cmpListening)
         this.cmpListening = null
@@ -273,7 +274,7 @@ export default {
         }
       }, 10000)
     },
-    async getReviewBreakpointPageNumber () {
+    async getReviewBreakpointPageNumber() {
       if (this.isFirstIncome && this.isReview) {
         await review.getReviewBreakpointPageNumber(this.listId)
             .then(response => {
@@ -285,7 +286,7 @@ export default {
             })
       }
     },
-    async initStockListFun () {
+    async initStockListFun() {
       await this.getReviewBreakpointPageNumber()
       await this.getReviewListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
@@ -296,7 +297,7 @@ export default {
         console.error(e)
       })
     },
-    async initEnhanceListFun () {
+    async initEnhanceListFun() {
       await this.getReviewBreakpointPageNumber()
       await this.getEnhanceListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
@@ -307,7 +308,7 @@ export default {
         console.error(e)
       })
     },
-    async initDefaultListFun () {
+    async initDefaultListFun() {
       await this.getListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
         this.page.pages = response.data.data.pages
@@ -317,7 +318,7 @@ export default {
         console.error(e)
       })
     },
-    async initList () {
+    async initList() {
       this.listRefresh = true
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         // 复习模式每页只加载5个单词
@@ -339,10 +340,10 @@ export default {
       await this.initDefaultListFun()
       this.listRefresh = false
     },
-    goBack () {
+    goBack() {
       this.$emit('tableVisibleToggle')
     },
-    async initNextReviewDetail (isGetDetail) {
+    async initNextReviewDetail(isGetDetail) {
       this.detail.loading = true
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
@@ -360,7 +361,7 @@ export default {
       await this.reviewDetail(this.detail.paraphraseVO.wordCharacter === kiwiConst.WORD_CHARACTER.PHRASE
           || this.spellType === kiwiConst.SPELL_TYPE.DISABLE)
     },
-    async showDetail (paraphraseId, index) {
+    async showDetail(paraphraseId, index) {
       this.detail.showIndex = index
       await this.getItemDetail(paraphraseId)
           .then(response => {
@@ -376,13 +377,13 @@ export default {
           })
       this.detail.dialogVisible = true
     },
-    async removeParaphraseStarListFun (paraphraseId, listId) {
+    async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.removeParaphraseStar({ paraphraseId: paraphraseId, listId: listId })
+        this.removeParaphraseStar({paraphraseId: paraphraseId, listId: listId})
             .then(() => {
               this.doSuccess()
               this.initList()
@@ -394,21 +395,21 @@ export default {
         loading.close()
       })
     },
-    handleDetailClose () {
+    handleDetailClose() {
       this.detail.dialogVisible = false
     },
-    handleShowDetail () {
+    handleShowDetail() {
       this.detail.dialogVisible = false
       this.$router.push({
         path: '/index/vocabulary/detail',
-        query: { active: 'search', word: this.detail.paraphraseVO.wordName }
+        query: {active: 'search', word: this.detail.paraphraseVO.wordName}
       })
     },
-    async pageChange () {
+    async pageChange() {
       this.isFirstIncome = false
       await this.init()
     },
-    switchSleepMode () {
+    switchSleepMode() {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
         this.$message.warning({
@@ -419,7 +420,7 @@ export default {
         })
       }
     },
-    doSuccess () {
+    doSuccess() {
       this.$message.success({
         duration: 1000,
         center: true,
@@ -427,7 +428,7 @@ export default {
         message: '操作成功'
       })
     },
-    async playPronunciation (id, sourceUrl, soundmarkType) {
+    async playPronunciation(id, sourceUrl, soundmarkType) {
       if (this.isReview) {
         this.$message.warning({
           duration: 1000,
@@ -468,7 +469,7 @@ export default {
         }, 1)
       }
     },
-    async stockReviewStart () {
+    async stockReviewStart() {
       this.isFirstIncome = false
       this.autoPlayDialogVisible++
       if (this.reviewAudioArr.length) {
@@ -480,7 +481,7 @@ export default {
         this.currentPlayAudio.play()
       }
     },
-    async recursiveReview () {
+    async recursiveReview() {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       // 每个单词播放前要计算播放audio数量，词组和单词不一样
       // this.calPlayCountPerWord()
@@ -488,7 +489,7 @@ export default {
       this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
       this.currentPlayAudio.play()
     },
-    createPronunciationAudio (isUS) {
+    createPronunciationAudio(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
         return audioPlay.createAudioFromText(this.getAudio(), '音标缺失')
       }
@@ -505,13 +506,13 @@ export default {
     getAudio: function () {
       return this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
     },
-    async reviewDetail (isNotReviewSpell) {
-      let reviewCount = 0
-      await review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+    async reviewDetail(isNotReviewSpell) {
+      let reviewVoiceRssCount = 0
+      await review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_VOICERSS)
           .then(response => {
-            reviewCount = response.data.data.reviewCount
+            reviewVoiceRssCount = response.data.data.reviewCount
           })
-      console.log('reviewCount = ' + reviewCount)
+      console.log('reviewVoiceRssCount = ' + reviewVoiceRssCount)
 
       let audioQueue = []
       let meaningChinese = this.detail.paraphraseVO.meaningChinese
@@ -529,44 +530,44 @@ export default {
         paraphraseEnglish = '英文释义缺失'
       }
 
-      function createWordSpellAudio () {
+      function createWordSpellAudio() {
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '单词的拼写是：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
           }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一次拼写：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
           }
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
         }
       }
 
-      function createWordParaphraseAudio () {
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
+      function createWordParaphraseAudio() {
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '中文释义是：'))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
         }
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一次中文释义：'))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
         }
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一遍英文释义：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
         }
       }
 
-      function createExampleAudio () {
+      function createExampleAudio() {
         if (this.isPlayExample !== kiwiConst.IS_PLAY_EXAMPLE.ENABLE) {
           return
         }
@@ -574,20 +575,20 @@ export default {
         console.log('exampleVOList = ' + exampleVOList)
         if (exampleVOList && meaningChinese && meaningChinese.length > 0) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '播报单词的例句：'))
+            audioQueue.push(audioPlay.createAudioForChinese(++reviewVoiceRssCount, this.getAudio(), '播报单词的例句：'))
           }
           for (let i = 0; i < exampleVOList.length; i++) {
             if (i > 1) {
               break
             }
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), exampleVOList[i].exampleTranslate))
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), exampleVOList[i].exampleSentence, true))
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), exampleVOList[i].exampleSentence, true))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
+            audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
           }
         }
       }
 
-      function createWordSelfAudio () {
+      function createWordSelfAudio() {
         // 如果是没有音标的词组
         if (!isNotReviewSpell) {
           audioQueue.push(this.createPronunciationAudio())
@@ -597,20 +598,20 @@ export default {
 
       if (this.isChToEn) {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '接下来复习的单词中文释义是：'))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一遍中文释义是：'))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), meaningChinese))
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '请在脑海回想对应的单词。'))
-        audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '对应的英文单词是'))
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '请在脑海回想对应的单词。'))
+        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '对应的英文单词是'))
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -618,14 +619,14 @@ export default {
 
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '单词的拼写是：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
           }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一次拼写：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
           }
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), wordAlphabet))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
         }
 
         // 如果是没有音标的词组
@@ -636,23 +637,23 @@ export default {
 
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '英文释义是：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
           }
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '再读一遍英文释义：'))
+            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), paraphraseEnglish, true))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
         }
       } else {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), '接下来复习的单词是：'))
+          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词是：'))
         }
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioFromTextPlus(reviewCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -681,7 +682,7 @@ export default {
         message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
       })
     },
-    createNewAudio () {
+    createNewAudio() {
       let audio = new Audio()
       audio.volume = 0.7
       audio.loop = false
@@ -716,7 +717,7 @@ export default {
       })
       return audio
     },
-    stopPlaying () {
+    stopPlaying() {
       if (this.playWordIndex < 0 || this.playStepIndex < 0) return
       if (this.reviewAudioArr[this.playWordIndex]) {
         if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
@@ -725,7 +726,7 @@ export default {
         }
       }
     },
-    rePlaying () {
+    rePlaying() {
       if (this.playWordIndex < 0 || this.playStepIndex < 0) return
       if (this.reviewAudioArr[this.playWordIndex]) {
         if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
@@ -734,7 +735,7 @@ export default {
         }
       }
     },
-    skipCurrentReview () {
+    skipCurrentReview() {
       if (this.playWordIndex !== this.detail.showIndex) {
         return
       }
@@ -749,7 +750,7 @@ export default {
       // 跳过当前单词的复习
       this.playStepIndex = this.playCountPerWord
     },
-    async rememberInSleepMode (isSleep) {
+    async rememberInSleepMode(isSleep) {
       // 如果是睡眠模式
       if (isSleep) {
         let diff = 1000
@@ -771,7 +772,7 @@ export default {
         this.keepInMindFun()
       }
     },
-    rememberOneFun () {
+    rememberOneFun() {
       this.skipCurrentReview()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
@@ -782,7 +783,7 @@ export default {
             this.$message.error(e)
           })
     },
-    keepInMindFun () {
+    keepInMindFun() {
       this.skipCurrentReview()
       this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
@@ -793,7 +794,7 @@ export default {
             this.$message.error(e)
           })
     },
-    forgetOneFun () {
+    forgetOneFun() {
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.doSuccess()
@@ -803,21 +804,21 @@ export default {
             this.$message.error(e)
           })
     },
-    countdownSelectHandle (command) {
+    countdownSelectHandle(command) {
       this.countdownText = command.text
       this.countdownMin = command.m
       this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
     },
-    countdownEndFun () {
+    countdownEndFun() {
       this.countdownMode && (this.isReviewStop = true)
       this.countdownMode = !this.countdownMode
       window.location.reload()
     },
-    async countdownEndReplay () {
+    async countdownEndReplay() {
       this.isReviewStop = false
       await this.init()
     },
-    async showPrevious () {
+    async showPrevious() {
       if (this.detail.showIndex === 0) {
         if (this.isReview) {
           this.$message.warning({
@@ -846,7 +847,7 @@ export default {
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-    async showNext () {
+    async showNext() {
       if (this.detail.showIndex === this.page.size - 1) {
         if (this.isReview) {
           this.$message.warning({

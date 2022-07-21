@@ -227,18 +227,18 @@ export default {
       }
     },
     refresh () {
-      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
-      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
+      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
+      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
           .then(response => {
             this.user.keepInMindCount = response.data.data.reviewCount
           })
-      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
-      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
+      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
+      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
           .then(response => {
             this.user.rememberCount = response.data.data.reviewCount
           })
-      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
-      review.getVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
           .then(response => {
             this.user.reviewCount = response.data.data.reviewCount
           })
