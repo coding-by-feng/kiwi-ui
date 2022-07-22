@@ -1,44 +1,48 @@
 <script>
 import website from '@/const/website'
-import { getStore, setStore } from '@/util/store'
+import {getStore, setStore} from '@/util/store'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 
+const TTS_API_KEY = 'tts_api_key';
+const USER_NAME = 'user_name';
+
 export default {
   name: 'userCenter',
-  data () {
+  data() {
     return {
       user: {
-        userName: getStore({ name: 'user_name' }),
-        pronunciationSource: getStore({ name: 'pronunciation_source' }),
+        userName: getStore({name: USER_NAME}),
+        pronunciationSource: getStore({name: 'pronunciation_source'}),
 
         /**
          * 导播模式，是否附带中文导播
          * 1：去除中文导播
          * 2：附带中文导播
          */
-        reviewType: getStore({ name: 'review_type' }),
-        spellType: getStore({ name: 'spell_type' }),
+        reviewType: getStore({name: 'review_type'}),
+        spellType: getStore({name: 'spell_type'}),
         /**
          * 是否播报英文释义
          * 1：去除英文释义
          * 2：附带英文释义
          */
-        enParaType: getStore({ name: 'enPara_type' }),
+        enParaType: getStore({name: 'enPara_type'}),
         /**
          * 是否播报例句
          * 1：去除英文释义
          * 2：附带英文释义
          */
-        isPlayExample: getStore({ name: 'is_play_example' }),
-        bgm: getStore({ name: 'bgm' }),
+        isPlayExample: getStore({name: 'is_play_example'}),
+        ttsApiKey: getStore({name: 'tts_api_key'}),
+        bgm: getStore({name: 'bgm'}),
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0
       }
     }
   },
-  mounted () {
+  mounted() {
     if (!this.user.pronunciationSource) {
       setStore({
         name: 'pronunciation_source',
@@ -74,8 +78,15 @@ export default {
         type: 'local'
       })
     }
+    if (!this.user.ttsApiKey) {
+      setStore({
+        name: 'tts_api_key',
+        content: kiwiConst.API_KEY_VOICE_RSS.KEY1,
+        type: 'local'
+      })
+    }
 
-    this.refresh()
+    this.refresh();
   },
   watch: {
     $route: function () {
@@ -86,15 +97,15 @@ export default {
     }
   },
   methods: {
-    handleLoginOut () {
+    handleLoginOut() {
       this.$store.dispatch('LogOut').then(() => {
-        this.$router.push({ path: website.noAuthPath.detail, query: { active: 'search' } })
+        this.$router.push({path: website.noAuthPath.detail, query: {active: 'search'}})
         window.location.reload()
       }).catch(e => {
         console.error(e)
       })
     },
-    pronunciationSourceChange (command) {
+    pronunciationSourceChange(command) {
       setStore({
         name: 'pronunciation_source',
         content: command,
@@ -103,7 +114,7 @@ export default {
       this.user.pronunciationSource = command
       window.location.reload()
     },
-    reviewTypeChange (command) {
+    reviewTypeChange(command) {
       setStore({
         name: 'review_type',
         content: command,
@@ -112,7 +123,7 @@ export default {
       this.user.reviewType = command
       window.location.reload()
     },
-    spellTypeChange (command) {
+    spellTypeChange(command) {
       setStore({
         name: 'spell_type',
         content: command,
@@ -121,7 +132,7 @@ export default {
       this.user.spellType = command
       window.location.reload()
     },
-    bgmChange (command) {
+    bgmChange(command) {
       setStore({
         name: 'bgm',
         content: command,
@@ -130,7 +141,7 @@ export default {
       this.user.bgm = command
       window.location.reload()
     },
-    enParaTypeChange (command) {
+    enParaTypeChange(command) {
       setStore({
         name: 'enPara_type',
         content: command,
@@ -139,7 +150,7 @@ export default {
       this.user.enParaType = command
       window.location.reload()
     },
-    isPlayExampleChange (command) {
+    isPlayExampleChange(command) {
       setStore({
         name: 'enPara_type',
         content: command,
@@ -148,7 +159,16 @@ export default {
       this.user.enParaType = command
       window.location.reload()
     },
-    tranReviewType (val) {
+    ttsApiKeyChange(command) {
+      setStore({
+        name: TTS_API_KEY,
+        content: command,
+        type: 'local'
+      })
+      this.user.enParaType = command
+      window.location.reload()
+    },
+    tranReviewType(val) {
       if (undefined === val) {
         setStore({
           name: 'review_type',
@@ -163,7 +183,7 @@ export default {
       }
       return '默认'
     },
-    tranEnParaType (val) {
+    tranEnParaType(val) {
       if (undefined === val) {
         setStore({
           name: 'enPara_type',
@@ -178,7 +198,7 @@ export default {
       }
       return '附带英文释义'
     },
-    tranIsPlayExample (val) {
+    tranIsPlayExample(val) {
       if (undefined === val) {
         setStore({
           name: 'is_play_example',
@@ -193,7 +213,7 @@ export default {
       }
       return '开启'
     },
-    tranSpellType (val) {
+    tranSpellType(val) {
       if (undefined === val) {
         setStore({
           name: 'review_type',
@@ -208,7 +228,7 @@ export default {
       }
       return '附带单词拼写'
     },
-    tranBGM (val) {
+    tranBGM(val) {
       if (undefined === val) {
         setStore({
           name: 'bgm',
@@ -226,7 +246,7 @@ export default {
         return '关闭'
       }
     },
-    refresh () {
+    refresh() {
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
           .then(response => {
@@ -321,6 +341,18 @@ export default {
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="1">开启</el-dropdown-item>
         <el-dropdown-item :command="2">关闭</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="ttsApiKeyChange">
+      {{ `TTS KEY：${user.ttsApiKey}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="'自动选择'">自动选择</el-dropdown-item>
+        <el-dropdown-item :command="'02df0a8f48b641548ec4224c24ebff0e'">02df0a8f48b641548ec4224c24ebff0e</el-dropdown-item>
+        <el-dropdown-item :command="'0e3c0a35570543249f743f74c027ef8b'">0e3c0a35570543249f743f74c027ef8b</el-dropdown-item>
+        <el-dropdown-item :command="'a65b84ea89b14011af581b3335e40d63'">a65b84ea89b14011af581b3335e40d63</el-dropdown-item>
+        <el-dropdown-item :command="'587527ea30b44778b6bbca2bcac95f38'">587527ea30b44778b6bbca2bcac95f38</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>

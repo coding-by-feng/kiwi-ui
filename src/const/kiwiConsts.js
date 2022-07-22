@@ -74,10 +74,15 @@ export default {
         .set('phrase', '短语'),
 
     API_KEY_VOICE_RSS: {
+        AUTO: '自动选择',
         KEY1: '02df0a8f48b641548ec4224c24ebff0e',
         KEY2: '0e3c0a35570543249f743f74c027ef8b',
         KEY3: 'a65b84ea89b14011af581b3335e40d63',
         KEY4: '587527ea30b44778b6bbca2bcac95f38'
-    }
+    },
+
+    CACHE_KEY: {
+        TT_API_KEY: 'tts_api_key'
+    },
 
 }

@@ -1,6 +1,7 @@
 import kiwiConsts from '@/const/kiwiConsts'
 import webSite from '@/const/website'
 import review from '@/api/review'
+import {getStore} from '@/util/store'
 
 export default {
     isIos() {
@@ -99,25 +100,6 @@ export default {
         }
     },
 
-    /* Refactor the code */
-
-    createAudioFromText(audio, text, isEnglish) {
-        let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
-        if (isEnglish) {
-            // url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=' +  webSite.baiduTtsToken +'&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
-            url = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
-            audio.volume = 1
-        } else {
-            audio.volume = 0.7
-        }
-        console.log('text ' + text)
-        console.log('url ' + url)
-        audio.src = url
-        // 播放完成之后注意删除掉
-        // document.body.appendChild(audio)
-        return audio
-    },
-
     createAudioForChinese(audio, text) {
         return this.createAudioFromTextPlus(0, audio, text, false)
     },
@@ -129,7 +111,10 @@ export default {
     createAudioFromTextPlus(reviewCount, audio, text, isEnglish) {
         let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=d0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
         if (isEnglish) {
+            let startTime = new Date().getTime()
             review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_VOICERSS)
+            let endTime = new Date().getTime()
+            console.log('cost time is ' + (endTime - startTime))
             audio.volume = 1
             let apiKey = this.selectApiKeyForVoiceRss(reviewCount);
             console.log('this.selectApiKeyForVoiceRss(reviewCount) = ' + apiKey)
@@ -147,8 +132,12 @@ export default {
     },
 
     selectApiKeyForVoiceRss(reviewCount) {
+        let ttsApiKey = getStore({name: kiwiConsts.CACHE_KEY.TT_API_KEY})
+        if (ttsApiKey !== kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
+            return ttsApiKey;
+        }
         if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS * 4) {
-            alert('voicerss 可用次数已经用完')
+            alert('voicerss 可用次数已经用完');
         } else if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS * 3) {
             return kiwiConsts.API_KEY_VOICE_RSS.KEY4;
         } else if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS * 2) {
