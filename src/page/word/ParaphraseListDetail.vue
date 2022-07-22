@@ -128,15 +128,6 @@ export default {
     },
     'playStepIndex'(newVal) {
       console.log('playStepIndex=' + newVal)
-      if (this.isReviewStop) {
-        this.$message.success({
-          duration: 2000,
-          center: true,
-          offset: 200,
-          message: '复习已暂停'
-        })
-        return;
-      }
       if (newVal === 0) return
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
@@ -162,16 +153,6 @@ export default {
     },
     'playWordIndex'(newVal) {
       console.log('playWordIndex this.page.current = ' + this.page.current)
-      if (this.isReviewStop) {
-        this.$message.success({
-          duration: 2000,
-          center: true,
-          offset: 200,
-          message: '复习已暂停'
-        })
-        return;
-      }
-      this.isReviewStop = false;
       if (newVal === 0) return
       if (newVal >= playCountOnce) {
         this.playWordIndex = 0
@@ -209,13 +190,12 @@ export default {
   methods: {
     ...paraphraseStarList,
     async init() {
-      if (this.isReview) {
+      if (this.isReview && !this.isReviewStop) {
         // stop playing
         this.stopPlaying()
         // clean data
         this.playWordIndex = 0
         this.playStepIndex = 0
-        this.isReviewStop = true
         this.reviewAudioArr = []
         this.listItems = []
         this.reviewAudioCandidates = []
@@ -240,7 +220,6 @@ export default {
         } finally {
           loading.close()
         }
-        this.isReviewStop = false
         if (!this.isFirstIncome) {
           this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
           this.$message.success({
@@ -561,7 +540,7 @@ export default {
         }
       }
 
-      function createWordParaphraseAudio() {
+      async function createWordParaphraseAudio() {
         audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
           audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '中文释义是：'))
@@ -570,7 +549,7 @@ export default {
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
+          audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
         }
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
           audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
@@ -580,11 +559,11 @@ export default {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
+          audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
         }
       }
 
-      function createExampleAudio() {
+      async function createExampleAudio() {
         if (this.isPlayExample !== kiwiConst.IS_PLAY_EXAMPLE.ENABLE) {
           return
         }
@@ -599,8 +578,8 @@ export default {
               break
             }
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
-            audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
-            audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
           }
         }
       }
@@ -713,17 +692,19 @@ export default {
           that.playStepIndex++
         }
       })
-      audio.addEventListener('error', async function () {
-        console.log('error src=' + this.src)
+
+      async function errorListener() {
+        console.log('error src=' + audio.src)
         // that.$message.error('音频数据加载异常')
+
         await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
           confirmButtonText: '确定',
           showCancelButton: false,
           type: 'warning'
         }).then($ => {
-          this.isReviewStop = true
+          that.isReviewStop = true
           window.location.reload()
-        })
+        });
 
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
@@ -731,7 +712,9 @@ export default {
         if (!that.isReviewStop) {
           that.playWordIndex++
         }
-      })
+      }
+
+      audio.addEventListener('error', errorListener())
       audio.addEventListener('playing', function () {
         console.log('playing')
         that.detail.loading = false
@@ -837,7 +820,7 @@ export default {
       this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
     },
     countdownEndFun() {
-      this.countdownMode && (this.isReviewStop = true)
+      this.isReviewStop = true
       this.countdownMode = !this.countdownMode
       window.location.reload()
     },
