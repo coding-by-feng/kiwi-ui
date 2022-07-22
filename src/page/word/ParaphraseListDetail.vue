@@ -200,6 +200,7 @@ export default {
         this.isReviewStop = true
         this.reviewAudioArr = []
         this.listItems = []
+        this.reviewAudioCandidates = []
         this.detail.paraphraseVO = {}
         if (this.currentPlayAudio) {
           this.currentPlayAudio.pause()
@@ -216,10 +217,8 @@ export default {
           await this.initList()
           await this.initNextReviewDetail(true)
         } catch (e) {
-          // alert(e)
-          sleep(5)
-          await this.init()
-          return
+          alert('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY')
+          this.$message.error('初始化加载异常')
         } finally {
           loading.close()
         }
@@ -491,7 +490,7 @@ export default {
     },
     createPronunciationAudio(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
-        return audioPlay.createAudioFromText(this.getAudio(), '音标缺失')
+        return audioPlay.createAudioForChinese(this.getAudio(), '音标缺失')
       }
       let pronunciation = this.getAudio()
       let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
@@ -686,6 +685,7 @@ export default {
       let audio = new Audio()
       audio.volume = 0.7
       audio.loop = false
+      audio.preload = 'load'
       audio.addEventListener('ended', function () {
         console.log('end')
         that.cmp = new Date().getTime()
@@ -698,6 +698,7 @@ export default {
       audio.addEventListener('error', function () {
         console.log('error src=' + this.src)
         that.$message.error('音频数据加载异常')
+        alert('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY')
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
         that.detail.loading = true
