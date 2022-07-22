@@ -104,11 +104,11 @@ export default {
         return this.createAudioFromTextPlus(0, audio, text, false)
     },
 
-    createAudioForEnglish(reviewCount, audio, text) {
-        return this.createAudioFromTextPlus(reviewCount, audio, text, true)
+    async createAudioForEnglish(reviewCount, audio, text) {
+        return await this.createAudioFromTextPlus(reviewCount, audio, text, true)
     },
 
-    createAudioFromTextPlus(reviewCount, audio, text, isEnglish) {
+    async createAudioFromTextPlus(reviewCount, audio, text, isEnglish) {
         let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=d0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
         if (isEnglish) {
             let startTime = new Date().getTime()
@@ -116,8 +116,9 @@ export default {
             let endTime = new Date().getTime()
             console.log('cost time is ' + (endTime - startTime))
             audio.volume = 1
-            let apiKey = this.selectApiKeyForVoiceRss(reviewCount);
-            console.log('this.selectApiKeyForVoiceRss(reviewCount) = ' + apiKey)
+            let apiKey = await this.selectApiKeyForVoiceRss();
+            console.log('this.selectApiKeyForVoiceRss() = ' + apiKey)
+            review.increaseApiKeyUsedTime(apiKey)
             url = `https://api.voicerss.org/?key=${apiKey}&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=${encodeURI(text)}`
         } else {
             review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_BAIDU)
@@ -131,22 +132,16 @@ export default {
         return audio
     },
 
-    selectApiKeyForVoiceRss(reviewCount) {
+    async selectApiKeyForVoiceRss() {
         let ttsApiKey = getStore({name: kiwiConsts.CACHE_KEY.TT_API_KEY})
         if (ttsApiKey !== kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
             return ttsApiKey;
         }
-        if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS * 4) {
-            alert('voicerss 可用次数已经用完');
-        } else if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS * 3) {
-            return kiwiConsts.API_KEY_VOICE_RSS.KEY4;
-        } else if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS * 2) {
-            return kiwiConsts.API_KEY_VOICE_RSS.KEY3;
-        } else if (reviewCount >= kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS) {
-            return kiwiConsts.API_KEY_VOICE_RSS.KEY2;
-        } else {
-            return kiwiConsts.API_KEY_VOICE_RSS.KEY1;
-        }
+        await review.autoSelectApiKey().then(resp => {
+            ttsApiKey = resp.data.data
+            console.log('autoSelectApiKey is ' + ttsApiKey)
+        });
+        return ttsApiKey;
     },
 
     getWordAlphabet(wordName) {

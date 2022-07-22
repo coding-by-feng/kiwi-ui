@@ -25,6 +25,28 @@ export default {
     })
   },
 
+  increaseApiKeyUsedTime (apiKey) {
+    return request({
+      url: `/wordBiz/word/review/increaseApiKeyUsedTime/${apiKey}`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'get'
+    })
+  },
+
+  autoSelectApiKey () {
+    return request({
+      url: `/wordBiz/word/review/autoSelectApiKey`,
+      headers: {
+        isToken: true,
+        'Content-Type': 'application/json'
+      },
+      method: 'get'
+    })
+  },
+
   getAllReviewCounterVO () {
     return request({
       url: `/wordBiz/word/review/getAllReviewCounterVO`,
