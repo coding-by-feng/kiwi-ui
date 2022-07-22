@@ -128,6 +128,15 @@ export default {
     },
     'playStepIndex'(newVal) {
       console.log('playStepIndex=' + newVal)
+      if (this.isReviewStop) {
+        this.$message.success({
+          duration: 2000,
+          center: true,
+          offset: 200,
+          message: '复习已暂停'
+        })
+        return;
+      }
       if (newVal === 0) return
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
@@ -153,7 +162,16 @@ export default {
     },
     'playWordIndex'(newVal) {
       console.log('playWordIndex this.page.current = ' + this.page.current)
-      this.isReviewStop = false
+      if (this.isReviewStop) {
+        this.$message.success({
+          duration: 2000,
+          center: true,
+          offset: 200,
+          message: '复习已暂停'
+        })
+        return;
+      }
+      this.isReviewStop = false;
       if (newVal === 0) return
       if (newVal >= playCountOnce) {
         this.playWordIndex = 0
@@ -695,10 +713,18 @@ export default {
           that.playStepIndex++
         }
       })
-      audio.addEventListener('error', function () {
+      audio.addEventListener('error', async function () {
         console.log('error src=' + this.src)
-        that.$message.error('音频数据加载异常')
-        alert('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY')
+        // that.$message.error('音频数据加载异常')
+        await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
+          confirmButtonText: '确定',
+          showCancelButton: false,
+          type: 'warning'
+        }).then($ => {
+          this.isReviewStop = true
+          window.location.reload()
+        })
+
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
         that.detail.loading = true
@@ -1149,7 +1175,7 @@ export default {
       </el-dialog>
       <el-dialog
           :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
-          :visible="isFirstIncome && isReview"
+          :visible="isFirstIncome && isReview && !isReviewStop"
           :show-close="false"
           width="300px">
         <el-alert
