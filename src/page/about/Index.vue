@@ -34,6 +34,12 @@ export default {
       <div class="text item">
         <img src="wechat.png" alt="微信个人二维码" width="300px">
       </div>
+      <div class="text item">
+        <!-- Voice RSS informer code -->
+        <a href="http://www.voicerss.org" target="_blank">
+          <img src="http://www.voicerss.org/images/info_dark_brown.gif" width="88px" height="31" style="border: 0" alt="Voice RSS - Online text-to-speech service" />
+        </a>
+      </div>
     </el-card>
   </div>
 </template>
