@@ -104,20 +104,15 @@ export default {
         return this.createAudioFromTextPlus(0, audio, text, false)
     },
 
-    async createAudioForEnglish(reviewCount, audio, text) {
-        return await this.createAudioFromTextPlus(reviewCount, audio, text, true)
+    createAudioForEnglish(apiKey, audio, text) {
+        return this.createAudioFromTextPlus(apiKey, audio, text, true)
     },
 
-    async createAudioFromTextPlus(reviewCount, audio, text, isEnglish) {
+    createAudioFromTextPlus(apiKey, audio, text, isEnglish) {
         let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=d0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
         if (isEnglish) {
-            let startTime = new Date().getTime()
             review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_VOICERSS)
-            let endTime = new Date().getTime()
-            console.log('cost time is ' + (endTime - startTime))
             audio.volume = 1
-            let apiKey = await this.selectApiKeyForVoiceRss();
-            console.log('this.selectApiKeyForVoiceRss() = ' + apiKey)
             review.increaseApiKeyUsedTime(apiKey)
             url = `https://api.voicerss.org/?key=${apiKey}&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=${encodeURI(text)}`
         } else {
@@ -129,6 +124,8 @@ export default {
         audio.src = url
         // 播放完成之后注意删除掉
         // document.body.appendChild(audio)
+        console.log('audio >>>')
+        console.log(audio)
         return audio
     },
 
