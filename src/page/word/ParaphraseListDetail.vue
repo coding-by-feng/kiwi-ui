@@ -1,5 +1,5 @@
 <script>
-import {getStore} from '@/util/store'
+import {getStore, setStore} from '@/util/store'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
@@ -113,8 +113,9 @@ export default {
     await this.init()
   },
   destroyed() {
-    if (this.cmpListening)
-      clearInterval(this.cmpListening)
+    if (this.cmpListening) {
+      clearInterval(this.cmpListening);
+    }
     if (this.isReview && this.reviewAudioArr && this.reviewAudioArr.length > 0) {
       let audio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
       if (audio)
@@ -142,13 +143,16 @@ export default {
           console.log('this.playWordIndex' + this.playWordIndex)
           console.log('this.playStepIndex' + this.playStepIndex)
           console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
-          console.log('this.reviewAudioArr[0].length' + this.reviewAudioArr[0].length)
+          console.log('this.reviewAudioArr[this.playWordIndex].length' + this.reviewAudioArr[this.playWordIndex].length)
           console.log(this.playCountPerWord)
+          console.log('reviewAudioArr', this.reviewAudioArr)
           this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+          console.log('this.currentPlayAudio is going to play!', this.currentPlayAudio.src)
           this.currentPlayAudio.play()
         }
       } catch (e) {
-        // alert(e)
+        console.error(e)
+        alert('播放音频异常，请刷新重试！')
       }
     },
     'playWordIndex'(newVal) {
@@ -194,6 +198,7 @@ export default {
         // stop playing
         this.stopPlaying()
         // clean data
+        this.isReviewStop = false
         this.playWordIndex = 0
         this.playStepIndex = 0
         this.reviewAudioArr = []
@@ -215,7 +220,7 @@ export default {
           await this.initList()
           await this.initNextReviewDetail(true)
         } catch (e) {
-          alert('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY')
+          console.error(e)
           this.$message.error('初始化加载异常')
         } finally {
           loading.close()
@@ -474,6 +479,8 @@ export default {
         await this.showDetail(this.listItems[0].paraphraseId, 0)
         // this.calPlayCountPerWord()
         this.currentPlayAudio = this.reviewAudioArr[0][0]
+        console.log('this.currentPlayAudio')
+        console.log(this.currentPlayAudio)
         this.currentPlayAudio.play()
       }
     },
@@ -500,15 +507,23 @@ export default {
       return pronunciation
     },
     getAudio: function () {
-      return this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio()
+      let audio = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio();
+      console.log('getAudio')
+      console.log(audio)
+      return audio
     },
     async reviewDetail(isNotReviewSpell) {
-      let reviewVoiceRssCount = 0
-      await review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_VOICERSS)
-          .then(response => {
-            reviewVoiceRssCount = response.data.data.reviewCount
+      let apiKey
+      await audioPlay.selectApiKeyForVoiceRss()
+          .then(key => {
+            apiKey = key
           })
-      console.log('reviewVoiceRssCount = ' + reviewVoiceRssCount)
+      console.log('apiKey is ' + apiKey)
+      setStore({
+        name: 'tts_api_key',
+        content: apiKey,
+        type: 'local'
+      })
 
       let audioQueue = []
       let meaningChinese = this.detail.paraphraseVO.meaningChinese
@@ -526,7 +541,7 @@ export default {
         paraphraseEnglish = '英文释义缺失'
       }
 
-      function createWordSpellAudio() {
+      async function createWordSpellAudio() {
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
@@ -549,7 +564,7 @@ export default {
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
-          audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
         }
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
           audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
@@ -559,7 +574,7 @@ export default {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
         }
       }
 
@@ -578,8 +593,8 @@ export default {
               break
             }
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
-            audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
-            audioQueue.push(await audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
+            audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
           }
         }
       }
@@ -606,8 +621,8 @@ export default {
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
@@ -635,11 +650,11 @@ export default {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
           }
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), paraphraseEnglish))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
         }
       } else {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
@@ -648,12 +663,15 @@ export default {
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioForEnglish(++reviewVoiceRssCount, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           audioQueue.push(this.createPronunciationAudio())
           audioQueue.push(this.createPronunciationAudio(true))
         }
+
+        console.log('audioQueue')
+        console.log(audioQueue)
 
         createWordSpellAudio.call(this)
         createWordSelfAudio.call(this)
@@ -693,28 +711,29 @@ export default {
         }
       })
 
-      async function errorListener() {
-        console.log('error src=' + audio.src)
-        // that.$message.error('音频数据加载异常')
+      audio.addEventListener('error', async function () {
+            console.log('error src=' + this.src)
+            // that.$message.error('音频数据加载异常')
 
-        await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
-          confirmButtonText: '确定',
-          showCancelButton: false,
-          type: 'warning'
-        }).then($ => {
-          that.isReviewStop = true
-          window.location.reload()
-        });
+            await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
+              confirmButtonText: '确定',
+              showCancelButton: false,
+              type: 'warning'
+            }).then($ => {
+              window.location.reload()
+            });
 
-        that.cmp = new Date().getTime()
-        that.reviewAudioCandidates.push(this)
-        that.detail.loading = true
-        if (!that.isReviewStop) {
-          that.playWordIndex++
-        }
-      }
+            review.deprecateApiKeyToday(getStore({name: 'tts_api_key'}))
 
-      audio.addEventListener('error', errorListener())
+            that.cmp = new Date().getTime()
+            that.reviewAudioCandidates.push(this)
+            that.detail.loading = true
+            if (!that.isReviewStop) {
+              that.playWordIndex++
+            }
+          }
+      )
+
       audio.addEventListener('playing', function () {
         console.log('playing')
         that.detail.loading = false
@@ -757,6 +776,7 @@ export default {
       })
 
       this.stopPlaying()
+      this.isReviewStop = false
       // 跳过当前单词的复习
       this.playStepIndex = this.playCountPerWord
     },
