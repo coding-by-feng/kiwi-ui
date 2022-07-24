@@ -356,6 +356,7 @@ export default {
         <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY4">{{API_KEY_VOICE_RSS.KEY4}}</el-dropdown-item>
         <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY5">{{API_KEY_VOICE_RSS.KEY5}}</el-dropdown-item>
         <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY6">{{API_KEY_VOICE_RSS.KEY6}}</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY7">{{API_KEY_VOICE_RSS.KEY7}}</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>

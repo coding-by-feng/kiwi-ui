@@ -103,7 +103,8 @@ export default {
       // 唯一标识的副本，用于判断
       counterpart: null,
       cmpListening: null,
-      notDistinctCount: 0
+      notDistinctCount: 0,
+      ignoreAllError: false
     }
   },
   beforeCreate: function () {
@@ -723,7 +724,9 @@ export default {
               window.location.reload()
             });
 
-            review.deprecateApiKeyToday(getStore({name: 'tts_api_key'}))
+            if (this.src.startsWith(kiwiConst.SITES.VOICE_RSS)) {
+              review.deprecateApiKeyToday(getStore({name: 'tts_api_key'}));
+            }
 
             that.cmp = new Date().getTime()
             that.reviewAudioCandidates.push(this)
