@@ -78,7 +78,9 @@ export default {
         KEY1: '02df0a8f48b641548ec4224c24ebff0e',
         KEY2: '0e3c0a35570543249f743f74c027ef8b',
         KEY3: 'a65b84ea89b14011af581b3335e40d63',
-        KEY4: '587527ea30b44778b6bbca2bcac95f38'
+        KEY4: '587527ea30b44778b6bbca2bcac95f38',
+        KEY5: '664f011d4efc4937b4d75a8b962f0323',
+        KEY6: '59a1e3301e4943edaab90166e3c1aafb'
     },
 
     CACHE_KEY: {

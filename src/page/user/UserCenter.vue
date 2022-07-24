@@ -38,8 +38,9 @@ export default {
         bgm: getStore({name: 'bgm'}),
         keepInMindCount: 0,
         rememberCount: 0,
-        reviewCount: 0
-      }
+        reviewCount: 0,
+      },
+      API_KEY_VOICE_RSS: kiwiConst.API_KEY_VOICE_RSS
     }
   },
   mounted() {
@@ -349,10 +350,12 @@ export default {
       {{ `TTS KEY：${user.ttsApiKey}` }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="'自动选择'">自动选择</el-dropdown-item>
-        <el-dropdown-item :command="'02df0a8f48b641548ec4224c24ebff0e'">02df0a8f48b641548ec4224c24ebff0e</el-dropdown-item>
-        <el-dropdown-item :command="'0e3c0a35570543249f743f74c027ef8b'">0e3c0a35570543249f743f74c027ef8b</el-dropdown-item>
-        <el-dropdown-item :command="'a65b84ea89b14011af581b3335e40d63'">a65b84ea89b14011af581b3335e40d63</el-dropdown-item>
-        <el-dropdown-item :command="'587527ea30b44778b6bbca2bcac95f38'">587527ea30b44778b6bbca2bcac95f38</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY1">{{API_KEY_VOICE_RSS.KEY1}}</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY2">{{API_KEY_VOICE_RSS.KEY2}}</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY3">{{API_KEY_VOICE_RSS.KEY3}}</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY4">{{API_KEY_VOICE_RSS.KEY4}}</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY5">{{API_KEY_VOICE_RSS.KEY5}}</el-dropdown-item>
+        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY6">{{API_KEY_VOICE_RSS.KEY6}}</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>
