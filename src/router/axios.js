@@ -39,7 +39,7 @@ axios.interceptors.response.use(res => {
   const status = String(res.status) || '200'
   const message = res.data.msg || responseCode[status] || responseCode['default']
   let refreshToken = getStore({ name: 'refresh_token' })
-  if (responseCode.UNAUTHORIZED == status) {
+  if (responseCode.UNAUTHORIZED === status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
         Message({
