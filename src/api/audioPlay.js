@@ -1,7 +1,7 @@
 import kiwiConsts from '@/const/kiwiConsts'
 import webSite from '@/const/website'
 import review from '@/api/review'
-import {getStore} from '@/util/store'
+import {getStore, setStore} from '@/util/store'
 
 export default {
     isIos() {
@@ -131,13 +131,17 @@ export default {
 
     async selectApiKeyForVoiceRss() {
         let ttsApiKey = getStore({name: kiwiConsts.CACHE_KEY.TT_API_KEY})
-        if (ttsApiKey !== kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
-            return ttsApiKey;
+        if (ttsApiKey === kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
+            await review.autoSelectApiKey().then(resp => {
+                ttsApiKey = resp.data.data
+                console.log('autoSelectApiKey is ' + ttsApiKey)
+            });
         }
-        await review.autoSelectApiKey().then(resp => {
-            ttsApiKey = resp.data.data
-            console.log('autoSelectApiKey is ' + ttsApiKey)
-        });
+        setStore({
+            name: kiwiConsts.CACHE_KEY.TTS_CURRENT_API_KEY,
+            content: ttsApiKey,
+            type: 'local'
+        })
         return ttsApiKey;
     },
 

@@ -63,6 +63,7 @@ export default {
       isShowPagination: true,
       detail: {
         loading: true,
+        reviewLoading: false,
         paraphraseVO: {},
         dialogVisible: false,
         rememberLoading: false,
@@ -105,7 +106,7 @@ export default {
       counterpart: null,
       cmpListening: null,
       notDistinctCount: 0,
-      ignoreAllError: false
+      isIgnoreOtherError: false
     }
   },
   beforeCreate: function () {
@@ -221,7 +222,7 @@ export default {
           this.currentPlayAudio = null
         }
 
-        const loading = this.$loading({
+        let loading = this.$loading({
           lock: true,
           text: `第${this.page.current}页自动复习资源加载中`,
           spinner: 'el-icon-loading',
@@ -385,6 +386,10 @@ export default {
             console.error(e)
           })
       this.detail.dialogVisible = true
+
+      if (this.isReview) {
+        this.detail.reviewLoading = true
+      }
     },
     async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
@@ -510,11 +515,6 @@ export default {
             apiKey = key
           })
       console.log('apiKey is ' + apiKey)
-      setStore({
-        name: 'tts_api_key',
-        content: apiKey,
-        type: 'local'
-      })
 
       let audioQueue = []
       let meaningChinese = this.detail.paraphraseVO.meaningChinese
@@ -703,33 +703,50 @@ export default {
       });
 
       audio.addEventListener('error', async function () {
+            that.detail.reviewLoading = false
+            if (that.isIgnoreOtherError) {
+              return
+            }
+
+            that.isIgnoreOtherError = true;
             console.log('error src=' + this.src)
             // that.$message.error('音频数据加载异常')
 
-            await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
-              confirmButtonText: '确定',
-              showCancelButton: false,
-              type: 'warning'
-            }).then($ => {
-              window.location.reload()
-            });
-
             if (this.src.startsWith(kiwiConst.SITES.VOICE_RSS)) {
-              review.deprecateApiKeyToday(getStore({name: 'tts_api_key'}));
+              let ttsCurrentApiKey = getStore({name: kiwiConst.CACHE_KEY.TTS_CURRENT_API_KEY});
+              if (review.isDeprecateApiKeyToday(ttsCurrentApiKey)) {
+                review.deprecateApiKeyToday(ttsCurrentApiKey);
+                that.msgWarning(that, '当前TTS KEY已经用完，正在自动切换');
+              } else {
+                that.msgWarning(that, '音频加载异常，正在重新加载')
+              }
+            } else {
+              that.msgWarning(that, '音频加载异常，正在重新加载')
             }
 
-            that.cmp = new Date().getTime()
-            that.reviewAudioCandidates.push(this)
-            that.detail.loading = true
-            if (!that.isReviewStop) {
-              that.playWordIndex++
-            }
+            that.init();
+
+            // await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
+            //   confirmButtonText: '确定',
+            //   showCancelButton: false,
+            //   type: 'warning'
+            // }).then($ => {
+            //   window.location.reload()
+            // });
+
+            // that.cmp = new Date().getTime()
+            // that.reviewAudioCandidates.push(this)
+            // that.detail.loading = true
+            // if (!that.isReviewStop) {
+            //   that.playWordIndex++
+            // }
           }
       )
 
       audio.addEventListener('playing', function () {
         console.log('playing')
         that.detail.loading = false
+        that.detail.reviewLoading = false
       })
       audio.addEventListener('play', function () {
         console.log('play')
@@ -975,6 +992,7 @@ export default {
 
       <!--释义详情弹窗-->
       <el-dialog
+          v-loading="isReview && detail.reviewLoading"
           ref="detailDialog"
           :visible.sync="detail.dialogVisible"
           fullscreen
