@@ -113,7 +113,6 @@ export default {
         type: 'local'
       })
       this.user.pronunciationSource = command
-      window.location.reload()
     },
     reviewTypeChange(command) {
       setStore({
@@ -122,7 +121,6 @@ export default {
         type: 'local'
       })
       this.user.reviewType = command
-      window.location.reload()
     },
     spellTypeChange(command) {
       setStore({
@@ -131,7 +129,6 @@ export default {
         type: 'local'
       })
       this.user.spellType = command
-      window.location.reload()
     },
     bgmChange(command) {
       setStore({
@@ -149,16 +146,14 @@ export default {
         type: 'local'
       })
       this.user.enParaType = command
-      window.location.reload()
     },
     isPlayExampleChange(command) {
       setStore({
-        name: 'enPara_type',
+        name: 'is_play_example',
         content: command,
         type: 'local'
       })
-      this.user.enParaType = command
-      window.location.reload()
+      this.user.isPlayExample = command
     },
     ttsApiKeyChange(command) {
       setStore({
@@ -166,8 +161,7 @@ export default {
         content: command,
         type: 'local'
       })
-      this.user.enParaType = command
-      window.location.reload()
+      this.user.ttsApiKey = command
     },
     tranReviewType(val) {
       if (undefined === val) {
