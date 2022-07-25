@@ -89,7 +89,8 @@ export default {
     },
 
     CACHE_KEY: {
-        TT_API_KEY: 'tts_api_key'
+        TT_API_KEY: 'tts_api_key',
+        TTS_CURRENT_API_KEY: 'tts_current_api_key'
     },
 
 }
