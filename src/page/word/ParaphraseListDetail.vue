@@ -1,5 +1,6 @@
 <script>
 import {getStore, setStore} from '@/util/store'
+import msgUtil from '@/util/msg'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
@@ -129,7 +130,11 @@ export default {
       this.init()
     },
     'playStepIndex'(newVal) {
-      console.log('playStepIndex=' + newVal)
+      if (!this.isReview) {
+        return;
+      }
+
+      console.log('playStepIndex=' + newVal);
       if (newVal === 0) return
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
@@ -157,6 +162,10 @@ export default {
       }
     },
     'playWordIndex'(newVal) {
+      if (!this.isReview) {
+        return;
+      }
+
       console.log('playWordIndex this.page.current = ' + this.page.current)
       if (newVal === 0) return
       if (newVal >= playCountOnce) {
@@ -194,8 +203,9 @@ export default {
   computed: {},
   methods: {
     ...paraphraseStarList,
+    ...msgUtil,
     async init() {
-      if (this.isReview && !this.isReviewStop) {
+      if (this.isReview) {
         // stop playing
         this.stopPlaying()
         // clean data
@@ -228,12 +238,7 @@ export default {
         }
         if (!this.isFirstIncome) {
           this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
-          this.$message.success({
-            duration: 2000,
-            center: true,
-            offset: 200,
-            message: '即将开始复习，请稍等！'
-          })
+          this.msgSuccess(this, '即将开始复习，请稍等！')
         }
         // 手动触发过的直接播放即可
         if (this.autoPlayDialogVisible > 1) {
@@ -321,6 +326,7 @@ export default {
       })
     },
     async initList() {
+      console.log('initList')
       this.listRefresh = true
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         // 复习模式每页只加载5个单词
@@ -346,6 +352,7 @@ export default {
       this.$emit('tableVisibleToggle')
     },
     async initNextReviewDetail(isGetDetail) {
+      console.log('initList')
       this.detail.loading = true
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
@@ -414,29 +421,15 @@ export default {
     switchSleepMode() {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
-        this.$message.warning({
-          duration: 3000,
-          center: true,
-          offset: 200,
-          message: '点击灰色区域记住或牢记当前复习单词！'
-        })
+        this.msgSuccess('点击灰色区域记住或牢记当前复习单词！')
       }
     },
     doSuccess() {
-      this.$message.success({
-        duration: 1000,
-        center: true,
-        offset: 200,
-        message: '操作成功'
-      })
+      this.msgSuccess(this, '操作成功')
     },
     async playPronunciation(id, sourceUrl, soundmarkType) {
       if (this.isReview) {
-        this.$message.warning({
-          duration: 1000,
-          offset: 200,
-          message: '自动复习期间不允许播放音标'
-        })
+        this.msgWarning(this, '自动复习期间不允许播放音标')
         return
       }
       try {
@@ -451,7 +444,7 @@ export default {
           }
         }
         // let audio = this.pronunciationAudioMap.get(id)
-        let audio = this.getAudio()
+        let audio = this.createNewAudio(true)
         if (this.source === '本地') {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
@@ -690,18 +683,18 @@ export default {
 
       this.reviewAudioArr.push(audioQueue)
       this.playCountPerWord = audioQueue.length
-      this.$message.success({
-        duration: 2000,
-        center: true,
-        offset: 200,
-        message: `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
-      })
+      this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`)
     },
-    createNewAudio() {
+    createNewAudio(skipListener) {
       let audio = new Audio()
       audio.volume = 0.7
       audio.loop = false
       audio.preload = 'load'
+
+      if (skipListener) {
+        return audio;
+      }
+
       audio.addEventListener('ended', function () {
         console.log('end')
         that.cmp = new Date().getTime()
@@ -710,7 +703,7 @@ export default {
         if (!that.isReviewStop) {
           that.playStepIndex++
         }
-      })
+      });
 
       audio.addEventListener('error', async function () {
             console.log('error src=' + this.src)
@@ -771,12 +764,7 @@ export default {
       if (this.playWordIndex !== this.detail.showIndex) {
         return
       }
-      this.$message.success({
-        duration: 2000,
-        center: true,
-        offset: 200,
-        message: `单词${this.detail.paraphraseVO.wordName}已跳过！`
-      })
+      this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已跳过！`)
 
       this.stopPlaying()
       this.isReviewStop = false
@@ -854,21 +842,11 @@ export default {
     async showPrevious() {
       if (this.detail.showIndex === 0) {
         if (this.isReview) {
-          this.$message.warning({
-            duration: 1000,
-            center: true,
-            offset: 200,
-            message: '当前已经是复习页第一个'
-          })
+          this.msgWarning(this, '当前已经是复习页第一个')
           return
         } else {
           if (this.page.current === 1) {
-            this.$message.warning({
-              duration: 1000,
-              center: true,
-              offset: 200,
-              message: '当前已经是第一页第一个'
-            })
+            this.msgWarning(this, '当前已经是第一页第一个')
             return
           }
           this.page.current--
@@ -880,24 +858,17 @@ export default {
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
+
     async showNext() {
-      if (this.detail.showIndex === this.page.size - 1) {
+      let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
+      let lastPage = this.page.current === this.page.pages;
+      if (lastIndexPerPage) {
         if (this.isReview) {
-          this.$message.warning({
-            duration: 1000,
-            center: true,
-            offset: 200,
-            message: '已经是当前复习页最后一个'
-          })
+          this.msgWarning(this, '已经是当前复习页最后一个');
           return
         } else {
-          if (this.page.current === this.page.pages) {
-            this.$message.warning({
-              duration: 1000,
-              center: true,
-              offset: 200,
-              message: '当前已经是最后一页最后一个'
-            })
+          if (lastPage) {
+            this.msgWarning(this, '当前已经是最后一页最后一个')
             return
           }
           this.page.current++
@@ -908,15 +879,10 @@ export default {
         this.detail.showIndex++
       }
       // 最后一页条目数可能小于每页条目数
-      if (this.page.current === this.page.pages) {
+      if (lastPage) {
         let lastPageRemainder = this.page.total % this.page.size
         if (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder) {
-          this.$message.warning({
-            duration: 1000,
-            center: true,
-            offset: 200,
-            message: '当前已经是最后一页最后一个'
-          })
+          this.msgWarning(this, '当前已经是最后一页最后一个')
           return
         }
       }
