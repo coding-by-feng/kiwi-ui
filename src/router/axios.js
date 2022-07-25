@@ -37,9 +37,9 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(res => {
   NProgress.done()
   const status = String(res.status) || '200'
-  const message = res.data.msg || responseCode[status] || responseCode['default']
+  const message = responseCode[status] || responseCode['default'] || res.data.msg
   let refreshToken = getStore({ name: 'refresh_token' })
-  if (responseCode.UNAUTHORIZED === status) {
+  if (responseCode.UNAUTHORIZED == status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
         Message({
