@@ -394,7 +394,7 @@ export default {
       }).then(() => {
         this.removeParaphraseStar({paraphraseId: paraphraseId, listId: listId})
             .then(() => {
-              this.doSuccess()
+              this.operateSuccess(this)
               this.initList()
             })
             .catch(e => {
@@ -423,9 +423,6 @@ export default {
       if (this.detail.isSleepMode) {
         this.msgSuccess('点击灰色区域记住或牢记当前复习单词！')
       }
-    },
-    doSuccess() {
-      this.msgSuccess(this, '操作成功')
     },
     async playPronunciation(id, sourceUrl, soundmarkType) {
       if (this.isReview) {
@@ -797,7 +794,7 @@ export default {
       this.skipCurrentReview()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.doSuccess()
+            this.operateSuccess(this)
           })
           .catch(e => {
             console.error(e)
@@ -808,7 +805,7 @@ export default {
       this.skipCurrentReview()
       this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.doSuccess()
+            this.operateSuccess(this)
           })
           .catch(e => {
             console.error(e)
@@ -818,7 +815,7 @@ export default {
     forgetOneFun() {
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.doSuccess()
+            this.operateSuccess(this)
           })
           .catch(e => {
             console.error(e)

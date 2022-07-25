@@ -1,5 +1,6 @@
 <script>
 import { getStore, setStore } from '@/util/store'
+import msgUtil from '@/util/msg'
 import wordSearch from '@/api/wordSearch'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
@@ -110,6 +111,7 @@ export default {
     }
   },
   methods: {
+    ...msgUtil,
     ...wordSearch,
     ...wordStarList,
     ...paraphraseStarList,
@@ -313,11 +315,7 @@ export default {
     },
     checkIsLogin () {
       if (!this.isLogin) {
-        this.$message.warning({
-          duration: 1000,
-          center: true,
-          message: '请先登录再进行收藏操作'
-        })
+        this.msgWarning(this, '请先登录再进行收藏操作')
         return false
       }
       return true

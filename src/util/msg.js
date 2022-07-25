@@ -9,7 +9,7 @@ export default {
         })
     },
 
-    msgSuccess : (that, msg) => {
+    msgSuccess: (that, msg) => {
         that.$message.success({
             duration: 2000,
             center: true,
@@ -17,5 +17,9 @@ export default {
             message: msg
         })
     },
+
+    operateSuccess: that => {
+        this.msgSuccess(that, '操作成功')
+    }
 
 }
