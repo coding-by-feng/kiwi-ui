@@ -1,7 +1,3 @@
-/*
- * @Autor: lycheng
- * @Date: 2020-01-13 16:12:22
- */
 export default {
   transToAudioData: function (audioDataStr, fromRate = 16000, toRate = 22505) {
     let outputS16 = this.base64ToS16(audioDataStr)
