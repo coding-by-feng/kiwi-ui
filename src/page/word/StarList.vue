@@ -505,16 +505,16 @@ export default {
           split-button @command="selectReviewMode">
         <i class="el-icon-video-camera"></i>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习最近收藏</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习最近收藏</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习最近收藏</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习最近收藏(汉英)
+          <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习(汉英)
           </el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习最近收藏(汉英)
+          <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习(汉英)
           </el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读最近收藏</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读最近收藏</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读最近收藏</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
       &nbsp;

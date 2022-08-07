@@ -75,6 +75,7 @@ export default {
         return request({
             url: `https://api.voicerss.org/?key=${apiKey}&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=test`,
             headers: {
+                'Access-Control-Allow-Origin': '*',
                 isToken: false,
             },
             method: 'get'

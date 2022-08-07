@@ -75,6 +75,7 @@ export default {
         listId: null,
         sleepClickFirstTime: null,
         sleepClickSecondTime: null,
+        previousReviewWord: null
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -90,6 +91,7 @@ export default {
       reviewAudioArr: [],
       reviewAudioCandidates: [],
       isReviewStop: false,
+      isReviewPlaying: false,
       playWordIndex: -1,
       playStepIndex: -1,
       playCountPerWord: 0,
@@ -120,7 +122,7 @@ export default {
       clearInterval(this.cmpListening);
     }
     if (this.isReview && this.reviewAudioArr && this.reviewAudioArr.length > 0) {
-      let audio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+      let audio = this.reviewAudioArr[this.playStepIndex]
       if (audio)
         audio.pause()
       this.reviewAudioArr = null
@@ -131,11 +133,13 @@ export default {
       this.init()
     },
     'playStepIndex'(newVal) {
-      if (!this.isReview) {
+      // noinspection JSVoidFunctionReturnValueUsed
+      if (this.isNeedStopReview()) {
         return;
       }
 
       console.log('playStepIndex=' + newVal);
+      console.log('this.playCountPerWord=' + this.playCountPerWord);
       if (newVal === 0) return
       if (this.isChToEn && newVal === runUpCh2EnCount) {
         sleep(3)
@@ -144,26 +148,23 @@ export default {
         if (newVal > this.playCountPerWord - 1) {
           this.playStepIndex = 0
           this.playWordIndex++
-          this.recursiveReview()
           this.detail.loading = true
+          this.showNext()
         } else {
-          console.log('this.playWordIndex' + this.playWordIndex)
-          console.log('this.playStepIndex' + this.playStepIndex)
-          console.log('this.reviewAudioArr.length' + this.reviewAudioArr.length)
-          console.log('this.reviewAudioArr[this.playWordIndex].length' + this.reviewAudioArr[this.playWordIndex].length)
-          console.log(this.playCountPerWord)
-          console.log('reviewAudioArr', this.reviewAudioArr)
-          this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-          console.log('this.currentPlayAudio is going to play!', this.currentPlayAudio.src)
+          console.log(this.reviewAudioArr)
+          console.log(this.playStepIndex)
+          this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
+          console.log(this.currentPlayAudio.src)
           this.currentPlayAudio.play()
         }
       } catch (e) {
         console.error(e)
-        alert('播放音频异常，请刷新重试！')
+        this.msgError('播放音频异常，正在自动重试！')
       }
     },
     'playWordIndex'(newVal) {
-      if (!this.isReview) {
+      // noinspection JSVoidFunctionReturnValueUsed
+      if (this.isNeedStopReview()) {
         return;
       }
 
@@ -207,20 +208,8 @@ export default {
     ...msgUtil,
     async init() {
       if (this.isReview) {
-        // stop playing
-        this.stopPlaying()
         // clean data
-        this.isReviewStop = false
-        this.playWordIndex = 0
-        this.playStepIndex = 0
-        this.reviewAudioArr = []
-        this.listItems = []
-        this.reviewAudioCandidates = []
-        this.detail.paraphraseVO = {}
-        if (this.currentPlayAudio) {
-          this.currentPlayAudio.pause()
-          this.currentPlayAudio = null
-        }
+        this.cleanInitReviewing();
 
         let loading = this.$loading({
           lock: true,
@@ -237,6 +226,9 @@ export default {
         } finally {
           loading.close()
         }
+
+        this.prepareReview()
+
         if (!this.isFirstIncome) {
           this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
           this.msgSuccess(this, '即将开始复习，请稍等！')
@@ -249,7 +241,7 @@ export default {
           console.log(this.reviewAudioArr)
           this.playWordIndex = 0
           this.playStepIndex = 0
-          this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
+          this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
           this.currentPlayAudio.play()
         }
 
@@ -387,7 +379,7 @@ export default {
           })
       this.detail.dialogVisible = true
 
-      if (this.isReview) {
+      if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
       }
     },
@@ -474,7 +466,7 @@ export default {
         this.playStepIndex = 0
         await this.showDetail(this.listItems[0].paraphraseId, 0)
         // this.calPlayCountPerWord()
-        this.currentPlayAudio = this.reviewAudioArr[0][0]
+        this.currentPlayAudio = this.reviewAudioArr[0]
         console.log('this.currentPlayAudio')
         console.log(this.currentPlayAudio)
         this.currentPlayAudio.play()
@@ -485,8 +477,14 @@ export default {
       // 每个单词播放前要计算播放audio数量，词组和单词不一样
       // this.calPlayCountPerWord()
       await this.initNextReviewDetail(false)
-      this.currentPlayAudio = this.reviewAudioArr[this.playWordIndex][this.playStepIndex]
-      this.currentPlayAudio.play()
+          .then(() => {
+            console.log('this.reviewAudioArr')
+            console.log(this.reviewAudioArr)
+            console.log(this.playWordIndex)
+            console.log(this.playStepIndex)
+            this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
+            this.currentPlayAudio.play()
+          })
     },
     createPronunciationAudio(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
@@ -516,7 +514,6 @@ export default {
           })
       console.log('apiKey is ' + apiKey)
 
-      let audioQueue = []
       let meaningChinese = this.detail.paraphraseVO.meaningChinese
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
 
@@ -533,39 +530,40 @@ export default {
       }
 
       async function createWordSpellAudio() {
+        isNotReviewSpell = isNotReviewSpell || this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
           }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
           }
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
         }
       }
 
       async function createWordParaphraseAudio() {
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '中文释义是：'))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
         }
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
         }
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
         }
       }
 
@@ -577,15 +575,15 @@ export default {
         console.log('exampleVOList = ' + exampleVOList)
         if (exampleVOList && meaningChinese && meaningChinese.length > 0) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(++reviewVoiceRssCount, this.getAudio(), '播报单词的例句：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(++reviewVoiceRssCount, this.getAudio(), '播报单词的例句：'))
           }
           for (let i = 0; i < exampleVOList.length; i++) {
-            if (i > 1) {
+            if (i > 1 && !exampleVOList[i]) {
               break
             }
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
-            audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
-            audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
+            this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence));
+            this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
           }
         }
       }
@@ -593,93 +591,89 @@ export default {
       function createWordSelfAudio() {
         // 如果是没有音标的词组
         if (!isNotReviewSpell) {
-          audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio(true))
+          this.reviewAudioArr.push(this.createPronunciationAudio())
+          this.reviewAudioArr.push(this.createPronunciationAudio(true))
         }
       }
 
       if (this.isChToEn) {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词中文释义是：'))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍中文释义是：'))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍中文释义是：'))
         }
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '请在脑海回想对应的单词。'))
-        audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '对应的英文单词是'))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '请在脑海回想对应的单词。'))
+        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '对应的英文单词是'))
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
-          audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio(true))
+          this.reviewAudioArr.push(this.createPronunciationAudio())
+          this.reviewAudioArr.push(this.createPronunciationAudio(true))
         }
 
         if (!isNotReviewSpell) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
           }
           let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
           }
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
         }
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio(true))
+          this.reviewAudioArr.push(this.createPronunciationAudio())
+          this.reviewAudioArr.push(this.createPronunciationAudio(true))
         }
 
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
           }
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
+            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
         }
       } else {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          audioQueue.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词是：'))
+          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词是：'))
         }
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
-          audioQueue.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
-          audioQueue.push(this.createPronunciationAudio())
-          audioQueue.push(this.createPronunciationAudio(true))
+          this.reviewAudioArr.push(this.createPronunciationAudio())
+          this.reviewAudioArr.push(this.createPronunciationAudio(true))
         }
 
-        console.log('audioQueue')
-        console.log(audioQueue)
+        console.log('this.reviewAudioArr')
+        console.log(this.reviewAudioArr)
 
+        createWordSelfAudio.call(this)
         createWordSpellAudio.call(this)
         createWordSelfAudio.call(this)
         createWordSpellAudio.call(this)
         createWordSpellAudio.call(this)
-        createWordSelfAudio.call(this)
         createWordParaphraseAudio.call(this)
-        createWordSpellAudio.call(this)
-        createWordSelfAudio.call(this)
         createWordParaphraseAudio.call(this)
-        createExampleAudio.call(this)
         createExampleAudio.call(this)
         createExampleAudio.call(this)
       }
 
-      this.reviewAudioArr.push(audioQueue)
-      this.playCountPerWord = audioQueue.length
+      this.playCountPerWord = this.reviewAudioArr.length
       this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`)
     },
     createNewAudio(skipListener) {
@@ -694,6 +688,7 @@ export default {
 
       audio.addEventListener('ended', function () {
         console.log('end')
+        that.isReviewPlaying = false
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
         that.detail.loading = true
@@ -703,6 +698,7 @@ export default {
       });
 
       audio.addEventListener('error', async function () {
+            that.isReviewPlaying = false
             that.detail.reviewLoading = false
             if (that.isIgnoreOtherError) {
               return
@@ -724,15 +720,19 @@ export default {
               that.msgWarning(that, '音频加载异常，正在重新加载')
             }
 
-            that.init();
-
-            // await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
-            //   confirmButtonText: '确定',
-            //   showCancelButton: false,
-            //   type: 'warning'
-            // }).then($ => {
-            //   window.location.reload()
-            // });
+            if (audioPlay.isIos()) {
+              audioPlay.playText2Audio('音频加载异常，请点击重新开始播放');
+              await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
+                confirmButtonText: '重新播放',
+                showCancelButton: false,
+                type: 'warning'
+              }).then($ => {
+                that.init();
+                // window.location.reload()
+              });
+            } else {
+              that.init();
+            }
 
             // that.cmp = new Date().getTime()
             // that.reviewAudioCandidates.push(this)
@@ -745,45 +745,55 @@ export default {
 
       audio.addEventListener('playing', function () {
         console.log('playing')
+        that.isReviewPlaying = true
         that.detail.loading = false
         that.detail.reviewLoading = false
       })
       audio.addEventListener('play', function () {
         console.log('play')
+        that.isReviewPlaying = true
+        that.detail.loading = false
+        that.detail.reviewLoading = false
       })
       audio.addEventListener('pause', function () {
+        that.isReviewPlaying = false
         console.log('pause')
       })
       return audio
     },
+    isNeedStopReview() {
+      return this.isReviewStop || !this.isReview || this.reviewAudioArr.length === 0
+          || this.playStepIndex < 0 || this.playCountPerWord < 1 || this.playWordIndex < 0;
+    },
     stopPlaying() {
+      this.isReviewStop = true
+      if (this.currentPlayAudio) {
+        this.currentPlayAudio.pause()
+        this.currentPlayAudio = null
+      }
       if (this.playWordIndex < 0 || this.playStepIndex < 0) return
-      if (this.reviewAudioArr[this.playWordIndex]) {
-        if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
-          this.reviewAudioArr[this.playWordIndex][this.playStepIndex].pause()
-          this.isReviewStop = true
+      if (this.reviewAudioArr.length) {
+        if (this.reviewAudioArr[this.playStepIndex]) {
+          this.reviewAudioArr[this.playStepIndex].pause()
         }
       }
     },
     rePlaying() {
+      console.log(this.playWordIndex)
+      console.log(this.playStepIndex)
+      console.log(this.reviewAudioArr)
       if (this.playWordIndex < 0 || this.playStepIndex < 0) return
-      if (this.reviewAudioArr[this.playWordIndex]) {
-        if (this.reviewAudioArr[this.playWordIndex][this.playStepIndex]) {
-          this.reviewAudioArr[this.playWordIndex][this.playStepIndex].play()
+      if (this.reviewAudioArr.length) {
+        if (this.reviewAudioArr[this.playStepIndex]) {
+          this.reviewAudioArr[this.playStepIndex].play()
           this.isReviewStop = false
         }
       }
     },
-    skipCurrentReview() {
-      if (this.playWordIndex !== this.detail.showIndex) {
-        return
-      }
-      this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已跳过！`)
-
-      this.stopPlaying()
+    async ignoreCurrentReview() {
+      this.cleanDetailReviewing()
       this.isReviewStop = false
-      // 跳过当前单词的复习
-      this.playStepIndex = this.playCountPerWord
+      this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已忽略！`)
     },
     async rememberInSleepMode(isSleep) {
       // 如果是睡眠模式
@@ -808,10 +818,11 @@ export default {
       }
     },
     rememberOneFun() {
-      this.skipCurrentReview()
+      this.ignoreCurrentReview()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.operateSuccess(this)
+            this.showNext()
           })
           .catch(e => {
             console.error(e)
@@ -819,10 +830,11 @@ export default {
           })
     },
     keepInMindFun() {
-      this.skipCurrentReview()
+      this.ignoreCurrentReview()
       this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.operateSuccess(this)
+            this.showNext()
           })
           .catch(e => {
             console.error(e)
@@ -855,43 +867,21 @@ export default {
     },
     async showPrevious() {
       if (this.detail.showIndex === 0) {
-        if (this.isReview) {
-          this.msgWarning(this, '当前已经是复习页第一个')
+        if (this.page.current === 1) {
+          this.msgWarning(this, '当前已经是第一页第一个')
           return
-        } else {
-          if (this.page.current === 1) {
-            this.msgWarning(this, '当前已经是第一页第一个')
-            return
-          }
-          this.page.current--
-          await this.init()
-          this.detail.showIndex = this.page.size - 1
         }
+        this.page.current--
+        await this.init()
+        this.detail.showIndex = this.page.size - 1
       } else {
         this.detail.showIndex--
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-
     async showNext() {
       let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
       let lastPage = this.page.current === this.page.pages;
-      if (lastIndexPerPage) {
-        if (this.isReview) {
-          this.msgWarning(this, '已经是当前复习页最后一个');
-          return
-        } else {
-          if (lastPage) {
-            this.msgWarning(this, '当前已经是最后一页最后一个')
-            return
-          }
-          this.page.current++
-          await this.init()
-          this.detail.showIndex = 0
-        }
-      } else {
-        this.detail.showIndex++
-      }
       // 最后一页条目数可能小于每页条目数
       if (lastPage) {
         let lastPageRemainder = this.page.total % this.page.size
@@ -900,7 +890,55 @@ export default {
           return
         }
       }
-      await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
+      if (lastIndexPerPage) {
+        this.page.current++
+        this.detail.showIndex = 0
+        await this.init()
+      } else {
+        this.detail.showIndex++
+        if (this.isReview) {
+          await this.ignoreCurrentReview()
+          // 每个单词播放前要计算播放audio数量，词组和单词不一样
+          await this.initNextReviewDetail(true)
+              .then(() => {
+                console.log('this.reviewAudioArr')
+                console.log(this.reviewAudioArr)
+                console.log(this.playWordIndex)
+                console.log(this.playStepIndex)
+                this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
+                this.currentPlayAudio.play()
+              });
+        }
+        await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex);
+      }
+    },
+    async refreshReviewDetail() {
+      this.cleanDetailReviewing()
+      this.prepareReview()
+      await this.recursiveReview()
+    },
+    cleanCommonReviewing() {
+      this.reviewAudioArr = []
+      this.reviewAudioCandidates = []
+      this.playStepIndex = 0
+      this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
+      this.detail.paraphraseVO = {}
+      this.detail.dialogVisible = false
+    },
+    cleanInitReviewing() {
+      // stop playing
+      this.stopPlaying()
+      this.cleanCommonReviewing()
+      this.playWordIndex = 0
+      this.listItems = []
+    },
+    prepareReview() {
+      this.isReviewStop = false
+    },
+    cleanDetailReviewing() {
+      this.stopPlaying()
+      this.cleanCommonReviewing()
+      this.playWordIndex = this.detail.showIndex
     }
   }
 }
@@ -1001,7 +1039,7 @@ export default {
           <div v-if="detail.isSleepMode" :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
                @click.stop="rememberInSleepMode(true)">
           </div>
-          <el-button type="info" size="mini" @click="showPrevious">
+          <el-button v-if="!isReview" type="info" size="mini" @click="showPrevious">
             <i class="el-icon-back"></i>
           </el-button>
           &nbsp;
@@ -1011,12 +1049,6 @@ export default {
           &nbsp;
           <el-button type="info" size="mini" @click="showNext">
             <i class="el-icon-right"></i>
-          </el-button>
-          <el-button type="info"
-                     v-if="isReview"
-                     size="mini"
-                     @click="skipCurrentReview">
-            <i class="el-icon-document-checked"></i>
           </el-button>
         </div>
         <div>
@@ -1046,7 +1078,7 @@ export default {
           </el-button>
           <el-button type="info"
                      v-if="isReview"
-                     @click="init"
+                     @click="refreshReviewDetail"
                      size="mini">
             <i class="el-icon-refresh" v-show="!detail.loading"></i>
             <i class="el-icon-loading" v-show="detail.loading"></i>
@@ -1124,11 +1156,11 @@ export default {
                   <div v-for="phrase in detail.paraphraseVO.phraseList">
                     <el-tag type="warning">{{ phrase }}</el-tag>
                   </div>
-                  <br/>
+                  <br v-if="detail.paraphraseVO.phraseList"/>
+                  {{ this.detail.paraphraseVO.codes }}
                   <div style="word-wrap:break-word; overflow:hidden;">
                     {{ this.detail.paraphraseVO.paraphraseEnglish }}
                   </div>
-                  <span class="outline_fix_top_left">{{ this.detail.paraphraseVO.codes }}</span>
                 </div>
               </el-alert>
             </div>
