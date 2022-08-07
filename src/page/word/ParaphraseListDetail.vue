@@ -371,6 +371,7 @@ export default {
     },
     async showDetail(paraphraseId, index) {
       this.detail.showIndex = index
+      this.detail.loading = false
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
@@ -388,6 +389,7 @@ export default {
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
       }
+      this.detail.loading = false
     },
     async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
