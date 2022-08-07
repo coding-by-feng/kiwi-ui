@@ -80,32 +80,28 @@ export default {
     },
 
     playText2Audio(text) {
-        return this.playText(text, new Audio())
+        let audio = new Audio();
+        audio.src = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
+        audio.volume = 0.7
+        audio.play()
     },
 
     playText(text, audio) {
-        // let url = 'https://tts.baidu.com/text2audio?lan=zh&ie=UTF-8&text=' + encodeURI(text)
-        // let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=' +  webSite.baiduTtsToken +'&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
-        audio.src = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
         audio.volume = 1
     },
 
-    playTextPlus(reviewCount, text, audio) {
-        if (reviewCount > kiwiConsts.DEFAULT_MAX_REVIEW_COUNT_FOR_VOICE_RSS) {
-            audio.src = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=f0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3'
-            audio.volume = 0.7
-        } else {
-            audio.src = 'https://api.voicerss.org/?key=02df0a8f48b641548ec4224c24ebff0e&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=' + encodeURI(text)
-            audio.volume = 1
-        }
-    },
-
     createAudioForChinese(audio, text) {
-        return this.createAudioFromTextPlus(0, audio, text, false)
+        if (text === '') {
+            text = null
+        }
+        return this.createAudioFromTextPlus(0, audio, text ? text : '中文释义缺失', false);
     },
 
     createAudioForEnglish(apiKey, audio, text) {
-        return this.createAudioFromTextPlus(apiKey, audio, text, true)
+        if (text === '') {
+            text = null
+        }
+        return this.createAudioFromTextPlus(apiKey, audio, text ? text : 'English text missing', true)
     },
 
     createAudioFromTextPlus(apiKey, audio, text, isEnglish) {
