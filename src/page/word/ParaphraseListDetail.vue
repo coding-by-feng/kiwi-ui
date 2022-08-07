@@ -160,6 +160,7 @@ export default {
       } catch (e) {
         console.error(e)
         this.msgError('播放音频异常，正在自动重试！')
+        this.refreshReviewDetail()
       }
     },
     'playWordIndex'(newVal) {
@@ -1036,58 +1037,21 @@ export default {
           fullscreen
           width="100%">
         <div slot="title">
-          <div v-if="detail.isSleepMode" :style="{height: innerHeight, background: '#909399', marginBottom: '35px'}"
+          <div v-if="detail.isSleepMode"
+               :style="{height: innerHeight, background: '#909399', marginBottom: '35px;'}"
                @click.stop="rememberInSleepMode(true)">
           </div>
-          <el-button v-if="!isReview" type="info" size="mini" @click="showPrevious">
-            <i class="el-icon-back"></i>
-          </el-button>
-          &nbsp;
+          <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true">
             <B style="font-size: larger ">{{ detail.paraphraseVO.wordName }}</B>
           </el-tag>
           &nbsp;
-          <el-button type="info" size="mini" @click="showNext">
-            <i class="el-icon-right"></i>
-          </el-button>
-        </div>
-        <div>
-          <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
-                     v-loading="detail.rememberLoading" @click="rememberOneFun">记住
-          </el-button>
-          <el-button v-if="reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead'" type="info" size="mini"
-                     v-loading="detail.rememberLoading" @click="keepInMindFun">牢记
-          </el-button>
           <el-button type="info"
-                     v-if="isReview"
+                     v-if="isReview && detail.isSleepMode"
                      @click="switchSleepMode"
                      size="mini">
             <i class="el-icon-thumb"></i>
           </el-button>
-          <el-button type="info"
-                     v-if="isReview && !isReviewStop"
-                     @click="stopPlaying"
-                     size="mini">
-            <i class="el-icon-video-pause"></i>
-          </el-button>
-          <el-button type="info"
-                     v-if="isReview && isReviewStop"
-                     @click="rePlaying"
-                     size="mini">
-            <i class="el-icon-video-play"></i>
-          </el-button>
-          <el-button type="info"
-                     v-if="isReview"
-                     @click="refreshReviewDetail"
-                     size="mini">
-            <i class="el-icon-refresh" v-show="!detail.loading"></i>
-            <i class="el-icon-loading" v-show="detail.loading"></i>
-          </el-button>
-          <el-button type="info"
-                     size="mini" @click="handleShowDetail">
-            <i class="el-icon-open"></i>
-          </el-button>
-          <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">遗忘</el-button>
         </div>
         <el-card class="box-card">
           <div slot="header">
@@ -1206,6 +1170,59 @@ export default {
           <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
         </div>
       </el-dialog>
+    </div>
+    <div v-if="!detail.isSleepMode"
+         style="position: fixed; bottom: 50px; right: 30px; z-index: 2147483646;line-height: 30px;">
+      <el-button v-if="!detail.dialogVisible" type="info" size="mini"
+                 @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
+        <i class="el-icon-document"></i>
+      </el-button>
+      <el-button v-if="!isReview" type="info" size="mini" @click="showPrevious">
+        <i class="el-icon-back"></i>
+      </el-button>
+      <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
+                 v-loading="detail.rememberLoading" @click="rememberOneFun">
+        <i class="el-icon-success"></i>
+      </el-button>
+      <el-button v-if="reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead'" type="info" size="mini"
+                 v-loading="detail.rememberLoading" @click="keepInMindFun">
+        <i class="el-icon-success"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="isReview"
+                 @click="switchSleepMode"
+                 size="mini">
+        <i class="el-icon-thumb"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="isReview && !isReviewStop"
+                 @click="stopPlaying"
+                 size="mini">
+        <i class="el-icon-video-pause"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="isReview && isReviewStop"
+                 @click="rePlaying"
+                 size="mini">
+        <i class="el-icon-video-play"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="isReview"
+                 @click="refreshReviewDetail"
+                 size="mini">
+        <i class="el-icon-refresh" v-show="!detail.loading"></i>
+        <i class="el-icon-loading" v-show="detail.loading"></i>
+      </el-button>
+      <el-button type="info"
+                 size="mini" @click="handleShowDetail">
+        <i class="el-icon-open"></i>
+      </el-button>
+      <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">
+        <i class="el-icon-question"></i>
+      </el-button>
+      <el-button type="info" size="mini" @click="showNext">
+        <i class="el-icon-right"></i>
+      </el-button>
     </div>
   </div>
 </template>
