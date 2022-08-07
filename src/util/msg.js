@@ -2,7 +2,7 @@ export default {
 
     msgWarning: (that, msg) => {
         that.$message.warning({
-            duration: 1500,
+            duration: 2500,
             center: true,
             offset: 200,
             message: msg
@@ -20,7 +20,7 @@ export default {
 
     msgSuccess: (that, msg) => {
         that.$message.success({
-            duration: 1000,
+            duration: 2000,
             center: true,
             offset: 200,
             message: msg
@@ -29,7 +29,7 @@ export default {
 
     operateSuccess: that => {
         that.$message.success({
-            duration: 1000,
+            duration: 2000,
             center: true,
             offset: 200,
             message: '操作成功'

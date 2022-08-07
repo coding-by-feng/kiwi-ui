@@ -75,7 +75,8 @@ export default {
         listId: null,
         sleepClickFirstTime: null,
         sleepClickSecondTime: null,
-        previousReviewWord: null
+        previousReviewWord: null,
+        apiKey: null
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -207,8 +208,12 @@ export default {
   methods: {
     ...paraphraseStarList,
     ...msgUtil,
+    getApiKey: async function () {
+      this.detail.apiKey = await audioPlay.selectApiKeyForVoiceRss()
+    },
     async init() {
       if (this.isReview) {
+        await this.getApiKey()
         // clean data
         this.cleanInitReviewing();
 
@@ -460,6 +465,7 @@ export default {
       }
     },
     async stockReviewStart() {
+      await this.getApiKey()
       this.isFirstIncome = false
       this.autoPlayDialogVisible++
       if (this.reviewAudioArr.length) {
@@ -508,14 +514,8 @@ export default {
       return audio
     },
     async reviewDetail(isNotReviewSpell) {
-      let apiKey
-      await audioPlay.selectApiKeyForVoiceRss()
-          .then(key => {
-            apiKey = key
-          })
-      console.log('apiKey is ' + apiKey)
-
-      let meaningChinese = this.detail.paraphraseVO.meaningChinese
+      await this.getApiKey()
+      let meaningChinese = this.detail.paraphraseVO.meaningChinese;
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
 
       if (this.detail.paraphraseVO.meaningChinese) {
@@ -554,7 +554,7 @@ export default {
         if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), paraphraseEnglish))
         }
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
           this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
@@ -564,7 +564,7 @@ export default {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), paraphraseEnglish))
         }
       }
 
@@ -583,8 +583,8 @@ export default {
               break
             }
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
-            this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence));
-            this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
+            this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), exampleVOList[i].exampleSentence));
+            this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), exampleVOList[i].exampleSentence))
           }
         }
       }
@@ -611,8 +611,8 @@ export default {
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           this.reviewAudioArr.push(this.createPronunciationAudio())
           this.reviewAudioArr.push(this.createPronunciationAudio(true))
@@ -640,11 +640,11 @@ export default {
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
           }
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), paraphraseEnglish))
           if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
           }
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), paraphraseEnglish))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), paraphraseEnglish))
         }
       } else {
         if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
@@ -653,8 +653,8 @@ export default {
 
         // 如果是没有音标的词组
         if (isNotReviewSpell) {
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
+          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
         } else {
           this.reviewAudioArr.push(this.createPronunciationAudio())
           this.reviewAudioArr.push(this.createPronunciationAudio(true))
@@ -791,10 +791,12 @@ export default {
         }
       }
     },
-    async ignoreCurrentReview() {
+    async ignoreCurrentReview(isShowTip) {
+      if (isShowTip) {
+        this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已忽略！`);
+      }
       this.cleanDetailReviewing()
       this.isReviewStop = false
-      this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已忽略！`)
     },
     async rememberInSleepMode(isSleep) {
       // 如果是睡眠模式
@@ -819,10 +821,9 @@ export default {
       }
     },
     rememberOneFun() {
-      this.ignoreCurrentReview()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.operateSuccess(this)
+            this.msgSuccess(this, '单词已经记住')
             this.showNext()
           })
           .catch(e => {
@@ -831,10 +832,9 @@ export default {
           })
     },
     keepInMindFun() {
-      this.ignoreCurrentReview()
       this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.operateSuccess(this)
+            this.msgSuccess(this, '单词已经牢记')
             this.showNext()
           })
           .catch(e => {
@@ -845,7 +845,8 @@ export default {
     forgetOneFun() {
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.operateSuccess(this)
+            this.msgSuccess(this, '单词已经忘记')
+            this.showNext()
           })
           .catch(e => {
             console.error(e)
@@ -898,7 +899,7 @@ export default {
       } else {
         this.detail.showIndex++
         if (this.isReview) {
-          await this.ignoreCurrentReview()
+          await this.ignoreCurrentReview(true)
           // 每个单词播放前要计算播放audio数量，词组和单词不一样
           await this.initNextReviewDetail(true)
               .then(() => {
@@ -1036,7 +1037,7 @@ export default {
           :visible.sync="detail.dialogVisible"
           fullscreen
           width="100%">
-        <div slot="title">
+        <div slot="title" style="margin-bottom: -35px">
           <div v-if="detail.isSleepMode"
                :style="{height: innerHeight, background: '#909399', marginBottom: '35px;'}"
                @click.stop="rememberInSleepMode(true)">
@@ -1154,6 +1155,7 @@ export default {
               </div>
             </el-alert>
           </div>
+          <div style="margin-top: 100px"></div>
         </el-card>
       </el-dialog>
       <el-dialog
@@ -1172,24 +1174,22 @@ export default {
       </el-dialog>
     </div>
     <div v-if="!detail.isSleepMode"
-         style="position: fixed; bottom: 50px; right: 30px; z-index: 2147483646;line-height: 30px;">
-      <el-button v-if="!detail.dialogVisible" type="info" size="mini"
+         style="position: fixed; bottom: 37px; right: 30px; z-index: 2147483646; text-align: right; line-height: 30px;">
+      <el-button v-if="!detail.dialogVisible && detail.paraphraseVO.paraphraseId" type="info" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
+      </el-button>
+      <el-button v-if="detail.dialogVisible" type="info" size="mini" @click="detail.dialogVisible = false">
+        <i class="el-icon-circle-close"></i>
       </el-button>
       <el-button v-if="!isReview" type="info" size="mini" @click="showPrevious">
         <i class="el-icon-back"></i>
       </el-button>
-      <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
-                 v-loading="detail.rememberLoading" @click="rememberOneFun">
-        <i class="el-icon-success"></i>
-      </el-button>
-      <el-button v-if="reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead'" type="info" size="mini"
-                 v-loading="detail.rememberLoading" @click="keepInMindFun">
-        <i class="el-icon-success"></i>
+      <el-button type="info" size="mini" @click="showNext">
+        <i class="el-icon-right"></i>
       </el-button>
       <el-button type="info"
-                 v-if="isReview"
+                 v-if="isReview && detail.dialogVisible"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
@@ -1206,6 +1206,15 @@ export default {
                  size="mini">
         <i class="el-icon-video-play"></i>
       </el-button>
+      <br/>
+      <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
+                 v-loading="detail.rememberLoading" @click="rememberOneFun">
+        <i class="el-icon-success"></i>
+      </el-button>
+      <el-button v-if="reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead'" type="info" size="mini"
+                 v-loading="detail.rememberLoading" @click="keepInMindFun">
+        <i class="el-icon-success"></i>
+      </el-button>
       <el-button type="info"
                  v-if="isReview"
                  @click="refreshReviewDetail"
@@ -1213,15 +1222,12 @@ export default {
         <i class="el-icon-refresh" v-show="!detail.loading"></i>
         <i class="el-icon-loading" v-show="detail.loading"></i>
       </el-button>
-      <el-button type="info"
+      <el-button type="info" v-if="detail.paraphraseVO.wordName"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
       </el-button>
       <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">
         <i class="el-icon-question"></i>
-      </el-button>
-      <el-button type="info" size="mini" @click="showNext">
-        <i class="el-icon-right"></i>
       </el-button>
     </div>
   </div>

@@ -127,11 +127,16 @@ export default {
 
     async selectApiKeyForVoiceRss() {
         let ttsApiKey = getStore({name: kiwiConsts.CACHE_KEY.TT_API_KEY})
-        if (ttsApiKey === kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
+        if (ttsApiKey === undefined || ttsApiKey === null || ttsApiKey === 'undefined' || ttsApiKey === kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
             await review.autoSelectApiKey().then(resp => {
                 ttsApiKey = resp.data.data
                 console.log('autoSelectApiKey is ' + ttsApiKey)
             });
+        }
+        console.log('apiKey is ' + ttsApiKey)
+        if (ttsApiKey === null || ttsApiKey === undefined || ttsApiKey.length < 20) {
+            alert('当前没有TTS KEY可用')
+            window.location.reload()
         }
         setStore({
             name: kiwiConsts.CACHE_KEY.TTS_CURRENT_API_KEY,
