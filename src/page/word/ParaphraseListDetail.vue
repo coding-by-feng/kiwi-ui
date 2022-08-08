@@ -1045,8 +1045,8 @@ export default {
                @click.stop="rememberInSleepMode(true)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
-          <el-tag type="info" :hit="true">
-            <B style="font-size: larger ">{{ detail.paraphraseVO.wordName }}</B>
+          <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;">
+            {{ detail.paraphraseVO.wordName }}
           </el-tag>
           &nbsp;
           <el-button type="info"
