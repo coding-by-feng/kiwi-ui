@@ -581,7 +581,7 @@ export default {
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(++reviewVoiceRssCount, this.getAudio(), '播报单词的例句：'))
           }
           for (let i = 0; i < exampleVOList.length; i++) {
-            if (i > 1 && !exampleVOList[i]) {
+            if (i > 1 || !exampleVOList[i]) {
               break
             }
             this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
@@ -1142,18 +1142,16 @@ export default {
                 :closable="false">
             </el-alert>
           </div>
-          <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.exampleVOList">
+          <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.exampleVOList"
+               @click="detail.showTranslation = !detail.showTranslation">
             <el-alert
                 type="info"
                 center
                 effect="light"
-                :description="wordParaphraseExampleVO.exampleTranslate"
+                :description="detail.showTranslation ? wordParaphraseExampleVO.exampleTranslate : '释义已经隐藏，点击该区域显示/隐藏'"
                 :closable="false">
               <div slot="title">
                 {{ wordParaphraseExampleVO.exampleSentence }}
-                <el-button type="text" style="color: #909399"><i
-                    class="el-icon-circle-plus-outline outline_fix" style="color: #FFFFFF"></i>
-                </el-button>
               </div>
             </el-alert>
           </div>

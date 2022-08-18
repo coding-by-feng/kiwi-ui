@@ -147,6 +147,8 @@ export default {
                   src="https://music.163.com/outchain/player?type=0&id=57330170&auto=1&height=430"></iframe>
           <iframe v-if="bgm===2" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
                   src="https://music.163.com/outchain/player?type=0&id=5295152134&auto=0&height=430"></iframe>
+          <iframe v-if="bgm===3" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
+                  src="https://music.163.com/outchain/player?type=0&id=5131166224&auto=0&height=430"></iframe>
         </el-card>
       </el-tab-pane>
     </el-tabs>
