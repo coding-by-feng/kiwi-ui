@@ -236,7 +236,7 @@ export default {
       } else if (val === 2) {
         return '【白噪音】篝火'
       } else if (val === 3) {
-        return '致抑郁轻音乐（慎点）'
+        return '【ASMR】颂钵疗愈'
       } else {
         return '关闭'
       }
@@ -299,6 +299,7 @@ export default {
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="1">【轻音乐】我的世界</el-dropdown-item>
         <el-dropdown-item :command="2">【白噪音】篝火</el-dropdown-item>
+        <el-dropdown-item :command="3">【ASMR】颂钵疗愈</el-dropdown-item>
         <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
