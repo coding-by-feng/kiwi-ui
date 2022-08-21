@@ -802,21 +802,23 @@ export default {
       this.cleanDetailReviewing()
       this.isReviewStop = false
     },
+    isDoubleClick() {
+      let diff = 1000
+      if (this.detail.sleepClickFirstTime) {
+        this.detail.sleepClickSecondTime = new Date().getTime()
+        diff = this.detail.sleepClickSecondTime - this.detail.sleepClickFirstTime
+        this.detail.sleepClickFirstTime = null
+        this.detail.sleepClickSecondTime = null
+      } else {
+        this.detail.sleepClickFirstTime = new Date().getTime()
+      }
+      console.log('diff = ' + diff)
+      return diff < 500;
+    },
     async rememberInSleepMode(isSleep) {
       // 如果是睡眠模式
-      if (isSleep) {
-        let diff = 1000
-        if (this.detail.sleepClickFirstTime) {
-          this.detail.sleepClickSecondTime = new Date().getTime()
-          diff = this.detail.sleepClickSecondTime - this.detail.sleepClickFirstTime
-          this.detail.sleepClickFirstTime = null
-          this.detail.sleepClickSecondTime = null
-        } else {
-          this.detail.sleepClickFirstTime = new Date().getTime()
-        }
-        if (diff > 500) {
-          return
-        }
+      if (isSleep && !this.isDoubleClick()) {
+        return
       }
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         this.rememberOneFun()
@@ -885,7 +887,12 @@ export default {
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-    async showNext() {
+    async showNext(isCheckDoubleClick) {
+      // 如果是睡眠模式
+      if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
+        return
+      }
+
       let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
       let lastPage = this.page.current === this.page.pages;
       // 最后一页条目数可能小于每页条目数
@@ -1043,12 +1050,12 @@ export default {
           width="100%">
         <div slot="title" style="margin-bottom: -35px">
           <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#909399', marginBottom: '35px;'}"
+               :style="{height: innerHeightHalfPx, background: '#909399'}"
                @click.stop="rememberInSleepMode(true)">
           </div>
           <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '100px;'}"
-               @click.stop="showNext">
+               :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '50%;'}"
+               @click.stop="showNext(true)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;">
