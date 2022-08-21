@@ -52,8 +52,10 @@ export default {
   },
   data() {
     return {
-      innerHeight: window.innerHeight + 'px',
-      innerWidth: window.innerWidth + 'px',
+      innerHeightPx: window.innerHeight + 'px',
+      innerHeightHalfPx: window.innerHeight / 2 + 'px',
+      innerWidthPx: window.innerWidth + 'px',
+      innerWidthHalfPx: window.innerWidth / 2 + 'px',
       page: {
         current: 1,
         size: readCountOnce,
@@ -1041,8 +1043,12 @@ export default {
           width="100%">
         <div slot="title" style="margin-bottom: -35px">
           <div v-if="detail.isSleepMode"
-               :style="{height: innerHeight, background: '#909399', marginBottom: '35px;'}"
+               :style="{height: innerHeightHalfPx, background: '#909399', marginBottom: '35px;'}"
                @click.stop="rememberInSleepMode(true)">
+          </div>
+          <div v-if="detail.isSleepMode"
+               :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '100px;'}"
+               @click.stop="showNext">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;">
