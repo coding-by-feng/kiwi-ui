@@ -813,7 +813,7 @@ export default {
         this.detail.sleepClickFirstTime = new Date().getTime()
       }
       console.log('diff = ' + diff)
-      return diff < 500;
+      return diff < 800;
     },
     async rememberInSleepMode(isSleep) {
       // 如果是睡眠模式
