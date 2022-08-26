@@ -93,4 +93,15 @@ export default {
         TTS_CURRENT_API_KEY: 'tts_current_api_key'
     },
 
+    REVIEW_AUDIO_TYPE: {
+        WORD_SPELLING: 0,
+        PARAPHRASE_EN: 1,
+        PARAPHRASE_CH: 2,
+        EXAMPLE_EN: 3,
+        EXAMPLE_CH: 4,
+        CHARACTER_EN: 6,
+        CHARACTER_CH: 7,
+        NON_REVIEW_SPELL: 8
+    }
+
 }
