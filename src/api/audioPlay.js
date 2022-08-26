@@ -125,6 +125,16 @@ export default {
         return audio
     },
 
+    validateReviewAudio(audio, sourceId, type) {
+        audio.volume = 1
+        let url = `/wordBiz/word/review/downloadReviewAudio/${sourceId}/${type}`
+        console.log('url ' + url)
+        audio.src = url
+        console.log('audio >>>')
+        console.log(audio)
+        return audio
+    },
+
     async selectApiKeyForVoiceRss() {
         let ttsApiKey = getStore({name: kiwiConsts.CACHE_KEY.TT_API_KEY})
         if (ttsApiKey === undefined || ttsApiKey === null || ttsApiKey === 'undefined' || ttsApiKey === kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
