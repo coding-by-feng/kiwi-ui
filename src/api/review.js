@@ -1,5 +1,4 @@
 import request from '@/router/axios'
-import {getStore, setStore} from '@/util/store'
 import kiwiConst from '@/const/kiwiConsts'
 
 export default {
@@ -29,28 +28,6 @@ export default {
     increaseApiKeyUsedTime(apiKey) {
         return request({
             url: `/wordBiz/word/review/increaseApiKeyUsedTime/${apiKey}`,
-            headers: {
-                isToken: true,
-                'Content-Type': 'application/json'
-            },
-            method: 'get'
-        })
-    },
-
-    /**
-     * 当天废弃掉该apiKey，并且设置成自动获取apiKey
-     * @param apiKey
-     * @returns {*}
-     */
-    deprecateApiKeyToday(apiKey) {
-        console.log('deprecateApiKeyToday, apiKey = ' + apiKey)
-        setStore({
-            name: 'tts_api_key',
-            content: kiwiConst.API_KEY_VOICE_RSS.AUTO,
-            type: 'local'
-        })
-        return request({
-            url: `/wordBiz/word/review/deprecateApiKeyToday/${apiKey}`,
             headers: {
                 isToken: true,
                 'Content-Type': 'application/json'

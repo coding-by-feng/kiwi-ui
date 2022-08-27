@@ -1,7 +1,6 @@
 import kiwiConsts from '@/const/kiwiConsts'
 import webSite from '@/const/website'
 import review from '@/api/review'
-import {getStore, setStore} from '@/util/store'
 
 export default {
     isIos() {
@@ -133,27 +132,6 @@ export default {
         console.log('audio >>>')
         console.log(audio)
         return audio
-    },
-
-    async selectApiKeyForVoiceRss() {
-        let ttsApiKey = getStore({name: kiwiConsts.CACHE_KEY.TT_API_KEY})
-        if (ttsApiKey === undefined || ttsApiKey === null || ttsApiKey === 'undefined' || ttsApiKey === kiwiConsts.API_KEY_VOICE_RSS.AUTO) {
-            await review.autoSelectApiKey().then(resp => {
-                ttsApiKey = resp.data.data
-                console.log('autoSelectApiKey is ' + ttsApiKey)
-            });
-        }
-        console.log('apiKey is ' + ttsApiKey)
-        if (ttsApiKey === null || ttsApiKey === undefined || ttsApiKey.length < 20) {
-            alert('当前没有TTS KEY可用')
-            window.location.reload()
-        }
-        setStore({
-            name: kiwiConsts.CACHE_KEY.TTS_CURRENT_API_KEY,
-            content: ttsApiKey,
-            type: 'local'
-        })
-        return ttsApiKey;
     },
 
     getWordAlphabet(wordName) {

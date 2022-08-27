@@ -4,7 +4,6 @@ import {getStore, setStore} from '@/util/store'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 
-const TTS_API_KEY = 'tts_api_key';
 const USER_NAME = 'user_name';
 
 export default {
@@ -34,13 +33,11 @@ export default {
          * 2：附带英文释义
          */
         isPlayExample: getStore({name: 'is_play_example'}),
-        ttsApiKey: getStore({name: 'tts_api_key'}),
         bgm: getStore({name: 'bgm'}),
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
-      },
-      API_KEY_VOICE_RSS: kiwiConst.API_KEY_VOICE_RSS
+      }
     }
   },
   mounted() {
@@ -76,13 +73,6 @@ export default {
       setStore({
         name: 'is_play_example',
         content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
-        type: 'local'
-      })
-    }
-    if (!this.user.ttsApiKey) {
-      setStore({
-        name: 'tts_api_key',
-        content: kiwiConst.API_KEY_VOICE_RSS.KEY1,
         type: 'local'
       })
     }
@@ -154,14 +144,6 @@ export default {
         type: 'local'
       })
       this.user.isPlayExample = command
-    },
-    ttsApiKeyChange(command) {
-      setStore({
-        name: TTS_API_KEY,
-        content: command,
-        type: 'local'
-      })
-      this.user.ttsApiKey = command
     },
     tranReviewType(val) {
       if (undefined === val) {
@@ -337,21 +319,6 @@ export default {
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="1">开启</el-dropdown-item>
         <el-dropdown-item :command="2">关闭</el-dropdown-item>
-      </el-dropdown-menu>
-    </el-dropdown>
-    <el-divider></el-divider>
-    <el-dropdown size="mini"
-                 split-button type="info" @command="ttsApiKeyChange">
-      {{ `TTS KEY：${user.ttsApiKey}` }}
-      <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="'自动选择'">自动选择</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY1">{{API_KEY_VOICE_RSS.KEY1}}</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY2">{{API_KEY_VOICE_RSS.KEY2}}</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY3">{{API_KEY_VOICE_RSS.KEY3}}</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY4">{{API_KEY_VOICE_RSS.KEY4}}</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY5">{{API_KEY_VOICE_RSS.KEY5}}</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY6">{{API_KEY_VOICE_RSS.KEY6}}</el-dropdown-item>
-        <el-dropdown-item :command="API_KEY_VOICE_RSS.KEY7">{{API_KEY_VOICE_RSS.KEY7}}</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>
