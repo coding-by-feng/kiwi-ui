@@ -63,13 +63,12 @@ export default {
         pages: 0
       },
       isShowPagination: true,
+      loading: false,
       detail: {
-        loading: true,
         reviewLoading: false,
         paraphraseVO: {},
         dialogVisible: false,
         rememberLoading: false,
-        forgetLoading: false,
         showTranslation: false,
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
         showIndex: 0,
@@ -88,7 +87,6 @@ export default {
       enParaType: getStore({name: 'enPara_type'}),
       isPlayExample: getStore({name: 'is_play_example'}),
       listItems: [],
-      listRefresh: false,
       autoPlayDialogVisible: 0,
       isFirstIncome: true,
       reviewAudioArr: [],
@@ -108,9 +106,6 @@ export default {
       // 唯一标识，用来判断复习模式是否长时间停滞
       cmp: new Date().getTime(),
       // 唯一标识的副本，用于判断
-      counterpart: null,
-      cmpListening: null,
-      notDistinctCount: 0,
       isIgnoreOtherError: false
     }
   },
@@ -121,9 +116,6 @@ export default {
     await this.init()
   },
   destroyed() {
-    if (this.cmpListening) {
-      clearInterval(this.cmpListening);
-    }
     if (this.isReview && this.reviewAudioArr && this.reviewAudioArr.length > 0) {
       let audio = this.reviewAudioArr[this.playStepIndex]
       if (audio)
@@ -151,7 +143,7 @@ export default {
         if (newVal > this.playCountPerWord - 1) {
           this.playStepIndex = 0
           this.playWordIndex++
-          this.detail.loading = true
+          this.loading = true
           this.showNext()
         } else {
           console.log(this.reviewAudioArr)
@@ -195,7 +187,7 @@ export default {
               offset: 200,
               message: '当前复习列表已经复习完'
             })
-            this.detail.loading = false
+            this.loading = false
           }
         }
       }
@@ -211,72 +203,54 @@ export default {
     ...paraphraseStarList,
     ...msgUtil,
     async init() {
-      if (this.isReview) {
-        // clean data
-        this.cleanInitReviewing();
+      this.loading = true
+      try {
+        if (this.isReview) {
+          // clean data
+          this.cleanInitReviewing();
 
-        let loading = this.$loading({
-          lock: true,
-          text: `第${this.page.current}页自动复习资源加载中`,
-          spinner: 'el-icon-loading',
-          background: 'rgba(0, 0, 0, 0.7)'
-        })
-        try {
-          await this.initList()
-          await this.initNextReviewDetail(true)
-        } catch (e) {
-          console.error(e)
-          this.$message.error('初始化加载异常')
-        } finally {
-          loading.close()
-        }
-
-        this.prepareReview()
-
-        if (!this.isFirstIncome) {
-          this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
-          this.msgSuccess(this, '即将开始复习，请稍等！')
-        }
-        // 手动触发过的直接播放即可
-        if (this.autoPlayDialogVisible > 1) {
-          await this.showDetail(this.listItems[0].paraphraseId, 0)
-          console.log('------------')
-          console.log(this.playWordIndex)
-          console.log(this.reviewAudioArr)
-          this.playWordIndex = 0
-          this.playStepIndex = 0
-          this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
-          this.currentPlayAudio.play()
-        }
-
-        // 启动断播监听，一旦网络卡住太久重新刷新，5秒监听一次
-        // await this.initCmpListening()
-      } else {
-        await this.initList()
-      }
-    },
-    async initCmpListening() {
-      if (this.cmpListening) {
-        clearInterval(this.cmpListening)
-        this.cmpListening = null
-        this.notDistinctCount = null
-      }
-      this.cmpListening = setInterval(() => {
-        console.log('cmpListening')
-        let counterpartTmp = this.cmp
-        if (counterpartTmp === this.counterpart) {
-          if (this.notDistinctCount > 2) {
-            // 自动刷新进入复习需要手动触发
-            this.autoPlayDialogVisible = 0
-            this.init()
-            return
+          let loading = this.$loading({
+            lock: true,
+            text: `第${this.page.current}页自动复习资源加载中`,
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          })
+          try {
+            await this.initList()
+            await this.initNextReviewDetail(true)
+          } catch (e) {
+            console.error(e)
+            this.$message.error('初始化加载异常')
+          } finally {
+            loading.close()
           }
-          this.notDistinctCount++
+
+          this.prepareReview()
+
+          if (!this.isFirstIncome) {
+            this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
+            this.msgSuccess(this, '即将开始复习，请稍等！')
+          }
+          // 手动触发过的直接播放即可
+          if (this.autoPlayDialogVisible > 1) {
+            await this.showDetail(this.listItems[0].paraphraseId, 0)
+            console.log('------------')
+            console.log(this.playWordIndex)
+            console.log(this.reviewAudioArr)
+            this.playWordIndex = 0
+            this.playStepIndex = 0
+            this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
+            this.currentPlayAudio.play()
+          }
         } else {
-          this.counterpart = counterpartTmp
-          this.notDistinctCount = 0
+          await this.initList()
         }
-      }, 10000)
+      } catch (e) {
+        console.error(e)
+        this.msgError(this, '初始化异常')
+      } finally {
+        this.loading = false
+      }
     },
     async getReviewBreakpointPageNumber() {
       if (this.isFirstIncome && this.isReview) {
@@ -324,12 +298,10 @@ export default {
     },
     async initList() {
       console.log('initList')
-      this.listRefresh = true
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         // 复习模式每页只加载5个单词
         this.page.size = playCountOnce
         await this.initStockListFun()
-        this.listRefresh = false
         return
       } else if (this.reviewMode === 'totalReview' || this.reviewMode === 'totalRead') {
         // 全量模式也只查5个
@@ -339,18 +311,16 @@ export default {
         // 复习模式每页只加载5个单词
         this.page.size = playCountOnce
         await this.initEnhanceListFun()
-        this.listRefresh = false
         return
       }
       await this.initDefaultListFun()
-      this.listRefresh = false
     },
     goBack() {
       this.$emit('tableVisibleToggle')
     },
     async initNextReviewDetail(isGetDetail) {
       console.log('initList')
-      this.detail.loading = true
+      this.loading = true
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
@@ -369,7 +339,6 @@ export default {
     },
     async showDetail(paraphraseId, index) {
       this.detail.showIndex = index
-      this.detail.loading = false
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
@@ -381,13 +350,17 @@ export default {
           })
           .catch(e => {
             console.error(e)
+            that.msgError(that, '加载释义详情异常')
+          })
+          .finally($ => {
+            that.loading = false
           })
       this.detail.dialogVisible = true
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
       }
-      this.detail.loading = false
+      this.loading = false
     },
     async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
@@ -465,24 +438,22 @@ export default {
       }
     },
     async stockReviewStart() {
-      this.detail.loading = true
+      this.loading = true
       this.autoPlayDialogVisible++
       this.isFirstIncome = false
       if (this.reviewAudioArr.length) {
         this.playWordIndex = 0
         this.playStepIndex = 0
         await this.showDetail(this.listItems[0].paraphraseId, 0)
-        // this.calPlayCountPerWord()
         this.currentPlayAudio = this.reviewAudioArr[0]
         console.log('this.currentPlayAudio')
         console.log(this.currentPlayAudio)
         this.currentPlayAudio.play()
       }
+      this.loading = false
     },
     async recursiveReview() {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
-      // 每个单词播放前要计算播放audio数量，词组和单词不一样
-      // this.calPlayCountPerWord()
       await this.initNextReviewDetail(false)
           .then(() => {
             console.log('this.reviewAudioArr')
@@ -491,6 +462,9 @@ export default {
             console.log(this.playStepIndex)
             this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
             this.currentPlayAudio.play()
+          })
+          .finally($ => {
+            that.loading = false
           })
     },
     createPronunciationAudio(isUS) {
@@ -689,7 +663,7 @@ export default {
         that.isReviewPlaying = false
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
-        that.detail.loading = true
+        that.loading = true
         if (!that.isReviewStop) {
           that.playStepIndex++
         }
@@ -708,13 +682,7 @@ export default {
 
             if (audioPlay.isIos()) {
               audioPlay.playText2Audio('音频加载异常，请点击重新开始播放');
-              await that.$confirm('当前的TTS KEY使用次数可能已经用完，请在个人中心切换其他TTS KEY', '免费额度已用完', {
-                confirmButtonText: '重新播放',
-                showCancelButton: false,
-                type: 'warning'
-              }).then($ => {
-                that.init();
-              });
+              that.init();
             } else {
               that.init();
             }
@@ -724,13 +692,13 @@ export default {
       audio.addEventListener('playing', function () {
         console.log('playing')
         that.isReviewPlaying = true
-        that.detail.loading = false
+        that.loading = false
         that.detail.reviewLoading = false
       })
       audio.addEventListener('play', function () {
         console.log('play')
         that.isReviewPlaying = true
-        that.detail.loading = false
+        that.loading = false
         that.detail.reviewLoading = false
       })
       audio.addEventListener('pause', function () {
@@ -800,6 +768,7 @@ export default {
       }
     },
     rememberOneFun() {
+      this.loading = true
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经记住')
@@ -808,6 +777,9 @@ export default {
           .catch(e => {
             console.error(e)
             this.$message.error(e)
+          })
+          .finally($ => {
+            this.loading = false
           })
     },
     keepInMindFun() {
@@ -822,6 +794,7 @@ export default {
           })
     },
     forgetOneFun() {
+      this.loading = true
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经忘记')
@@ -830,6 +803,9 @@ export default {
           .catch(e => {
             console.error(e)
             this.$message.error(e)
+          })
+          .finally($ => {
+            that.loading = false
           })
     },
     countdownSelectHandle(command) {
@@ -865,7 +841,6 @@ export default {
       if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
         return
       }
-
       let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
       let lastPage = this.page.current === this.page.pages;
       // 最后一页条目数可能小于每页条目数
@@ -881,6 +856,7 @@ export default {
         this.detail.showIndex = 0
         await this.init()
       } else {
+        this.loading = true
         this.detail.showIndex++
         if (this.isReview) {
           await this.ignoreCurrentReview(true)
@@ -897,6 +873,7 @@ export default {
         }
         await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex);
       }
+      this.loading = false
     },
     async refreshReviewDetail() {
       this.cleanDetailReviewing()
@@ -940,7 +917,7 @@ export default {
 </style>
 
 <template>
-  <div style="margin-top: 30px">
+  <div style="margin-top: 30px" v-loading="loading">
     <div style="z-index: 1;">
       <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
         <div>
@@ -1159,7 +1136,7 @@ export default {
         </div>
       </el-dialog>
     </div>
-    <div v-if="!detail.isSleepMode"
+    <div v-if="(isReview && !detail.isSleepMode && !isFirstIncome) || !isReview"
          style="position: fixed; bottom: 37px; right: 30px; z-index: 2147483646; text-align: right; line-height: 30px;">
       <el-button v-if="!detail.dialogVisible && detail.paraphraseVO.paraphraseId" type="info" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
@@ -1193,26 +1170,29 @@ export default {
         <i class="el-icon-video-play"></i>
       </el-button>
       <br/>
-      <el-button v-if="reviewMode === 'stockReview' || reviewMode === 'stockRead'" type="info" size="mini"
-                 v-loading="detail.rememberLoading" @click="rememberOneFun">
+      <el-button v-if="detail.paraphraseVO.paraphraseId || reviewMode === 'stockReview' || reviewMode === 'stockRead'"
+                 type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
       </el-button>
-      <el-button v-if="reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead'" type="info" size="mini"
-                 v-loading="detail.rememberLoading" @click="keepInMindFun">
+      <el-button
+          v-if="detail.paraphraseVO.paraphraseId && (reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead')"
+          type="info" size="mini" @click="keepInMindFun">
         <i class="el-icon-success"></i>
       </el-button>
       <el-button type="info"
                  v-if="isReview"
                  @click="refreshReviewDetail"
                  size="mini">
-        <i class="el-icon-refresh" v-show="!detail.loading"></i>
-        <i class="el-icon-loading" v-show="detail.loading"></i>
+        <i class="el-icon-refresh" v-show="!loading"></i>
+        <i class="el-icon-loading" v-show="loading"></i>
       </el-button>
       <el-button type="info" v-if="detail.paraphraseVO.wordName"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
       </el-button>
-      <el-button type="info" size="mini" v-loading="detail.forgetLoading" @click="forgetOneFun">
+      <el-button
+          v-if="detail.paraphraseVO.paraphraseId"
+          type="info" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
       </el-button>
     </div>
