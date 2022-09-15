@@ -77,7 +77,8 @@ export default {
         sleepClickFirstTime: null,
         sleepClickSecondTime: null,
         previousReviewWord: null,
-        apiKey: null
+        apiKey: null,
+        audioHint: '音频加载进度提示条'
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -143,7 +144,7 @@ export default {
         if (newVal > this.playCountPerWord - 1) {
           this.playStepIndex = 0
           this.playWordIndex++
-          this.loading = true
+          this.markLoading()
           this.showNext()
         } else {
           console.log(this.reviewAudioArr)
@@ -187,7 +188,7 @@ export default {
               offset: 200,
               message: '当前复习列表已经复习完'
             })
-            this.loading = false
+            this.endLoading()
           }
         }
       }
@@ -203,7 +204,7 @@ export default {
     ...paraphraseStarList,
     ...msgUtil,
     async init() {
-      this.loading = true
+      this.markLoading()
       try {
         if (this.isReview) {
           // clean data
@@ -249,7 +250,7 @@ export default {
         console.error(e)
         this.msgError(this, '初始化异常')
       } finally {
-        this.loading = false
+        this.endLoading()
       }
     },
     async getReviewBreakpointPageNumber() {
@@ -320,7 +321,7 @@ export default {
     },
     async initNextReviewDetail(isGetDetail) {
       console.log('initList')
-      this.loading = true
+      this.markLoading()
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
@@ -353,14 +354,14 @@ export default {
             that.msgError(that, '加载释义详情异常')
           })
           .finally($ => {
-            that.loading = false
+            that.endLoading()
           })
       this.detail.dialogVisible = true
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
       }
-      this.loading = false
+      this.endLoading()
     },
     async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
@@ -382,6 +383,17 @@ export default {
     },
     handleDetailClose() {
       this.detail.dialogVisible = false
+    },
+    markLoading() {
+      if (this.detail.isSleepMode) {
+        return
+      }
+      this.loading = true;
+    },
+    endLoading() {
+      if (this.loading) {
+        this.loading = false;
+      }
     },
     handleShowDetail() {
       this.detail.dialogVisible = false
@@ -438,7 +450,7 @@ export default {
       }
     },
     async stockReviewStart() {
-      this.loading = true
+      this.markLoading()
       this.autoPlayDialogVisible++
       this.isFirstIncome = false
       if (this.reviewAudioArr.length) {
@@ -450,7 +462,7 @@ export default {
         console.log(this.currentPlayAudio)
         this.currentPlayAudio.play()
       }
-      this.loading = false
+      this.endLoading()
     },
     async recursiveReview() {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
@@ -464,7 +476,7 @@ export default {
             this.currentPlayAudio.play()
           })
           .finally($ => {
-            that.loading = false
+            that.endLoading()
           })
     },
     createPronunciationAudio(isUS) {
@@ -660,10 +672,10 @@ export default {
 
       audio.addEventListener('ended', function () {
         console.log('end')
+        that.detail.audioHint = `当前音频播放结束(时长${this.duration})`
         that.isReviewPlaying = false
         that.cmp = new Date().getTime()
         that.reviewAudioCandidates.push(this)
-        that.loading = true
         if (!that.isReviewStop) {
           that.playStepIndex++
         }
@@ -678,6 +690,8 @@ export default {
 
             that.isIgnoreOtherError = true;
             console.log('error src=' + this.src)
+            that.detail.audioHint = `当前音频加载异常(时长${this.duration})`
+
             that.$message.error('音频数据加载异常')
 
             if (audioPlay.isIos()) {
@@ -691,19 +705,16 @@ export default {
 
       audio.addEventListener('playing', function () {
         console.log('playing')
+        that.detail.audioHint = `当前音频正在播放(时长${this.duration})`
+
         that.isReviewPlaying = true
-        that.loading = false
-        that.detail.reviewLoading = false
-      })
-      audio.addEventListener('play', function () {
-        console.log('play')
-        that.isReviewPlaying = true
-        that.loading = false
+        that.endLoading()
         that.detail.reviewLoading = false
       })
       audio.addEventListener('pause', function () {
         that.isReviewPlaying = false
         console.log('pause')
+        that.detail.audioHint = `当前音频停止播放(时长${this.duration})`
       })
       return audio
     },
@@ -768,7 +779,7 @@ export default {
       }
     },
     rememberOneFun() {
-      this.loading = true
+      this.markLoading()
       this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经记住')
@@ -779,7 +790,7 @@ export default {
             this.$message.error(e)
           })
           .finally($ => {
-            this.loading = false
+            this.endLoading()
           })
     },
     keepInMindFun() {
@@ -794,7 +805,7 @@ export default {
           })
     },
     forgetOneFun() {
-      this.loading = true
+      this.markLoading()
       this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经忘记')
@@ -805,7 +816,7 @@ export default {
             this.$message.error(e)
           })
           .finally($ => {
-            that.loading = false
+            that.endLoading()
           })
     },
     countdownSelectHandle(command) {
@@ -856,7 +867,7 @@ export default {
         this.detail.showIndex = 0
         await this.init()
       } else {
-        this.loading = true
+        this.markLoading()
         this.detail.showIndex++
         if (this.isReview) {
           await this.ignoreCurrentReview(true)
@@ -873,7 +884,7 @@ export default {
         }
         await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex);
       }
-      this.loading = false
+      this.endLoading()
     },
     async refreshReviewDetail() {
       this.cleanDetailReviewing()
@@ -1008,6 +1019,8 @@ export default {
                @click.stop="showNext(true)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
+          <el-tag v-if="isReview" type="warn">{{ detail.audioHint }}</el-tag>
+          <el-divider v-if="isReview"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;">
             {{ detail.paraphraseVO.wordName }}
           </el-tag>
