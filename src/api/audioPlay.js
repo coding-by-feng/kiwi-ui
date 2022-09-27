@@ -1,4 +1,3 @@
-import kiwiConsts from '@/const/kiwiConsts'
 import webSite from '@/const/website'
 import review from '@/api/review'
 
@@ -106,12 +105,12 @@ export default {
     createAudioFromTextPlus(apiKey, audio, text, isEnglish) {
         let url = 'https://tsn.baidu.com/text2audio?lan=zh&ctp=1&cuid=d0:18:98:13:93:1e&tok=' + webSite.baiduTtsToken + '&tex=' + encodeURI(text) + '&per=0&spd=5&pit=5&aue=3&vol=4'
         if (isEnglish) {
-            review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_VOICERSS)
+            // review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_VOICERSS)
             audio.volume = 1
             review.increaseApiKeyUsedTime(apiKey)
             url = `https://api.voicerss.org/?key=${apiKey}&r=-2&hl=en-us&v=Mary&c=MP3&f=16khz_16bit_stereo&src=${encodeURI(text)}`
         } else {
-            review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_BAIDU)
+            // review.increaseCounter(kiwiConsts.REVIEW_DAILY_COUNTER_TYPE.REVIEW_AUDIO_TTS_BAIDU)
             audio.volume = 0.7
         }
         console.log('text ' + text)

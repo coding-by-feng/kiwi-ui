@@ -7,6 +7,7 @@ import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
 import { isMobile } from '@/util/util'
+import kiwiConsts from "@/const/kiwiConsts";
 
 let that
 
@@ -279,7 +280,7 @@ export default {
         // audio.loop = false
         // audio.type = 'audio/ogg'
         let source = getStore({ name: 'pronunciation_source' })
-        if (source === '本地') {
+        if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
           audio.src = sourceUrl

@@ -13,13 +13,13 @@ const sleep = function (time) {
 }
 
 const runUpCh2EnCount = 5 // 需要回想时间
-const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
-const carryChModeCh2EnAudioCount = 17 // 附带中文汉英模式播放的Audio数
-const ridChModeEh2ChAudioCount = 22 // 去除中文英汉模式播放的Audio数
-const carryChModeEh2ChAudioCount = 40 // 附带中文英汉模式播放的Audio数
-const playWordLoadCountOnce = 1 // 一播放加载的单词个数
-const playCountOnce = 5 // 复习模式每页加载的单词个数
-const readCountOnce = 10 // 阅读模式每页加载的单词个数
+// const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
+// const carryChModeCh2EnAudioCount = 17 // 附带中文汉英模式播放的Audio数
+// const ridChModeEh2ChAudioCount = 22 // 去除中文英汉模式播放的Audio数
+// const carryChModeEh2ChAudioCount = 40 // 附带中文英汉模式播放的Audio数
+// const playWordLoadCountOnce = 1 // 一播放加载的单词个数
+const playCountOnce = 20 // 复习模式每页加载的单词个数
+const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
 let that
 
@@ -48,7 +48,7 @@ export default {
     }
   },
   components: {
-    Countdown: $ => import('./Countdown')
+    Countdown: () => import('./Countdown')
   },
   data() {
     return {
@@ -362,6 +362,7 @@ export default {
         this.detail.reviewLoading = true
       }
       this.endLoading()
+      review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
     },
     async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
@@ -430,7 +431,7 @@ export default {
         }
         // let audio = this.pronunciationAudioMap.get(id)
         let audio = this.createNewAudio(true)
-        if (this.source === '本地') {
+        if (this.source === kiwiConst.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
           audio.src = sourceUrl
@@ -475,7 +476,7 @@ export default {
             this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
             this.currentPlayAudio.play()
           })
-          .finally($ => {
+          .finally(() => {
             that.endLoading()
           })
     },
@@ -486,7 +487,7 @@ export default {
       let pronunciation = this.getAudio()
       let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
       let first = isUS && isExistUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[0]
-      if (this.source === '本地') {
+      if (this.source === kiwiConst.PRONUNCIATION_SOURCE.LOCAL) {
         pronunciation.src = '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
         pronunciation.src = first.sourceUrl
@@ -657,14 +658,14 @@ export default {
       }
 
       this.playCountPerWord = this.reviewAudioArr.length
-      this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`)
+      this.detail.audioHint = `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
     },
 
     createNewAudio(skipListener) {
       let audio = new Audio()
       audio.volume = 0.7
       audio.loop = false
-      audio.preload = 'load'
+      audio.preload = 'auto'
 
       if (skipListener) {
         return audio;
@@ -711,10 +712,28 @@ export default {
         that.endLoading()
         that.detail.reviewLoading = false
       })
+
       audio.addEventListener('pause', function () {
         that.isReviewPlaying = false
         console.log('pause')
         that.detail.audioHint = `当前音频停止播放(时长${this.duration})`
+      })
+
+      audio.addEventListener('abort', function () {
+        that.detail.audioHint = `音频加载被终止(时长${this.duration})`
+        console.log('abort')
+      })
+      audio.addEventListener('canplay', function () {
+        console.log('canplay')
+        that.detail.audioHint = `音频加载准备就绪(时长${this.duration})`
+      })
+      audio.addEventListener('suspend', function () {
+        console.log('suspend')
+        that.detail.audioHint = `当前音频加载终止(时长${this.duration})`
+      })
+      audio.addEventListener('waiting', function () {
+        console.log('waiting')
+        that.detail.audioHint = `当前音频正在缓存(时长${this.duration})`
       })
       return audio
     },
@@ -735,7 +754,7 @@ export default {
         }
       }
     },
-    rePlaying() {
+    rePlayingNotRefresh() {
       console.log(this.playWordIndex)
       console.log(this.playStepIndex)
       console.log(this.reviewAudioArr)
@@ -789,7 +808,7 @@ export default {
             console.error(e)
             this.$message.error(e)
           })
-          .finally($ => {
+          .finally(() => {
             this.endLoading()
           })
     },
@@ -815,7 +834,7 @@ export default {
             console.error(e)
             this.$message.error(e)
           })
-          .finally($ => {
+          .finally(() => {
             that.endLoading()
           })
     },
@@ -1178,7 +1197,7 @@ export default {
       </el-button>
       <el-button type="info"
                  v-if="isReview && isReviewStop"
-                 @click="rePlaying"
+                 @click="refreshReviewDetail"
                  size="mini">
         <i class="el-icon-video-play"></i>
       </el-button>
