@@ -14,7 +14,7 @@ export default {
         })
     },
 
-    increaseCounter(type) {
+    async increaseCounter(type) {
         return request({
             url: `/wordBiz/word/review/increaseCounter/${type}`,
             headers: {
@@ -100,6 +100,17 @@ export default {
         result = '词性翻译缺失'
         return result
     },
+
+    deprecateReviewAudio(sourceId) {
+        return request({
+            url: `/wordBiz/word/review/deprecate-review-audio/${sourceId}`,
+            headers: {
+                isToken: true,
+                'Content-Type': 'application/json'
+            },
+            method: 'get'
+        })
+    }
 
 }
 

@@ -84,6 +84,8 @@ export default {
         CHARACTER_EN: 6,
         CHARACTER_CH: 7,
         NON_REVIEW_SPELL: 8
-    }
+    },
+
+    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/wordBiz/word/review/downloadReviewAudio/'
 
 }

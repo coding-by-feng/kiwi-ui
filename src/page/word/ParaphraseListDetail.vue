@@ -362,8 +362,21 @@ export default {
         this.detail.reviewLoading = true
       }
       this.endLoading()
+
+      // noinspection ES6MissingAwait
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
     },
+
+    async showDetailNotLoadData() {
+      this.detail.dialogVisible = true
+      if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
+        this.detail.reviewLoading = true
+      }
+
+      // noinspection ES6MissingAwait
+      review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+    },
+
     async removeParaphraseStarListFun(paraphraseId, listId) {
       this.$confirm('即将进行删除, 是否继续?', '删除操作', {
         confirmButtonText: '确定',
@@ -692,14 +705,14 @@ export default {
             that.isIgnoreOtherError = true;
             console.log('error src=' + this.src)
             that.detail.audioHint = `当前音频加载异常(时长${this.duration})`
-
             that.$message.error('音频数据加载异常')
-
-            if (audioPlay.isIos()) {
-              audioPlay.playText2Audio('音频加载异常，请点击重新开始播放');
-              that.init();
-            } else {
-              that.init();
+            audioPlay.playText2Audio('音频加载异常，请点击重新开始播放');
+            if (this.src.startsWith(kiwiConst.DOWNLOAD_REVIEW_AUDIO_URL_PREFIX)) {
+              let sourceId = this.src.replaceAll(kiwiConst.DOWNLOAD_REVIEW_AUDIO_URL_PREFIX, '')
+                  .substring(sourceId.indexOf('/'));
+              alert('error src=' + this.src)
+              alert('sourceId=' + sourceId)
+              review.deprecateReviewAudio(sourceId);
             }
           }
       )
@@ -867,43 +880,55 @@ export default {
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
     async showNext(isCheckDoubleClick) {
-      // 如果是睡眠模式
-      if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
-        return
-      }
-      let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
-      let lastPage = this.page.current === this.page.pages;
-      // 最后一页条目数可能小于每页条目数
-      if (lastPage) {
-        let lastPageRemainder = this.page.total % this.page.size
-        if (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder) {
-          this.msgWarning(this, '当前已经是最后一页最后一个')
+      try {
+        // 如果是睡眠模式
+        if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
           return
         }
-      }
-      if (lastIndexPerPage) {
-        this.page.current++
-        this.detail.showIndex = 0
-        await this.init()
-      } else {
-        this.markLoading()
-        this.detail.showIndex++
-        if (this.isReview) {
-          await this.ignoreCurrentReview(true)
-          // 每个单词播放前要计算播放audio数量，词组和单词不一样
-          await this.initNextReviewDetail(true)
-              .then(() => {
-                console.log('this.reviewAudioArr')
-                console.log(this.reviewAudioArr)
-                console.log(this.playWordIndex)
-                console.log(this.playStepIndex)
-                this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
-                this.currentPlayAudio.play()
-              });
+        let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
+        let lastPage = this.page.current === this.page.pages;
+        // 最后一页条目数可能小于每页条目数
+        if (lastPage) {
+          let lastPageRemainder = this.page.total % this.page.size
+          if (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder) {
+            this.msgWarning(this, '当前已经是最后一页最后一个')
+            return
+          }
         }
-        await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex);
+        if (lastIndexPerPage) {
+          this.page.current++
+          this.detail.showIndex = 0
+          await this.init()
+        } else {
+          this.markLoading()
+          this.detail.showIndex++
+          if (this.isReview) {
+            await this.ignoreCurrentReview(true);
+            // 每个单词播放前要计算播放audio数量，词组和单词不一样
+            await this.initNextReviewDetail(true)
+                .then(() => {
+                  console.log('this.reviewAudioArr')
+                  console.log(this.reviewAudioArr)
+                  console.log(this.playWordIndex)
+                  console.log(this.playStepIndex)
+                  this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
+                  this.currentPlayAudio.play()
+                }).catch(e => {
+                  this.msgError('初始化下一个释义详情异常!')
+                  console.error('initNextReviewDetail error')
+                  console.error(e)
+                });
+            await this.showDetailNotLoadData()
+          } else {
+            await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex);
+          }
+        }
+      } catch (e) {
+        alert('showNext error.')
+        alert(e)
+      } finally {
+        this.endLoading()
       }
-      this.endLoading()
     },
     async refreshReviewDetail() {
       this.cleanDetailReviewing()
