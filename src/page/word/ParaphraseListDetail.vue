@@ -5,6 +5,8 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
+import {Howl, Howler} from 'howler';
+import howlerHelper from '../../api/howlerHelper'
 
 const sleep = function (time) {
   let startTime = new Date().getTime() + time * 1000
@@ -18,7 +20,7 @@ const runUpCh2EnCount = 5 // 需要回想时间
 // const ridChModeEh2ChAudioCount = 22 // 去除中文英汉模式播放的Audio数
 // const carryChModeEh2ChAudioCount = 40 // 附带中文英汉模式播放的Audio数
 // const playWordLoadCountOnce = 1 // 一播放加载的单词个数
-const playCountOnce = 20 // 复习模式每页加载的单词个数
+const playCountOnce = 5 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
 let that
@@ -52,6 +54,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       innerHeightPx: window.innerHeight + 'px',
       innerHeightHalfPx: window.innerHeight / 2 + 'px',
       innerWidthPx: window.innerWidth + 'px',
@@ -63,12 +66,10 @@ export default {
         pages: 0
       },
       isShowPagination: true,
-      loading: false,
       detail: {
         reviewLoading: false,
         paraphraseVO: {},
         dialogVisible: false,
-        rememberLoading: false,
         showTranslation: false,
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
         showIndex: 0,
@@ -78,7 +79,8 @@ export default {
         sleepClickSecondTime: null,
         previousReviewWord: null,
         apiKey: null,
-        audioHint: '音频加载进度提示条'
+        howlerPlayerQueue: [],
+        howlerPlayer: null
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -90,24 +92,15 @@ export default {
       listItems: [],
       autoPlayDialogVisible: 0,
       isFirstIncome: true,
-      reviewAudioArr: [],
-      reviewAudioCandidates: [],
+      reviseAudioCandidates: [],
       isReviewStop: false,
       isReviewPlaying: false,
       playWordIndex: -1,
-      playStepIndex: -1,
-      playCountPerWord: 0,
-      currentPlayAudio: null,
 
       countdownMode: false,
       countdownTime: new Date().getTime(),
       countdownMin: 30,
       countdownText: '30分钟',
-
-      // 唯一标识，用来判断复习模式是否长时间停滞
-      cmp: new Date().getTime(),
-      // 唯一标识的副本，用于判断
-      isIgnoreOtherError: false
     }
   },
   beforeCreate: function () {
@@ -117,80 +110,41 @@ export default {
     await this.init()
   },
   destroyed() {
-    if (this.isReview && this.reviewAudioArr && this.reviewAudioArr.length > 0) {
-      let audio = this.reviewAudioArr[this.playStepIndex]
-      if (audio)
-        audio.pause()
-      this.reviewAudioArr = null
+    if (this.detail.howlerPlayer) {
+      this.detail.howlerPlayer.stop()
+      this.detail.howlerPlayer = null
     }
   },
   watch: {
     'listId'() {
       this.init()
     },
-    'playStepIndex'(newVal) {
-      // noinspection JSVoidFunctionReturnValueUsed
-      if (this.isNeedStopReview()) {
-        return;
-      }
-
-      console.log('playStepIndex=' + newVal);
-      console.log('this.playCountPerWord=' + this.playCountPerWord);
-      if (newVal === 0) return
-      if (this.isChToEn && newVal === runUpCh2EnCount) {
-        sleep(3)
-      }
-      try {
-        if (newVal > this.playCountPerWord - 1) {
-          this.playStepIndex = 0
-          this.playWordIndex++
-          this.markLoading()
-          this.showNext()
-        } else {
-          console.log(this.reviewAudioArr)
-          console.log(this.playStepIndex)
-          this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
-          console.log(this.currentPlayAudio.src)
-          this.currentPlayAudio.play()
-        }
-      } catch (e) {
-        console.error(e)
-        this.msgError('播放音频异常，正在自动重试！')
-        this.refreshReviewDetail()
-      }
-    },
     'playWordIndex'(newVal) {
+      console.log('this.playWordIndex = ' + this.playWordIndex)
       // noinspection JSVoidFunctionReturnValueUsed
-      if (this.isNeedStopReview()) {
+      if (this.isNeedStopReview() || this.isReviewPlaying || newVal === 0) {
         return;
       }
 
-      console.log('playWordIndex this.page.current = ' + this.page.current)
-      if (newVal === 0) return
       if (newVal >= playCountOnce) {
+        console.log('this.playWordIndex(newVal >= playCountOnce) = ' + this.playWordIndex)
         this.playWordIndex = 0
-        this.reviewAudioArr = []
         if (this.page.pages > this.page.current) {
-          this.page.current++
-          this.init()
+          this.page.current++;
+          this.init();
         }
       } else {
+        console.log('this.playWordIndex(else) = ' + this.playWordIndex)
         // 最后一页条目数可能小于每页条目数
         if (this.page.current === this.page.pages) {
+          console.log('this.page.current === this.page.pages')
           let lastPageRemainder = this.page.total % this.page.size
-          if (lastPageRemainder === 0) {
+          if (newVal >= this.page.size || (lastPageRemainder !== 0 && newVal === lastPageRemainder)) {
+            this.msgSuccess(this, '当前复习列表已经复习完')
             return
           }
-          if (newVal === lastPageRemainder) {
-            this.$message.warning({
-              duration: 3000,
-              center: true,
-              offset: 200,
-              message: '当前复习列表已经复习完'
-            })
-            this.endLoading()
-          }
         }
+        this.skipCurrent()
       }
     },
     'countdownMode'(newVal) {
@@ -204,29 +158,22 @@ export default {
     ...paraphraseStarList,
     ...msgUtil,
     async init() {
-      this.markLoading()
+      console.log('init...')
       try {
+        this.loading = true
         if (this.isReview) {
           // clean data
-          this.cleanInitReviewing();
+          await this.cleanInitRevising();
 
-          let loading = this.$loading({
-            lock: true,
-            text: `第${this.page.current}页自动复习资源加载中`,
-            spinner: 'el-icon-loading',
-            background: 'rgba(0, 0, 0, 0.7)'
-          })
           try {
             await this.initList()
-            await this.initNextReviewDetail(true)
+            await this.initNextReviseDetail(true)
           } catch (e) {
             console.error(e)
             this.$message.error('初始化加载异常')
-          } finally {
-            loading.close()
+            this.loading = false
+            return
           }
-
-          this.prepareReview()
 
           if (!this.isFirstIncome) {
             this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
@@ -235,13 +182,7 @@ export default {
           // 手动触发过的直接播放即可
           if (this.autoPlayDialogVisible > 1) {
             await this.showDetail(this.listItems[0].paraphraseId, 0)
-            console.log('------------')
-            console.log(this.playWordIndex)
-            console.log(this.reviewAudioArr)
-            this.playWordIndex = 0
-            this.playStepIndex = 0
-            this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
-            this.currentPlayAudio.play()
+            this.detail.howlerPlayer.play()
           }
         } else {
           await this.initList()
@@ -250,7 +191,7 @@ export default {
         console.error(e)
         this.msgError(this, '初始化异常')
       } finally {
-        this.endLoading()
+        this.loading = false
       }
     },
     async getReviewBreakpointPageNumber() {
@@ -319,9 +260,12 @@ export default {
     goBack() {
       this.$emit('tableVisibleToggle')
     },
-    async initNextReviewDetail(isGetDetail) {
-      console.log('initList')
-      this.markLoading()
+    async initNextReviseDetail(isGetDetail) {
+      console.log('initNextReviewDetail')
+      console.log('this.playWordIndex = ' + this.playWordIndex)
+      console.log('this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
+      let loading = this.buildNotGlobalLoading();
+      this.prepareReview()
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
@@ -335,8 +279,9 @@ export default {
               console.error(e)
             })
       }
-      await this.reviewDetailUseInternalSource(this.detail.paraphraseVO.wordCharacter === kiwiConst.WORD_CHARACTER.PHRASE
-          || this.spellType === kiwiConst.SPELL_TYPE.DISABLE)
+      this.detail.howlerPlayerQueue = this.createReviseQueue();
+      this.detail.howlerPlayer = this.detail.howlerPlayerQueue[0];
+      loading.close()
     },
     async showDetail(paraphraseId, index) {
       this.detail.showIndex = index
@@ -353,21 +298,17 @@ export default {
             console.error(e)
             that.msgError(that, '加载释义详情异常')
           })
-          .finally($ => {
-            that.endLoading()
-          })
       this.detail.dialogVisible = true
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
       }
-      this.endLoading()
-
       // noinspection ES6MissingAwait
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
     },
 
     async showDetailNotLoadData() {
+      console.log('showDetailNotLoadData')
       this.detail.dialogVisible = true
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
@@ -397,17 +338,6 @@ export default {
     },
     handleDetailClose() {
       this.detail.dialogVisible = false
-    },
-    markLoading() {
-      if (this.detail.isSleepMode) {
-        return
-      }
-      this.loading = true;
-    },
-    endLoading() {
-      if (this.loading) {
-        this.loading = false;
-      }
     },
     handleShowDetail() {
       this.detail.dialogVisible = false
@@ -443,7 +373,7 @@ export default {
           }
         }
         // let audio = this.pronunciationAudioMap.get(id)
-        let audio = this.createNewAudio(true)
+        let audio = this.createNewAudio()
         if (this.source === kiwiConst.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
@@ -464,34 +394,32 @@ export default {
       }
     },
     async stockReviewStart() {
-      this.markLoading()
+      this.playWordIndex = 0
       this.autoPlayDialogVisible++
       this.isFirstIncome = false
-      if (this.reviewAudioArr.length) {
-        this.playWordIndex = 0
-        this.playStepIndex = 0
-        await this.showDetail(this.listItems[0].paraphraseId, 0)
-        this.currentPlayAudio = this.reviewAudioArr[0]
-        console.log('this.currentPlayAudio')
-        console.log(this.currentPlayAudio)
-        this.currentPlayAudio.play()
-      }
-      this.endLoading()
+      await this.showDetail(this.listItems[0].paraphraseId, 0)
+      this.detail.howlerPlayer.play()
     },
     async recursiveReview() {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
-      await this.initNextReviewDetail(false)
+      await this.initNextReviseDetail(false)
           .then(() => {
-            console.log('this.reviewAudioArr')
-            console.log(this.reviewAudioArr)
-            console.log(this.playWordIndex)
-            console.log(this.playStepIndex)
-            this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
-            this.currentPlayAudio.play()
+            that.detail.howlerPlayer.play()
           })
-          .finally(() => {
-            that.endLoading()
-          })
+    },
+    assemblePronunciationUrl(isUS) {
+      if (!this.detail.paraphraseVO.pronunciationVOList) {
+        return null
+      }
+      let url
+      let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
+      let first = isUS && isExistUS ? this.detail.paraphraseVO.pronunciationVOList[1] : this.detail.paraphraseVO.pronunciationVOList[0]
+      if (this.source === kiwiConst.PRONUNCIATION_SOURCE.LOCAL) {
+        url = '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
+      } else {
+        url = first.sourceUrl
+      }
+      return url
     },
     createPronunciationAudio(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
@@ -508,10 +436,7 @@ export default {
       return pronunciation
     },
     getAudio: function () {
-      let audio = this.reviewAudioCandidates.length ? this.reviewAudioCandidates.pop() : this.createNewAudio();
-      console.log('getAudio')
-      console.log(audio)
-      return audio
+      return this.reviseAudioCandidates.length ? this.reviseAudioCandidates.pop() : this.createNewAudio()
     },
     extractParaphraseMeaningChinese: function () {
       let meaningChinese = this.detail.paraphraseVO.meaningChinese;
@@ -524,266 +449,40 @@ export default {
       }
       return meaningChinese;
     },
-
-    async reviewDetailUseInternalSource(isNotReviewSpell) {
-      let wordCharacter = this.detail.paraphraseVO.wordCharacter
-      let meaningChinese = this.extractParaphraseMeaningChinese();
-
-      async function createWordSpellAudio() {
-        isNotReviewSpell = isNotReviewSpell || this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
-        if (!isNotReviewSpell) {
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
-          }
-          let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
-          }
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
-        }
-      }
-
-      async function createWordParaphraseAudio() {
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '词性是：' + review.translateWordCharacter(wordCharacter)))
-        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '中文释义是：'))
-        }
-        // this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
-        if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE)
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
-          this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-        }
-        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次中文释义：'))
-        }
-        // this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
-        if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
-          }
-          this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-        }
-      }
-
-      async function createExampleAudio() {
-        if (this.isPlayExample !== kiwiConst.IS_PLAY_EXAMPLE.ENABLE) {
-          return
-        }
-        let exampleVOList = this.detail.paraphraseVO.exampleVOList
-        console.log('exampleVOList = ' + exampleVOList)
-        if (exampleVOList) {
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '播报单词的例句：'))
-          }
-          for (let i = 0; i < exampleVOList.length; i++) {
-            if (i > 1 || !exampleVOList[i]) {
-              break
-            }
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), exampleVOList[i].exampleTranslate))
-            this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), exampleVOList[i].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_EN))
-            this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), exampleVOList[i].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_EN))
-          }
-        }
-      }
-
-      function createWordSelfAudio() {
-        // 如果是没有音标的词组
-        if (!isNotReviewSpell) {
-          this.reviewAudioArr.push(this.createPronunciationAudio())
-          this.reviewAudioArr.push(this.createPronunciationAudio(true))
-        }
-      }
-
-      if (this.isChToEn) {
-        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词中文释义是：'))
-        }
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
-        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍中文释义是：'))
-        }
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), meaningChinese))
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '请在脑海回想对应的单词。'))
-        this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '对应的英文单词是'))
-
-        // 如果是没有音标的词组
-        if (isNotReviewSpell) {
-          this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.NON_REVIEW_SPELL))
-          this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.NON_REVIEW_SPELL))
-        } else {
-          this.reviewAudioArr.push(this.createPronunciationAudio())
-          this.reviewAudioArr.push(this.createPronunciationAudio(true))
-        }
-
-        if (!isNotReviewSpell) {
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '单词的拼写是：'))
-          }
-          let wordAlphabet = audioPlay.getWordAlphabet(this.detail.paraphraseVO.wordName)
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一次拼写：'))
-          }
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), wordAlphabet))
-        }
-
-        if (this.enParaType === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '英文释义是：'))
-          }
-          this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-          if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-            this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '再读一遍英文释义：'))
-          }
-          this.reviewAudioArr.push(audioPlay.validateReviewAudio(this.getAudio(), this.detail.paraphraseVO.paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-        }
-      } else {
-        if (this.reviewType === kiwiConst.REVIEW_TYPE.WITH_CHINESE) {
-          this.reviewAudioArr.push(audioPlay.createAudioForChinese(this.getAudio(), '接下来复习的单词是：'))
-        }
-
-        // 如果是没有音标的词组
-        if (isNotReviewSpell) {
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
-          this.reviewAudioArr.push(audioPlay.createAudioForEnglish(this.detail.apiKey, this.getAudio(), this.detail.paraphraseVO.wordName))
-        } else {
-          this.reviewAudioArr.push(this.createPronunciationAudio())
-          this.reviewAudioArr.push(this.createPronunciationAudio(true))
-        }
-
-        console.log('this.reviewAudioArr')
-        console.log(this.reviewAudioArr)
-
-        createWordSelfAudio.call(this)
-        createWordSpellAudio.call(this)
-        createWordSelfAudio.call(this)
-        createWordSpellAudio.call(this)
-        createWordSpellAudio.call(this)
-        createWordParaphraseAudio.call(this)
-        createWordParaphraseAudio.call(this)
-        createExampleAudio.call(this)
-        createExampleAudio.call(this)
-      }
-
-      this.playCountPerWord = this.reviewAudioArr.length
-      this.detail.audioHint = `单词${this.detail.paraphraseVO.wordName}资源加载完毕，即将开始播放！`
-    },
-
-    createNewAudio(skipListener) {
+    createNewAudio() {
       let audio = new Audio()
       audio.volume = 0.7
       audio.loop = false
       audio.preload = 'auto'
-
-      if (skipListener) {
-        return audio;
-      }
-
-      audio.addEventListener('ended', function () {
-        console.log('end')
-        that.detail.audioHint = `当前音频播放结束(时长${this.duration})`
-        that.isReviewPlaying = false
-        that.cmp = new Date().getTime()
-        that.reviewAudioCandidates.push(this)
-        if (!that.isReviewStop) {
-          that.playStepIndex++
-        }
-      });
-
-      audio.addEventListener('error', async function () {
-            that.isReviewPlaying = false
-            that.detail.reviewLoading = false
-            if (that.isIgnoreOtherError) {
-              return
-            }
-
-            that.isIgnoreOtherError = true;
-            console.log('error src=' + this.src)
-            that.detail.audioHint = `当前音频加载异常(时长${this.duration})`
-            that.$message.error('音频数据加载异常')
-            audioPlay.playText2Audio('音频加载异常，请点击重新开始播放');
-            if (this.src.startsWith(kiwiConst.DOWNLOAD_REVIEW_AUDIO_URL_PREFIX)) {
-              let sourceId = this.src.replaceAll(kiwiConst.DOWNLOAD_REVIEW_AUDIO_URL_PREFIX, '')
-                  .substring(sourceId.indexOf('/'));
-              alert('error src=' + this.src)
-              alert('sourceId=' + sourceId)
-              review.deprecateReviewAudio(sourceId);
-            }
-          }
-      )
-
-      audio.addEventListener('playing', function () {
-        console.log('playing')
-        that.detail.audioHint = `当前音频正在播放(时长${this.duration})`
-
-        that.isReviewPlaying = true
-        that.endLoading()
-        that.detail.reviewLoading = false
-      })
-
-      audio.addEventListener('pause', function () {
-        that.isReviewPlaying = false
-        console.log('pause')
-        that.detail.audioHint = `当前音频停止播放(时长${this.duration})`
-      })
-
-      audio.addEventListener('abort', function () {
-        that.detail.audioHint = `音频加载被终止(时长${this.duration})`
-        console.log('abort')
-      })
-      audio.addEventListener('canplay', function () {
-        console.log('canplay')
-        that.detail.audioHint = `音频加载准备就绪(时长${this.duration})`
-      })
-      audio.addEventListener('suspend', function () {
-        console.log('suspend')
-        that.detail.audioHint = `当前音频加载终止(时长${this.duration})`
-      })
-      audio.addEventListener('waiting', function () {
-        console.log('waiting')
-        that.detail.audioHint = `当前音频正在缓存(时长${this.duration})`
-      })
+      this.reviseAudioCandidates.push(audio)
       return audio
     },
     isNeedStopReview() {
-      return this.isReviewStop || !this.isReview || this.reviewAudioArr.length === 0
-          || this.playStepIndex < 0 || this.playCountPerWord < 1 || this.playWordIndex < 0;
+      console.log('this.isReviewStop = ' + this.isReviewStop)
+      return this.isReviewStop || !this.isReview || this.playWordIndex < 0;
     },
-    stopPlaying() {
+    async stopPlaying() {
+      console.log('stopPlaying')
       this.isReviewStop = true
-      if (this.currentPlayAudio) {
-        this.currentPlayAudio.pause()
-        this.currentPlayAudio = null
-      }
-      if (this.playWordIndex < 0 || this.playStepIndex < 0) return
-      if (this.reviewAudioArr.length) {
-        if (this.reviewAudioArr[this.playStepIndex]) {
-          this.reviewAudioArr[this.playStepIndex].pause()
-        }
+      this.isReviewPlaying = false
+      let howlerPlayerQueue = this.detail.howlerPlayerQueue;
+      for (let i = 0; i < howlerPlayerQueue.length; i++) {
+        console.log('this.detail.howlerPlayerQueue[i].pause()')
+        await howlerPlayerQueue[i].pause()
       }
     },
     rePlayingNotRefresh() {
       console.log(this.playWordIndex)
-      console.log(this.playStepIndex)
-      console.log(this.reviewAudioArr)
-      if (this.playWordIndex < 0 || this.playStepIndex < 0) return
-      if (this.reviewAudioArr.length) {
-        if (this.reviewAudioArr[this.playStepIndex]) {
-          this.reviewAudioArr[this.playStepIndex].play()
-          this.isReviewStop = false
-        }
+      if (this.detail.howlerPlayer) {
+        this.detail.howlerPlayer.play()
       }
     },
     async ignoreCurrentReview(isShowTip) {
+      console.log('ignoreCurrentReview')
       if (isShowTip) {
         this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已忽略！`);
       }
-      this.cleanDetailReviewing()
+      await this.cleanDetailRevising()
       this.isReviewStop = false
     },
     isDoubleClick() {
@@ -805,50 +504,62 @@ export default {
         return
       }
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
-        this.rememberOneFun()
+        await this.rememberOneFun()
       } else {
-        this.keepInMindFun()
+        await this.keepInMindFun()
       }
     },
-    rememberOneFun() {
-      this.markLoading()
-      this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
+    buildNotGlobalLoading: function () {
+      return this.$loading({
+        lock: true,
+        text: `正在操作`,
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+    },
+    async rememberOneFun() {
+      let loading = this.buildNotGlobalLoading()
+      await this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经记住')
-            this.showNext()
+            this.skipCurrent()
           })
           .catch(e => {
             console.error(e)
             this.$message.error(e)
           })
           .finally(() => {
-            this.endLoading()
+            loading.close()
           })
     },
-    keepInMindFun() {
-      this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
+    async keepInMindFun() {
+      let loading = this.buildNotGlobalLoading()
+      await this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经牢记')
-            this.showNext()
-          })
-          .catch(e => {
-            console.error(e)
-            this.$message.error(e)
-          })
-    },
-    forgetOneFun() {
-      this.markLoading()
-      this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
-          .then(() => {
-            this.msgSuccess(this, '单词已经忘记')
-            this.showNext()
+            this.skipCurrent()
           })
           .catch(e => {
             console.error(e)
             this.$message.error(e)
           })
           .finally(() => {
-            that.endLoading()
+            loading.close()
+          })
+    },
+    async forgetOneFun() {
+      let loading = this.buildNotGlobalLoading()
+      await this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
+          .then(() => {
+            this.msgSuccess(this, '单词已经忘记')
+            this.skipCurrent()
+          })
+          .catch(e => {
+            console.error(e)
+            this.$message.error(e)
+          })
+          .finally(() => {
+            loading.close()
           })
     },
     countdownSelectHandle(command) {
@@ -880,17 +591,31 @@ export default {
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
     async showNext(isCheckDoubleClick) {
+      console.log('showNext')
+      // 如果是睡眠模式
+      if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
+        return
+      }
+
+      if (this.isReview) {
+        this.playWordIndex++
+      }
+      this.detail.showIndex++
+      await this.skipCurrent()
+    },
+    async skipCurrent() {
+      console.log('skipCurrent')
+      console.log('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
+      console.log('skipCurrent this.page.size = ' + this.page.size)
       try {
-        // 如果是睡眠模式
-        if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
-          return
-        }
-        let lastIndexPerPage = this.detail.showIndex === this.page.size - 1;
+        let lastIndexPerPage = this.detail.showIndex >= this.page.size - 1;
         let lastPage = this.page.current === this.page.pages;
         // 最后一页条目数可能小于每页条目数
+        console.log('skipCurrent lastPage = ' + lastPage)
+        console.log('skipCurrent lastIndexPerPage = ' + lastIndexPerPage)
         if (lastPage) {
           let lastPageRemainder = this.page.total % this.page.size
-          if (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder) {
+          if (lastIndexPerPage || (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder)) {
             this.msgWarning(this, '当前已经是最后一页最后一个')
             return
           }
@@ -900,22 +625,15 @@ export default {
           this.detail.showIndex = 0
           await this.init()
         } else {
-          this.markLoading()
-          this.detail.showIndex++
           if (this.isReview) {
             await this.ignoreCurrentReview(true);
             // 每个单词播放前要计算播放audio数量，词组和单词不一样
-            await this.initNextReviewDetail(true)
+            await this.initNextReviseDetail(true)
                 .then(() => {
-                  console.log('this.reviewAudioArr')
-                  console.log(this.reviewAudioArr)
-                  console.log(this.playWordIndex)
-                  console.log(this.playStepIndex)
-                  this.currentPlayAudio = this.reviewAudioArr[this.playStepIndex]
-                  this.currentPlayAudio.play()
+                  that.detail.howlerPlayer.play()
                 }).catch(e => {
-                  this.msgError('初始化下一个释义详情异常!')
-                  console.error('initNextReviewDetail error')
+                  this.msgError(that, '初始化下一个释义详情异常!')
+                  console.error('initNextReviseDetail error')
                   console.error(e)
                 });
             await this.showDetailNotLoadData()
@@ -924,40 +642,99 @@ export default {
           }
         }
       } catch (e) {
-        alert('showNext error.')
-        alert(e)
-      } finally {
-        this.endLoading()
+        alert('skipCurrent error.')
+        console.error(e)
       }
     },
-    async refreshReviewDetail() {
-      this.cleanDetailReviewing()
+    async refreshReviseDetail() {
+      this.cleanDetailRevising()
       this.prepareReview()
       await this.recursiveReview()
     },
-    cleanCommonReviewing() {
-      this.reviewAudioArr = []
-      this.reviewAudioCandidates = []
-      this.playStepIndex = 0
+    async cleanRevising() {
+      this.reviseAudioCandidates = []
+      let howlerPlayerQueue = this.detail.howlerPlayerQueue;
+      for (let i = 0; i < howlerPlayerQueue.length; i++) {
+        console.log('this.detail.howlerPlayerQueue[i].unload()')
+        await howlerPlayerQueue[i].unload()
+      }
       this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
     },
-    cleanInitReviewing() {
+    async cleanInitRevising() {
       // stop playing
-      this.stopPlaying()
-      this.cleanCommonReviewing()
+      await this.stopPlaying()
+      await this.cleanRevising()
       this.playWordIndex = 0
       this.listItems = []
     },
     prepareReview() {
       this.isReviewStop = false
     },
-    cleanDetailReviewing() {
-      this.stopPlaying()
-      this.cleanCommonReviewing()
-      this.playWordIndex = this.detail.showIndex
-    }
+    async cleanDetailRevising() {
+      await this.stopPlaying()
+      await this.cleanRevising()
+    },
+    createReviseQueue() {
+      let paraphraseId = this.detail.paraphraseVO.paraphraseId;
+      let wordId = this.detail.paraphraseVO.wordId;
+      let wordCharacter = this.detail.paraphraseVO.wordCharacter;
+      let ukPronunciationUrl = this.assemblePronunciationUrl(false)
+      let usPronunciationUrl = this.assemblePronunciationUrl(true)
+      let urls = howlerHelper.extractedUrls(paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+      console.log(urls)
+      let queueLength = urls.length
+      let sounds = []
+      let playIndex = 0
+      console.log('queueLength=' + queueLength)
+      for (let i = 0; i < queueLength; i++) {
+        let sound = new Howl({
+          src: urls[i],
+          autoplay: false,
+          loop: false,
+          volume: 0.5,
+          html5: true,
+          format: ['mp3'],
+          pool: queueLength,
+          onend: function () {
+            console.log('onend playIndex=' + playIndex)
+            console.log('onend: ' + urls[playIndex])
+            that.isReviewPlaying = false
+            if (++playIndex < queueLength) {
+              that.detail.howlerPlayer = sounds[playIndex]
+              that.detail.howlerPlayer.play()
+            } else {
+              console.log('that.playWordIndex++ ' + that.playWordIndex)
+              ++that.playWordIndex
+            }
+          },
+          onload: function () {
+            console.log('onload playIndex=' + playIndex)
+            console.log('onload: ' + urls[playIndex])
+          },
+          onloaderror: function () {
+            console.log('onloaderror: ' + urls[playIndex])
+            that.isReviewPlaying = false
+            that.detail.reviewLoading = false
+            that.msgError(that, '音频数据加载异常')
+          },
+          onplay: function () {
+            console.log('onplay: ' + urls[playIndex])
+            that.isReviewPlaying = true
+            that.detail.reviewLoading = false
+          },
+          onpause: function () {
+            console.log('onpause: ' + urls[playIndex])
+            that.isReviewPlaying = false
+          }
+        });
+        console.log('foreach playIndex=' + playIndex)
+        sounds.push(sound)
+      }
+      return sounds
+    },
+
   }
 }
 </script>
@@ -1063,8 +840,6 @@ export default {
                @click.stop="showNext(true)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
-          <el-tag v-if="isReview" type="warn">{{ detail.audioHint }}</el-tag>
-          <el-divider v-if="isReview"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;">
             {{ detail.paraphraseVO.wordName }}
           </el-tag>
@@ -1222,7 +997,7 @@ export default {
       </el-button>
       <el-button type="info"
                  v-if="isReview && isReviewStop"
-                 @click="refreshReviewDetail"
+                 @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-video-play"></i>
       </el-button>
@@ -1238,10 +1013,9 @@ export default {
       </el-button>
       <el-button type="info"
                  v-if="isReview"
-                 @click="refreshReviewDetail"
+                 @click="refreshReviseDetail"
                  size="mini">
-        <i class="el-icon-refresh" v-show="!loading"></i>
-        <i class="el-icon-loading" v-show="loading"></i>
+        <i class="el-icon-refresh"></i>
       </el-button>
       <el-button type="info" v-if="detail.paraphraseVO.wordName"
                  size="mini" @click="handleShowDetail">

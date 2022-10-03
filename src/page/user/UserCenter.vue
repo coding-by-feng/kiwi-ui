@@ -227,17 +227,23 @@ export default {
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
           .then(response => {
-            this.user.keepInMindCount = response.data.data.reviewCount
+            if (response.data.data) {
+              this.user.keepInMindCount = response.data.data.reviewCount;
+            }
           })
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
           .then(response => {
-            this.user.rememberCount = response.data.data.reviewCount
+            if (response.data.data) {
+              this.user.rememberCount = response.data.data.reviewCount;
+            }
           })
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
           .then(response => {
-            this.user.reviewCount = response.data.data.reviewCount
+            if (response.data.data) {
+              this.user.reviewCount = response.data.data.reviewCount;
+            }
           })
     }
   }

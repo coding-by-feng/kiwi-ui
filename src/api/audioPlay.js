@@ -133,6 +133,16 @@ export default {
         return audio
     },
 
+    validateCharacterReviewAudio(audio, characterCode) {
+        audio.volume = 1
+        let url = `/wordBiz/word/review/character/downloadReviewAudio/${characterCode}`
+        console.log('url ' + url)
+        audio.src = url
+        console.log('audio >>>')
+        console.log(audio)
+        return audio
+    },
+
     getWordAlphabet(wordName) {
         let wordAlphabet = ''
         for (let i = 0; i < wordName.length; i++) {
