@@ -40,5 +40,5 @@ export default {
         ]
     },
 
-    baiduTtsToken: "25.3b0d762028ad25e2f786cbc2d42ec7dc.315360000.1973768906.282335-20116041",
+    baiduTtsToken: "changeme",
 }
