@@ -20,7 +20,7 @@ const runUpCh2EnCount = 5 // 需要回想时间
 // const ridChModeEh2ChAudioCount = 22 // 去除中文英汉模式播放的Audio数
 // const carryChModeEh2ChAudioCount = 40 // 附带中文英汉模式播放的Audio数
 // const playWordLoadCountOnce = 1 // 一播放加载的单词个数
-const playCountOnce = 5 // 复习模式每页加载的单词个数
+const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
 let that
@@ -126,13 +126,13 @@ export default {
         return;
       }
 
-      if (newVal >= playCountOnce) {
-        console.log('this.playWordIndex(newVal >= playCountOnce) = ' + this.playWordIndex)
-        this.playWordIndex = 0
+      if (newVal > playCountOnce) {
+        console.log('this.playWordIndex(newVal > playCountOnce) = ' + this.playWordIndex)
         if (this.page.pages > this.page.current) {
           this.page.current++;
           this.init();
         }
+        this.playWordIndex = 0
       } else {
         console.log('this.playWordIndex(else) = ' + this.playWordIndex)
         // 最后一页条目数可能小于每页条目数
@@ -394,11 +394,15 @@ export default {
       }
     },
     async stockReviewStart() {
-      this.playWordIndex = 0
-      this.autoPlayDialogVisible++
-      this.isFirstIncome = false
-      await this.showDetail(this.listItems[0].paraphraseId, 0)
-      this.detail.howlerPlayer.play()
+      try {
+        this.playWordIndex = 0;
+        this.autoPlayDialogVisible++;
+        this.isFirstIncome = false;
+        await this.showDetail(this.listItems[0].paraphraseId, 0);
+        this.detail.howlerPlayer.play();
+      } catch (e) {
+        alert(e)
+      }
     },
     async recursiveReview() {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
@@ -522,7 +526,7 @@ export default {
       await this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经记住')
-            this.skipCurrent()
+            this.showNext()
           })
           .catch(e => {
             console.error(e)
@@ -537,7 +541,7 @@ export default {
       await this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经牢记')
-            this.skipCurrent()
+            this.showNext()
           })
           .catch(e => {
             console.error(e)
@@ -597,15 +601,20 @@ export default {
         return
       }
 
-      if (this.isReview) {
-        this.playWordIndex++
-      }
       this.detail.showIndex++
+      if (this.isReview) {
+        if (this.detail.showIndex !== this.playWordIndex - 1) {
+          this.playWordIndex = this.detail.showIndex;
+        } else {
+          this.playWordIndex++
+        }
+      }
       await this.skipCurrent()
     },
     async skipCurrent() {
       console.log('skipCurrent')
       console.log('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
+      console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
       console.log('skipCurrent this.page.size = ' + this.page.size)
       try {
         let lastIndexPerPage = this.detail.showIndex >= this.page.size - 1;
@@ -682,7 +691,8 @@ export default {
       let wordCharacter = this.detail.paraphraseVO.wordCharacter;
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
-      let urls = howlerHelper.extractedUrls(paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+      let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName;
+      let urls = howlerHelper.extractedUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
       console.log(urls)
       let queueLength = urls.length
       let sounds = []
@@ -709,10 +719,6 @@ export default {
               ++that.playWordIndex
             }
           },
-          onload: function () {
-            console.log('onload playIndex=' + playIndex)
-            console.log('onload: ' + urls[playIndex])
-          },
           onloaderror: function () {
             console.log('onloaderror: ' + urls[playIndex])
             that.isReviewPlaying = false
@@ -729,7 +735,6 @@ export default {
             that.isReviewPlaying = false
           }
         });
-        console.log('foreach playIndex=' + playIndex)
         sounds.push(sound)
       }
       return sounds

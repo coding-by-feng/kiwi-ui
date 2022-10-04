@@ -2,16 +2,22 @@ import kiwiConst from '@/const/kiwiConsts'
 
 export default {
 
-    extractedUrls: function (paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, characterCode, exampleList) {
+    extractedUrls: function (lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, characterCode, exampleList) {
         let urls = []
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
-        urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
-        urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
+        if (!lastIsSame) {
+            urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING));
+            urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
+            urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
+        }
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
-        urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
-        urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
+        if (!lastIsSame) {
+            urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING));
+            urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
+            urls.push(this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING))
+        }
         urls.push(this.assembleCharacterReviseAudioUrl(characterCode))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
@@ -19,7 +25,7 @@ export default {
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-        if (!exampleList) {
+        if (!exampleList || exampleList.length === 0) {
             return urls;
         }
         if (exampleList.length === 1) {
