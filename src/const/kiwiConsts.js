@@ -87,6 +87,13 @@ export default {
         PRONUNCIATION: 9
     },
 
-    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/wordBiz/word/review/downloadReviewAudio/'
+    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/wordBiz/word/review/downloadReviewAudio/',
+
+    REVIEW_MODEL: {
+        STOCK_REVIEW: 'stockReview',
+        STOCK_READ: 'stockRead',
+        ENHANCE_REVIEW: 'enhanceReview',
+        ENHANCE_READ: 'enhanceRead',
+    }
 
 }
