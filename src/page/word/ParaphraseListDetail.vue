@@ -72,7 +72,8 @@ export default {
         previousReviewWord: null,
         apiKey: null,
         howlerPlayerQueue: [],
-        howlerPlayer: null
+        howlerPlayer: null,
+        howlerPlayerToken: null,
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -98,6 +99,8 @@ export default {
   beforeCreate: function () {
     that = this
     noSleep = new NoSleep()
+    Howler.html5PoolSize = 30
+    Howler.autoSuspend = false
   },
   async mounted() {
     await this.init()
@@ -130,7 +133,7 @@ export default {
   },
   computed: {
     showWordSpelling() {
-      return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示'
+      return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
     },
     isStockReviewModel() {
       return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_REVIEW
@@ -157,7 +160,10 @@ export default {
     },
     isDetailLoading() {
       return this.isReview && this.detail.reviewLoading;
-    }
+    },
+    isListItemsNotEmpty() {
+      return this.listItems && this.listItems.length > 0;
+    },
   },
   methods: {
     ...paraphraseStarList,
@@ -186,11 +192,16 @@ export default {
           }
           // 手动触发过的直接播放即可
           if (this.autoPlayDialogVisible > 1) {
-            await this.showDetail(this.listItems[0].paraphraseId, 0)
+            if (this.isListItemsNotEmpty) {
+              await this.showDetail(this.listItems[0].paraphraseId, 0);
+            }
             this.detail.howlerPlayer.play()
           }
         } else {
           await this.initList()
+          if (this.isListItemsNotEmpty) {
+            await this.showDetail(this.listItems[0].paraphraseId, 0);
+          }
         }
       } catch (e) {
         console.error(e)
@@ -283,7 +294,7 @@ export default {
               console.error(e)
             })
       }
-      this.detail.howlerPlayerQueue = this.createReviseQueue();
+      this.detail.howlerPlayerQueue = this.createReviseQueue(this.detail.howlerPlayerToken);
       console.log('initNextReviewDetail this.detail.howlerPlayerQueue=' + this.detail.howlerPlayerQueue)
       this.detail.howlerPlayer = this.detail.howlerPlayerQueue[0];
       loading.close()
@@ -477,11 +488,7 @@ export default {
       console.log('stopPlaying')
       this.isReviewStop = true
       this.isReviewPlaying = false
-      let howlerPlayerQueue = this.detail.howlerPlayerQueue;
-      for (let i = 0; i < howlerPlayerQueue.length; i++) {
-        console.log('this.detail.howlerPlayerQueue[i].pause()')
-        await howlerPlayerQueue[i].pause()
-      }
+      Howler.stop()
     },
     rePlayingNotRefresh() {
       if (this.detail.howlerPlayer) {
@@ -667,15 +674,12 @@ export default {
       await this.recursiveReview()
     },
     async cleanRevising() {
+      Howler.unload()
       this.reviseAudioCandidates = []
-      let howlerPlayerQueue = this.detail.howlerPlayerQueue;
-      for (let i = 0; i < howlerPlayerQueue.length; i++) {
-        console.log('this.detail.howlerPlayerQueue[i].unload()')
-        await howlerPlayerQueue[i].unload()
-      }
       this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
+      this.detail.howlerPlayerToken = new Date().getTime()
     },
     async cleanInitRevising() {
       // stop playing
@@ -708,7 +712,7 @@ export default {
         return howlerUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
       }
     },
-    createReviseQueue() {
+    createReviseQueue(token) {
       let urls = this.extractHowlUrls();
       let queueLength = urls.length
       let sounds = []
@@ -734,6 +738,9 @@ export default {
                 await util.sleep(sleepMs)
               }
             }
+            if (token !== that.detail.howlerPlayerToken) {
+              return
+            }
             if (++playIndex < queueLength) {
               that.detail.howlerPlayer = sounds[playIndex];
               that.detail.howlerPlayer.play();
@@ -742,11 +749,14 @@ export default {
               ++that.playWordIndex;
             }
           },
-          onloaderror: function () {
+          onloaderror: async function () {
             // console.log('onloaderror: ' + urls[playIndex])
             that.isReviewPlaying = false
             that.detail.reviewLoading = false
             that.msgError(that, '音频数据加载异常')
+            Howler.unload()
+            ++playIndex
+            review.deprecateReviewAudio(that.detail.paraphraseVO.paraphraseId)
           },
           onplay: function () {
             // console.log('onplay: ' + urls[playIndex])
