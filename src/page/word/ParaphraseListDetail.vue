@@ -8,11 +8,13 @@ import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import {Howl, Howler} from 'howler';
 import howlerUtil from '../../util/howlerUtil'
+import NoSleep from 'nosleep.js'
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
 let that
+let noSleep
 
 export default {
   name: 'paraphraseStarListDetail',
@@ -60,6 +62,7 @@ export default {
         paraphraseVO: {},
         dialogVisible: false,
         showTranslation: false,
+        showWord: true,
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
         showIndex: 0,
         isSleepMode: false,
@@ -89,11 +92,12 @@ export default {
       countdownMode: false,
       countdownTime: new Date().getTime(),
       countdownMin: 30,
-      countdownText: '30分钟',
+      countdownText: '30分钟'
     }
   },
   beforeCreate: function () {
     that = this
+    noSleep = new NoSleep()
   },
   async mounted() {
     await this.init()
@@ -120,10 +124,14 @@ export default {
     'countdownMode'(newVal) {
       if (newVal) {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
+        noSleep.enable()
       }
     }
   },
   computed: {
+    showWordSpelling() {
+      return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示'
+    },
     isStockReviewModel() {
       return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_REVIEW
           || this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_READ)
@@ -572,6 +580,7 @@ export default {
     countdownEndFun() {
       this.isReviewStop = true
       this.countdownMode = !this.countdownMode
+      noSleep.disable()
       window.location.reload()
     },
     async countdownEndReplay() {
@@ -675,6 +684,9 @@ export default {
       this.detail.showIndex = 0
       this.playWordIndex = 0
       this.listItems = []
+      if (this.isChToEn) {
+        this.detail.showWord = false
+      }
     },
     prepareReview() {
       this.isReviewStop = false
@@ -847,8 +859,9 @@ export default {
                @click.stop="showNext(true)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
-          <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;">
-            {{ detail.paraphraseVO.wordName }}
+          <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;"
+                  @click="detail.showWord = !detail.showWord">
+            {{ showWordSpelling }}
           </el-tag>
           &nbsp;
           <el-button type="info"
