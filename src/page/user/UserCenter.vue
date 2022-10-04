@@ -292,6 +292,7 @@ export default {
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
+<!--
     <el-dropdown size="mini"
                  split-button type="info" @command="reviewTypeChange">
       {{ `导播：${tranReviewType(user.reviewType)}` }}
@@ -301,6 +302,7 @@ export default {
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
+-->
     <el-dropdown size="mini"
                  split-button type="info" @command="spellTypeChange">
       {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}

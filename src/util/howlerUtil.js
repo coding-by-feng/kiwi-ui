@@ -1,6 +1,8 @@
 import kiwiConst from '@/const/kiwiConsts'
+import {getStore} from '@/util/store'
 
 let CH2_EN_INDEX_SLEEP_MS_MAP = null
+const IS_PLAY_EXAMPLE = getStore({name: 'is_play_example'})
 
 export default {
 
@@ -27,7 +29,7 @@ export default {
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-        if (!exampleList || exampleList.length === 0) {
+        if (IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0) {
             return urls;
         }
         if (exampleList.length === 1) {
@@ -76,7 +78,7 @@ export default {
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
         urls.push(this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN))
-        if (!exampleList || exampleList.length === 0) {
+        if (IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0) {
             return urls;
         }
         if (exampleList.length === 1) {
