@@ -6,7 +6,7 @@ import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import {Howl, Howler} from 'howler';
-import howlerHelper from '../../api/howlerHelper'
+import howlerUtil from '../../util/howlerUtil'
 
 const sleep = function (time) {
   let startTime = new Date().getTime() + time * 1000
@@ -15,11 +15,6 @@ const sleep = function (time) {
 }
 
 const runUpCh2EnCount = 5 // 需要回想时间
-// const ridChModeCh2EnAudioCount = 11 // 去除中文汉英模式播放的Audio数
-// const carryChModeCh2EnAudioCount = 17 // 附带中文汉英模式播放的Audio数
-// const ridChModeEh2ChAudioCount = 22 // 去除中文英汉模式播放的Audio数
-// const carryChModeEh2ChAudioCount = 40 // 附带中文英汉模式播放的Audio数
-// const playWordLoadCountOnce = 1 // 一播放加载的单词个数
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
@@ -153,7 +148,34 @@ export default {
       }
     }
   },
-  computed: {},
+  computed: {
+    isStockReviewModel() {
+      return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_REVIEW
+          || this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_READ)
+    },
+    isEnhanceReviewModel() {
+      return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConst.REVIEW_MODEL.ENHANCE_REVIEW
+          || this.reviewMode === kiwiConst.REVIEW_MODEL.ENHANCE_READ)
+    },
+    enableOperationIcon() {
+      return (this.isReview && !this.detail.isSleepMode && !this.isFirstIncome) || !this.isReview;
+    },
+    enableShowDetailIcon() {
+      return !this.detail.dialogVisible && this.detail.paraphraseVO.paraphraseId;
+    },
+    enableSleepModeIcon() {
+      return this.isReview && this.detail.dialogVisible;
+    },
+    enableFirstIncomeReviewMode() {
+      return this.isFirstIncome && this.isReview && !this.isReviewStop;
+    },
+    enableParaphraseExamples() {
+      return this.detail.paraphraseVO.exampleVOList && this.detail.paraphraseVO.exampleVOList.length < 1;
+    },
+    isDetailLoading() {
+      return this.isReview && this.detail.reviewLoading;
+    }
+  },
   methods: {
     ...paraphraseStarList,
     ...msgUtil,
@@ -284,7 +306,9 @@ export default {
       loading.close()
     },
     async showDetail(paraphraseId, index) {
-      this.detail.showIndex = index
+      if (null !== index && undefined !== index) {
+        this.detail.showIndex = index
+      }
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
@@ -297,7 +321,7 @@ export default {
           .catch(e => {
             console.error(e)
             that.msgError(that, '加载释义详情异常')
-          })
+          });
       this.detail.dialogVisible = true
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
@@ -556,7 +580,6 @@ export default {
       await this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             this.msgSuccess(this, '单词已经忘记')
-            this.skipCurrent()
           })
           .catch(e => {
             console.error(e)
@@ -686,13 +709,23 @@ export default {
       await this.cleanRevising()
     },
     createReviseQueue() {
+      if (this.isChToEn) {
+        return this.createCh2EnReviseQueue()
+      } else {
+        return this.createEn2ChReviseQueue()
+      }
+    },
+    createCh2EnReviseQueue() {
+      return [];
+    },
+    createEn2ChReviseQueue() {
       let paraphraseId = this.detail.paraphraseVO.paraphraseId;
       let wordId = this.detail.paraphraseVO.wordId;
       let wordCharacter = this.detail.paraphraseVO.wordCharacter;
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
       let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName;
-      let urls = howlerHelper.extractedUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+      let urls = howlerUtil.extractedUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
       console.log(urls)
       let queueLength = urls.length
       let sounds = []
@@ -706,7 +739,6 @@ export default {
           volume: 0.5,
           html5: true,
           format: ['mp3'],
-          pool: queueLength,
           onend: function () {
             console.log('onend playIndex=' + playIndex)
             console.log('onend: ' + urls[playIndex])
@@ -830,7 +862,7 @@ export default {
 
       <!--释义详情弹窗-->
       <el-dialog
-          v-loading="isReview && detail.reviewLoading"
+          v-loading="isDetailLoading"
           ref="detailDialog"
           :visible.sync="detail.dialogVisible"
           fullscreen
@@ -933,7 +965,7 @@ export default {
             </div>
           </div>
           <div
-              v-if="detail.paraphraseVO.exampleVOList && detail.paraphraseVO.exampleVOList.length < 1">
+              v-if="enableParaphraseExamples">
             <el-alert
                 type="info"
                 title="该释义暂时没有例句"
@@ -960,7 +992,7 @@ export default {
       </el-dialog>
       <el-dialog
           :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
-          :visible="isFirstIncome && isReview && !isReviewStop"
+          :visible="enableFirstIncomeReviewMode"
           :show-close="false"
           width="300px">
         <el-alert
@@ -973,9 +1005,9 @@ export default {
         </div>
       </el-dialog>
     </div>
-    <div v-if="(isReview && !detail.isSleepMode && !isFirstIncome) || !isReview"
+    <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 37px; right: 30px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button v-if="!detail.dialogVisible && detail.paraphraseVO.paraphraseId" type="info" size="mini"
+      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
       </el-button>
@@ -989,7 +1021,7 @@ export default {
         <i class="el-icon-right"></i>
       </el-button>
       <el-button type="info"
-                 v-if="isReview && detail.dialogVisible"
+                 v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
@@ -1007,14 +1039,14 @@ export default {
         <i class="el-icon-video-play"></i>
       </el-button>
       <br/>
-      <el-button v-if="detail.paraphraseVO.paraphraseId || reviewMode === 'stockReview' || reviewMode === 'stockRead'"
+      <el-button v-if="isStockReviewModel"
                  type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
       </el-button>
       <el-button
-          v-if="detail.paraphraseVO.paraphraseId && (reviewMode === 'enhanceReview' || reviewMode === 'enhanceRead')"
+          v-if="isEnhanceReviewModel"
           type="info" size="mini" @click="keepInMindFun">
-        <i class="el-icon-success"></i>
+        <i class="el-icon-medal"></i>
       </el-button>
       <el-button type="info"
                  v-if="isReview"
