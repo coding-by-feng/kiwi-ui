@@ -476,7 +476,6 @@ export default {
       }
     },
     rePlayingNotRefresh() {
-      console.log(this.playWordIndex)
       if (this.detail.howlerPlayer) {
         this.detail.howlerPlayer.play()
       }
@@ -705,6 +704,7 @@ export default {
       console.log('queueLength=' + queueLength)
       let ch2EnIndexSleepMsMap = howlerUtil.acquireCh2EnIndexSleepMsMap();
       for (let i = 0; i < queueLength; i++) {
+        // noinspection JSUnusedGlobalSymbols
         let sound = new Howl({
           src: urls[i],
           autoplay: false,
@@ -754,15 +754,6 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.pin {
-  width: 100%;
-  height: 100%;
-  background: yellow;
-  position: absolute;
-}
-</style>
 
 <template>
   <div style="margin-top: 30px" v-loading="loading">
@@ -986,32 +977,32 @@ export default {
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 37px; right: 30px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
+      <el-button v-if="enableShowDetailIcon" type="primary" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
       </el-button>
-      <el-button v-if="detail.dialogVisible" type="info" size="mini" @click="detail.dialogVisible = false">
+      <el-button v-if="detail.dialogVisible" type="primary" size="mini" @click="detail.dialogVisible = false">
         <i class="el-icon-circle-close"></i>
       </el-button>
-      <el-button v-if="!isReview" type="info" size="mini" @click="showPrevious">
-        <i class="el-icon-back"></i>
+      <el-button v-if="!isReview" type="primary" size="mini" @click="showPrevious">
+        <i class="el-icon-arrow-left"></i>
       </el-button>
-      <el-button type="info" size="mini" @click="showNext">
-        <i class="el-icon-right"></i>
+      <el-button type="primary" size="mini" @click="showNext">
+        <i class="el-icon-arrow-right"></i>
       </el-button>
-      <el-button type="info"
+      <el-button type="primary"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
       </el-button>
-      <el-button type="info"
+      <el-button type="primary"
                  v-if="isReview && !isReviewStop"
                  @click="stopPlaying"
                  size="mini">
         <i class="el-icon-video-pause"></i>
       </el-button>
-      <el-button type="info"
+      <el-button type="primary"
                  v-if="isReview && isReviewStop"
                  @click="refreshReviseDetail"
                  size="mini">
@@ -1019,27 +1010,27 @@ export default {
       </el-button>
       <br/>
       <el-button v-if="isStockReviewModel"
-                 type="info" size="mini" @click="rememberOneFun">
+                 type="primary" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
       </el-button>
       <el-button
           v-if="isEnhanceReviewModel"
-          type="info" size="mini" @click="keepInMindFun">
+          type="primary" size="mini" @click="keepInMindFun">
         <i class="el-icon-medal"></i>
       </el-button>
-      <el-button type="info"
+      <el-button type="primary"
                  v-if="isReview"
                  @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-refresh"></i>
       </el-button>
-      <el-button type="info" v-if="detail.paraphraseVO.wordName"
+      <el-button type="primary" v-if="detail.paraphraseVO.wordName"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
       </el-button>
       <el-button
           v-if="detail.paraphraseVO.paraphraseId"
-          type="info" size="mini" @click="forgetOneFun">
+          type="primary" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
       </el-button>
     </div>

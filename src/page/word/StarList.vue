@@ -57,9 +57,9 @@ function cacheExampleList (list) {
 
 export default {
   components: {
-    WordListDetail: $ => import('@/page/word/WordListDetail'),
-    ParaphraseListDetail: $ => import('@/page/word/ParaphraseListDetail'),
-    ExampleListDetail: $ => import('@/page/word/ExampleListDetail')
+    WordListDetail: () => import('@/page/word/WordListDetail'),
+    ParaphraseListDetail: () => import('@/page/word/ParaphraseListDetail'),
+    ExampleListDetail: () => import('@/page/word/ExampleListDetail')
   },
   data () {
     return {
@@ -201,10 +201,10 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then($ => {
+      }).then(() => {
         if (this.list.listType === 'word') {
           wordStarList.delById(row.id)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -214,7 +214,7 @@ export default {
               })
         } else if (this.list.listType === 'paraphrase') {
           paraphraseStarList.delById(row.id)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -224,7 +224,7 @@ export default {
               })
         } else if (this.list.listType === 'example') {
           exampleStarList.delById(row.id)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -233,7 +233,7 @@ export default {
                 this.$message.error(e)
               })
         }
-      }).finally($ => {
+      }).finally(() => {
         loading.close()
       })
     },
@@ -245,7 +245,7 @@ export default {
       if (this.edit.type === 'update') {
         if (this.list.listType === 'word') {
           await wordStarList.updateById(this.edit.form)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -255,7 +255,7 @@ export default {
               })
         } else if (this.list.listType === 'paraphrase') {
           await paraphraseStarList.updateById(this.edit.form)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -265,7 +265,7 @@ export default {
               })
         } else if (this.list.listType === 'example') {
           await exampleStarList.updateById(this.edit.form)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -277,7 +277,7 @@ export default {
       } else if (this.edit.type === 'add') {
         if (this.list.listType === 'word') {
           await wordStarList.save(this.edit.form)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -287,7 +287,7 @@ export default {
               })
         } else if (this.list.listType === 'paraphrase') {
           await paraphraseStarList.save(this.edit.form)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -297,7 +297,7 @@ export default {
               })
         } else if (this.list.listType === 'example') {
           await exampleStarList.save(this.edit.form)
-              .then(response => {
+              .then(() => {
                 this.doSuccess()
                 this.init(true)
               })
@@ -460,31 +460,24 @@ export default {
 
   <div class="text item" v-loading="loading">
     <div style="position: fixed; bottom: 5px; right: 30px; z-index: 99;">
-      <el-button size="mini" @click="goBack">
-        <i class="el-icon-back"
-           style="color: #76838f;"></i>
+      <el-button size="mini" type="primary" @click="goBack">
+        <i class="el-icon-back"></i>
       </el-button>
-      <el-button size="mini" @click="refresh">
-        <i class="el-icon-refresh"
-           style="color: #76838f;"></i>
+      <el-button size="mini" type="primary" @click="refresh">
+        <i class="el-icon-refresh-right"></i>
       </el-button>
-      <el-button size="mini" @click="handleOperate">
-        <i class="el-icon-folder-add"
-           style="color: #76838f;"></i>
+      <el-button size="mini" type="primary" @click="handleOperate">
+        <i class="el-icon-folder-add"></i>
       </el-button>
-      <el-button size="mini" v-if="list.status==='list'"
+      <el-button size="mini" type="primary" v-if="list.status==='list'"
                  @click="list.editMode = !list.editMode">
-        <i class="el-icon-unlock" v-if="!list.editMode"
-           style="color: #76838f;"></i>
-        <i class="el-icon-lock" v-if="list.editMode"
-           style="color: #76838f;"></i>
+        <i class="el-icon-unlock" v-if="!list.editMode"></i>
+        <i class="el-icon-lock" v-if="list.editMode"></i>
       </el-button>
-      <el-button size="mini" v-if="list.status==='detail'"
+      <el-button size="mini" type="primary" v-if="list.status==='detail'"
                  @click="detail.isShowParaphrase = !detail.isShowParaphrase">
-        <i class="el-icon-lock" v-if="detail.isShowParaphrase"
-           style="color: #76838f;"></i>
-        <i class="el-icon-unlock" v-if="!detail.isShowParaphrase"
-           style="color: #76838f;"></i>
+        <i class="el-icon-lock" v-if="detail.isShowParaphrase"></i>
+        <i class="el-icon-unlock" v-if="!detail.isShowParaphrase"></i>
       </el-button>
     </div>
     <div style="position: fixed; top: 60px; left: 35px; z-index: 99;">
