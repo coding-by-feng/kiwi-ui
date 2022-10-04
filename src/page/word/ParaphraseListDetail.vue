@@ -1,6 +1,7 @@
 <script>
 import {getStore, setStore} from '@/util/store'
 import msgUtil from '@/util/msg'
+import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import audioPlay from '../../api/audioPlay'
 import review from '@/api/review'
@@ -8,13 +9,6 @@ import kiwiConst from '@/const/kiwiConsts'
 import {Howl, Howler} from 'howler';
 import howlerUtil from '../../util/howlerUtil'
 
-const sleep = function (time) {
-  let startTime = new Date().getTime() + time * 1000
-  while (new Date().getTime() < startTime) {
-  }
-}
-
-const runUpCh2EnCount = 5 // 需要回想时间
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
@@ -264,9 +258,8 @@ export default {
       this.$emit('tableVisibleToggle')
     },
     async initNextReviseDetail(isGetDetail) {
-      console.log('initNextReviewDetail')
-      console.log('this.playWordIndex = ' + this.playWordIndex)
-      console.log('this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
+      console.log('initNextReviewDetail this.playWordIndex = ' + this.playWordIndex)
+      console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
       let loading = this.buildNotGlobalLoading();
       this.prepareReview()
       if (isGetDetail) {
@@ -283,6 +276,7 @@ export default {
             })
       }
       this.detail.howlerPlayerQueue = this.createReviseQueue();
+      console.log('initNextReviewDetail this.detail.howlerPlayerQueue=' + this.detail.howlerPlayerQueue)
       this.detail.howlerPlayer = this.detail.howlerPlayerQueue[0];
       loading.close()
     },
@@ -407,6 +401,7 @@ export default {
         this.detail.howlerPlayer.play();
       } catch (e) {
         alert(e)
+        console.error(e)
       }
     },
     async recursiveReview() {
@@ -689,29 +684,26 @@ export default {
       await this.stopPlaying()
       await this.cleanRevising()
     },
-    createReviseQueue() {
-      if (this.isChToEn) {
-        return this.createCh2EnReviseQueue()
-      } else {
-        return this.createEn2ChReviseQueue()
-      }
-    },
-    createCh2EnReviseQueue() {
-      return [];
-    },
-    createEn2ChReviseQueue() {
+    extractHowlUrls: function () {
       let paraphraseId = this.detail.paraphraseVO.paraphraseId;
       let wordId = this.detail.paraphraseVO.wordId;
       let wordCharacter = this.detail.paraphraseVO.wordCharacter;
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
       let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName;
-      let urls = howlerUtil.extractedUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
-      console.log(urls)
+      if (this.isChToEn) {
+        return howlerUtil.extractedCh2EnUrls(paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+      } else {
+        return howlerUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+      }
+    },
+    createReviseQueue() {
+      let urls = this.extractHowlUrls();
       let queueLength = urls.length
       let sounds = []
       let playIndex = 0
       console.log('queueLength=' + queueLength)
+      let ch2EnIndexSleepMsMap = howlerUtil.acquireCh2EnIndexSleepMsMap();
       for (let i = 0; i < queueLength; i++) {
         let sound = new Howl({
           src: urls[i],
@@ -720,16 +712,22 @@ export default {
           volume: 0.5,
           html5: true,
           format: ['mp3'],
-          onend: function () {
+          onend: async function () {
             // console.log('onend playIndex=' + playIndex)
             // console.log('onend: ' + urls[playIndex])
             that.isReviewPlaying = false
+            if (that.isChToEn) {
+              let sleepMs = ch2EnIndexSleepMsMap.get(playIndex);
+              if (sleepMs) {
+                await util.sleep(sleepMs)
+              }
+            }
             if (++playIndex < queueLength) {
-              that.detail.howlerPlayer = sounds[playIndex]
-              that.detail.howlerPlayer.play()
+              that.detail.howlerPlayer = sounds[playIndex];
+              that.detail.howlerPlayer.play();
             } else {
               // console.log('that.playWordIndex++ ' + that.playWordIndex)
-              ++that.playWordIndex
+              ++that.playWordIndex;
             }
           },
           onloaderror: function () {
