@@ -121,26 +121,7 @@ export default {
         return;
       }
 
-      if (newVal > playCountOnce) {
-        console.log('this.playWordIndex(newVal > playCountOnce) = ' + this.playWordIndex)
-        if (this.page.pages > this.page.current) {
-          this.page.current++;
-          this.init();
-        }
-        this.playWordIndex = 0
-      } else {
-        console.log('this.playWordIndex(else) = ' + this.playWordIndex)
-        // 最后一页条目数可能小于每页条目数
-        if (this.page.current === this.page.pages) {
-          console.log('this.page.current === this.page.pages')
-          let lastPageRemainder = this.page.total % this.page.size
-          if (newVal >= this.page.size || (lastPageRemainder !== 0 && newVal === lastPageRemainder)) {
-            this.msgSuccess(this, '当前复习列表已经复习完')
-            return
-          }
-        }
-        this.skipCurrent()
-      }
+      this.skipCurrent()
     },
     'countdownMode'(newVal) {
       if (newVal) {
@@ -626,7 +607,7 @@ export default {
 
       this.detail.showIndex++
       if (this.isReview) {
-        if (this.detail.showIndex !== this.playWordIndex - 1) {
+        if (this.detail.showIndex !== this.playWordIndex) {
           this.playWordIndex = this.detail.showIndex;
         } else {
           this.playWordIndex++
@@ -640,7 +621,7 @@ export default {
       console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
       console.log('skipCurrent this.page.size = ' + this.page.size)
       try {
-        let lastIndexPerPage = this.detail.showIndex >= this.page.size - 1;
+        let lastIndexPerPage = this.detail.showIndex >= this.page.size;
         let lastPage = this.page.current === this.page.pages;
         // 最后一页条目数可能小于每页条目数
         console.log('skipCurrent lastPage = ' + lastPage)
@@ -654,7 +635,6 @@ export default {
         }
         if (lastIndexPerPage) {
           this.page.current++
-          this.detail.showIndex = 0
           await this.init()
         } else {
           if (this.isReview) {
@@ -698,6 +678,7 @@ export default {
       // stop playing
       await this.stopPlaying()
       await this.cleanRevising()
+      this.detail.showIndex = 0
       this.playWordIndex = 0
       this.listItems = []
     },
@@ -740,30 +721,30 @@ export default {
           html5: true,
           format: ['mp3'],
           onend: function () {
-            console.log('onend playIndex=' + playIndex)
-            console.log('onend: ' + urls[playIndex])
+            // console.log('onend playIndex=' + playIndex)
+            // console.log('onend: ' + urls[playIndex])
             that.isReviewPlaying = false
             if (++playIndex < queueLength) {
               that.detail.howlerPlayer = sounds[playIndex]
               that.detail.howlerPlayer.play()
             } else {
-              console.log('that.playWordIndex++ ' + that.playWordIndex)
+              // console.log('that.playWordIndex++ ' + that.playWordIndex)
               ++that.playWordIndex
             }
           },
           onloaderror: function () {
-            console.log('onloaderror: ' + urls[playIndex])
+            // console.log('onloaderror: ' + urls[playIndex])
             that.isReviewPlaying = false
             that.detail.reviewLoading = false
             that.msgError(that, '音频数据加载异常')
           },
           onplay: function () {
-            console.log('onplay: ' + urls[playIndex])
+            // console.log('onplay: ' + urls[playIndex])
             that.isReviewPlaying = true
             that.detail.reviewLoading = false
           },
           onpause: function () {
-            console.log('onpause: ' + urls[playIndex])
+            // console.log('onpause: ' + urls[playIndex])
             that.isReviewPlaying = false
           }
         });
