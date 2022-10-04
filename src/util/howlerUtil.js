@@ -51,8 +51,9 @@ export default {
     acquireCh2EnIndexSleepMsMap() {
         if (CH2_EN_INDEX_SLEEP_MS_MAP === null) {
             CH2_EN_INDEX_SLEEP_MS_MAP = new Map()
-                .set(0, 2000)
-                .set(1, 2000)
+                .set(0, 3000)
+                .set(1, 3000)
+                .set(17, 3000)
         }
         return CH2_EN_INDEX_SLEEP_MS_MAP;
     },
