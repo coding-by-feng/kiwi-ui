@@ -74,6 +74,7 @@ export default {
         howlerPlayerQueue: [],
         howlerPlayer: null,
         howlerPlayerToken: null,
+        isUnfoldOperateIcon: false
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -147,10 +148,28 @@ export default {
       return (this.isReview && !this.detail.isSleepMode && !this.isFirstIncome) || !this.isReview;
     },
     enableShowDetailIcon() {
-      return !this.detail.dialogVisible && this.detail.paraphraseVO.paraphraseId;
+      return !this.detail.isUnfoldOperateIcon && !this.detail.dialogVisible && this.detail.paraphraseVO.paraphraseId;
+    },
+    enableCloseDetailIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.detail.dialogVisible
+    },
+    enableStopwatchIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.isReview;
+    },
+    enableShowPreviousIcon() {
+      return !this.detail.isUnfoldOperateIcon && !this.isReview;
+    },
+    enableShowNextIcon() {
+      return !this.detail.isUnfoldOperateIcon;
     },
     enableSleepModeIcon() {
-      return this.isReview && this.detail.dialogVisible;
+      return !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible;
+    },
+    enableStopPlayingIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.isReview && !this.isReviewStop
+    },
+    enableRefreshReviseDetailIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.isReview && this.isReviewStop
     },
     enableFirstIncomeReviewMode() {
       return this.isFirstIncome && this.isReview && !this.isReviewStop;
@@ -782,13 +801,6 @@ export default {
     <div style="z-index: 1;">
       <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
         <div>
-          <el-switch
-              v-if="isReview"
-              v-model="countdownMode"
-              active-color="#409EFF"
-              inactive-color="#909399">
-          </el-switch>
-          &nbsp;
           <el-dropdown
               size="mini"
               split-button type="info" @command="countdownSelectHandle">
@@ -1004,13 +1016,17 @@ export default {
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
       </el-button>
-      <el-button v-if="detail.dialogVisible" type="primary" size="mini" @click="detail.dialogVisible = false">
+      <el-button v-if="enableCloseDetailIcon" type="primary" size="mini" @click="detail.dialogVisible = false">
         <i class="el-icon-circle-close"></i>
       </el-button>
-      <el-button v-if="!isReview" type="primary" size="mini" @click="showPrevious">
+      <el-button v-if="enableStopwatchIcon" type="primary" size="mini" @click="countdownMode = !countdownMode">
+        <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
+        <i class="el-icon-switch-button" v-if="countdownMode"></i>
+      </el-button>
+      <el-button v-if="enableShowPreviousIcon" type="primary" size="mini" @click="showPrevious">
         <i class="el-icon-arrow-left"></i>
       </el-button>
-      <el-button type="primary" size="mini" @click="showNext">
+      <el-button v-if="enableShowNextIcon" type="primary" size="mini" @click="showNext">
         <i class="el-icon-arrow-right"></i>
       </el-button>
       <el-button type="primary"
@@ -1020,41 +1036,46 @@ export default {
         <i class="el-icon-thumb"></i>
       </el-button>
       <el-button type="primary"
-                 v-if="isReview && !isReviewStop"
+                 v-if="enableStopPlayingIcon"
                  @click="stopPlaying"
                  size="mini">
         <i class="el-icon-video-pause"></i>
       </el-button>
       <el-button type="primary"
-                 v-if="isReview && isReviewStop"
+                 v-if="enableRefreshReviseDetailIcon"
                  @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-video-play"></i>
       </el-button>
       <br/>
-      <el-button v-if="isStockReviewModel"
+      <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
                  type="primary" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
       </el-button>
       <el-button
-          v-if="isEnhanceReviewModel"
+          v-if="isEnhanceReviewModel && !detail.isUnfoldOperateIcon"
           type="primary" size="mini" @click="keepInMindFun">
         <i class="el-icon-medal"></i>
       </el-button>
       <el-button type="primary"
-                 v-if="isReview"
+                 v-if="isReview && !detail.isUnfoldOperateIcon"
                  @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-refresh"></i>
       </el-button>
-      <el-button type="primary" v-if="detail.paraphraseVO.wordName"
+      <el-button type="primary" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
       </el-button>
       <el-button
-          v-if="detail.paraphraseVO.paraphraseId"
+          v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
           type="primary" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
+      </el-button>
+      <el-button type="primary" size="mini"
+                 @click="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon">
+        <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
+        <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>
       </el-button>
     </div>
   </div>
