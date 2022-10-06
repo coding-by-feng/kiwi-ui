@@ -1,10 +1,10 @@
 <script>
-import { getStore, setStore } from '@/util/store'
+import {getStore, setStore} from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 
-function emptyExampleStars () {
+function emptyExampleStars() {
   setStore({
     name: 'example_stars',
     content: null,
@@ -12,7 +12,7 @@ function emptyExampleStars () {
   })
 }
 
-function emptyParaphraseStars () {
+function emptyParaphraseStars() {
   setStore({
     name: 'paraphrase_stars',
     content: null,
@@ -20,7 +20,7 @@ function emptyParaphraseStars () {
   })
 }
 
-function emptyWordStars () {
+function emptyWordStars() {
   setStore({
     name: 'word_stars',
     content: null,
@@ -28,7 +28,7 @@ function emptyWordStars () {
   })
 }
 
-function cacheWordList (list) {
+function cacheWordList(list) {
   if (list && list.length > 0)
     setStore({
       name: 'word_stars',
@@ -37,7 +37,7 @@ function cacheWordList (list) {
     })
 }
 
-function cacheParaphraseList (list) {
+function cacheParaphraseList(list) {
   if (list && list.length > 0)
     setStore({
       name: 'paraphrase_stars',
@@ -46,7 +46,7 @@ function cacheParaphraseList (list) {
     })
 }
 
-function cacheExampleList (list) {
+function cacheExampleList(list) {
   if (list && list.length > 0)
     setStore({
       name: 'example_stars',
@@ -61,7 +61,7 @@ export default {
     ParaphraseListDetail: () => import('@/page/word/ParaphraseListDetail'),
     ExampleListDetail: () => import('@/page/word/ExampleListDetail')
   },
-  data () {
+  data() {
     return {
       tableVisible: true,
       loading: true,
@@ -100,21 +100,21 @@ export default {
     }
   },
   computed: {
-    isSmallWindow () {
+    isSmallWindow() {
       return window.innerWidth <= 400
     }
   },
-  async mounted () {
+  async mounted() {
     await this.init(false)
   },
   methods: {
-    async init (isUpdateCache) {
+    async init(isUpdateCache) {
       if (this.$route.query.listType) {
         this.list.listType = this.$route.query.listType
       }
       if (this.list.listType === 'word') {
         if (isUpdateCache) emptyWordStars()
-        this.list.starListData = getStore({ name: 'word_stars' })
+        this.list.starListData = getStore({name: 'word_stars'})
         if (!this.list.starListData || this.list.starListData.length < 1) {
           await wordStarList.getWordStarList().then(response => {
             this.list.starListData = response.data.data
@@ -125,7 +125,7 @@ export default {
         }
       } else if (this.list.listType === 'paraphrase') {
         if (isUpdateCache) emptyParaphraseStars()
-        this.list.starListData = getStore({ name: 'paraphrase_stars' })
+        this.list.starListData = getStore({name: 'paraphrase_stars'})
         if (!this.list.starListData || this.list.starListData.length < 1) {
           await paraphraseStarList.getParaphraseStarList().then(response => {
             this.list.starListData = response.data.data
@@ -136,7 +136,7 @@ export default {
         }
       } else if (this.list.listType === 'example') {
         if (isUpdateCache) emptyExampleStars()
-        this.list.starListData = getStore({ name: 'example_stars' })
+        this.list.starListData = getStore({name: 'example_stars'})
         if (!this.list.starListData || this.list.starListData.length < 1) {
           await exampleStarList.getExampleStarList().then(response => {
             this.list.starListData = response.data.data
@@ -148,7 +148,7 @@ export default {
       }
       this.loading = false
     },
-    async refresh () {
+    async refresh() {
       if (this.list.status === 'list') {
         await this.init(true)
       } else {
@@ -161,13 +161,13 @@ export default {
         }
       }
     },
-    selectOneList (id, isReview) {
+    selectOneList(id, isReview) {
       this.detail.paraphraseIsReview = isReview
       this.detail.listId = id
       this.visibleToggle()
       this.list.status = 'detail'
     },
-    visibleToggle () {
+    visibleToggle() {
       this.tableVisible = !this.tableVisible
       if (this.list.listType === 'word') {
         this.detail.wordDetailVisible = !this.detail.wordDetailVisible
@@ -177,20 +177,20 @@ export default {
         this.detail.exampleDetailVisible = !this.detail.exampleDetailVisible
       }
     },
-    handleOperate () {
+    handleOperate() {
       this.edit.title = this.list.listName + '-增加'
       this.edit.type = 'add'
       this.edit.form.id = null
       this.edit.form.listName = ''
       this.edit.dialogVisible = true
     },
-    handleEdit (index, row) {
+    handleEdit(index, row) {
       this.edit.title = this.list.listName + '-修改'
       this.edit.type = 'update'
       this.edit.form.id = row.id
       this.edit.dialogVisible = true
     },
-    handleDelete (index, row) {
+    handleDelete(index, row) {
       const loading = this.$loading({
         lock: true,
         text: 'Loading',
@@ -237,10 +237,10 @@ export default {
         loading.close()
       })
     },
-    handleEditClose () {
+    handleEditClose() {
       this.edit.dialogVisible = false
     },
-    async handleEditSubmit () {
+    async handleEditSubmit() {
       this.loading = true
       if (this.edit.type === 'update') {
         if (this.list.listType === 'word') {
@@ -310,7 +310,7 @@ export default {
       this.loading = false
       this.handleEditClose()
     },
-    goBack () {
+    goBack() {
       if (this.list.status === 'detail') {
         if (this.detail.paraphraseIsReview || this.detail.paraphraseIsRead) {
           this.closeAutoReview()
@@ -321,7 +321,7 @@ export default {
           this.list.status = 'list'
         }
       } else {
-        let queryTmp = { active: 'search' }
+        let queryTmp = {active: 'search'}
         let query
         if (this.$route.query.word) {
           query = {
@@ -329,13 +329,13 @@ export default {
             word: this.$route.query.word
           }
         } else {
-          query = { ...queryTmp }
+          query = {...queryTmp}
         }
-        this.$router.push({ path: '/index/vocabulary/detail', query: query })
+        this.$router.push({path: '/index/vocabulary/detail', query: query})
       }
       this.list.status = 'list'
     },
-    async selectReviewMode (command) {
+    async selectReviewMode(command) {
       if (command.mode === 'stockReview') {
         this.list.isChToEn = false
         this.multiModeReview(command.id, 'stockReview')
@@ -365,7 +365,7 @@ export default {
         this.totalReview(command.id)
       }
     },
-    async listTypeClick (command) {
+    async listTypeClick(command) {
       if (this.list.status === 'detail') {
         this.visibleToggle()
       }
@@ -380,14 +380,29 @@ export default {
       }
       await this.init(false)
     },
-    doSuccess () {
+    async operationClick(command) {
+      if (command === 'back') {
+        this.goBack()
+      } else if (command === 'add') {
+        this.handleOperate()
+      } else if (command === 'refresh') {
+        this.refresh()
+      } else if (command === 'switch') {
+        if (this.list.status === 'detail') {
+          this.detail.isShowParaphrase = !this.detail.isShowParaphrase
+        } else if (this.list.status === 'list') {
+          this.list.editMode = !this.list.editMode
+        }
+      }
+    },
+    doSuccess() {
       this.$message.success({
         duration: 1000,
         center: true,
         message: '操作成功'
       })
     },
-    multiModeReview (listId, mode) {
+    multiModeReview(listId, mode) {
       let query
       this.list.reviewMode = mode
       if ('word' === this.list.listType) {
@@ -408,9 +423,9 @@ export default {
           now: new Date().getTime()
         }
       }
-      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      this.$router.push({path: '/index/vocabulary/detail', query: query})
     },
-    totalReview (listId) {
+    totalReview(listId) {
       let query
       this.list.reviewMode = 'totalReview'
       if ('word' === this.list.listType) {
@@ -431,25 +446,25 @@ export default {
           now: new Date().getTime()
         }
       }
-      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      this.$router.push({path: '/index/vocabulary/detail', query: query})
     },
-    multiModeRead (listId, mode) {
+    multiModeRead(listId, mode) {
       let query
       this.list.reviewMode = mode
       if ('word' === this.list.listType) {
-        query = { active: 'search', mode: mode, listId: listId, listType: this.list.listType }
+        query = {active: 'search', mode: mode, listId: listId, listType: this.list.listType}
       } else if ('paraphrase' === this.list.listType) {
         this.selectOneList(listId, false)
-        query = { active: 'starList', mode: mode, listId: listId, listType: this.list.listType }
+        query = {active: 'starList', mode: mode, listId: listId, listType: this.list.listType}
       }
-      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      this.$router.push({path: '/index/vocabulary/detail', query: query})
     },
-    closeAutoReview () {
+    closeAutoReview() {
       this.detail.paraphraseIsReview = false
       this.detail.paraphraseIsRead = false
       this.detail.paraphraseDetailVisible = false
-      let query = { active: 'starList' }
-      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      let query = {active: 'starList'}
+      this.$router.push({path: '/index/vocabulary/detail', query: query})
       window.location.reload()
     }
   }
@@ -459,27 +474,6 @@ export default {
 <template>
 
   <div class="text item" v-loading="loading">
-    <div style="position: fixed; bottom: 5px; right: 30px; z-index: 99;">
-      <el-button size="mini" type="primary" @click="goBack">
-        <i class="el-icon-back"></i>
-      </el-button>
-      <el-button size="mini" type="primary" @click="refresh">
-        <i class="el-icon-refresh-right"></i>
-      </el-button>
-      <el-button size="mini" type="primary" @click="handleOperate">
-        <i class="el-icon-folder-add"></i>
-      </el-button>
-      <el-button size="mini" type="primary" v-if="list.status==='list'"
-                 @click="list.editMode = !list.editMode">
-        <i class="el-icon-unlock" v-if="!list.editMode"></i>
-        <i class="el-icon-lock" v-if="list.editMode"></i>
-      </el-button>
-      <el-button size="mini" type="primary" v-if="list.status==='detail'"
-                 @click="detail.isShowParaphrase = !detail.isShowParaphrase">
-        <i class="el-icon-lock" v-if="detail.isShowParaphrase"></i>
-        <i class="el-icon-unlock" v-if="!detail.isShowParaphrase"></i>
-      </el-button>
-    </div>
     <div style="position: fixed; top: 60px; left: 35px; z-index: 99;">
       <el-dropdown size="mini" plain
                    split-button @command="listTypeClick">
@@ -498,13 +492,13 @@ export default {
           split-button @command="selectReviewMode">
         <i class="el-icon-video-camera"></i>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习</el-dropdown-item>
           <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习(汉英)
           </el-dropdown-item>
           <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习(汉英)
           </el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习</el-dropdown-item>
           <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读</el-dropdown-item>
           <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读</el-dropdown-item>
           <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读</el-dropdown-item>
@@ -514,6 +508,17 @@ export default {
       <span v-if="!isSmallWindow">
         &nbsp;
       </span>
+
+      <el-dropdown size="mini" plain
+                   split-button @command="operationClick">
+        <i class="el-icon-menu"></i>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="back">返回</el-dropdown-item>
+          <el-dropdown-item command="refresh">刷新</el-dropdown-item>
+          <el-dropdown-item command="add">新建</el-dropdown-item>
+          <el-dropdown-item command="switch">切换</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
     </div>
     <el-table
         v-show="tableVisible"
@@ -541,13 +546,13 @@ export default {
               split-button type="info" @command="selectReviewMode">
             <i class="el-icon-headset"></i>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'enhanceReview', id: scope.row.id}">强化复习</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: scope.row.id}">存量复习(汉英模式)
               </el-dropdown-item>
               <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: scope.row.id}">全量复习(汉英模式)
               </el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'enhanceReview', id: scope.row.id}">强化复习</el-dropdown-item>
+              <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'enhanceRead', id: scope.row.id}">强化阅读</el-dropdown-item>
               <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
