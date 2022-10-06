@@ -823,8 +823,7 @@ export default {
             // console.log('onloaderror: ' + urls[playIndex])
             that.isReviewPlaying = false
             that.detail.reviewLoading = false
-            that.msgError('音频加载异常，请点击重新刷新当前单词')
-            await that.refreshReviseDetail()
+            that.msgError(that, '音频加载异常，请点击重新刷新当前单词')
             review.deprecateReviewAudio(that.detail.paraphraseVO.paraphraseId)
           },
           onplay: function () {
@@ -1053,7 +1052,7 @@ export default {
       </el-dialog>
     </div>
     <div v-if="enableOperationIcon"
-         style="position: fixed; bottom: 37px; right: 30px; z-index: 2147483646; text-align: right; line-height: 30px;">
+         style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
       <el-button v-if="enableShowDetailIcon" type="primary" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
