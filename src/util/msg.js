@@ -10,12 +10,11 @@ export default {
     },
 
     msgError: (that, msg) => {
-        that.$message.error({
-            duration: 2000,
-            center: true,
-            offset: 200,
-            message: msg
-        })
+        that.$notify.error({
+            title: '错误提示',
+            message: msg,
+            duration: 0
+        });
     },
 
     msgSuccess: (that, msg) => {
@@ -25,6 +24,14 @@ export default {
             offset: 200,
             message: msg
         })
+    },
+
+    notifySuccess: (that, title, msg) => {
+        that.$notify({
+            title: title,
+            message: msg,
+            type: 'success'
+        });
     },
 
     operateSuccess: that => {
