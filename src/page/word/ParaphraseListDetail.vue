@@ -74,7 +74,8 @@ export default {
         howlerPlayerQueue: [],
         howlerPlayer: null,
         howlerPlayerToken: null,
-        isUnfoldOperateIcon: false
+        isUnfoldOperateIcon: false,
+        isEnableNoSleepMode: false
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -110,6 +111,7 @@ export default {
     if (this.detail.howlerPlayer) {
       this.detail.howlerPlayer.stop()
       this.detail.howlerPlayer = null
+      noSleep.disable()
     }
   },
   watch: {
@@ -128,7 +130,6 @@ export default {
     'countdownMode'(newVal) {
       if (newVal) {
         this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
-        noSleep.enable()
       }
     }
   },
@@ -169,7 +170,7 @@ export default {
       return !this.detail.isUnfoldOperateIcon && this.isReview && !this.isReviewStop
     },
     enableRefreshReviseDetailIcon() {
-      return !this.detail.isUnfoldOperateIcon && this.isReview && this.isReviewStop
+      return !this.detail.isUnfoldOperateIcon && this.isReview && this.isReviewStop && !this.isReviewPlaying
     },
     enableFirstIncomeReviewMode() {
       return this.isFirstIncome && this.isReview && !this.isReviewStop;
@@ -187,6 +188,20 @@ export default {
   methods: {
     ...paraphraseStarList,
     ...msgUtil,
+    listenerMinBrowser() {
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          that.isReviewStop = true
+          that.isReviewPlaying = false
+          Howler.stop()
+        } else {
+          that.isReviewStop = false
+          that.isReviewPlaying = true
+        }
+        console.log('visibilitychange isReviewStop=' + that.isReviewStop)
+        console.log('visibilitychange isReviewPlaying=' + that.isReviewPlaying)
+      })
+    },
     async init() {
       console.log('init...')
       try {
@@ -200,15 +215,16 @@ export default {
             await this.initNextReviseDetail(true)
           } catch (e) {
             console.error(e)
-            this.$message.error('初始化加载异常')
+            this.msgError(this, '列表初始化异常，请刷新重试')
             this.loading = false
             return
           }
 
           if (!this.isFirstIncome) {
             this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
-            this.msgSuccess(this, '即将开始复习，请稍等！')
+            this.notifySuccess(this, '复习模式', '即将开始复习，请稍等！');
           }
+
           // 手动触发过的直接播放即可
           if (this.autoPlayDialogVisible > 1) {
             if (this.isListItemsNotEmpty) {
@@ -367,7 +383,7 @@ export default {
               this.initList()
             })
             .catch(e => {
-              this.$message.error(e)
+              that.msgError(that, '删除单词收藏操作异常')
             })
       }).finally(() => {
         loading.close()
@@ -390,7 +406,18 @@ export default {
     switchSleepMode() {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
-        this.msgSuccess('点击灰色区域记住或牢记当前复习单词！')
+        this.notifySuccess(this, '操作提示', '睡眠模式已开启');
+        this.notifySuccess(this, '睡眠模式', '上滑显示更多信息，双击上边区域记住单词，双击下边区域跳过当前单词');
+      } else {
+        this.notifySuccess(this, '操作提示', '睡眠模式已关闭');
+      }
+    },
+    switchStopWatchMode() {
+      this.countdownMode = !this.countdownMode
+      if (this.countdownMode) {
+        this.notifySuccess(this, '操作提示', '倒计时模式已经开启');
+      } else {
+        this.notifySuccess(this, '操作提示', '倒计时模式已经关闭');
       }
     },
     async playPronunciation(id, sourceUrl, soundmarkType) {
@@ -430,13 +457,24 @@ export default {
         }, 1)
       }
     },
+    enableNoSleepMode() {
+      if (!this.detail.isEnableNoSleepMode) {
+        this.detail.isEnableNoSleepMode = true
+        noSleep.enable();
+      }
+    },
     async stockReviewStart() {
       try {
+        this.enableNoSleepMode()
         this.playWordIndex = 0;
-        this.autoPlayDialogVisible++;
-        this.isFirstIncome = false;
-        await this.showDetail(this.listItems[0].paraphraseId, 0);
-        this.detail.howlerPlayer.play();
+        this.autoPlayDialogVisible++
+        this.isFirstIncome = false
+        if (this.isChToEn) {
+          this.detail.showTranslation = true
+        }
+        await this.showDetail(this.listItems[0].paraphraseId, 0)
+        this.detail.howlerPlayer.play()
+        this.listenerMinBrowser()
       } catch (e) {
         alert(e)
         console.error(e)
@@ -504,21 +542,22 @@ export default {
       return this.isReviewStop || !this.isReview || this.playWordIndex < 0;
     },
     async stopPlaying() {
-      console.log('stopPlaying')
+      if (!this.isFirstIncome) {
+        this.notifySuccess(this, '操作提示', '停止播放当前复习的单词')
+      }
       this.isReviewStop = true
       this.isReviewPlaying = false
       Howler.stop()
     },
     rePlayingNotRefresh() {
+      this.notifySuccess(this, '操作提示', '重新播放当前单词');
       if (this.detail.howlerPlayer) {
         this.detail.howlerPlayer.play()
       }
     },
-    async ignoreCurrentReview(isShowTip) {
+    async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
-      if (isShowTip) {
-        this.msgSuccess(this, `单词${this.detail.paraphraseVO.wordName}已忽略！`);
-      }
+      this.notifySuccess(this, '操作提示', '复习下一次单词');
       await this.cleanDetailRevising()
       this.isReviewStop = false
     },
@@ -555,44 +594,47 @@ export default {
       });
     },
     async rememberOneFun() {
+      this.notifySuccess(this, '操作提示', '正在标记标记单词已经记住')
       let loading = this.buildNotGlobalLoading()
       await this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.msgSuccess(this, '单词已经记住')
+            that.notifySuccess(that, '操作提示', '操作成功')
             this.showNext()
           })
           .catch(e => {
             console.error(e)
-            this.$message.error(e)
+            that.msgError(that, '记住单词操作异常')
           })
           .finally(() => {
             loading.close()
           })
     },
     async keepInMindFun() {
+      this.notifySuccess(this, '操作提示', '正在标记标记单词已经牢记')
       let loading = this.buildNotGlobalLoading()
       await this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.msgSuccess(this, '单词已经牢记')
+            that.notifySuccess(that, '操作提示', '操作成功')
             this.showNext()
           })
           .catch(e => {
             console.error(e)
-            this.$message.error(e)
+            that.msgError(that, '牢记单词操作异常')
           })
           .finally(() => {
             loading.close()
           })
     },
     async forgetOneFun() {
+      this.notifySuccess(this, '操作提示', '正在标记标记单词已经忘记')
       let loading = this.buildNotGlobalLoading()
       await this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
-            this.msgSuccess(this, '单词已经忘记')
+            that.notifySuccess(that, '操作提示', '操作成功')
           })
           .catch(e => {
             console.error(e)
-            this.$message.error(e)
+            that.msgError(that, '忘记单词操作异常')
           })
           .finally(() => {
             loading.close()
@@ -604,14 +646,10 @@ export default {
       this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
     },
     countdownEndFun() {
-      this.isReviewStop = true
       this.countdownMode = !this.countdownMode
       noSleep.disable()
+      this.detail.isEnableNoSleepMode = false
       window.location.reload()
-    },
-    async countdownEndReplay() {
-      this.isReviewStop = false
-      await this.init()
     },
     async showPrevious() {
       if (this.detail.showIndex === 0) {
@@ -628,7 +666,6 @@ export default {
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
     async showNext(isCheckDoubleClick) {
-      console.log('showNext')
       // 如果是睡眠模式
       if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
         return
@@ -639,7 +676,7 @@ export default {
         if (this.detail.showIndex !== this.playWordIndex) {
           this.playWordIndex = this.detail.showIndex;
         } else {
-          this.playWordIndex++
+          this.playWordIndex++;
         }
       }
       await this.skipCurrent()
@@ -650,6 +687,9 @@ export default {
       console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
       console.log('skipCurrent this.page.size = ' + this.page.size)
       try {
+        if (this.isChToEn) {
+          this.detail.showWord = false
+        }
         let lastIndexPerPage = this.detail.showIndex >= this.page.size;
         let lastPage = this.page.current === this.page.pages;
         // 最后一页条目数可能小于每页条目数
@@ -688,7 +728,8 @@ export default {
       }
     },
     async refreshReviseDetail() {
-      this.cleanDetailRevising()
+      this.notifySuccess(this, '操作提示', '正在刷新当前复习资源')
+      await this.cleanDetailRevising()
       this.prepareReview()
       await this.recursiveReview()
     },
@@ -702,7 +743,7 @@ export default {
     },
     async cleanInitRevising() {
       // stop playing
-      await this.stopPlaying()
+      await this.stopPlaying();
       await this.cleanRevising()
       this.detail.showIndex = 0
       this.playWordIndex = 0
@@ -732,9 +773,13 @@ export default {
       }
     },
     createReviseQueue(token) {
+      let sounds = []
+      if (token !== that.detail.howlerPlayerToken) {
+        return sounds
+      }
+
       let urls = this.extractHowlUrls();
       let queueLength = urls.length
-      let sounds = []
       let playIndex = 0
       console.log('queueLength=' + queueLength)
       let ch2EnIndexSleepMsMap = howlerUtil.acquireCh2EnIndexSleepMsMap();
@@ -754,10 +799,16 @@ export default {
             if (that.isChToEn) {
               let sleepMs = ch2EnIndexSleepMsMap.get(playIndex);
               if (sleepMs) {
+                that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
                 await util.sleep(sleepMs)
+                    .then(() => {
+                      if (playIndex === 1) {
+                        that.detail.showWord = true;
+                      }
+                    })
               }
             }
-            if (token !== that.detail.howlerPlayerToken) {
+            if (token !== that.detail.howlerPlayerToken || that.isReviewStop) {
               return
             }
             if (++playIndex < queueLength) {
@@ -772,9 +823,8 @@ export default {
             // console.log('onloaderror: ' + urls[playIndex])
             that.isReviewPlaying = false
             that.detail.reviewLoading = false
-            that.msgError(that, '音频数据加载异常')
-            Howler.unload()
-            ++playIndex
+            that.msgError('音频加载异常，请点击重新刷新当前单词')
+            await that.refreshReviseDetail()
             review.deprecateReviewAudio(that.detail.paraphraseVO.paraphraseId)
           },
           onplay: function () {
@@ -813,14 +863,6 @@ export default {
               <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-          &nbsp;
-          <el-button
-              v-if="!countdownMode && isReviewStop"
-              type="info"
-              size="mini"
-              @click="countdownEndReplay">
-            <i class="el-icon-video-play"></i>
-          </el-button>
         </div>
         <div v-if="countdownMode">
           <br/>
@@ -1019,7 +1061,7 @@ export default {
       <el-button v-if="enableCloseDetailIcon" type="primary" size="mini" @click="detail.dialogVisible = false">
         <i class="el-icon-circle-close"></i>
       </el-button>
-      <el-button v-if="enableStopwatchIcon" type="primary" size="mini" @click="countdownMode = !countdownMode">
+      <el-button v-if="enableStopwatchIcon" type="primary" size="mini" @click="switchStopWatchMode">
         <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
         <i class="el-icon-switch-button" v-if="countdownMode"></i>
       </el-button>
