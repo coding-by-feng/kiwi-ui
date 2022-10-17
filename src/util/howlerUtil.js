@@ -35,7 +35,17 @@ export default {
         urls.push(paraphraseChUrl)
         urls.push(paraphraseEnUrl)
 
-        if (IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0) {
+        let isExampleInvalid = IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0;
+        if (isExampleInvalid) {
+            return urls;
+        }
+        for (let example in exampleList) {
+            if (!example.exampleTranslate) {
+                isExampleInvalid = true
+                break
+            }
+        }
+        if (isExampleInvalid) {
             return urls;
         }
 

@@ -381,9 +381,7 @@ export default {
       await this.init(false)
     },
     async operationClick(command) {
-      if (command === 'back') {
-        this.goBack()
-      } else if (command === 'add') {
+      if (command === 'add') {
         this.handleOperate()
       } else if (command === 'refresh') {
         this.refresh()
@@ -505,15 +503,11 @@ export default {
         </el-dropdown-menu>
       </el-dropdown>
       &nbsp;
-      <span v-if="!isSmallWindow">
-        &nbsp;
-      </span>
-
       <el-dropdown size="mini" plain
-                   split-button @command="operationClick">
-        <i class="el-icon-menu"></i>
+                   :split-button="true" @command="operationClick"
+                   @click="goBack">
+        <i class="el-icon-back"></i>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="back">返回</el-dropdown-item>
           <el-dropdown-item command="refresh">刷新</el-dropdown-item>
           <el-dropdown-item command="add">新建</el-dropdown-item>
           <el-dropdown-item command="switch">切换</el-dropdown-item>
