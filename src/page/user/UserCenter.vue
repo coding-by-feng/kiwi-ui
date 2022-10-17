@@ -12,28 +12,29 @@ export default {
     return {
       user: {
         userName: getStore({name: USER_NAME}),
-        pronunciationSource: getStore({name: 'pronunciation_source'}),
+        pronunciationSource: getStore({name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE}),
 
         /**
          * 导播模式，是否附带中文导播
          * 1：去除中文导播
          * 2：附带中文导播
          */
-        reviewType: getStore({name: 'review_type'}),
-        spellType: getStore({name: 'spell_type'}),
+        reviewType: getStore({name: kiwiConst.CONFIG_KEY.REVIEW_TYPE}),
+        spellType: getStore({name: kiwiConst.CONFIG_KEY.SPELL_TYPE}),
         /**
          * 是否播报英文释义
          * 1：去除英文释义
          * 2：附带英文释义
          */
-        enParaType: getStore({name: 'enPara_type'}),
+        enParaType: getStore({name: kiwiConst.CONFIG_KEY.EN_PARA_TYPE}),
+        enableMsgHint: getStore({name: kiwiConst.CONFIG_KEY.ENABLE_MSG_HINT}),
         /**
          * 是否播报例句
          * 1：去除英文释义
          * 2：附带英文释义
          */
-        isPlayExample: getStore({name: 'is_play_example'}),
-        bgm: getStore({name: 'bgm'}),
+        isPlayExample: getStore({name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE}),
+        bgm: getStore({name: kiwiConst.CONFIG_KEY.BGM}),
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
@@ -43,7 +44,7 @@ export default {
   mounted() {
     if (!this.user.pronunciationSource) {
       setStore({
-        name: 'pronunciation_source',
+        name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE,
         content: kiwiConst.PRONUNCIATION_SOURCE.LOCAL,
         type: 'local'
       })
@@ -57,21 +58,21 @@ export default {
     }
     if (!this.user.reviewType) {
       setStore({
-        name: 'review_type',
+        name: kiwiConst.CONFIG_KEY.REVIEW_TYPE,
         content: kiwiConst.REVIEW_TYPE.ONLY_ENGLISH,
         type: 'local'
       })
     }
     if (!this.user.spellType) {
       setStore({
-        name: 'spell_type',
+        name: kiwiConst.CONFIG_KEY.SPELL_TYPE,
         content: kiwiConst.SPELL_TYPE.ENABLE,
         type: 'local'
       })
     }
     if (!this.user.isPlayExample) {
       setStore({
-        name: 'is_play_example',
+        name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE,
         content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
         type: 'local'
       })
@@ -98,7 +99,7 @@ export default {
     },
     pronunciationSourceChange(command) {
       setStore({
-        name: 'pronunciation_source',
+        name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE,
         content: command,
         type: 'local'
       })
@@ -106,7 +107,7 @@ export default {
     },
     reviewTypeChange(command) {
       setStore({
-        name: 'review_type',
+        name: kiwiConst.CONFIG_KEY.REVIEW_TYPE,
         content: command,
         type: 'local'
       })
@@ -114,7 +115,7 @@ export default {
     },
     spellTypeChange(command) {
       setStore({
-        name: 'spell_type',
+        name: kiwiConst.CONFIG_KEY.SPELL_TYPE,
         content: command,
         type: 'local'
       })
@@ -122,7 +123,7 @@ export default {
     },
     bgmChange(command) {
       setStore({
-        name: 'bgm',
+        name: kiwiConst.CONFIG_KEY.BGM,
         content: command,
         type: 'local'
       })
@@ -131,15 +132,23 @@ export default {
     },
     enParaTypeChange(command) {
       setStore({
-        name: 'enPara_type',
+        name: kiwiConst.CONFIG_KEY.EN_PARA_TYPE,
         content: command,
         type: 'local'
       })
       this.user.enParaType = command
     },
+    enableMsgHintChange(command) {
+      setStore({
+        name: kiwiConst.CONFIG_KEY.ENABLE_MSG_HINT,
+        content: command,
+        type: 'local'
+      })
+      this.user.enableMsgHint = command
+    },
     isPlayExampleChange(command) {
       setStore({
-        name: 'is_play_example',
+        name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE,
         content: command,
         type: 'local'
       })
@@ -148,7 +157,7 @@ export default {
     tranReviewType(val) {
       if (undefined === val) {
         setStore({
-          name: 'review_type',
+          name: kiwiConst.CONFIG_KEY.REVIEW_TYPE,
           content: kiwiConst.REVIEW_TYPE.WITH_CHINESE,
           type: 'local'
         })
@@ -163,7 +172,7 @@ export default {
     tranEnParaType(val) {
       if (undefined === val) {
         setStore({
-          name: 'enPara_type',
+          name: kiwiConst.CONFIG_KEY.EN_PARA_TYPE,
           content: kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE,
           type: 'local'
         })
@@ -175,10 +184,25 @@ export default {
       }
       return '附带英文释义'
     },
+    tranEnableMsgHint(val) {
+      if (undefined === val) {
+        setStore({
+          name: kiwiConst.CONFIG_KEY.ENABLE_MSG_HINT,
+          content: kiwiConst.ENABLE_MSG_HINT.ENABLE,
+          type: 'local'
+        })
+      }
+      if (val === kiwiConst.ENABLE_MSG_HINT.DISABLE) {
+        return '关闭'
+      } else if (val === kiwiConst.ENGLISH_PARAPHRASE_TYPE.ENABLE) {
+        return '开启'
+      }
+      return '默认'
+    },
     tranIsPlayExample(val) {
       if (undefined === val) {
         setStore({
-          name: 'is_play_example',
+          name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE,
           content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
           type: 'local'
         })
@@ -193,7 +217,7 @@ export default {
     tranSpellType(val) {
       if (undefined === val) {
         setStore({
-          name: 'review_type',
+          name: kiwiConst.CONFIG_KEY.REVIEW_TYPE,
           content: kiwiConst.SPELL_TYPE.ENABLE,
           type: 'local'
         })
@@ -318,6 +342,15 @@ export default {
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="1">去除英文释义</el-dropdown-item>
         <el-dropdown-item :command="2">附带英文释义</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="enableMsgHintChange">
+      {{ `消息提醒：${tranEnableMsgHint(user.enableMsgHint)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="0">关闭</el-dropdown-item>
+        <el-dropdown-item :command="1">开启</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>

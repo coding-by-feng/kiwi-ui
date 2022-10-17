@@ -1,3 +1,8 @@
+import {getStore} from '@/util/store'
+import kiwiConst from '@/const/kiwiConsts'
+
+const enableMsgHint = getStore({name: kiwiConst.CONFIG_KEY.ENABLE_MSG_HINT})
+
 export default {
 
     msgWarning: (that, msg) => {
@@ -27,6 +32,10 @@ export default {
     },
 
     notifySuccess: (that, title, msg) => {
+        if (enableMsgHint === kiwiConst.ENABLE_MSG_HINT.DISABLE) {
+            return
+        }
+
         that.$notify({
             title: title,
             message: msg,

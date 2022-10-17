@@ -106,6 +106,7 @@ export default {
   },
   async mounted() {
     await this.init()
+    this.listenerMinBrowser()
   },
   destroyed() {
     if (this.detail.howlerPlayer) {
@@ -134,6 +135,12 @@ export default {
     }
   },
   computed: {
+    showPreviousPageIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.page.current >= 1
+    },
+    showNextPageIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.page.current < this.page.pages
+    },
     showWordSpelling() {
       return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
     },
@@ -472,11 +479,12 @@ export default {
         if (this.isChToEn) {
           this.detail.showTranslation = true
         }
-        await this.showDetail(this.listItems[0].paraphraseId, 0)
-        this.detail.howlerPlayer.play()
-        this.listenerMinBrowser()
+        this.showDetail(this.listItems[0].paraphraseId, 0)
+            .then(() => {
+              this.detail.howlerPlayer.play()
+            })
       } catch (e) {
-        alert(e)
+        alert('test' + e)
         console.error(e)
       }
     },
@@ -489,7 +497,7 @@ export default {
     },
     assemblePronunciationUrl(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList) {
-        return null
+        return howlerUtil.assembleReviseAudioUrl(this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.PHRASE_PRONUNCIATION)
       }
       let url
       let isExistUS = this.detail.paraphraseVO.pronunciationVOList[1]
@@ -592,6 +600,14 @@ export default {
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       });
+    },
+    previousPageFun() {
+      this.page.current--
+      this.pageChange()
+    },
+    nextPageFun() {
+      this.page.current++
+      this.pageChange()
     },
     async rememberOneFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经记住')
@@ -915,11 +931,11 @@ export default {
         <div slot="title" style="margin-bottom: -35px">
           <div v-if="detail.isSleepMode"
                :style="{height: innerHeightHalfPx, background: '#909399'}"
-               @click.stop="rememberInSleepMode(true)">
+               @click.stop="rememberInSleepMode(false)">
           </div>
           <div v-if="detail.isSleepMode"
                :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '50%;'}"
-               @click.stop="showNext(true)">
+               @click.stop="showNext(false)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;"
@@ -1053,6 +1069,17 @@ export default {
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
+
+      <el-button type="primary" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
+        <i class="el-icon-d-arrow-left"></i>
+      </el-button>
+      <el-button v-if="showNextPageIcon"
+                 type="primary" size="mini" @click="nextPageFun">
+        <i class="el-icon-d-arrow-right"></i>
+      </el-button>
+
+      <br/>
+
       <el-button v-if="enableShowDetailIcon" type="primary" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
@@ -1088,7 +1115,9 @@ export default {
                  size="mini">
         <i class="el-icon-video-play"></i>
       </el-button>
+
       <br/>
+
       <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
                  type="primary" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
@@ -1118,6 +1147,7 @@ export default {
         <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
         <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>
       </el-button>
+
     </div>
   </div>
 </template>

@@ -38,6 +38,16 @@ export default {
     },
 
     /**
+     * 英文释义播报模式，是否附带英文释义
+     * 1：去除英文释义
+     * 2：附带英文释义
+     */
+    ENABLE_MSG_HINT: {
+        DISABLE: 0,
+        ENABLE: 1
+    },
+
+    /**
      * 是否播放单词拼写
      * 1：去除单词拼写
      * 2：附带单词拼写
@@ -84,7 +94,8 @@ export default {
         CHARACTER_EN: 6,
         CHARACTER_CH: 7,
         NON_REVIEW_SPELL: 8,
-        PRONUNCIATION: 9
+        PRONUNCIATION: 9,
+        PHRASE_PRONUNCIATION: 10
     },
 
     DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/wordBiz/word/review/downloadReviewAudio/',
@@ -94,6 +105,16 @@ export default {
         STOCK_READ: 'stockRead',
         ENHANCE_REVIEW: 'enhanceReview',
         ENHANCE_READ: 'enhanceRead',
+    },
+
+    CONFIG_KEY: {
+        PRONUNCIATION_SOURCE: 'pronunciation_source',
+        REVIEW_TYPE: 'review_type',
+        SPELL_TYPE: 'spell_type',
+        EN_PARA_TYPE: 'enPara_type',
+        ENABLE_MSG_HINT: 'enable_msg_hint',
+        IS_PLAY_EXAMPLE: 'is_play_example',
+        BGM: 'bgm'
     }
 
 }
