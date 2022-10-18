@@ -113,6 +113,7 @@ export default {
       this.detail.howlerPlayer.stop()
       this.detail.howlerPlayer = null
       noSleep.disable()
+      this.detail.isEnableNoSleepMode = false
     }
   },
   watch: {
@@ -237,7 +238,9 @@ export default {
             if (this.isListItemsNotEmpty) {
               await this.showDetail(this.listItems[0].paraphraseId, 0);
             }
-            this.detail.howlerPlayer.play()
+            this.detail.howlerPlayer.play();
+          } else {
+            this.stockReviewStart()
           }
         } else {
           await this.initList()
@@ -470,7 +473,7 @@ export default {
         noSleep.enable();
       }
     },
-    async stockReviewStart() {
+    stockReviewStart() {
       try {
         this.enableNoSleepMode()
         this.playWordIndex = 0;
@@ -484,7 +487,7 @@ export default {
               this.detail.howlerPlayer.play()
             })
       } catch (e) {
-        alert('test' + e)
+        // alert('test' + e)
         console.error(e)
       }
     },
@@ -839,8 +842,6 @@ export default {
             // console.log('onloaderror: ' + urls[playIndex])
             that.isReviewPlaying = false
             that.detail.reviewLoading = false
-            that.msgError(that, '音频加载异常，请点击重新刷新当前单词')
-            review.deprecateReviewAudio(that.detail.paraphraseVO.paraphraseId)
           },
           onplay: function () {
             // console.log('onplay: ' + urls[playIndex])
