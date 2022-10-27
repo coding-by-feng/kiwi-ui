@@ -84,7 +84,7 @@ export default {
         return CH2_EN_INDEX_SLEEP_MS_MAP;
     },
 
-    extractedCh2EnUrls: function (paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, characterCode, exampleList) {
+    extractedCh2EnUrls: function (lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, characterCode, exampleList) {
         let urls = []
         let wordSpellingUrl = this.assembleReviseAudioUrl(wordId, kiwiConst.REVIEW_AUDIO_TYPE.WORD_SPELLING);
         let paraphraseChUrl = this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_CH);
@@ -96,13 +96,17 @@ export default {
         urls.push(characterUrl)
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
-        urls.push(wordSpellingUrl);
-        urls.push(wordSpellingUrl)
-        urls.push(wordSpellingUrl)
+        if (!lastIsSame) {
+            urls.push(wordSpellingUrl);
+            urls.push(wordSpellingUrl)
+            urls.push(wordSpellingUrl)
+        }
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
-        urls.push(wordSpellingUrl)
-        urls.push(wordSpellingUrl)
+        if (!lastIsSame) {
+            urls.push(wordSpellingUrl);
+            urls.push(wordSpellingUrl)
+        }
         urls.push(characterUrl)
         urls.push(paraphraseChUrl)
         urls.push(paraphraseEnUrl)
