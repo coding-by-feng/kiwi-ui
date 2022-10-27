@@ -650,6 +650,7 @@ export default {
       await this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
+            that.showNext(false)
           })
           .catch(e => {
             console.error(e)
@@ -690,21 +691,22 @@ export default {
         return
       }
 
-      this.detail.showIndex++
       if (this.isReview) {
         if (this.detail.showIndex !== this.playWordIndex) {
           this.playWordIndex = this.detail.showIndex;
-        } else {
-          this.playWordIndex++;
         }
+        this.detail.showIndex++
+        this.playWordIndex++;
+      } else {
+        this.detail.showIndex++
       }
-      await this.skipCurrent()
+      await this.skipCurrent();
     },
     async skipCurrent() {
       console.log('skipCurrent')
-      console.log('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
-      console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
-      console.log('skipCurrent this.page.size = ' + this.page.size)
+      // alert('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
+      // alert('skipCurrent this.playWordIndex = ' + this.playWordIndex)
+      // alert('skipCurrent this.page.size = ' + this.page.size)
       try {
         if (this.isChToEn) {
           this.detail.showWord = false
@@ -786,7 +788,7 @@ export default {
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
       let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName;
       if (this.isChToEn) {
-        return howlerUtil.extractedCh2EnUrls(paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+        return howlerUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
       } else {
         return howlerUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
       }
