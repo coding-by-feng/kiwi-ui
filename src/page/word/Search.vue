@@ -66,7 +66,7 @@ export default {
         return
       }
       // var results = fuzzyQueryWord(queryString);
-      this.fuzzyQueryWord(real, 1, 50).then(response => {
+      this.fuzzyQueryWord(real.toLowerCase(), 1, 50).then(response => {
         callback(response.data.data)
       }).catch(e => {
         console.error(e)
@@ -82,7 +82,7 @@ export default {
       }
       this.$router.push({
         path: this.$route.path,
-        query: {active: 'search', word: encodeURI(real), now: new Date().getTime()}
+        query: {active: 'search', word: encodeURI(real.toLowerCase()), now: new Date().getTime()}
       })
     },
     onSubmit() {
@@ -93,7 +93,7 @@ export default {
       this.$refs.auto.close()
       this.$router.push({
         path: this.$route.path,
-        query: {active: 'search', word: encodeURI(real), now: new Date().getTime()}
+        query: {active: 'search', word: encodeURI(real.toLowerCase()), now: new Date().getTime()}
       })
     },
     handleOpen(key, keyPath) {

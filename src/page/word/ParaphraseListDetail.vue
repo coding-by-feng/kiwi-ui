@@ -693,7 +693,7 @@ export default {
 
       if (this.isReview) {
         if (this.detail.showIndex !== this.playWordIndex) {
-          this.playWordIndex = this.detail.showIndex;
+          this.detail.showIndex = this.playWordIndex;
         }
         this.detail.showIndex++
         this.playWordIndex++;
