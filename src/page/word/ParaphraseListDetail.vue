@@ -94,8 +94,8 @@ export default {
 
       countdownMode: false,
       countdownTime: new Date().getTime(),
-      countdownMin: 30,
-      countdownText: '30分钟'
+      countdownMin: 60,
+      countdownText: '1小时'
     }
   },
   beforeCreate: function () {
