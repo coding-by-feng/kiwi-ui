@@ -702,6 +702,12 @@ export default {
       }
       await this.skipCurrent();
     },
+    isLastIndexPerPage: function () {
+      return this.playWordIndex >= playCountOnce;
+    },
+    isLastPage: function () {
+      return this.page.current >= this.page.pages;
+    },
     async skipCurrent() {
       console.log('skipCurrent')
       // alert('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
@@ -711,11 +717,15 @@ export default {
         if (this.isChToEn) {
           this.detail.showWord = false
         }
-        let lastIndexPerPage = this.detail.showIndex >= this.page.size;
-        let lastPage = this.page.current === this.page.pages;
+        let lastIndexPerPage = this.isLastIndexPerPage()
+        let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
         console.log('skipCurrent lastPage = ' + lastPage)
+        console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
         console.log('skipCurrent lastIndexPerPage = ' + lastIndexPerPage)
+        console.log('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
+        console.log('skipCurrent this.page.current = ' + this.page.current)
+        console.log('skipCurrent this.page.size = ' + this.page.size)
         if (lastPage) {
           let lastPageRemainder = this.page.total % this.page.size
           if (lastIndexPerPage || (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder)) {
@@ -874,11 +884,11 @@ export default {
               split-button type="info" @command="countdownSelectHandle">
             <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
             <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
+              <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
               <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
               <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
               <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
-              <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
-              <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </div>
