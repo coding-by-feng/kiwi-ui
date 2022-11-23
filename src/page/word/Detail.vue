@@ -1,12 +1,12 @@
 <script>
-import { getStore, setStore } from '@/util/store'
+import {getStore, setStore} from '@/util/store'
 import msgUtil from '@/util/msg'
 import wordSearch from '@/api/wordSearch'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
-import { isMobile } from '@/util/util'
+import {isMobile} from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 
 let that
@@ -18,7 +18,7 @@ export default {
   components: {
     Countdown: $ => import('./Countdown')
   },
-  data () {
+  data() {
     return {
       loading: false,
       windowInnerHeight: window.innerHeight,
@@ -41,9 +41,9 @@ export default {
         type: '',
         listSelectDialogVisible: false,
         starListData: [],
-        paraphraseStars: getStore({ name: 'paraphrase_stars' }),
-        wordStars: getStore({ name: 'word_stars' }),
-        exampleStars: getStore({ name: 'example_stars' }),
+        paraphraseStars: getStore({name: 'paraphrase_stars'}),
+        wordStars: getStore({name: 'word_stars'}),
+        exampleStars: getStore({name: 'example_stars'}),
         paraphraseCollectMap: new Map(),
         dialogTitle: '',
         collectId: 0
@@ -69,29 +69,29 @@ export default {
     that = this
   },
   computed: {
-    isLogin () {
-      let accessToken = getStore({ name: 'access_token' })
+    isLogin() {
+      let accessToken = getStore({name: 'access_token'})
       return !!accessToken
     },
-    getDateOn8Sec () {
+    getDateOn8Sec() {
       return new Date().getTime() + 1000 * 10
     },
-    getWordNameStyle () {
+    getWordNameStyle() {
       if (this.getWindowWidth < 350) {
         return `font-family: 'Helvetica Neue'; font-size: large;`
       }
       return `font-family: 'Helvetica Neue'; font-size: xx-large;`
     },
-    getWindowWidth () {
+    getWindowWidth() {
       return window.innerWidth
     },
-    isSmallWindow () {
+    isSmallWindow() {
       return window.innerWidth <= 400
     },
-    isLargeWindow () {
+    isLargeWindow() {
       return window.innerWidth >= 800
     },
-    getYoudaoQueryUrl () {
+    getYoudaoQueryUrl() {
       if (isMobile()) {
         return `https://m.youdao.com/dict?le=eng&q=${this.keyword}`
       } else {
@@ -99,12 +99,12 @@ export default {
       }
     }
   },
-  async mounted () {
+  async mounted() {
     await this.init()
     // await this.initPronunciation()
   },
   watch: {
-    '$route' () {
+    '$route'() {
       this.initTabActivate()
       if (this.isTabActivate) {
         this.init()
@@ -117,13 +117,13 @@ export default {
     ...wordStarList,
     ...paraphraseStarList,
     ...exampleStarList,
-    async initTabActivate () {
+    async initTabActivate() {
       // 标记当前Tab被激活显示
       let active = this.$route.query.active
       this.isTabActivate = !active || active === 'search'
       this.showWordSelect = false
     },
-    async init () {
+    async init() {
       // clean data
       this.showCharacterId = 0
 
@@ -153,7 +153,7 @@ export default {
         await this.initDetail('')
       }
     },
-    async initDetail (w) {
+    async initDetail(w) {
       let word = w
       if (this.$route.query.word) {
         word = decodeURI(this.$route.query.word)
@@ -202,7 +202,7 @@ export default {
             this.defaultHint = '单词数据从Cambridge抓取不到，请联系作者'
             this.isForceRequest = false
           }
-          this.wordInfo = { wordName: '' }
+          this.wordInfo = {wordName: ''}
           this.countdownTime = 0
         }
         this.keyword = word
@@ -210,13 +210,13 @@ export default {
         console.error(e)
       })
     },
-    agileShowDetail (wordInfo) {
+    agileShowDetail(wordInfo) {
       this.wordInfo = wordInfo
       this.isQueryNotResult = false
       this.defaultHint = null
       this.showWordSelect = false
     },
-    async initPronunciation () {
+    async initPronunciation() {
       if (this.wordInfo.characterVOList) {
         let characterVOList = this.wordInfo.characterVOList
         for (let i = 0; i < characterVOList.length; i++) {
@@ -229,7 +229,7 @@ export default {
         }
       }
     },
-    async stockReview (wordIdList) {
+    async stockReview(wordIdList) {
       for (let i = 0; i < wordIdList.length; i++) {
         let wordId = wordIdList[i]
         await this.queryWordDetailById(wordId).then(response => {
@@ -237,7 +237,7 @@ export default {
             this.wordInfo = response.data.data
             this.playDetail2Audio()
           } else {
-            this.wordInfo = { wordName: '' }
+            this.wordInfo = {wordName: ''}
           }
         }).catch(e => {
           console.error(e)
@@ -247,13 +247,13 @@ export default {
         this.autoPlayDialogVisible = true
       }
     },
-    async oneWordPlay () {
+    async oneWordPlay() {
       // tts.setAudioText('詹士锋个人测试')
       // tts.playTTS()
       await this.playDetail2Audio()
       await this.stockReviewStart()
     },
-    stockReviewStart () {
+    stockReviewStart() {
       this.autoPlayDialogVisible = false
       // console.log(this.audioList)
       if (index === 0 && this.audioList.length) {
@@ -262,7 +262,7 @@ export default {
         this.audioList[0].play()
       }
     },
-    async playPronunciation (id, sourceUrl, soundmarkType) {
+    async playPronunciation(id, sourceUrl, soundmarkType) {
       try {
         if (soundmarkType) {
           if (this.isUKPronunciationPlaying || this.isUSPronunciationPlaying) {
@@ -279,7 +279,7 @@ export default {
         // audio.pause()
         // audio.loop = false
         // audio.type = 'audio/ogg'
-        let source = getStore({ name: 'pronunciation_source' })
+        let source = getStore({name: 'pronunciation_source'})
         if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
         } else {
@@ -298,43 +298,43 @@ export default {
         }, 1)
       }
     },
-    handleChange (val) {
+    handleChange(val) {
       // console.log(val)
     },
-    getWordCollectClass () {
+    getWordCollectClass() {
       if (this.collect.wordIsCollect) {
         return 'el-icon-remove-outline outline_fix'
       }
       return 'el-icon-circle-plus-outline outline_fix'
     },
-    getParaphraseCollectClass (id) {
+    getParaphraseCollectClass(id) {
       let collectListId = this.collect.paraphraseCollectMap.get(id)
       if (collectListId != null) {
         return 'el-icon-remove-outline outline_fix_top_right'
       }
       return 'el-icon-circle-plus-outline outline_fix_top_right'
     },
-    checkIsLogin () {
+    checkIsLogin() {
       if (!this.isLogin) {
         this.msgWarning(this, '请先登录再进行收藏操作')
         return false
       }
       return true
     },
-    selectShowCharacter (characterId) {
+    selectShowCharacter(characterId) {
       this.showCharacterId = characterId
       this.showCharacter = false
       setTimeout(() => {
         this.showCharacter = true
       }, 1)
     },
-    async wordCollectClickFun () {
+    async wordCollectClickFun() {
       if (!this.checkIsLogin()) {
         return
       }
       // 例句本从缓存读取，提高性能
       if (this.collect.wordStars && this.collect.wordStars.length > 0) {
-        this.collect.wordStars = getStore({ name: 'word_stars' })
+        this.collect.wordStars = getStore({name: 'word_stars'})
       } else {
         await this.getWordStarList().then(response => {
           this.collect.wordStars = response.data.data
@@ -353,13 +353,13 @@ export default {
       this.collect.listSelectDialogVisible = true
       this.collect.dialogTitle = '选择想要保存的单词本'
     },
-    async paraphraseCollectClickFun (paraphraseId) {
+    async paraphraseCollectClickFun(paraphraseId) {
       if (!this.checkIsLogin()) {
         return
       }
       this.collect.collectId = paraphraseId
       if (this.collect.paraphraseStars && this.collect.paraphraseStars.length > 0) {
-        this.collect.paraphraseStars = getStore({ name: 'paraphrase_stars' })
+        this.collect.paraphraseStars = getStore({name: 'paraphrase_stars'})
       } else {
         await this.getParaphraseStarList().then(response => {
           this.collect.paraphraseStars = response.data.data
@@ -378,14 +378,14 @@ export default {
       this.collect.listSelectDialogVisible = true
       this.collect.dialogTitle = '选择想要保存的释义本'
     },
-    async exampleCollectClickFun (exampleId) {
+    async exampleCollectClickFun(exampleId) {
       if (!this.checkIsLogin()) {
         return
       }
       this.collect.collectId = exampleId
       // 例句本从缓存读取，提高性能
       if (this.collect.exampleStars && this.collect.exampleStars.length > 0) {
-        this.collect.exampleStars = getStore({ name: 'example_stars' })
+        this.collect.exampleStars = getStore({name: 'example_stars'})
       } else {
         await this.getExampleStarList().then(response => {
           this.collect.exampleStars = response.data.data
@@ -404,10 +404,10 @@ export default {
       this.collect.listSelectDialogVisible = true
       this.collect.dialogTitle = '选择想要保存的例句本'
     },
-    listSelectDialogHandleClose () {
+    listSelectDialogHandleClose() {
       this.collect.listSelectDialogVisible = false
     },
-    async selectOneList (listId) {
+    async selectOneList(listId) {
       const loading = this.$loading({
         lock: true,
         text: 'Loading',
@@ -415,7 +415,7 @@ export default {
         background: 'rgba(0, 0, 0, 0.7)'
       })
       if (this.collect.type === 'word') {
-        let data = { wordId: this.wordInfo.wordId, listId: listId }
+        let data = {wordId: this.wordInfo.wordId, listId: listId}
         await this.putWordStarList(data).then(response => {
           this.collect.listSelectDialogVisible = false
           this.doSuccess()
@@ -423,7 +423,7 @@ export default {
           console.error(e)
         })
       } else if (this.collect.type === 'paraphrase') {
-        let data = { paraphraseId: this.collect.collectId, listId: listId }
+        let data = {paraphraseId: this.collect.collectId, listId: listId}
         await this.putParaphraseStarList(data).then(response => {
           this.collect.listSelectDialogVisible = false
           this.doSuccess()
@@ -431,7 +431,7 @@ export default {
           console.error(e)
         })
       } else if (this.collect.type === 'example') {
-        let data = { exampleId: this.collect.collectId, listId: listId }
+        let data = {exampleId: this.collect.collectId, listId: listId}
         await this.putExampleStarList(data).then(response => {
           this.collect.listSelectDialogVisible = false
           this.doSuccess()
@@ -441,7 +441,7 @@ export default {
       }
       loading.close()
     },
-    playDetail2Audio () {
+    playDetail2Audio() {
       let autoAudio = new Audio()
       autoAudio.pause()
       autoAudio.loop = false
@@ -458,14 +458,14 @@ export default {
       this.audioList.push(autoAudio)
       this.autoWordList.push(this.wordInfo)
     },
-    doSuccess () {
+    doSuccess() {
       this.$message.success({
         duration: 1000,
         center: true,
         message: '操作成功'
       })
     },
-    removeByWordNameFun () {
+    removeByWordNameFun() {
       this.$confirm('即将清除当前单词数据，重新抓取, 是否继续?', '清除操作', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -481,13 +481,13 @@ export default {
         }
       })
     },
-    countdownEndFun () {
+    countdownEndFun() {
       this.countdownTime++
       this.isQueryNotResult = false
       this.isForceRequest = true
       this.init()
     },
-    async pageChange () {
+    async pageChange() {
       this.loading = true
       this.isForceRequest = true
       try {
@@ -529,6 +529,7 @@ export default {
   position: absolute;
   top: 5px;
   left: 5px;
+  width: 90%;
 }
 
 .outline_fix_bottom_left {
@@ -729,14 +730,18 @@ export default {
                          v-for="phraseVO in wordParaphraseVO.phraseList">
                       <p>[ {{ phraseVO }} ]</p>
                     </div>
-                    <p>{{ wordParaphraseVO.paraphraseEnglish }}</p>
+                    <p style="margin-top: 50px;">
+                      {{ wordParaphraseVO.paraphraseEnglish }}
+                    </p>
                     <el-button type="text" style="color: #909399">
                       <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                          style="color: #FFFFFF;"
                          @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
                     </el-button>
-                    <span v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
-                          class="outline_fix_top_left">{{ wordParaphraseVO.codes }}</span>
+                    <div v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
+                         class="outline_fix_top_left">
+                      {{ wordParaphraseVO.codes }}
+                    </div>
                   </div>
                 </el-alert>
               </div>

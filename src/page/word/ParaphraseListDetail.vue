@@ -1031,7 +1031,7 @@ export default {
                     <el-tag type="warning">{{ phrase }}</el-tag>
                   </div>
                   <br v-if="detail.paraphraseVO.phraseList"/>
-                  {{ this.detail.paraphraseVO.codes }}
+                  <p>{{ this.detail.paraphraseVO.codes }}</p>
                   <div style="word-wrap:break-word; overflow:hidden;">
                     {{ this.detail.paraphraseVO.paraphraseEnglish }}
                   </div>
@@ -1128,7 +1128,6 @@ export default {
                  size="mini">
         <i class="el-icon-video-play"></i>
       </el-button>
-
       <br/>
 
       <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
