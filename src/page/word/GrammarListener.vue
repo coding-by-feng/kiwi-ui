@@ -5,8 +5,9 @@ import NoSleep from 'nosleep.js'
 import msgUtil from '@/util/msg'
 import {removeBlankLines} from '@/util/util'
 import {Howl, Howler} from 'howler';
+import {toFixedNum} from '@/util/mathUtil'
 
-const PER_SHOW_LINES_SIZE = 5
+const PER_SHOW_LINES_SIZE = 4
 
 let that
 let noSleep
@@ -14,7 +15,7 @@ let noSleep
 export default {
   data() {
     return {
-      innerHeightPx: window.innerHeight * 0.6 + 'px',
+      innerHeightPx: window.innerHeight * 0.7 + 'px',
       currentGrammar: null,
       currentGrammarHint: '请选择当前的语法篇章',
       currentMp3TotalTime: 0,
@@ -27,7 +28,11 @@ export default {
       isPlaying: false,
       currentGrammarHowl: null,
       countdownFun: null,
-      GRAMMAR_EN_TO_CH_HINT: kiwiConsts.GRAMMAR_EN_TO_CH_HINT
+      GRAMMAR_EN_TO_CH_HINT: kiwiConsts.GRAMMAR_EN_TO_CH_HINT,
+      loading: false,
+      canAdjustCurrentItem: false,
+      thisStopDuration: 0,
+      thisStopStartTime: null
     }
   },
   beforeCreate: function () {
@@ -58,13 +63,16 @@ export default {
         this.currentItemsIndex = 0;
         this.currentGrammarItems = []
         this.currentGrammarPlayPercentage = 0
+        this.thisStopDuration = 0
+        this.thisStopStartTime = null
       }
       if (isCleanItemsRelatedData) {
-        this.currentGrammarItemsShowTime = [];
+        this.currentGrammarItemsShowTime = []
       }
       noSleep.disable()
     },
     selectGrammar(command) {
+      this.loading = true
       this.cleaningAll()
       this.currentGrammar = command
       this.currentGrammarHint = kiwiConsts.GRAMMAR_EN_TO_CH_HINT.get(command)
@@ -84,6 +92,7 @@ export default {
           this.currentGrammarItems.push(item);
         }
       }
+      this.loading = false
     },
     nextItem: function () {
       console.log('nextItem this.currentItemsIndex = ' + this.currentItemsIndex)
@@ -104,6 +113,7 @@ export default {
     },
     startPlay() {
       console.log('startPlay')
+      this.loading = true
       if (!this.currentGrammarHowl) {
         this.currentGrammarHowl = new Howl({
           src: ['grammar/mp3/' + this.currentGrammar + '.mp3'],
@@ -128,19 +138,26 @@ export default {
               }
             }
 
+            if (that.thisStopStartTime) {
+              that.thisStopDuration += new Date().getTime() - that.thisStopStartTime.getTime()
+              console.log('that.thisStopDuration = ' + that.thisStopDuration)
+            }
             that.countdownFun = setInterval(() => {
-              that.currentGrammarPlayPercentage = (that.currentItemsIndex / that.currentGrammarItems.length).toFixed(2)
+              that.currentGrammarPlayPercentage = toFixedNum(that.currentItemsIndex / that.currentGrammarItems.length, 2)
+              if (that.canAdjustCurrentItem) {
+                return
+              }
               if (that.currentItemsIndex < that.currentGrammarItems.length) {
-                let future = new Date().getTime();
-                console.log('diff = ' + (future - that.currentGrammarItemsShowTime[that.currentItemsIndex]))
+                let future = new Date().getTime() - that.thisStopDuration
                 if (future > that.currentGrammarItemsShowTime[that.currentItemsIndex]) {
-                  that.nextItem();
+                  that.nextItem()
                 }
               }
             }, 300)
 
             that.isPlaying = true
             noSleep.enable()
+            that.thisStopStartTime = null
           },
           onend: function () {
             that.isPlaying = false
@@ -153,7 +170,8 @@ export default {
         })
       }
 
-      this.currentGrammarHowl.play()
+      this.currentGrammarHowl.play();
+      this.loading = false
     },
     stopPlay() {
       if (this.countdownFun) {
@@ -163,6 +181,7 @@ export default {
         this.currentGrammarHowl.pause();
       }
       this.isPlaying = false
+      this.thisStopStartTime = new Date()
     },
     showPrevItemAgain(index) {
       if (index > 0) {
@@ -175,7 +194,15 @@ export default {
         return this.currentGrammarItems[index + 1];
       }
       return '=========分割线(下面已无更多字幕显示)========='
-    }
+    },
+    adjustCurrentItem() {
+      if (!this.canAdjustCurrentItem) {
+        msgUtil.msgSuccess(this, '当前字幕自动滚动已锁住，不会自动滚动，调整完字幕之后请再次点击开启字幕自动滚动');
+      } else {
+        msgUtil.msgSuccess(this, '当前字幕自动滚动已开启');
+      }
+      this.canAdjustCurrentItem = !this.canAdjustCurrentItem;
+    },
   }
 }
 </script>
@@ -197,12 +224,14 @@ export default {
                  @click="startPlay"></el-button>
       <el-button v-if="isPlaying && currentGrammar" icon="el-icon-video-pause" size="mini"
                  @click="stopPlay"></el-button>
-      <el-button v-if="currentGrammar" icon="el-icon-top" size="mini"
+      <el-button v-if="currentGrammar" :icon="canAdjustCurrentItem ? 'el-icon-lock' : 'el-icon-unlock'" size="mini"
+                 @click="adjustCurrentItem"></el-button>
+      <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-top" size="mini"
                  @click="prevItem"></el-button>
-      <el-button v-if="currentGrammar" icon="el-icon-bottom" size="mini"
+      <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-bottom" size="mini"
                  @click="nextItem"></el-button>
     </div>
-    <div style="margin-top: 36px">
+    <div style="margin-top: 36px" v-loading="loading">
       <el-progress v-if="currentGrammar" :text-inside="true" :stroke-width="20"
                    :percentage="currentGrammarPlayPercentage"
                    color="#C0C0C0"></el-progress>
