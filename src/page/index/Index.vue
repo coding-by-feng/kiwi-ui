@@ -127,6 +127,10 @@ export default {
         <span slot="label"><i class="el-icon-tickets"></i></span>
         <router-view name="starList"></router-view>
       </el-tab-pane>
+      <el-tab-pane name="grammarListener" v-if="isLogin">
+        <span slot="label"><i class=el-icon-school></i></span>
+        <router-view name="grammarListener"></router-view>
+      </el-tab-pane>
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label"><i class="el-icon-user"></i></span>
         <router-view name="userCenter"></router-view>

@@ -107,6 +107,27 @@ export default {
         ENHANCE_READ: 'enhanceRead',
     },
 
+    GRAMMAR_EN_TO_CH_HINT: new Map()
+        .set('article', '冠词')
+        .set('simple-present-tense', '一般现在时')
+        .set('simple-past-tense', '一般过去时')
+        .set('simple-future-tense', '一般将来时')
+        .set('present-progressive', '现在进行时')
+        .set('past-continuous-tense', '过去进行时')
+        .set('future-continuous-tense', '将来进行时')
+        .set('the-present-perfect', '现在完成时')
+        .set('the-past-perfect', '过去完成时')
+        .set('the-future-perfect', '将来完成时')
+        .set('characteristic-of-the-continuous-tense', '进行时态的特性')
+        .set('present-perfect-continuous-tense', '现在完成进行时')
+        .set('past-perfect-continuous-tense', '过去完成进行时')
+        .set('future-perfect-continuous-tense', '将来完成进行时')
+        .set('simple-sentences-and-complex-sentences', '简单句和复杂句')
+        .set('subjunctive-mood', '虚拟语气')
+        .set('modal-1', '情态动词第一部分')
+        .set('modal-2', '情态动词第二部分')
+        .set('nominal-clause', '名词从句'),
+
     CONFIG_KEY: {
         PRONUNCIATION_SOURCE: 'pronunciation_source',
         REVIEW_TYPE: 'review_type',

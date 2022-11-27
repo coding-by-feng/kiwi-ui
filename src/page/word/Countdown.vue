@@ -16,7 +16,7 @@ export default {
       default: false
     }
   },
-  data () {
+  data() {
     return {
       time: '',
       flag: false,
@@ -24,14 +24,14 @@ export default {
       countdownFun: null
     }
   },
-  mounted () {
+  mounted() {
     this.init()
   },
-  destroyed () {
+  destroyed() {
     clearInterval(this.countdownFun)
   },
   methods: {
-    init () {
+    init() {
       if (!this.endTime) {
         this.time = '0天0小时0分0秒'
         return
@@ -43,7 +43,7 @@ export default {
         this.timeDown()
       }, 200)
     },
-    timeDown () {
+    timeDown() {
       const end = new Date(this.endTime)
       const now = new Date()
       let leftTime = parseInt((end.getTime() - now.getTime()) / 1000)
@@ -69,7 +69,7 @@ export default {
         }
       }
     },
-    format (time) {
+    format(time) {
       if (time >= 10) {
         return time
       }

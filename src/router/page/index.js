@@ -3,6 +3,7 @@ import IndexLazy from '@/page/index/IndexLazy'
 import Search from '@/page/word/Search'
 import Detail from '@/page/word/Detail'
 import StarList from '@/page/word/StarList'
+import GrammarListener from '@/page/word/GrammarListener'
 import UserLogin from '@/page/login/UserLogin'
 import UserCenter from '@/page/user/UserCenter'
 import About from '@/page/about/Index'
@@ -24,6 +25,7 @@ export default [{
     components: {
       search: Search,
       starList: StarList,
+      grammarListener: GrammarListener,
       userLogin: UserLogin,
       userCenter: UserCenter,
       about: About

@@ -527,6 +527,7 @@ export default {
 
 .outline_fix_top_left {
   position: absolute;
+  text-align: left;
   top: 5px;
   left: 5px;
   width: 90%;
