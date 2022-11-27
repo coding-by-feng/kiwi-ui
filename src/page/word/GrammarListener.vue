@@ -1,0 +1,226 @@
+<script>
+import kiwiConsts from "@/const/kiwiConsts";
+import {readFile, escapeHTML} from '@/util/fileUtil'
+import NoSleep from 'nosleep.js'
+import msgUtil from '@/util/msg'
+import {removeBlankLines} from '@/util/util'
+import {Howl, Howler} from 'howler';
+
+const PER_SHOW_LINES_SIZE = 5
+
+let that
+let noSleep
+
+export default {
+  data() {
+    return {
+      innerHeightPx: window.innerHeight * 0.6 + 'px',
+      currentGrammar: null,
+      currentGrammarHint: '请选择当前的语法篇章',
+      currentMp3TotalTime: 0,
+      currentItemsIndex: 0,
+      currentGrammarTxtLength: 0,
+      currentGrammarItems: [],
+      currentGrammarItemsShowTime: [],
+      currentGrammarItemsFirstPlayTime: null,
+      currentGrammarPlayPercentage: 0,
+      isPlaying: false,
+      currentGrammarHowl: null,
+      countdownFun: null,
+      GRAMMAR_EN_TO_CH_HINT: kiwiConsts.GRAMMAR_EN_TO_CH_HINT
+    }
+  },
+  beforeCreate: function () {
+    that = this
+    noSleep = new NoSleep()
+    Howler.html5PoolSize = 30
+    Howler.autoSuspend = false
+  },
+  destroyed() {
+    this.cleaningAll()
+  },
+  computed: {},
+  methods: {
+    ...msgUtil,
+    cleaningAll() {
+      this.cleaning(true, true, true, true)
+    },
+    cleaning(isCleanHowl, isCleanCountDown, isCleanItems, isCleanItemsRelatedData) {
+      if (isCleanHowl && this.currentGrammarHowl) {
+        Howler.stop()
+        this.currentGrammarHowl = null;
+        this.isPlaying = false
+      }
+      if (isCleanCountDown && this.countdownFun) {
+        clearInterval(this.countdownFun)
+      }
+      if (isCleanItems) {
+        this.currentItemsIndex = 0;
+        this.currentGrammarItems = []
+        this.currentGrammarPlayPercentage = 0
+      }
+      if (isCleanItemsRelatedData) {
+        this.currentGrammarItemsShowTime = [];
+      }
+      noSleep.disable()
+    },
+    selectGrammar(command) {
+      this.cleaningAll()
+      this.currentGrammar = command
+      this.currentGrammarHint = kiwiConsts.GRAMMAR_EN_TO_CH_HINT.get(command)
+      let grammarTxt = readFile('grammar/txt/' + command + '.txt');
+      grammarTxt = removeBlankLines(grammarTxt)
+      this.currentGrammarTxtLength = grammarTxt.length
+      let grammarTxtLines = grammarTxt.split('\n');
+      for (let i = 0; i < grammarTxtLines.length; i += PER_SHOW_LINES_SIZE) {
+        let item = ''
+        for (let j = 0; j < PER_SHOW_LINES_SIZE; j++) {
+          if (i + j < grammarTxtLines.length) {
+            item += grammarTxtLines[i + j] + '\n';
+          }
+        }
+        console.log(item)
+        if (item !== '') {
+          this.currentGrammarItems.push(item);
+        }
+      }
+    },
+    nextItem: function () {
+      console.log('nextItem this.currentItemsIndex = ' + this.currentItemsIndex)
+      if (this.currentItemsIndex >= this.currentGrammarItems.length) {
+        msgUtil.msgSuccess(this, '已经到底部啦')
+        return
+      }
+      this.currentItemsIndex++;
+      this.$refs.grammarPlane.next()
+    },
+    prevItem: function () {
+      if (this.currentItemsIndex < 1) {
+        msgUtil.msgSuccess(this, '已经到顶部啦')
+        return
+      }
+      this.currentItemsIndex--;
+      this.$refs.grammarPlane.prev()
+    },
+    startPlay() {
+      console.log('startPlay')
+      if (!this.currentGrammarHowl) {
+        this.currentGrammarHowl = new Howl({
+          src: ['grammar/mp3/' + this.currentGrammar + '.mp3'],
+          autoplay: false,
+          loop: false,
+          volume: 0.5,
+          html5: true,
+          format: ['mp3'],
+          onplay: function () {
+            console.log('onplay this._duration = ' + this._duration)
+            that.currentMp3TotalTime = this._duration
+            that.cleaning(false, true, false, true)
+
+            let now = new Date();
+            let timePerUnit = that.currentMp3TotalTime / that.currentGrammarTxtLength;
+            for (let i = 0; i < that.currentGrammarItems.length; i++) {
+              if (i < 1) {
+                that.currentGrammarItemsShowTime.push(now.getTime() + that.currentGrammarItems[0].length * timePerUnit * 1000);
+              } else {
+                let nextTimeInFuture = that.currentGrammarItemsShowTime[i - 1] + that.currentGrammarItems[i].length * timePerUnit * 1000;
+                that.currentGrammarItemsShowTime.push(nextTimeInFuture);
+              }
+            }
+
+            that.countdownFun = setInterval(() => {
+              that.currentGrammarPlayPercentage = (that.currentItemsIndex / that.currentGrammarItems.length).toFixed(2)
+              if (that.currentItemsIndex < that.currentGrammarItems.length) {
+                let future = new Date().getTime();
+                console.log('diff = ' + (future - that.currentGrammarItemsShowTime[that.currentItemsIndex]))
+                if (future > that.currentGrammarItemsShowTime[that.currentItemsIndex]) {
+                  that.nextItem();
+                }
+              }
+            }, 300)
+
+            that.isPlaying = true
+            noSleep.enable()
+          },
+          onend: function () {
+            that.isPlaying = false
+            that.cleaning(false, true, false, true)
+          },
+          onpause: function () {
+            that.isPlaying = false
+            that.cleaning(false, true, false, true)
+          }
+        })
+      }
+
+      this.currentGrammarHowl.play()
+    },
+    stopPlay() {
+      if (this.countdownFun) {
+        clearInterval(this.countdownFun);
+      }
+      if (this.currentGrammarHowl) {
+        this.currentGrammarHowl.pause();
+      }
+      this.isPlaying = false
+    },
+    showPrevItemAgain(index) {
+      if (index > 0) {
+        return this.currentGrammarItems[index - 1];
+      }
+      return '=========分割线(上面已无更多字幕显示)========='
+    },
+    showNextItemInAdvance(index) {
+      if (index < this.currentGrammarItems.length) {
+        return this.currentGrammarItems[index + 1];
+      }
+      return '=========分割线(下面已无更多字幕显示)========='
+    }
+  }
+}
+</script>
+
+<template>
+  <div class="text item">
+    <div style="position: fixed; top: 60px; left: 35px; z-index: 99;">
+      <el-dropdown size="mini" plain
+                   split-button @command="selectGrammar">
+        {{ this.currentGrammarHint }}
+        <el-dropdown-menu slot="dropdown">
+          <div v-for="(value, key) in GRAMMAR_EN_TO_CH_HINT" :key="key">
+            <el-dropdown-item :command="value[0]">{{ value[1] }}</el-dropdown-item>
+          </div>
+        </el-dropdown-menu>
+      </el-dropdown>
+      &nbsp;
+      <el-button v-if="!isPlaying && currentGrammar" icon="el-icon-video-play" size="mini"
+                 @click="startPlay"></el-button>
+      <el-button v-if="isPlaying && currentGrammar" icon="el-icon-video-pause" size="mini"
+                 @click="stopPlay"></el-button>
+      <el-button v-if="currentGrammar" icon="el-icon-top" size="mini"
+                 @click="prevItem"></el-button>
+      <el-button v-if="currentGrammar" icon="el-icon-bottom" size="mini"
+                 @click="nextItem"></el-button>
+    </div>
+    <div style="margin-top: 36px">
+      <el-progress v-if="currentGrammar" :text-inside="true" :stroke-width="20"
+                   :percentage="currentGrammarPlayPercentage"
+                   color="#C0C0C0"></el-progress>
+      <el-carousel ref="grammarPlane" v-if="currentGrammar" :height="innerHeightPx"
+                   direction="vertical" :loop="false" :autoplay="false">
+        <el-carousel-item v-for="(item, index) in currentGrammarItems" :key="index">
+          <p style="white-space: pre-line; text-align: left; font-size: smaller; color: #ABABAB;">
+            {{ showPrevItemAgain(index) }}
+          </p>
+          <p style="white-space: pre-line; text-align: left; font-size: small;">{{ item }}</p>
+          <p style="white-space: pre-line; text-align: left; font-size: smaller; color: #ABABAB;">
+            {{ showNextItemInAdvance(index) }}
+          </p>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+</style>

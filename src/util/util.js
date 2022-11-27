@@ -125,6 +125,10 @@ export function sleep (time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
+export function removeBlankLines(str) {
+  return str.replaceAll(/(\n[\s\t]*\r*\n)/g, '\n').replaceAll(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, '')
+}
+
 export default {
   isObjectValueEqual,
   isMobile,
