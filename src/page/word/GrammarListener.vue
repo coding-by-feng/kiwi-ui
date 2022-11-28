@@ -219,20 +219,9 @@ export default {
           </div>
         </el-dropdown-menu>
       </el-dropdown>
-      &nbsp;
-      <el-button v-if="!isPlaying && currentGrammar" icon="el-icon-video-play" size="mini"
-                 @click="startPlay"></el-button>
-      <el-button v-if="isPlaying && currentGrammar" icon="el-icon-video-pause" size="mini"
-                 @click="stopPlay"></el-button>
-      <el-button v-if="currentGrammar" :icon="canAdjustCurrentItem ? 'el-icon-lock' : 'el-icon-unlock'" size="mini"
-                 @click="adjustCurrentItem"></el-button>
-      <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-top" size="mini"
-                 @click="prevItem"></el-button>
-      <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-bottom" size="mini"
-                 @click="nextItem"></el-button>
     </div>
-    <div style="margin-top: 36px" v-loading="loading">
-      <el-progress v-if="currentGrammar" :text-inside="true" :stroke-width="20"
+    <div style="margin-top: 36px">
+      <el-progress v-loading="loading" v-if="currentGrammar" :text-inside="true" :stroke-width="20"
                    :percentage="currentGrammarPlayPercentage"
                    color="#C0C0C0"></el-progress>
       <el-carousel ref="grammarPlane" v-if="currentGrammar" :height="innerHeightPx"
@@ -247,6 +236,18 @@ export default {
           </p>
         </el-carousel-item>
       </el-carousel>
+    </div>
+    <div style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
+      <el-button v-loading="loading" v-if="!isPlaying && currentGrammar" icon="el-icon-video-play" size="mini"
+                 @click="startPlay"></el-button>
+      <el-button v-if="isPlaying && currentGrammar" icon="el-icon-video-pause" size="mini"
+                 @click="stopPlay"></el-button>
+      <el-button v-if="currentGrammar" :icon="canAdjustCurrentItem ? 'el-icon-lock' : 'el-icon-unlock'" size="mini"
+                 @click="adjustCurrentItem"></el-button>
+      <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-top" size="mini"
+                 @click="prevItem"></el-button>
+      <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-bottom" size="mini"
+                 @click="nextItem"></el-button>
     </div>
   </div>
 </template>
