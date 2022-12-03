@@ -238,7 +238,7 @@ export default {
         let currentGrammarPlayedDuration = future - this.currentGrammarStartPlayTime
         console.log(`currentGrammarPlayedDuration: ${currentGrammarPlayedDuration}`)
         console.log(`this.currentGrammarPlayDuration: ${this.currentGrammarPlayDuration}`)
-        this.currentGrammarPlayPercentage = Math.min(toFixedNum(currentGrammarPlayedDuration / this.currentGrammarPlayDuration, 3) * 100, 100)
+        this.currentGrammarPlayPercentage = toFixedNum(Math.min(currentGrammarPlayedDuration * 100 / this.currentGrammarPlayDuration, 100), 2)
         console.log('this.currentGrammarPlayPercentage = ' + this.currentGrammarPlayPercentage)
 
         if (this.currentItemsIndex < this.currentGrammarItems.length - 2) {
@@ -281,6 +281,7 @@ export default {
               },
               onend: function () {
                 that.isPlaying = false
+                that.currentGrammarPlayPercentage = 100
                 that.cleaning(false, true, false, true)
               }
               ,
