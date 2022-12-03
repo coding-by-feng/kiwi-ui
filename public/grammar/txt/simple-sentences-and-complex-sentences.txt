@@ -1,3 +1,4 @@
+英语语法之-简单句和复杂句
 句型一：主语加系动词加表语
 其谓语动词特点
 该句型的谓语动词是系动词，又叫连系动词，顾名思义，这种动词并没有具体的动作，而只是起连接主语和后面成分的作用。这种动词后面所接的成分用来说明主语的特点，表明主语的性质特征，因此被称为主语补足语或表语（能表示主语特征的成分）。
@@ -152,23 +153,6 @@ An eagle’s egg（主语）was placed（谓语）in the nest of a prairie chick
 It scratched in the dirt for seeds.
 它在土里找种子吃。
 It（主语）scratched（谓语）in the dirt（地点状语）for seeds（目的状语）.
-
-简单句叠加成复杂难句
-This trend began during the Second World War.
-该句的主语是this trend，谓语began是一个不及物动词，后边没有带宾语。介词短语during the Second World War作时间状语。
-这种趋势始于第二次世界大战期间。
-下面开始一步步把这个句子复杂化：
-This trend began during the Second World War, when several governments came to the conclusion.
-这里加了一个定语从句when several governments came to the conclusion，来修饰时间the Second World War。
-这种趋势始于第二次世界大战期间，当时一些国家的政府得出这样的结论。
-再进一步把这个句子复杂化：
-This trend began during the Second World War, when several governments came to the conclusion that the specific demands cannot generally be foreseen in detail.
-这里添加了一个同位语从句that the specific demands cannot generally be foreseen in detail，补充说明conclusion。这个同位语从句也是一个“主语加谓语”的句型，这里的主语是the specific demands，谓语是一个被动结构cannot generally be foreseen，介词短语in detail作状语。
-这种趋势始于第二次世界大战期间，当时一些国家的政府得出结论：具体要求通常是无法详尽预见的。
-再进一步把这个句子复杂化:
-This trend began during the Second World War, when several governments came to the conclusion that the specific demands that a government wants to make of its scientific establishment cannot generally be foreseen in detail.
-这里添加了一个定语从句that a government wants to make of its scientific establishment，来修饰the specific demands。这个定语从句是一个“主语加谓语加宾语”的句型，主语是a government，谓语是wants，宾语是to make of its scientific establishment。这里的that指代先行词demands，在定语从句中作谓语make的宾语，从而构成一个make demands of的搭配，表示“对……提出要求”。
-这种趋势始于第二次世界大战期间，当时一些国家的政府得出结论：政府想向科研机构提出的具体要求通常是无法详尽预见的。
 
 句型三：主语加谓语加宾语
 其谓语动词特点

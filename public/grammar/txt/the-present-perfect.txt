@@ -1,3 +1,4 @@
+英语语法之-现在完成时
 完成时态的构成
 完成时态（perfect tense）的构成分为两部分：一是助动词have，二是实义动词的过去分词-ed，以动词work为例，：
 现在完成时：have worked
@@ -24,8 +25,8 @@
 This has been my life. I have found it worth living, and would gladly live it again if the chance were offered me.
 罗素用现在完成时总结说：“This has been my life.”。因为他是在回顾自己的一生经历，所以必然要用“现在完成时”这样一个横贯过去与现在的时态来作出“这就是我的一生”这样的结语。若单纯地用一般现在时说成“This is my life.”，那只表明他目前的生活状态——“这就是我现在的生活”，而失去了“回顾过去、纵观一生”的思想内涵。
 
-2002年2月21日是美国前总统尼克松秘密访华30周年的纪念日，次日，美国时任总统小布什在中国著名高等学府清华大学发表了演说。
-小布什作完演讲后，接受了清华大学学生的提问。当有位学生问到有关台湾问题时，小布什作了如下表态：
+2002年2月21日是美国前总统尼克松秘密访华30周年的JNR，次日，美国时任总统小布什在中国著名高等学府清华大学发表了演说。
+小布什作完演讲后，接受了清华大学学生的提问。当有位学生问到有关TW问题时，小布什作了如下表态：
 We’ve had many discussions with your leaders, and I’ve reiterated
 support for the“One China”policy. It’s been my government’s policy for a long period of time, and I haven’t changed it.
 这里短短的几句话，小布什全部用了现在完成时态，强调自从尼克松总统首次访华及后来的中美建交以来，中美两国之间在不断地交流、交往、增加接触、加强了解，以及美国政府 对“一个中国”政策的一贯支持。
@@ -219,13 +220,13 @@ John F. Kennedy was assassinated.
 
 时态搭配：现在完成时+一般过去时
 口语对话中常出现“现在完成时+一般过去时”的时态搭配使用。此时，我们用“现在完成时”提起一个新闻话题，用“一般过去时”继续详谈内容。
-比如，若你要把萨达姆被捕这一新闻告诉你的朋友，你一开始应该用现在完成时，接下去的对话则应改为过去时：
-A: The former Iraqi President Saddam has been captured.
-B: Really? When did that happen?
-A: He was captured Saturday at 8:30 p.m. in a cellar on an isolated farm near Tikrit.
-A：伊拉克前总统萨达姆被抓了。
-B：真的？什么时候？
-A：他是周六晚8:30在提克里特附近一个偏僻的农场的地窖里被捕的。
+比如，若你要把SDM被捕这一新闻告诉你的朋友，你一开始应该用现在完成时，接下去的对话则应改为过去时：
+A说 The former Iraqi President Saddam has been captured.
+B说 Really? When did that happen?
+A说 He was captured Saturday at 8:30 p.m. in a cellar on an isolated farm near Tikrit.
+A说 伊拉克前总统SDM被抓了。
+B说 真的？什么时候？
+A说 他是周六晚8:30在提克里特附近一个偏僻的农场的地窖里被捕的。
 
 过去的经历（past experience）——远的过去
 表示过去经历的现在完成时
@@ -323,11 +324,11 @@ I have married.
 I am married.
 这两句话的语境背景还是稍有不同的：“I am married.”只是很客观地、平静地说明“我已经结婚了”这个事实；而“I have married.”则带有感情色彩，只适用于新婚不久的情况，比如“我”表现出兴奋的样子，见到朋友，满脸幸福地向朋友们宣布“我已经结婚了（I have married.）”。
 这即是完成时所要表达的“对现在的影响”。这种新婚时的兴奋劲一过，以后再向别人作自我介绍时说“我已经结婚了”，就只能说成“I’m married.”。
-比如萨达姆刚刚被美军抓住时，新闻报道就可以用现在完成时态说：
+比如SDM刚刚被美军抓住时，新闻报道就可以用现在完成时态说：
 Saddam has been captured. 意思相当于“Saddam is captive.”。
 肯尼迪刚刚被暗杀后，就可以说：
 Kennedy has been assassinated. 意思相当于“Kennedy is dead.”。
-但是，随着时间的改变，语境也就变了，“萨达姆被抓”“肯尼迪被杀”离现在都比较久远了，因此，现在就不便说“Saddam has been captured.”和“Kennedy has been assassinated.”，而只能用一般过去时并加上具体的过去时间状语说成“Saddam was captured on 14 Dec. 2003.”和“Kennedy was assassinated on 22 Nov. 1963.”。
+但是，随着时间的改变，语境也就变了，“SDM被抓”“肯尼迪被杀”离现在都比较久远了，因此，现在就不便说“Saddam has been captured.”和“Kennedy has been assassinated.”，而只能用一般过去时并加上具体的过去时间状语说成“Saddam was captured on 14 Dec. 2003.”和“Kennedy was assassinated on 22 Nov. 1963.”。
 
 “动作表达”的完成时态与“状态表达”的完成时态
 在英语中，“动作表达”的完成时态强调最近发生的事件，而“状态表达”的完成时态强调“较远的过去”经历。

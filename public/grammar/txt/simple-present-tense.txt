@@ -1,3 +1,4 @@
+英语语法之-一般现在时
 一般现在时态并非只表示“现在”。一般现在时本质的思维特征是：表示从过去到现在直至将来的一段时间内发生的动作（action）或存在的状态（state），它们可发生于任何时间，这一段时间可以近乎无限长（如表示客观真理），也可以是人们生活中的一段时间（如人们的习惯活动）。
 因此，一般现在时态通常被描述为有两种基本用法：
 1. 不受时间限制的科学事实、客观真理、 谚语格言，以及用于概括、结论、观点等；
@@ -74,8 +75,8 @@ There goes our bus; we'll have to wait for the next one.
 这个瞬间动作是说话人在说话的同时即刻发生的。这只适用于表达动作的动词，表示对一些动作的解说，比如：球赛解说、剧情介绍、解释自己正在做的事情、给别人一边说一边做的示范动作等等。
 这是球赛的解说，表示在说话时刻正在发生的动作。
 迈克尔传给克林特，克林特传给杰克，杰克又回传给克林特——克林特射门——球进了！
-The woman is a spy, now she enters the room, opens the drawer, takes out a pistol and slips it into her pocket.
-这个女人是个间谍。现在她走进房间，打开抽屉，拿出手枪塞进衣兜里。
+The woman is a killer, now she enters the room, opens the drawer, takes out a pistol and slips it into her pocket.
+这个女人是个杀手。现在她走进房间，打开抽屉，拿出手枪塞进衣兜里。
 The woman is a spy, now she enters the room, opens the drawer, takes out a pistol and slips it into her pocket.
 
 用法四：一般现在时表示将来发生的动作
