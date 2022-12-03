@@ -1,3 +1,5 @@
+英语语法之-冠词
+
 冠词，限定词与名词的关系最为密切， 因为它必然是修饰某个名词，以限定名词所指的范围，对名词起泛指或特指、定量或不定量等限定修饰作用。
 限定词包括：
 第一种-冠词：the, an和a；
@@ -153,7 +155,7 @@ four times a day 每天四次
 各种数量词中也含有不定冠词a，此时不能换成one，比如：a few, a little, a great many 以及a large number of等等。
 
 用不用冠词的意义区别 (the hospital 或者 hospital) 
-对于表示处所或社会事业机构类的名词 (如prison, church和college等) ，使用冠词the，是强调处所，指的是实际的建筑物或地点；不用冠词the，是强调活动。
+对于表示处所或社会事业机构类的名词 (如prison和college等) ，使用冠词the，是强调处所，指的是实际的建筑物或地点；不用冠词the，是强调活动。
 家居生活类名词
 at table 或者 at the table
 in bed 或者 in the bed

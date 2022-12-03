@@ -1,4 +1,4 @@
-情态动词第一部分
+英语语法之-情态动词第一部分
 
 多情多义的情态动词
 需要注意的是，四个情态动词的过去式could，might，would和should只是在形式上是can，may，will和shall的过去式，而在意义上并不是完全对应于can，may，will和shall。
@@ -149,7 +149,6 @@ B说 He may(或者)might(或者)could be in the library.
 
 While this might explain some cases, it is not universally applicable.
 这种观点或许可以解释某些情况，但它并非放之四海而皆准。
-While this might explain some cases, it is not universally applicable.
 
 不同的情态动词所表达的可能性的程度是不一样的，用must肯定要比用could或might所表示的说话人的把握大得多。用could或might就更加不确定了；
 
@@ -174,7 +173,7 @@ Ring his home number. He’ll be at home now.
 这里用will，表示“我肯定他在家”，相当于“He must be at home now.”。
 will很少用于表示对现在的推测，主要是表示对将来的“预测”。 should表示推测时还有其他限制。
 
-推测用法 (二) ：将来预测 (情态动词一般式) 
+推测用法 (二) ：将来预测 (情态动词一般式)
 对将来的推测，确切地说应该是“预测 (prediction) ”，谓语形式也是用“情态动词一般式”。
 实际上，除了must，情态动词如will，should，may，might和 could都可以表示对将来的预测。
 A说 What did the weatherman say?
@@ -197,12 +196,10 @@ In many European countries, people believe that the first visitor on New Year’
 这里的前三个would都是表示推测。注意，在So some towns would choose a man with dark hair to go quickly from house to house.After he makes his rounds, the houses would be open to other visitors. 中的两个would不是表示推测，而是表示“意愿”，即属于情态动词的基本用法。
 新年的迷信
 在许多欧洲国家，人们相信，在新年这天你遇到的第一个人将会给你带来好运或者厄运。若是遇到一头黑发的男子，这就意味着好运。若是遇到浅色头发的女子或男子，则意味着是厄运。因此，有的城镇就会专门挑选出一名深色头发的男子迅速地挨家挨户走动。等他转一圈下来之后，屋门才会打开，迎接其他客人。
-In many European countries, people believe that the first visitor on New Year’s Day would bring them either good luck or bad luck. A dark-haired man would bring good luck. A woman or a man with light hair would bring bad luck. So some towns would choose a man with dark hair to go quickly from house to house. After he makes his rounds, the houses would be open to other visitors.
 
 should表示确定程度较大的预测，相当于“很可能将会这样了”。
 The results are expected tomorrow. We should know the results tomorrow.
 结果明天就出来了。我们明天就该知道结果了。
-The results are expected tomorrow. We should know the results tomorrow.
 
 He should have plenty of time to get to the station.
 他应该有足够多的时间去车站。
@@ -213,7 +210,6 @@ The journey should take two or three days.
 may表示约50％确定的预测。
 Tomorrow’s computers may have something for your nose to enjoy.
 未来的计算机可能就会使你的鼻子能够闻到气味。
-Tomorrow’s computers may have something for your nose to enjoy.
 This bridge may collapse in an earthquake. 这座桥可能会在地震中坍塌。
 
 could(或者)might表示很不确定的预测。
@@ -243,7 +239,7 @@ There could be another disaster shortly. 很快就会发生另一场灾难。
 - 其次，不同的情态动词所表示的确定程度不同。
 - 最后，要理解should用来对说话人所希望发生的事进行推断。
 
-推测用法 (三) ：过去推测 (情态动词完成式) 
+推测用法 (三) ：过去推测 (情态动词完成式)
 表示对过去的推测，英语的谓语形式要用“情态动词完成式”，常用的情态动词有must，may，might和could，所以要说成 must have been, may have been, might have been和could have been等形式；若是在否定句中，则需要将must换成can或could，说成can’t have done或couldn’t have done，
 其中情态动词所表达的推测的确定程度与对现在的推测中所说的一样，即must表示非常确定的推测，may其次，might或could最不确定。
 A说 Why wasn’t John in class yesterday?约翰昨天怎么没来上课？
@@ -272,8 +268,8 @@ He could have sent a message.
 也可以理解成对过去的推测，译成：他可能已经捎口信过去了。
 
 He might have been drowned.
-译文1：他当时差点就被淹死了。 (虚拟) 
-译文2：他可能已经被淹死了。 (推测) 
+译文1：他当时差点就被淹死了。 (虚拟)
+译文2：他可能已经被淹死了。 (推测)
 
 但是如果是这样的句子：
 You might have been drowned!
@@ -294,7 +290,7 @@ Oh no, a traffic jam. There must have been an accident.
 哦，又是堵车，一定是发生交通事故了。
 
 另外，“情态动词have done”的结构不一定相当于现在完成时。例如：
-You must have seen him. (你一定见过他了。) 
+You must have seen him. (你一定见过他了。)
 可以相当于：
 I assume now you have seen him before.
 I assume now you saw him last night.
@@ -369,8 +365,8 @@ can所表示的“可能”与前文讲过的could，may和might所表示的“�
 区分“理论上的可能”与“实际上的可能”的一个关键点，是看所说的可能情况与说话时的现状是否有联系。与说话时的现状有联系的，则是“实际上的可能”。这时往往是谈论一个具体的事件，这尤其用于针对一个现状或后果来推断其产生的原因。与说话当时的现状无关的，则是“理论上的可能”。
 由于can具有“潜能”这一特性，决定了它只能用来表示“理论上的可能”，而不能表示“实际上的可能”，即不能具体地谈一个事件。所以，上面提到的推测含义中，都没有提到用can，而说的是could，might和may。
 
-The boy can be very naughty. (理论上、潜在的可能) 
-The boy looks pale. He could be sick. (实际上、现实的可能) 
+The boy can be very naughty. (理论上、潜在的可能)
+The boy looks pale. He could be sick. (实际上、现实的可能)
 Grammar can be fun!
 这里的can表示一种“理论上的可能”。比如说现在市面上有很多枯燥乏味的英语语法书。于是我就想说“语法可能会很有趣”，并且我一直在努力这么做。只不过，这种理论上的可能，在实践中是要下一番苦功夫的。
 语法可能会很有趣！
@@ -419,7 +415,7 @@ He could(或者)was able to pull down a bull and acknowledged as a man with supe
 这里只是说他“曾经能够”，并没有具体说是哪次活动，所以是“潜能”，不是“实际行动”。
 In those days few workers could support their families.
 那时很少有工人能够养家糊口。
-表示过去的“实际行动” (都不能用could) 
+表示过去的“实际行动” (都不能用could)
 I applied everywhere and finally I was able to get a good job.
 我四处应聘，终于找到了一份不错的工作。
 I applied everywhere and finally I was able to get a good job.

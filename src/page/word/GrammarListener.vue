@@ -3,14 +3,41 @@ import kiwiConsts from "@/const/kiwiConsts";
 import {readFile, escapeHTML} from '@/util/fileUtil'
 import NoSleep from 'nosleep.js'
 import msgUtil from '@/util/msg'
-import {removeBlankLines} from '@/util/util'
+import {isEmptyStr, isNotEmptyStr, removeBlankLines} from '@/util/util'
 import {Howl, Howler} from 'howler';
 import {toFixedNum} from '@/util/mathUtil'
+import {countSectionSyllables, getStrCount} from '@/util/wordUtil'
+import {secToMicroTime} from "@/util/dateUtil";
 
-const PER_SHOW_LINES_SIZE = 4
+const PER_SHOW_LINES_SIZE = 3
 
 let that
 let noSleep
+
+function changeSearchKey(searchKey) {
+  let lastChar = searchKey.substring(searchKey.length - 1, searchKey.length)
+  console.log('lastChar: ' + lastChar)
+  if (',' === lastChar || '，' === lastChar || '。' === lastChar || '’' === lastChar) {
+    searchKey = searchKey.substring(0, searchKey.length - 1) + ' '
+  }
+  if ('$' === lastChar) {
+    if (searchKey.length === 1) {
+      return ''
+    }
+    searchKey = searchKey.substring(0, searchKey.length - 1) + ' ';
+  }
+  return searchKey;
+}
+
+function buildSearchKey(searchKey, currentGrammarItem, j) {
+  let lastChar = currentGrammarItem.substring(j - 1, j);
+  searchKey += lastChar;
+  let lastNewLineIndex = searchKey.lastIndexOf('\n');
+  if (lastNewLineIndex > -1 && lastNewLineIndex < searchKey.length) {
+    searchKey = searchKey.substring(lastNewLineIndex + 1, searchKey.length)
+  }
+  return searchKey.replaceAll('  ', ' ');
+}
 
 export default {
   data() {
@@ -18,13 +45,14 @@ export default {
       innerHeightPx: window.innerHeight * 0.7 + 'px',
       currentGrammar: null,
       currentGrammarHint: '请选择当前的语法篇章',
-      currentMp3TotalTime: 0,
       currentItemsIndex: 0,
-      currentGrammarTxtLength: 0,
+      currentGrammarRemainingSrt: [],
+      currentGrammarSrt: null,
       currentGrammarItems: [],
-      currentGrammarItemsShowTime: [],
-      currentGrammarItemsFirstPlayTime: null,
+      currentGrammarItemPlayDuration: [],
       currentGrammarPlayPercentage: 0,
+      currentGrammarStartPlayTime: null,
+      currentGrammarPlayDuration: null,
       isPlaying: false,
       currentGrammarHowl: null,
       countdownFun: null,
@@ -43,6 +71,7 @@ export default {
   },
   destroyed() {
     this.cleaningAll()
+    noSleep.disable()
   },
   computed: {},
   methods: {
@@ -53,8 +82,11 @@ export default {
     cleaning(isCleanHowl, isCleanCountDown, isCleanItems, isCleanItemsRelatedData) {
       if (isCleanHowl && this.currentGrammarHowl) {
         Howler.stop()
-        this.currentGrammarHowl = null;
+        this.currentGrammarHowl = null
+        this.currentGrammarRemainingSrt = []
         this.isPlaying = false
+        this.currentGrammarPlayDuration = null
+        this.currentGrammarStartPlayTime = null
       }
       if (isCleanCountDown && this.countdownFun) {
         clearInterval(this.countdownFun)
@@ -65,11 +97,10 @@ export default {
         this.currentGrammarPlayPercentage = 0
         this.thisStopDuration = 0
         this.thisStopStartTime = null
+        this.currentGrammarItemPlayDuration = []
       }
       if (isCleanItemsRelatedData) {
-        this.currentGrammarItemsShowTime = []
       }
-      noSleep.disable()
     },
     selectGrammar(command) {
       this.loading = true
@@ -77,8 +108,15 @@ export default {
       this.currentGrammar = command
       this.currentGrammarHint = kiwiConsts.GRAMMAR_EN_TO_CH_HINT.get(command)
       let grammarTxt = readFile('grammar/txt/' + command + '.txt');
+      this.currentGrammarSrt = readFile('grammar/mp3/' + command + '.srt');
+      this.currentGrammarSrt.split('\n').forEach(line => {
+        if (isNotEmptyStr(line)) {
+          this.currentGrammarRemainingSrt.push(line)
+        }
+      })
       grammarTxt = removeBlankLines(grammarTxt)
-      this.currentGrammarTxtLength = grammarTxt.length
+      console.log('grammarTxt:')
+      console.log(grammarTxt)
       let grammarTxtLines = grammarTxt.split('\n');
       for (let i = 0; i < grammarTxtLines.length; i += PER_SHOW_LINES_SIZE) {
         let item = ''
@@ -87,7 +125,6 @@ export default {
             item += grammarTxtLines[i + j] + '\n';
           }
         }
-        console.log(item)
         if (item !== '') {
           this.currentGrammarItems.push(item);
         }
@@ -111,67 +148,151 @@ export default {
       this.currentItemsIndex--;
       this.$refs.grammarPlane.prev()
     },
+    increaseStopDuration() {
+      if (this.thisStopStartTime) {
+        this.thisStopDuration += new Date().getTime() - this.thisStopStartTime.getTime()
+        console.log('that.thisStopDuration = ' + that.thisStopDuration)
+      }
+    },
+    prepareCurrentGrammarItemsShowTime() {
+      if (this.currentGrammarItemPlayDuration && this.currentGrammarItemPlayDuration.length) {
+        return
+      }
+
+      this.currentGrammarSrt.split('\n').forEach(line => {
+        if (isNotEmptyStr(line)) {
+          this.currentGrammarRemainingSrt.push(line)
+        }
+      })
+
+      for (let i = 1; i < this.currentGrammarItems.length; i++) {
+        let currentGrammarItem = this.currentGrammarItems[i];
+        if (isEmptyStr(currentGrammarItem)) {
+          continue
+        }
+        console.log('currentGrammarItem: ' + i);
+        console.log(currentGrammarItem);
+        let isFoundPlayEndTimeInSrt = false;
+        let searchKey = '';
+        for (let j = 1; j < currentGrammarItem.length; j++) {
+          searchKey = buildSearchKey(searchKey, currentGrammarItem, j);
+          console.log(`searchKey: '${searchKey}'`);
+          if (isEmptyStr(searchKey)) {
+            console.warn('searchKey is empty')
+            continue
+          }
+          let searchResultCount = getStrCount(this.currentGrammarSrt, searchKey)
+          if (searchResultCount < 1) {
+            searchKey = changeSearchKey(searchKey)
+            if (isEmptyStr(searchKey)) {
+              continue;
+            } else {
+              console.log('searchKey cannot be indexed, attempt to change search key: ' + searchKey)
+            }
+            searchResultCount = getStrCount(this.currentGrammarSrt, searchKey);
+            if (searchResultCount < 1) {
+              console.error('searchKey cannot be indexed, after change search key: ' + searchKey)
+              break;
+            }
+          }
+          if (searchResultCount > 1) {
+            console.log('searchKey can be indexed, count is ' + searchResultCount)
+            continue;
+          }
+          console.log('searchResultCount is ' + searchResultCount)
+          for (let k = 0; k < this.currentGrammarRemainingSrt.length; k++) {
+            if (this.currentGrammarRemainingSrt[k].indexOf(searchKey) > -1) {
+              console.log('this.currentGrammarRemainingSrt[k] = ' + this.currentGrammarRemainingSrt[k])
+              console.log('this.currentGrammarRemainingSrt[k - 1] = ' + this.currentGrammarRemainingSrt[k - 1])
+              isFoundPlayEndTimeInSrt = true
+              let lastItemPlayEndTimeLine = this.currentGrammarRemainingSrt[k - 1]
+              let lastSectionPlayEndTime = secToMicroTime(lastItemPlayEndTimeLine.toString().split('-->')[0].trim());
+              this.currentGrammarItemPlayDuration.push(lastSectionPlayEndTime);
+              this.currentGrammarRemainingSrt = this.currentGrammarRemainingSrt.slice(k - 1, this.currentGrammarRemainingSrt.length)
+              break
+            }
+          }
+          if (!isFoundPlayEndTimeInSrt) {
+            msgUtil.msgError(this, '字幕自动滚动失败！');
+            throw new Error('Cannot found the start play time!');
+          } else {
+            searchKey = ''
+            console.log('searchKey search success!');
+            break
+          }
+        }
+      }
+
+      for (let i = 0; i < this.currentGrammarItemPlayDuration.length; i++) {
+        console.log(`this.currentGrammarItemPlayDuration[${i}] = ` + this.currentGrammarItemPlayDuration[i])
+      }
+    },
+    setupCountdownFun: function () {
+      this.countdownFun = setInterval(() => {
+        if (this.canAdjustCurrentItem) {
+          return
+        }
+
+        console.log('this.thisStopDuration ' + this.thisStopDuration)
+        let future = new Date().getTime() - this.thisStopDuration
+        let currentGrammarPlayedDuration = future - this.currentGrammarStartPlayTime
+        console.log(`currentGrammarPlayedDuration: ${currentGrammarPlayedDuration}`)
+        console.log(`this.currentGrammarPlayDuration: ${this.currentGrammarPlayDuration}`)
+        this.currentGrammarPlayPercentage = Math.min(toFixedNum(currentGrammarPlayedDuration / this.currentGrammarPlayDuration, 3) * 100, 100)
+        console.log('this.currentGrammarPlayPercentage = ' + this.currentGrammarPlayPercentage)
+
+        if (this.currentItemsIndex < this.currentGrammarItems.length - 2) {
+          console.log(`currentItemPlayDuration: ${this.currentGrammarItemPlayDuration[this.currentItemsIndex]}`)
+          if (currentGrammarPlayedDuration - this.currentGrammarItemPlayDuration[this.currentItemsIndex] > 0) {
+            this.nextItem()
+          }
+        }
+      }, 200)
+    },
     startPlay() {
       console.log('startPlay')
       this.loading = true
       if (!this.currentGrammarHowl) {
         this.currentGrammarHowl = new Howl({
-          src: ['grammar/mp3/' + this.currentGrammar + '.mp3'],
-          autoplay: false,
-          loop: false,
-          volume: 0.5,
-          html5: true,
-          format: ['mp3'],
-          onplay: function () {
-            console.log('onplay this._duration = ' + this._duration)
-            that.currentMp3TotalTime = this._duration
-            that.cleaning(false, true, false, true)
+              src: ['grammar/mp3/' + this.currentGrammar + '.mp3'],
+              autoplay: false,
+              loop: false,
+              volume: 0.5,
+              html5: true,
+              format: ['mp3'],
+              onplay: function () {
+                console.log('onplay this._duration = ' + this._duration)
+                that.currentGrammarPlayDuration = this._duration * 1000
+                that.cleaning(false, true, false, true)
 
-            let now = new Date();
-            let timePerUnit = that.currentMp3TotalTime / that.currentGrammarTxtLength;
-            for (let i = 0; i < that.currentGrammarItems.length; i++) {
-              if (i < 1) {
-                that.currentGrammarItemsShowTime.push(now.getTime() + that.currentGrammarItems[0].length * timePerUnit * 1000);
-              } else {
-                let nextTimeInFuture = that.currentGrammarItemsShowTime[i - 1] + that.currentGrammarItems[i].length * timePerUnit * 1000;
-                that.currentGrammarItemsShowTime.push(nextTimeInFuture);
-              }
-            }
+                that.prepareCurrentGrammarItemsShowTime()
 
-            if (that.thisStopStartTime) {
-              that.thisStopDuration += new Date().getTime() - that.thisStopStartTime.getTime()
-              console.log('that.thisStopDuration = ' + that.thisStopDuration)
-            }
-            that.countdownFun = setInterval(() => {
-              that.currentGrammarPlayPercentage = toFixedNum(that.currentItemsIndex / that.currentGrammarItems.length, 2)
-              if (that.canAdjustCurrentItem) {
-                return
-              }
-              if (that.currentItemsIndex < that.currentGrammarItems.length) {
-                let future = new Date().getTime() - that.thisStopDuration
-                if (future > that.currentGrammarItemsShowTime[that.currentItemsIndex]) {
-                  that.nextItem()
+                that.increaseStopDuration()
+
+                that.setupCountdownFun()
+
+                that.isPlaying = true
+                noSleep.enable()
+                that.thisStopStartTime = null
+                that.loading = false
+                if (that.currentGrammarStartPlayTime === null) {
+                  that.currentGrammarStartPlayTime = new Date().getTime();
                 }
+              },
+              onend: function () {
+                that.isPlaying = false
+                that.cleaning(false, true, false, true)
               }
-            }, 300)
-
-            that.isPlaying = true
-            noSleep.enable()
-            that.thisStopStartTime = null
-          },
-          onend: function () {
-            that.isPlaying = false
-            that.cleaning(false, true, false, true)
-          },
-          onpause: function () {
-            that.isPlaying = false
-            that.cleaning(false, true, false, true)
-          }
-        })
+              ,
+              onpause: function () {
+                that.isPlaying = false
+                that.cleaning(false, true, false, true)
+              }
+            }
+        )
       }
 
       this.currentGrammarHowl.play();
-      this.loading = false
     },
     stopPlay() {
       if (this.countdownFun) {
@@ -187,21 +308,21 @@ export default {
       if (index > 0) {
         return this.currentGrammarItems[index - 1];
       }
-      return '=========分割线(上面已无更多字幕显示)========='
+      return '=====来自张满胜老师的《语法新思维》，侵删====='
     },
     showNextItemInAdvance(index) {
       if (index < this.currentGrammarItems.length) {
         return this.currentGrammarItems[index + 1];
       }
-      return '=========分割线(下面已无更多字幕显示)========='
+      return '=====来自张满胜老师的《语法新思维》，侵删====='
     },
     adjustCurrentItem() {
       if (!this.canAdjustCurrentItem) {
-        msgUtil.msgSuccess(this, '当前字幕自动滚动已锁住，不会自动滚动，调整完字幕之后请再次点击开启字幕自动滚动');
+        msgUtil.msgSuccess(this, '当前字幕自动滚动已锁住，不会自动滚动，调整完字幕之后请再次点击开启字幕自动滚动')
       } else {
-        msgUtil.msgSuccess(this, '当前字幕自动滚动已开启');
+        msgUtil.msgSuccess(this, '当前字幕自动滚动已开启')
       }
-      this.canAdjustCurrentItem = !this.canAdjustCurrentItem;
+      this.canAdjustCurrentItem = !this.canAdjustCurrentItem
     },
   }
 }
