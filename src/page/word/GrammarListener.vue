@@ -54,6 +54,7 @@ export default {
       currentGrammarStartPlayTime: null,
       currentGrammarPlayDuration: null,
       isPlaying: false,
+      isEnd: false,
       currentGrammarHowl: null,
       countdownFun: null,
       GRAMMAR_EN_TO_CH_HINT: kiwiConsts.GRAMMAR_EN_TO_CH_HINT,
@@ -167,9 +168,6 @@ export default {
 
       for (let i = 1; i < this.currentGrammarItems.length; i++) {
         let currentGrammarItem = this.currentGrammarItems[i];
-        if (isEmptyStr(currentGrammarItem)) {
-          continue
-        }
         console.log('currentGrammarItem: ' + i);
         console.log(currentGrammarItem);
         let isFoundPlayEndTimeInSrt = false;
@@ -205,9 +203,9 @@ export default {
               console.log('this.currentGrammarRemainingSrt[k] = ' + this.currentGrammarRemainingSrt[k])
               console.log('this.currentGrammarRemainingSrt[k - 1] = ' + this.currentGrammarRemainingSrt[k - 1])
               isFoundPlayEndTimeInSrt = true
-              let lastItemPlayEndTimeLine = this.currentGrammarRemainingSrt[k - 1]
-              let lastSectionPlayEndTime = secToMicroTime(lastItemPlayEndTimeLine.toString().split('-->')[0].trim());
-              this.currentGrammarItemPlayDuration.push(lastSectionPlayEndTime);
+              let prevItemPlayEndTimeLine = this.currentGrammarRemainingSrt[k - 1]
+              let prevSectionPlayEndTime = secToMicroTime(prevItemPlayEndTimeLine.toString().split('-->')[0].trim());
+              this.currentGrammarItemPlayDuration.push(prevSectionPlayEndTime);
               this.currentGrammarRemainingSrt = this.currentGrammarRemainingSrt.slice(k - 1, this.currentGrammarRemainingSrt.length)
               break
             }
@@ -241,7 +239,7 @@ export default {
         this.currentGrammarPlayPercentage = toFixedNum(Math.min(currentGrammarPlayedDuration * 100 / this.currentGrammarPlayDuration, 100), 2)
         console.log('this.currentGrammarPlayPercentage = ' + this.currentGrammarPlayPercentage)
 
-        if (this.currentItemsIndex < this.currentGrammarItems.length - 2) {
+        if (this.currentItemsIndex < this.currentGrammarItems.length - 1) {
           console.log(`currentItemPlayDuration: ${this.currentGrammarItemPlayDuration[this.currentItemsIndex]}`)
           if (currentGrammarPlayedDuration - this.currentGrammarItemPlayDuration[this.currentItemsIndex] > 0) {
             this.nextItem()
@@ -252,6 +250,10 @@ export default {
     startPlay() {
       console.log('startPlay')
       this.loading = true
+      if (this.isEnd) {
+        this.isEnd = false
+        this.selectGrammar(this.currentGrammar)
+      }
       if (!this.currentGrammarHowl) {
         this.currentGrammarHowl = new Howl({
               src: ['grammar/mp3/' + this.currentGrammar + '.mp3'],
@@ -281,6 +283,7 @@ export default {
               },
               onend: function () {
                 that.isPlaying = false
+                that.isEnd = true
                 that.currentGrammarPlayPercentage = 100
                 that.cleaning(false, true, false, true)
               }
