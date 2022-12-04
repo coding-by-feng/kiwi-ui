@@ -470,7 +470,7 @@ export default {
     enableNoSleepMode() {
       if (!this.detail.isEnableNoSleepMode) {
         this.detail.isEnableNoSleepMode = true
-        noSleep.enable();
+        noSleep.enable()
       }
     },
     stockReviewStart() {
