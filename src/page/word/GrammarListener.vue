@@ -78,7 +78,7 @@ export default {
     that = this
     noSleep = new NoSleep()
     Howler.html5PoolSize = 10
-    Howler.autoSuspend = false
+    // Howler.autoSuspend = false
   },
   destroyed() {
     this.cleaningAll()
@@ -206,7 +206,7 @@ export default {
                 console.log(`after strip head of search key(${searchKey}), searchResultCount is ${searchResultCount}`)
               }
               if (searchResultCount < 1) {
-                console.error('searchKey cannot be indexed, after change search key: ' + searchKey)
+                console.warn('searchKey cannot be indexed, after change search key: ' + searchKey)
                 continue
               }
             }
@@ -215,7 +215,7 @@ export default {
             console.log('searchKey can be indexed, count is ' + searchResultCount)
             continue
           }
-          console.log('searchResultCount is ' + searchResultCount)
+          console.log(`searchResultCount is ${searchResultCount} for searchKey['${searchKey}']`)
           for (let k = 0; k < this.currentGrammarRemainingSrt.length; k++) {
             if (this.currentGrammarRemainingSrt[k].indexOf(searchKey) > -1) {
               console.log('this.currentGrammarRemainingSrt[k] = ' + this.currentGrammarRemainingSrt[k])
@@ -270,6 +270,7 @@ export default {
       if (this.isEnd) {
         this.isEnd = false
         this.selectGrammar(this.currentGrammar)
+        this.$refs.grammarPlane.setActiveItem(0)
       }
       if (!this.currentGrammarHowl) {
         this.currentGrammarHowl = new Howl({

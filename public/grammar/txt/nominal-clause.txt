@@ -17,10 +17,10 @@ That English is important（主语从句）is an undoubted fact（谓语部分�
 一个句子只表达一个核心意思（因为我们说话要一句一句地说），也就只能有一个谓语部分。现在这个句子有两个谓语部分，读者就会纳闷：你要表达的意思到底是“某个东西重要”，还是要说“某个东西是事实”？
 为了避免混淆，在句首加上一个标志that，这里的that就相当于一个指路牌，它的出现就等于是在告诉读者：that后面紧接着的句子是要作为另一个句子的某一个成分来使用的，不是要表达的核心意思。因此，当读者读到“That English is important…”，他就会知道这个句子的核心意思并没有讲出来，他一定会期待着句子接下来的中心意思。当他读到“…is an undoubted fact”时，他知道了，句子要表达的意思是“英语很重要，这是一个毋庸置疑的事实”，而不是要说“英语很重要”。
 
-例句1） The criminal confessed his sins harmed many people.
-例句2） The criminal confessed that his sins harmed many people.
+例句1） The criminal confessed his sins killed many people.
+例句2） The criminal confessed that his sins killed many people.
 这名罪犯承认，他的罪行伤害了很多人。
-对于例句2），因为有了that的存在，我们能轻而易举地判断出the criminal confessed是主句，而his sins harmed many people是宾语从句，因而缩短了理解的时间。
+对于例句2），因为有了that的存在，我们能轻而易举地判断出the criminal confessed是主句，而his sins killed many people是宾语从句，因而缩短了理解的时间。
 
 He said no word at the meeting was strange.
 对于这个句子，很多读者自然会将其当作宾语从句理解：“He said that no word at the meeting was strange.”。此时句子的意思是：他说，会上人们的发言都很正常，并没有什么奇怪的。
@@ -30,7 +30,7 @@ He said no word at the meeting was strange.
 那么为什么宾语从句中的that可以省去呢？这是因为对于宾语从句，主句的谓语已经出现，谓语后面所接的成分自然是宾语，所以在不影响句子意思的情况下，可以把that省去。
 
 比如“I think you are right.”或“I think that you are right.”都可以。
-但是，像上面的例句The criminal confessed that his sins harmed many people.，即使是宾语从句，that也不宜省去。
+但是，像上面的例句The criminal confessed that his sins killed many people.，即使是宾语从句，that也不宜省去。
 
 一般疑问句作句子成分
 用whether或if引导
