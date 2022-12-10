@@ -1,5 +1,5 @@
 <script>
-import { getStore } from '@/util/store'
+import {getStore} from '@/util/store'
 import website from '@/const/website'
 
 const isIos = function () {
@@ -17,12 +17,15 @@ const isSafari = function () {
 }
 
 export default {
-  data () {
+  data() {
     return {
       tabsWidth: window.innerWidth - 20 + 'px',
       activeName: this.$route.query.active ? this.$route.query.active : 'search',
       query: this.$route.query,
-      bgm: getStore({ name: 'bgm' })
+      bgm: getStore({name: 'bgm'}),
+      user: {
+        userName: getStore({name: 'user_name'})
+      }
     }
   },
   watch: {
@@ -31,12 +34,15 @@ export default {
     }
   },
   computed: {
-    isLogin () {
-      let accessToken = getStore({ name: 'access_token' })
+    isLogin() {
+      let accessToken = getStore({name: 'access_token'})
       return !!accessToken
-    }
+    },
+    isAdmin() {
+      return 'admin' === this.user.userName
+    },
   },
-  mounted () {
+  mounted() {
     // window.onresize = () => {
     //   return (() => {
     //     this.tabsWidth = window.innerWidth - 20 + 'px'
@@ -52,9 +58,9 @@ export default {
     // }
   },
   methods: {
-    handleSelectMenu () {
+    handleSelectMenu() {
     },
-    tabClick (tab, event) {
+    tabClick(tab, event) {
       let params
       let paramsTmp = {
         active: tab.name,
@@ -66,11 +72,11 @@ export default {
           ...paramsTmp
         }
       } else {
-        params = { ...paramsTmp }
+        params = {...paramsTmp}
       }
       let isActiveChange = JSON.stringify(this.query) === JSON.stringify(params)
       if (!isActiveChange) {
-        this.$router.push({ path: website.noAuthPath.detail, query: params })
+        this.$router.push({path: website.noAuthPath.detail, query: params})
       }
     }
   }
@@ -125,7 +131,8 @@ export default {
       </el-tab-pane>
       <el-tab-pane name="starList" v-if="isLogin">
         <span slot="label"><i class="el-icon-tickets"></i></span>
-        <router-view name="starList"></router-view>
+        <router-view name="starList" v-if="isAdmin"></router-view>
+        <span v-if="!isAdmin">超级背单词功能升级中，非VIP用户请联系管理员试用，让你不需要看屏幕，不需要手指操作即可背单词的功能</span>
       </el-tab-pane>
       <el-tab-pane name="grammarListener" v-if="isLogin">
         <span slot="label"><i class=el-icon-school></i></span>
