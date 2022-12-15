@@ -39,7 +39,8 @@ export default {
       return !!accessToken
     },
     isAdmin() {
-      return 'admin' === this.user.userName
+      // return 'admin' === this.user.userName
+      return true
     },
   },
   mounted() {
