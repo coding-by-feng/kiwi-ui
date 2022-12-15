@@ -126,7 +126,8 @@ export default {
         .set('subjunctive-mood', '虚拟语气')
         .set('modal-1', '情态动词第一部分')
         .set('modal-2', '情态动词第二部分')
-        .set('nominal-clause', '名词从句'),
+        .set('nominal-clause', '名词从句')
+        .set('attributive-clause-1', '宾语从句第一部分'),
 
     CONFIG_KEY: {
         PRONUNCIATION_SOURCE: 'pronunciation_source',

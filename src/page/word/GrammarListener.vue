@@ -64,6 +64,7 @@ export default {
       currentGrammarStartPlayTime: null,
       currentGrammarPlayDuration: null,
       isPlaying: false,
+      isStopped: false,
       isEnd: false,
       currentGrammarHowl: null,
       countdownFun: null,
@@ -307,7 +308,7 @@ export default {
                 that.isPlaying = false
                 that.isEnd = true
                 that.currentGrammarPlayPercentage = 100
-                that.cleaning(false, true, false, true)
+                that.cleaning(true, true, false, true)
               }
               ,
               onpause: function () {
@@ -329,7 +330,13 @@ export default {
         this.currentGrammarHowl.pause()
       }
       this.isPlaying = false
+      this.isStopped = true
       this.thisStopStartTime = new Date()
+    },
+    rePlay() {
+      this.stopPlay()
+      this.isEnd = true
+      this.startPlay()
     },
     showPrevItemAgain(index) {
       if (index > 0) {
@@ -386,10 +393,13 @@ export default {
       </el-carousel>
     </div>
     <div style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button v-loading="loading" v-if="!isPlaying && currentGrammar" icon="el-icon-video-play" size="mini"
+      <el-button v-loading="loading" v-if="!isPlaying && !isStopped && currentGrammar" icon="el-icon-video-play"
+                 size="mini"
                  @click="startPlay"></el-button>
       <el-button v-if="isPlaying && currentGrammar" icon="el-icon-video-pause" size="mini"
                  @click="stopPlay"></el-button>
+      <el-button v-loading="loading" v-if="currentGrammar && isStopped" icon="el-icon-refresh-right" size="mini"
+                 @click="rePlay"></el-button>
       <el-button v-if="currentGrammar" :icon="canAdjustCurrentItem ? 'el-icon-lock' : 'el-icon-unlock'" size="mini"
                  @click="adjustCurrentItem"></el-button>
       <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-top" size="mini"
