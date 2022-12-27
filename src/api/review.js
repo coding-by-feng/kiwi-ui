@@ -21,7 +21,7 @@ export default {
                 isToken: true,
                 'Content-Type': 'application/json'
             },
-            method: 'get'
+            method: 'put'
         })
     },
 
@@ -32,7 +32,7 @@ export default {
                 isToken: true,
                 'Content-Type': 'application/json'
             },
-            method: 'get'
+            method: 'put'
         })
     },
 
@@ -108,7 +108,18 @@ export default {
                 isToken: true,
                 'Content-Type': 'application/json'
             },
-            method: 'get'
+            method: 'delete'
+        })
+    },
+
+    reGenReviewAudio(sourceId) {
+        return request({
+            url: `/wordBiz/word/review/reGenReviewAudio/${sourceId}`,
+            headers: {
+                isToken: true,
+                'Content-Type': 'application/json'
+            },
+            method: 'delete'
         })
     }
 

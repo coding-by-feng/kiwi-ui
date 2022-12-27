@@ -34,6 +34,17 @@ export function unescapeHTML(a) {
     return a.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
 }
 
+function stringToArrayBuffer(data) {
+    let buf = new ArrayBuffer(data.length)
+    let bufView = new Uint8Array(buf)
+
+    for (var i = 0, strLen = data.length; i < strLen; i++) {
+        bufView[i] = data.charCodeAt(i)
+    }
+
+    return buf;
+}
+
 export default {
     readFile
 }

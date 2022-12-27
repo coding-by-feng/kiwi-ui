@@ -551,7 +551,7 @@ export default {
     <el-header>
       <div v-if="isTabActivate">
         <div style="position: fixed; top: 5px; right: 15px; z-index: 999;">
-          <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true">
+          <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true" circle>
             <i class="el-icon-s-unfold"
                style="color: #76838f;"></i>
           </el-button>
