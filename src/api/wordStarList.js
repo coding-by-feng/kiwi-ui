@@ -31,7 +31,7 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
+      method: 'put',
       params: data
     })
   },
@@ -43,22 +43,19 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
+      method: 'delete',
       params: data
     })
   },
 
   getListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/star/list/getListItems/${page.size}/${page.current}`,
+      url: `/wordBiz/word/star/list/getListItems/${page.size}/${page.current}/${listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
-      params: {
-        listId: listId
-      }
+      method: 'get'
     })
   },
 
@@ -69,7 +66,7 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
+      method: 'put',
       params: data
     })
   },
@@ -93,7 +90,7 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post'
+      method: 'delete'
     })
   }
 }

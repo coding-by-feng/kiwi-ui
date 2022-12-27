@@ -9,6 +9,15 @@ export default {
         LOCAL: 'Local'
     },
 
+    STORE_TYPE: {
+        LOCAL: 'local'
+    },
+
+    IS_NOT_CACHE: {
+        TRUE: true,
+        FALSE: false
+    },
+
     REVIEW_DAILY_COUNTER_TYPE: {
         REMEMBER: 1,
         KEEP_IN_MIND: 2,
@@ -136,7 +145,8 @@ export default {
         EN_PARA_TYPE: 'enPara_type',
         ENABLE_MSG_HINT: 'enable_msg_hint',
         IS_PLAY_EXAMPLE: 'is_play_example',
-        BGM: 'bgm'
+        BGM: 'bgm',
+        IS_NOT_CACHE: 'is_not_cache'
     }
 
 }
