@@ -519,7 +519,7 @@ export default {
       }
     },
     assemblePronunciationUrl(isUS) {
-      if (!this.detail.paraphraseVO.pronunciationVOList) {
+      if (!this.detail.paraphraseVO.pronunciationVOList || this.detail.paraphraseVO.pronunciationVOList.length < 1) {
         return howlerUtil.assembleReviseAudioUrl(this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.PHRASE_PRONUNCIATION)
       }
       return this.getPronunciationUrl(this.getPronunciationVO(isUS))
