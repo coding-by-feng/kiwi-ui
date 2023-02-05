@@ -136,7 +136,10 @@ export default {
         .set('modal-1', '情态动词第一部分')
         .set('modal-2', '情态动词第二部分')
         .set('nominal-clause', '名词从句')
-        .set('attributive-clause-1', '宾语从句第一部分'),
+        .set('attributive-clause-1', '宾语从句第一部分')
+        .set('attributive-clause-2', '宾语从句第二部分')
+        .set('attributive-clause-3', '宾语从句第三部分')
+        .set('adverbial-clause', '状语从句'),
 
     CONFIG_KEY: {
         PRONUNCIATION_SOURCE: 'pronunciation_source',
