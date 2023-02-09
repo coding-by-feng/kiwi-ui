@@ -355,11 +355,13 @@ The work is not as difficult as you think.
 这里前一个as作为副词来修饰一个形容词，而这个形容词同时又修饰一个名词。使用时要特别注意这里形容词置于不定冠词之前这一特点。
 很少有哪项科技的发展能像电子技术的发展这样，对我们的社会、经济以及文化等诸多方面产生如此重要的影响。
 Rarely has a technological development had as great an impact on so many aspects of social, economic, and cultural development as the growth of electronics.
-若没有as修饰great，这句话原本的结构是a great impact，但现在将其放置在as…as结构中，则冠词和形容词的语序要互换，因此成了as great an impact as。另外要注意的是，整个句子是一个倒装句，正常语序为“A technological development has rarely had as great an impact on…as the growth of electronics.”。
+若没有as修饰great，这句话原本的结构是a great impact，但现在将其放置在as…as结构中，则冠词和形容词的语序要互换，因此成了as great an impact as。
+另外要注意的是，整个句子是一个倒装句，正常语序为“A technological development has rarely had as great an impact on…as the growth of electronics.”。
 
 美国人的思维习惯是由小到大。我们举一个写信封地址的简单例子吧。
 Americans tend to think from small to large. Let us take as simple an example as the addressing of envelopes.
-若没有as修饰simple，这句话原本的结构是a simple example，但现在将其放置在as…as结构中，则冠词和形容词的语序要互换，因此成了as simple an example as，译成“像这样的一个简单例子”。虽然这里as…as结构并不是引导一个比较状语从句，举这个例子主要是为了说明“as+形容词+a(n)+可数名词单数+as”这一结构。
+若没有as修饰simple，这句话原本的结构是a simple example，但现在将其放置在as…as结构中，则冠词和形容词的语序要互换，因此成了as simple an example as，译成“像这样的一个简单例子”。
+虽然这里as…as结构并不是引导一个比较状语从句，举这个例子主要是为了说明“as+形容词+a(n)+可数名词单数+as”这一结构。
 
 在否定句中第一个as可用so代替
 这个房间没有我们昨天看到的那个大。
@@ -371,7 +373,8 @@ No other modern nation devotes so small a portion of its wealth to public health
 此时的结构是“as…as+助动词+主语”。
 尽管蚂蚁很小，但是它同地球上的任何其他动物一样，也是一种动物。
 Small as it is, the ant is as much a creature as are all other animals on the earth.
-这里的as are all other animals on the earth是一个倒装结构，主语是all other animals on the earth。另外，这里的as much…as表示的是“在同等程度上”，翻译时可以处理成“和……一样”。
+这里的as are all other animals on the earth是一个倒装结构，主语是all other animals on the earth。
+另外，这里的as much…as表示的是“在同等程度上”，翻译时可以处理成“和……一样”。
 
 计算机革命对于我们人类社会的改变之深刻，就如同当年的工业革命。
 The computer revolution may well change society as fundamentally as did the Industrial Revolution.
@@ -425,10 +428,14 @@ the more…, the more句型
 - 3） The more exact your words are, the easier it is for people to understand you.
 - 4） The more exact words you use, the more easily people will understand you.
 
-- 在句1）中，其各自引导的分句分别是you use your words和people will understand you，这里使用的形容词比较级the more exact和the easier不能修饰句子的谓语use和understand（因为形容词不能修饰动词），即比较级部分无法充当后面分句的任何成分。
-- 在句2）中，把比较级部分都改为副词的比较级the more exactly和the more easily，此时就能修饰句子的谓语use和understand（因为副词修饰动词），即比较级部分充当了后面分句的方式状语。
-- 在句3）中，形容词的比较级the more exact就在其后的分句your words are中作表语，相当于your words are more exact；形容词的比较级the easier就在分句it is for people to understand you中作表语，相当于it is easier for people to understand you。
-- 在句4）中，比较级部分the more exact words作后面分句的谓语use的宾语，相当于you use more exact words；比较级部分the more easily作后面分句谓语understand的方式状语，相当于people will more easily understand you。
+- 在句1）中，其各自引导的分句分别是you use your words和people will understand you，
+这里使用的形容词比较级the more exact和the easier不能修饰句子的谓语use和understand（因为形容词不能修饰动词），即比较级部分无法充当后面分句的任何成分。
+- 在句2）中，把比较级部分都改为副词的比较级the more exactly和the more easily，
+此时就能修饰句子的谓语use和understand（因为副词修饰动词），即比较级部分充当了后面分句的方式状语。
+- 在句3）中，形容词的比较级the more exact就在其后的分句your words are中作表语，相当于your words are more exact；
+形容词的比较级the easier就在分句it is for people to understand you中作表语，相当于it is easier for people to understand you。
+- 在句4）中，比较级部分the more exact words作后面分句的谓语use的宾语，相当于you use more exact words；
+比较级部分the more easily作后面分句谓语understand的方式状语，相当于people will more easily understand you。
 
 这个句型的三个用法要点：
 - 比较级部分都必须在各自引导的分句中充当一定的成分。
@@ -436,7 +443,8 @@ the more…, the more句型
 
 朋友是冬天里的灯:朋友越老，灯越亮。
 Friends are lights in winter: the older the friend, the brighter the light.
-这个句子的比较部分是省略结构，完整的表达应该是the older the friend is, the brighter the light is，即这里省去了系动词is。所以，比较级都是在各自引导的分句中作表语。注意，在这个句型中，系动词常常会被省略。
+这个句子的比较部分是省略结构，完整的表达应该是the older the friend is, the brighter the light is，即这里省去了系动词is。
+所以，比较级都是在各自引导的分句中作表语。注意，在这个句型中，系动词常常会被省略。
 
 方式状语从句
 方式状语从句表示动作的方式，引导词有：as，like，as if，as though和the way等，它多用来谈论某人的行为或者做某事的方式。
@@ -464,7 +472,9 @@ Live like it’s heaven on earth.
 时间状语从句的省略
 零，只有和实数在一起使用才有意义；思想，只有付诸行动才能散发光芒。
 A zero can have its meaning only when used with real numbers; thoughts can give off brilliant light only when put into actions.
-这是when引导的时间状语从句的省略，还原后完整的句子结构应该是“A zero can have its meaning only when it is used with real numbers; thoughts can give off brilliant light only when they are put into actions.”。所以这里的两个when引导的从句分别省去了it is和they are。 这里的it指主句的主语zero，they指主句的主语thoughts。
+这是when引导的时间状语从句的省略，还原后完整的句子结构应该是“A zero can have its meaning only when it is used with real numbers;
+thoughts can give off brilliant light only when they are put into actions.”。
+所以这里的两个when引导的从句分别省去了it is和they are。 这里的it指主句的主语zero，they指主句的主语thoughts。
 
 金属具有热胀冷缩的特性。
 Metals expand when heated and contract when cooled.
