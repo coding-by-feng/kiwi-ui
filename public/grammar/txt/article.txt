@@ -31,8 +31,9 @@
 - 两种the+复数名词也可以表示泛指；
 第一种：the+国籍名词，是指一个国籍的、一个种族的人。
 例句) The Chinese are a great people.
-Chinese是单复数同形的名词，这里的the Chinese是表示复数的概念，这从谓语动词are可以看出来。但这里的the Chinese表示的是“整个中国人或中华民族”，是一个泛指的概念。
-当然也不是所有的国籍名词都可以这样用，比如不能说) the German are...。这样用的国籍名词只限于以) e、s、e和s、h和c、h结尾的词。
+Chinese是单复数同形的名词，这里的the Chinese是表示复数的概念，这从谓语动词are可以看出来。
+但这里的the Chinese表示的是“整个中国人或中华民族”，是一个泛指的概念。
+当然也不是所有的国籍名词都可以这样用，比如不能说) the German are什么什么。这样用的国籍名词只限于以) e、s、e和s、h和c、h结尾的词。
 以 e、s、e 结尾的国籍名词： Chinese, Japanese
 以 s、h 结尾的国籍名词： British, Cornish, Danish, English, Irish, Spanish, Turkish, Welsh
 以 c、h 结尾的国籍名词： Dutch, French
@@ -86,10 +87,13 @@ B说 What dessert?
 C说 You were supposed to bring the dessert.
 B说 I didn't know that. Nobody told me about it.
 第五种：上下文共指 (textual co-reference) 
-就是指听话者或读者可以根据上下文找到所指。它可分为前指 (anaphoric reference) 和后指 (cataphoric reference) 。前指又可分为直接前指 (direct anaphora) 和间接前指 (indirect anaphora) 
+就是指听话者或读者可以根据上下文找到所指。它可分为前指 (anaphoric reference) 和后指 (cataphoric reference) 。
+前指又可分为直接前指 (direct anaphora) 和间接前指 (indirect anaphora) 
 
 直接前指
-直接前指是指前面提到的某个事物，在后文中再次提到，这样前后两个名词短语是一种共指关系 (co-reference) ，指代同一个事物。由于第一次提到的事物通常是不定指的，所以常用不定冠词来限定。可是一旦那个事物在话语中已经谈到过，就可以把它看作“从上文中已得知的东西”，此后再提到它时就要用定冠词。
+直接前指是指前面提到的某个事物，在后文中再次提到，这样前后两个名词短语是一种共指关系 (co-reference) ，指代同一个事物。
+由于第一次提到的事物通常是不定指的，所以常用不定冠词来限定。
+可是一旦那个事物在话语中已经谈到过，就可以把它看作“从上文中已得知的东西”，此后再提到它时就要用定冠词。
 I had a banana and an apple. I ate the banana and gave the apple to Clint.
 
 间接前指
@@ -105,7 +109,8 @@ The brick house on the corner is mine.
 What makes us different from women of past decades is our range of choices.
 这里的名词women被介词短语of past decades修饰，但并没有the来限定women ，变成the women 。
 
-所以，决定一个名词的前面是否要有the来限定，并不完全是看该名词的后面是否有后置定语修饰，主要还是看这个被后置定语修饰的名词是表达一个泛指概念还是特指概念。具体可分成两种情况xdc
+所以，决定一个名词的前面是否要有the来限定，并不完全是看该名词的后面是否有后置定语修饰，主要还是看这个被后置定语修饰的名词是表达一个泛指概念还是特指概念。
+具体可分成两种情况xdc
 第一种情况：如果被后置定语修饰的名词是表达一个没有限制的、广泛的、不可预知的人或事物，此时名词的前面依然不用the来限定；
 第二种情况：如果被后置定语修饰的名词是表达某个被限定的、特殊的、听者或读者很熟悉或与之有关的人或事物，此时名词的前面需要用the来限定。
 例句 1) What makes us different from women of past decades is our range of choices.
@@ -199,8 +204,10 @@ man ：泛指整个人类时，不加冠词。
 
 关于星期
 表示星期几的名词前面一般是不加冠词的，而是直接用介词on加上星期。
-比如现在的说话时间是在“周三”，那么我们说on Monday，就是指刚刚过去的那个“周一”，即“前天”，表示的是一个过去的时间；而我们说on Friday，就是指即将到来的那个“周五”，即“后天”，表示的是一个将来的时间。
-除此以外，“on加星期几”还可以表示周期性的“星期几”，比如on Monday可以表示“每逢周一”。在英语中，表示“每逢周几”，我们还可以在星期名词的后面加-s ，比如on Mondays。
+比如现在的说话时间是在“周三”，那么我们说on Monday，就是指刚刚过去的那个“周一”，即“前天”，表示的是一个过去的时间；
+而我们说on Friday，就是指即将到来的那个“周五”，即“后天”，表示的是一个将来的时间。
+除此以外，“on加星期几”还可以表示周期性的“星期几”，比如on Monday可以表示“每逢周一”。
+在英语中，表示“每逢周几”，我们还可以在星期名词的后面加-s ，比如on Mondays。
 I have English class on Monday.
 这里的on Monday可以理解成“每周一”，此时也可以用复数，说成on Mondays。
 加了冠词说on a Monday和on the Thursday，此时的参照时间不是说话的时间，而是上下文里所确立的某一时间。
@@ -216,10 +223,12 @@ The spring of last year was cold. (去年春天很冷。)
 - noon (正午) dusk 或者 twilight (黄昏) 
 - night (夜晚) midnight (午夜) 
 以上这些名词尤其是当它们出现在at, by, after和before之后时，往往不加冠词。
-at dawn (在黎明时) at daybreak (在破晓时) at sunrise (在日出时) at sunset (在日落时) at noon (在正午时) at dusk 或者 twilight (在黄昏时) at night (在夜晚) at midnight (在午夜) 
+at dawn (在黎明时) at daybreak (在破晓时) at sunrise (在日出时) at sunset (在日落时) 
+at noon (在正午时) at dusk 或者 twilight (在黄昏时) at night (在夜晚) at midnight (在午夜) 
 
 如果是用在其他介词之后，或者是在其他场合，这些名词前则往往要加冠词。
-watch the dawn (看黎明到来) The sunrise was splendid. (日出很壮观。) We admired the sunset. (我们欣赏了日落。) see nothing in the dusk (在黄昏时什么也没看见) wake up in the night (在夜里醒来) all through the night (整整一夜) 
+watch the dawn (看黎明到来) The sunrise was splendid. (日出很壮观。) We admired the sunset. (我们欣赏了日落。)
+see nothing in the dusk (在黄昏时什么也没看见) wake up in the night (在夜里醒来) all through the night (整整一夜)
 
 另外，若是表示某一天的某个时间段，往往用不定冠词，并且用介词on，此时这些名词的前面通常都会有形容词修饰。
 on a frosty December night
@@ -229,8 +238,8 @@ on a frosty December night
 have rice for dinner 晚餐吃米饭
 for breakfast 或者 lunch (早餐  或者  午餐吃 …… ) stay for breakfast (留下来吃早餐) before lunch (午餐前) after dinner (晚餐后) 
 但是如果指需要特别提出的某一次用餐，则常用the来强调。
-) Where are we having dinner tonight?
-) The dinner after his retirement party was quite lavish.
+Where are we having dinner tonight?
+The dinner after his retirement party was quite lavish.
 
 若在三餐名词前有形容词时，则一般加不定冠词，来表示什么样的一餐。
 We often have a big lunch and a nice dinner.
