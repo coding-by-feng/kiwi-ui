@@ -7,7 +7,8 @@ as引导的非限定性定语从句的特点主要有两个：
 as引导的非限定性定语从句可以放在句首，此时as指代后面的整个主句。换句话说，关系代词as的先行词可以出现在as后边。
 这点不同于which及任何其他关系词，因为which及其他关系词所指代的先行词必须出现在它们的前面，因此which引导的非限定性定语从句不能放在句首。
 As is so often pointed out, knowledge is a two-edged 武器 which can be used equally for good or evil.
-这是一个放在句首的由as引导的定语从句，此时as所指代的先行词是其后面的完整的主句，即knowledge is a two-edged 武器 which can be used equally for good or evil。as在定语从句中作主语。注意：在这里我们不能说“Which is so often pointed out, ...”。
+这是一个放在句首的由as引导的定语从句，此时as所指代的先行词是其后面的完整的主句，即knowledge is a two-edged 武器 which can be used equally for good or evil。as在定语从句中作主语。
+注意：在这里我们不能说“Which is so often pointed out, ...”。
 
 1） 什么什么 is known to us all, the whale is not fish but a mammal.
 2） 什么什么 is known to us all that the whale is not fish but a mammal.
@@ -15,13 +16,18 @@ As is so often pointed out, knowledge is a two-edged 武器 which can be used eq
 我们知道，鲸不是鱼类，而是哺乳类动物。
 在例句1）中，两个分句间有逗号分隔，表明这是一个放在句首的非限定性定语从句，此时只能用as。
 在例句2）中，两个分句间多了一个连词that，替换了例句1）中的逗号，表明这是一个主语从句，其基本的结构是“It is+过去分词+that”。
-例句3）与例句2）相比多了一个谓语is，表明is前面的成分是主语，后面的成分是表语。在主语部分is known to us all里又有一个谓语is，这就表明充当主语的应该是一个主语从句，而且空白处填入的连词必须又能在主语从句中作主语，所以只能填What。
+例句3）与例句2）相比多了一个谓语is，表明is前面的成分是主语，后面的成分是表语。
+在主语部分is known to us all里又有一个谓语is，这就表明充当主语的应该是一个主语从句，而且空白处填入的连词必须又能在主语从句中作主语，所以只能填What。
 
 as引导的非限定性定语从句可放在句中
-放在句中，往往会分隔主句中的某两个成分，因此在分析句子时要跳过这个as引导的从句，直接将从句的前后两个成分联系起来看，这样才便于理解。尽管as引导的从句放在句中，但as所指代的先行词依然是主句，只不过此时的主句是被as引导的从句分隔成了前后两部分。which引导的非限定性定语从句也可以放在句中，但which的先行词必须出现在其前面。
+放在句中，往往会分隔主句中的某两个成分，因此在分析句子时要跳过这个as引导的从句，直接将从句的前后两个成分联系起来看，这样才便于理解。
+尽管as引导的从句放在句中，但as所指代的先行词依然是主句，只不过此时的主句是被as引导的从句分隔成了前后两部分。
+which引导的非限定性定语从句也可以放在句中，但which的先行词必须出现在其前面。
 Stratford-on-Avon, as we all know, has only one industry—William Shakespeare—but there are two distinctly separate and increasingly hostile branches.
 众所周知，埃文河上的斯特拉特福德镇只有一个产业，即威廉·莎士比亚，但是存在着两个明显不同且日益敌对的分支。
-as引导的定语从句放在句中，隔开了主语Stratford-on- Avon与其谓语has。此时as指代的先行词依然是主句，只不过此时的主句是被as引导的从句分隔成了Stratford-on-Avon和has only one industry— William Shakespeare—but there are two distinctly separate and increasingly hostile branches两部分。as指代这个主句的同时在定语从句中作know的宾语。
+as引导的定语从句放在句中，隔开了主语Stratford-on- Avon与其谓语has。
+此时as指代的先行词依然是主句，只不过此时的主句是被as引导的从句分隔成了Stratford-on-Avon和has only one industry— William Shakespeare—but there are two distinctly separate and increasingly hostile branches两部分。
+as指代这个主句的同时在定语从句中作know的宾语。
 这里若用which替换as，说成which we all know，那么which只能指代Stratford-on-Avon而不能指代整个主句。因此，which表示“我们所知道”的是Stratford-on-Avon这个城市。
 
 There is, as has been suggested, a growing body of research literature in journalism and broadcasting, but very little significant attention has been devoted to the study of the interview itself.
@@ -103,7 +109,8 @@ but通常只引导限定性定语从句。
 
 There is no man but errs.
 人必犯错。
-该句相当于说“There is no man who doesn't err.”。表示“不犯错误的人是没有的”。关系代词but指代人，在定语从句中作主语。与此句相关的还有一句是“To err is human; to forgive, divine.”。表示“犯错人皆难免，宽恕则属超凡”。这两句话可以连在一起使用。
+该句相当于说“There is no man who doesn't err.”。表示“不犯错误的人是没有的”。关系代词but指代人，在定语从句中作主语。
+与此句相关的还有一句是“To err is human; to forgive, divine.”。表示“犯错人皆难免，宽恕则属超凡”。这两句话可以连在一起使用。
 There are very few but admire his talents.
 很少有人不赞赏他的才干的。
 该句相当于说“There are very few who don't admire his talents.”。表示“不赞赏他的才能的人几乎没有”。关系代词but指代先行词few，在定语从句中作主语。
@@ -120,7 +127,8 @@ D. that is needed
 所需要的就是日常生活必需品能够持续供应。
 
 what在从句中大多数情况下是没有疑问意义的，即不翻译成“什么”，而是理解为the things that, all that或something that。
-可以把what看作是一个特殊的关系代词，它是先行词和关系代词的结合体，这就是为什么what被称为“缩合关系代词”。或者说what本身的含义里已经含有一个“隐性”的先行词了，这也就解释了为什么what前面不能再有“显性”的先行词。
+可以把what看作是一个特殊的关系代词，它是先行词和关系代词的结合体，这就是为什么what被称为“缩合关系代词”。
+或者说what本身的含义里已经含有一个“隐性”的先行词了，这也就解释了为什么what前面不能再有“显性”的先行词。
 
 使用关系词what的前提：what的前面不能有先行词
 下面这个句子语法是错误的：
@@ -129,18 +137,21 @@ You can have everything what you like.
 1） Dolphins might be trained to cooperate with fishermen and help them by finding, tracking, herding, or even catching fish—in all of which activities dolphins are expert.
 海豚可能被训练成与渔民合作，帮助他们寻找、跟踪、放牧，甚至捕鱼，海豚都是这些活动的专家。
 2） Dolphins might be trained to cooperate with fishermen and help them by finding, tracking, herding, or even catching fish—in all of what activities dolphins are expert. *
-在例句1）中，关系词which后面接了一个名词activities，整个短语which activities显然指的是前面提到的finding, tracking, herding, or even catching fish这一系列“活动”，这些动名词短语就是被关系词which所指代的先行词。因为在主句中有了这个先行词，所以就不能用what引导从句了。
+在例句1）中，关系词which后面接了一个名词activities，整个短语which activities显然指的是前面提到的finding, tracking, herding, or even catching fish这一系列“活动”，
+这些动名词短语就是被关系词which所指代的先行词。因为在主句中有了这个先行词，所以就不能用what引导从句了。
 
 大象吃的所有食物中的大部分是通过象鼻送到嘴里的。
 1） Most of the food ___什么什么___ elephants eat is brought to their mouths by their trunks.
 2） Most of ___什么什么___ food elephants eat is brought to their mouths by their trunks.
 A. what B. which C. who D. as
-在例句1）中，空格前面有一个名词food，即需要被定语从句修饰的先行词。而有了先行词就不能填入what，所以A不正确。因为food是指物不是指人，所以不能用who。又因为as要与the same, such或as搭配使用，所以也不能填as。故B正确。在例句2）中，空格前面没有任何名词，即没有先行词，所以要填入what。故A正确。
+在例句1）中，空格前面有一个名词food，即需要被定语从句修饰的先行词。而有了先行词就不能填入what，所以A不正确。因为food是指物不是指人，所以不能用who。又因为as要与the same, such或as搭配使用，所以也不能填as。故B正确。
+在例句2）中，空格前面没有任何名词，即没有先行词，所以要填入what。故A正确。
 
 贝多芬这位伟大的音乐家一生中创作了九部交响曲，其中大部分是在他耳朵失聪后完成的。
 Beethoven, the great musician, wrote【A】 nine symphonies in his life, most of what【B】 were written after he had lost【C】 his hearing【D】.
 B。应改为：most of which。
-从表面上看来，这里的most of what中的what前面没有名词，但其实这是一个非限定性定语从句，这个定语从句是补充说明先行词nine symphonies的。因为有先行词，所以不能用what引导从句，而应改成most of which，也就相当于most of the nine symphonies。
+从表面上看来，这里的most of what中的what前面没有名词，但其实这是一个非限定性定语从句，这个定语从句是补充说明先行词nine symphonies的。
+因为有先行词，所以不能用what引导从句，而应改成most of which，也就相当于most of the nine symphonies。
 
 what单独使用，即其后面可以不接名词
 what可表示物，也可表示人。所以，what在意义上相当于说the thing that 或the person that，此时的what一般不具有“什么”这样的疑问意义。
@@ -157,13 +168,16 @@ Show me what you have written.
 今天的船只可以利用50年前还没有的卫星和声呐发现猎物，这意味着海洋里更大比例的鱼类正在被捕捉。
 Today's vessels can find their prey using satellites and sonar, which were not available 50 years ago. That means a higher proportion of what is in the sea is being caught.
 原句可以改成一个含有定语从句的句子：“That means a higher proportion of the fish that is in the sea is being caught.”。
-还要注意断句，不能理解成a higher proportion of what是主语，谓语是is in the sea，而应该理解成是a higher proportion of这个短语后面接了一个从 句what is in the sea，即充当介词of的宾语的不是what这个词，而是what从句what is in the sea。所以，这个短语不是表示“更大比例的鱼类在海洋里”，而是要理解成“海洋里更大比例的鱼类”。
+还要注意断句，不能理解成a higher proportion of what是主语，谓语是is in the sea，而应该理解成是a higher proportion of这个短语后面接了一个从句what is in the sea，
+即充当介词of的宾语的不是what这个词，而是what从句what is in the sea。所以，这个短语不是表示“更大比例的鱼类在海洋里”，而是要理解成“海洋里更大比例的鱼类”。
 
 what的后面可以接名词
-尽管what的前面不能有名词，但它后面可以接名词。当what后面接名词时，what作关系形容词，其结构是“what+名词”，相当于“all the+名词+that”，意思为“所有的……，尽可能多的……”。所以，此时的what同样没有疑问含义。这里的what一般表示物，而不表示人。
+尽管what的前面不能有名词，但它后面可以接名词。当what后面接名词时，what作关系形容词，其结构是“what+名词”，相当于“all the+名词+that”，意思为“所有的……，尽可能多的……”。
+所以，此时的what同样没有疑问含义。这里的what一般表示物，而不表示人。
 大象吃的所有食物中的大部分是通过象鼻送到嘴里的。
 Most of what food elephants eat is brought to their mouths by their trunks.
-这里what后面接名词food，what food相当于all the food that，表示“所有食物”，并不表示疑问意义的“什么食物”。于是，most of what food elephants eat相当于most of all the food that elephants eat，表示“大象吃的所有食物中的大部分”，并不表示疑问意义的“大象吃的大部分是什么食物”或“大象大部分吃的是什么食物”。
+这里what后面接名词food，what food相当于all the food that，表示“所有食物”，并不表示疑问意义的“什么食物”。
+于是，most of what food elephants eat相当于most of all the food that elephants eat，表示“大象吃的所有食物中的大部分”，并不表示疑问意义的“大象吃的大部分是什么食物”或“大象大部分吃的是什么食物”。
 
 我身上所有的钱都给你了。
 What money I have has been given to you.
@@ -181,8 +195,10 @@ For Williams, those activities became what he calls “electronic heroin”.
 对威廉斯来说，这些活动成了他所称的“电子海X因”。
 One difficulty is that almost all of what is called behavioral science continues to trace behavior to states of mind, feelings, traits of character, human nature, and so on.
 难题之一在于，所谓的行为科学几乎全部依然从心态、感情、性格特征、人性等方面去寻求行为的根源。
-In America, the move away from juggling to a simpler, less materialistic lifestyle is a well-established trend. Downshifting—also known in America as “voluntary simplicity”—has, ironically, even bred a new area of what might be termed anticonsumerism.
-在美国，从紧张忙碌的生活隐退到一种较为简单、不太注重物质的生活，这是一个明确的趋势。让人哭笑不得的是，放慢生活节奏——在美国也叫作“自愿返璞归真”——甚至已形成一个可称为“反消费主义”的新领域。
+In America, the move away from juggling to a simpler, less materialistic lifestyle is a well-established trend.
+Downshifting—also known in America as “voluntary simplicity”—has, ironically, even bred a new area of what might be termed anticonsumerism.
+在美国，从紧张忙碌的生活隐退到一种较为简单、不太注重物质的生活，这是一个明确的趋势。
+让人哭笑不得的是，放慢生活节奏——在美国也叫作“自愿返璞归真”——甚至已形成一个可称为“反消费主义”的新领域。
 
 关系副词的用法
 when的用法
@@ -203,7 +219,8 @@ We will put off the outing until next week, when we won’t be so busy.
 也许在不久的将来，我们就不必去办公室上班了，而就在家里工作。
 The day may soon come when we don’t bother to go to office but just work at home.
 关系副词when在从句中作时间状语（先行词表示时间时，不一定都用when引导定语从句）
-when是在定语从句中作时间状语。换句话说，若定语从句不是缺少状语，而是缺少主语或宾语，那么即使先行词是表示时间的名词，也不能用when而要用which或that来引导定语从句。因为用when来引导定语从句的前提条件是：when必须在其引导的定语从句中作时间状语。
+when是在定语从句中作时间状语。换句话说，若定语从句不是缺少状语，而是缺少主语或宾语，那么即使先行词是表示时间的名词，也不能用when而要用which或that来引导定语从句。
+因为用when来引导定语从句的前提条件是：when必须在其引导的定语从句中作时间状语。
 例句1）我永远不会忘记在大学校园里度过的时光。
 I’ll never forget the time which I spent on campus.
 I’ll never forget the time which I spent on campus.
@@ -222,7 +239,8 @@ The day, which began brightly, ended with a violent storm.
 例句：这种趋势始于第二次世界大战期间，当时一些国家的政府得出结论：政府要向科研机构提出的具体要求通常是无法详尽预见的。
 This trend began during the Second 世界大战, when several governments came to the conclusion that the specific demands that a government wants to make of its scientific establishment cannot generally be foreseen in detail.
 这里when的前面有表示时间的名词短语the Second 世界大战，这里的when不是表示“当……时”，而要译成“当时”，这个从句可以译成“当时一些国家的政府得出结论”，而不能译成“当一些国家的政府得出结论的时候”。
-同位语从句的主语部分是the specific demands that a government wants to make of its scientific establishment，谓语部分是cannot generally be foreseen in detail。这个主语部分比较难，因为主语中心词demands后面又带了一个that引导的定语从句that a government wants to make of its scientific establishment。
+同位语从句的主语部分是the specific demands that a government wants to make of its scientific establishment，谓语部分是cannot generally be foreseen in detail。
+这个主语部分比较难，因为主语中心词demands后面又带了一个that引导的定语从句that a government wants to make of its scientific establishment。
 这里的that指代先行词demands，在定语从句中作谓语make的宾语，从而构成一个make demands of的搭配，表示“对……提出要求”。
 
 在20世纪60年代之前，当人们伏案写作时，即使受教育不多的人也追求一种高雅的风格，而从那以后，即使是令人景仰的文章作品也在追求一种口语风格。
@@ -233,7 +251,10 @@ While even the modestly educated sought an elevated tone when they put pen to pa
 when也可以是一个"缩合关系词"
 对于她来说，当她回忆起初遇丈夫时的情景，就把他们之间的关于生活琐事的争议抛到九霄云外了。
 To her, the arguments about little things and other obstacles she and her husband face are forgettable when she thinks back to when she first met her husband.
-第一个when引导的从句不难理解，应是一个时间状语从句，所以when可译成“当……时”。而第二个when引导的从句较为特殊，从结构上看，这个从句是作介词to的宾语，所以应该是一个宾语从句。但从when的意义上来看，这个when相当于说the day when，是一个“缩合关系词”，也就是说when本身含有一个“隐性”先行词the day。所以从句when she first met her husband可以改写成一个定语从句the day when she first met her husband，表示“当初第一次认识她丈夫时的那天”。
+第一个when引导的从句不难理解，应是一个时间状语从句，所以when可译成“当……时”。
+而第二个when引导的从句较为特殊，从结构上看，这个从句是作介词to的宾语，所以应该是一个宾语从句。
+但从when的意义上来看，这个when相当于说the day when，是一个“缩合关系词”，也就是说when本身含有一个“隐性”先行词the day。
+所以从句when she first met her husband可以改写成一个定语从句the day when she first met her husband，表示“当初第一次认识她丈夫时的那天”。
 
 where的用法
 where的先行词指地点，引导定语从句，在定语从句中作地点状语，修饰从句谓语动词，其先行词一般是表示地点的名词，如place和house等。
@@ -265,7 +286,8 @@ A. where I’d like to visit
 B. in which I’d like to visit
 C. I most want to visit
 D. that I want to visit it most
-本题考查定语从句关系词的选择。这句话中尽管先行词是表示地点的名词place，但由于从句中的谓语visit缺少宾语，所以不能选A，而C才是正确答案。这里相当于省去了关系词that或which，因此原句应该是that / which I most want to visit。
+本题考查定语从句关系词的选择。这句话中尽管先行词是表示地点的名词place，但由于从句中的谓语visit缺少宾语，所以不能选A，而C才是正确答案。
+这里相当于省去了关系词that或which，因此原句应该是that / which I most want to visit。
 
 事实上，现在鹿群数量过多，因此有些鹿被送到那些能将它们送回野外的地方。
 In fact, there are now so many deer that some are being sent to places which would like to return this kind of deer to the wild.
@@ -306,7 +328,8 @@ Would you please put the book to which it belongs? 这样说是错误的，因�
 where作为“缩合关系词”
 我们停留了片刻，出来走到我们曾经看过乔治·米尔斯晚上在泥里工作的地方。
 We stopped for a minute to walk out to where we had seen George Mills work in the mud the night before.
-从结构上看，这里的where引导的从句是作介词to的宾语，所以应该是一个宾语从句。但从where的意义上来看，这里的where相当于说the place where，是一个“缩合关系词”，也就是说where本身含有一个“隐性”的先行词the place。
+从结构上看，这里的where引导的从句是作介词to的宾语，所以应该是一个宾语从句。
+但从where的意义上来看，这里的where相当于说the place where，是一个“缩合关系词”，也就是说where本身含有一个“隐性”的先行词the place。
 所以从句where we had seen George Mills work in the mud the night before可以改写成一个定语从句the place where we had seen George Mills work in the mud the night before。
 
 why的用法
@@ -329,7 +352,8 @@ You know the old golden rule, “Care for others the way you would like them to 
 
 限制性与非限制性定语从句
 在限制性定语从句中，先行词和关系词之间不用逗号隔开，而非限制性定语从句则需要逗号隔开。
-限制性定语从句是用来对一个名词提供必要的信息，以说明定语从句所修饰的先行词的身份或性质，或用来限制先行词所指的范围。若去掉限制性定语从句，则主句部分的含义不明确，或意义不完整，所以不能用逗号来分隔先行词和定语从句。
+限制性定语从句是用来对一个名词提供必要的信息，以说明定语从句所修饰的先行词的身份或性质，或用来限制先行词所指的范围。
+若去掉限制性定语从句，则主句部分的含义不明确，或意义不完整，所以不能用逗号来分隔先行词和定语从句。
 比如“I don’t like people.”，这句话的意思不明确，句意不完整，因此其后面必须加一个限制性定语从句，才能使句意完整。比如：
 我不喜欢不守时的人。
 I don’t like people who are never on time.

@@ -197,7 +197,8 @@ I hear the music.
 英语中的延续状态一般都是由be动词接一个形容词或名词构成的。我们在这里主要讨论形容词的情形。
 正如动词可以有静态与动态之分一样，英文中的形容词也可分为静态形容词和动态形容词。
 静态形容词：是指某一事物或现象所具有的长时期内难以自然改变的性质特征或状态。英文中的形容词主要是这样的静态形容词，如： tall, red, long, big, beautiful和important等。
-动态形容词：是指某一事物或现象所具有的随时可以被改变的性质特征或状态。这些形容词主要是用来描写人的性格特征的，最常用的有：brave, calm, careful, careless, clever, cruel, foolish, friendly, funny, impatient, lazy, kind, naughty, nice, noisy, patient, polite, rude, shy, silly, stubborn和stupid等。
+动态形容词：是指某一事物或现象所具有的随时可以被改变的性质特征或状态。这些形容词主要是用来描写人的性格特征的，最常用的有：
+brave, calm, careful, careless, clever, cruel, foolish, friendly, funny, impatient, lazy, kind, naughty, nice, noisy, patient, polite, rude, shy, silly, stubborn和stupid等。
 静态形容词不能用于进行时态。
 动态形容词可以用于进行时态，来描述主语的一个暂时的性质状态或特征，而非其本身所固有的或持久的特征。此时主语是施动者，所以有时表示主语“有意如此”的含义。例如：
 例句1) He's being rude.

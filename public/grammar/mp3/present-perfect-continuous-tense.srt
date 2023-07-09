@@ -2032,11 +2032,7 @@ I ve lived in Beijing for 20 years now.
 
 509
 00:41:54,326 --> 00:41:58,833
-比如： He has been repairing his car since 6:00 this
-
-510
-00:41:58,834 --> 00:42:00,127
-morning.
+比如： He has been repairing his car since 6:00 this morning.
 
 511
 00:42:00,127 --> 00:42:04,367

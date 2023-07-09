@@ -2,7 +2,8 @@
 
 多情多义的情态动词
 需要注意的是，四个情态动词的过去式could，might，would和should只是在形式上是can，may，will和shall的过去式，而在意义上并不是完全对应于can，may，will和shall。
-一方面，现在式和过去式这两类情态动词的意义并不完全对等。例如，can和could的意义并不完全等同，它们既有共同的用法，如表示“能力”，也有各自不同的用法。另一方面，这四个过去形式的情态动词并不一定表示过去的时间 (实际上通常都不是) 。
+一方面，现在式和过去式这两类情态动词的意义并不完全对等。例如，can和could的意义并不完全等同，它们既有共同的用法，如表示“能力”，也有各自不同的用法。
+另一方面，这四个过去形式的情态动词并不一定表示过去的时间 (实际上通常都不是) 。
 
 情态动词的意义
 情态动词 (modals) 用在实义动词 (main verb) 的前面，以添加某种意思。比较下列句子用与不用情态动词在意义上的差别：
@@ -44,7 +45,8 @@ He must drink a lot of milk.
 可以想象这样一个场景：父母要求自己的孩子多喝牛奶，这时他就会说“你必须多喝牛奶”，即例句1) 的意思。这里的must表达孩子应尽的“义务 (obligation) ”。
 而如果是孩子向他们要东西喝，这时他们就可以回答说“你可以喝点牛奶”，即例句2) 的意思。这里的may表达“许可 (permission) ”。
 
-虚拟语气其实就是情态动词could，might，would和should的用法的一部分，这一虚拟用法其实是属于推测用法中的一个重要分支。因此，如果把虚拟用法从推测用法中独立出来，那么情态动词就有三大类用法：推测用法、基本用法和虚拟用法。
+虚拟语气其实就是情态动词could，might，would和should的用法的一部分，这一虚拟用法其实是属于推测用法中的一个重要分支。
+因此，如果把虚拟用法从推测用法中独立出来，那么情态动词就有三大类用法：推测用法、基本用法和虚拟用法。
 
 情态动词的结构搭配与意义之间的关系有下列三点：
 情态动词加一般式，这一结构就是在情态动词后面接一个动词原形。
@@ -60,11 +62,13 @@ He should still be working right now. 他现在应该还在工作。
 Could he be waiting for us at the station? 他会不会正在车站等我们呢？
 You look very tired. You must have been working all day. 你看起来很累，你准是忙了一整天了。
 在情态动词接完成式、进行式或完成进行式的时候，情态动词都是具有推测意义，而没有各自的基本意义。
-比如上面例句中的may，should，could和must都是用了推测意义。具体来说，这里的may不是“许可”的意思，而是表示推测的“可能”；should不是表示义务的“应该”，而是表示推测的“应该”；could不是表示“能力”，也不是表示过去，而是表示对现在的推测；must不是表示“必须”，而是表示推测的“准是”。
+比如上面例句中的may，should，could和must都是用了推测意义。具体来说，这里的may不是“许可”的意思，而是表示推测的“可能”；
+should不是表示义务的“应该”，而是表示推测的“应该”；could不是表示“能力”，也不是表示过去，而是表示对现在的推测；must不是表示“必须”，而是表示推测的“准是”。
 换句话说，用于基本意义的情态动词，其后面一般只接动词的一般式，而不接完成式、进行式或完成进行式。
 
 另外，四个过去形式的情态动词would，could，might 和should接完成式 (have done) 可以表示对过去的虚拟，此时情态动词不是推测的意义，而是虚拟含义。
-如果把虚拟意义看作是推测意义的一种特例——推测某种可能性不存在，此时也就与情态动词的推测用法有联系了，这样就依然证明了上面的规律：在情态动词接完成式、进行式或完成进行式的时候，情态动词都具有推测意义，而没有各自的基本意义。
+如果把虚拟意义看作是推测意义的一种特例——推测某种可能性不存在，此时也就与情态动词的推测用法有联系了，这样就依然证明了上面的规律：
+在情态动词接完成式、进行式或完成进行式的时候，情态动词都具有推测意义，而没有各自的基本意义。
 
 情态动词 加 情态动词短语
 情态动词对应于这样一些短语：be able to，be allowed to，have (got) to，be supposed to(或者)ought to和be going to。这些短语可以用在情态动词后面。
@@ -100,7 +104,8 @@ You must concentrate on one thing at a time. 做事时你必须一心一意。
 I must try harder next time. 我下次必须更努力。
 
 must的“推测”用法和“必须”用法之间的关系：
-- 表示“推测”时，must不能表示将来，只能表示对现在的推测和对过去的推测。若是表示对现在的推测，其谓语形式是“must一般式”，即must do；或“must进行式”，即must be doing。若是表示对过去的推测，其谓语形式是“must完成式”，即must have done。
+- 表示“推测”时，must不能表示将来，只能表示对现在的推测和对过去的推测。若是表示对现在的推测，其谓语形式是“must一般式”，即must do；
+或“must进行式”，即must be doing。若是表示对过去的推测，其谓语形式是“must完成式”，即must have done。
 - 表示“必须”时，must不能谈过去的事件，只能谈现在和将来的事情。其谓语形式都是“must一般式”，即must do。must表示“必须”的意义时是没有过去时态的，要表示“过去必须”，则要借用had to来表达。
 - 在表示“必须”时，must后面的谓语动词一般是表示动作的，具体来说，就是现在的动作或将来的动作，不会是表示状态。在表示“推测”时，must后面的谓语动词可以是动作，也可以是状态。比如：
 He must be dead.
@@ -192,10 +197,16 @@ B说 But according to the weather report, it will rain tomorrow.
 
 would表示确定程度较大的预测。
 New Year’s Superstitions
-In many European countries, people believe that the first visitor on New Year’s Day would bring them either good luck or bad luck. A dark-haired man would bring good luck. A woman or a man with light hair would bring bad luck. So some towns would choose a man with dark hair to go quickly from house to house. After he makes his rounds, the houses would be open to other visitors.
-这里的前三个would都是表示推测。注意，在So some towns would choose a man with dark hair to go quickly from house to house.After he makes his rounds, the houses would be open to other visitors. 中的两个would不是表示推测，而是表示“意愿”，即属于情态动词的基本用法。
+In many European countries, people believe that the first visitor on New Year’s Day would bring them either good luck or bad luck.
+A dark-haired man would bring good luck. A woman or a man with light hair would bring bad luck.
+So some towns would choose a man with dark hair to go quickly from house to house.
+After he makes his rounds, the houses would be open to other visitors.
+这里的前三个would都是表示推测。注意，在So some towns would choose a man with dark hair to go quickly from house to house.
+After he makes his rounds, the houses would be open to other visitors. 中的两个would不是表示推测，而是表示“意愿”，即属于情态动词的基本用法。
 新年的迷信
-在许多欧洲国家，人们相信，在新年这天你遇到的第一个人将会给你带来好运或者厄运。若是遇到一头黑发的男子，这就意味着好运。若是遇到浅色头发的女子或男子，则意味着是厄运。因此，有的城镇就会专门挑选出一名深色头发的男子迅速地挨家挨户走动。等他转一圈下来之后，屋门才会打开，迎接其他客人。
+在许多欧洲国家，人们相信，在新年这天你遇到的第一个人将会给你带来好运或者厄运。若是遇到一头黑发的男子，这就意味着好运。
+若是遇到浅色头发的女子或男子，则意味着是厄运。因此，有的城镇就会专门挑选出一名深色头发的男子迅速地挨家挨户走动。
+等他转一圈下来之后，屋门才会打开，迎接其他客人。
 
 should表示确定程度较大的预测，相当于“很可能将会这样了”。
 The results are expected tomorrow. We should know the results tomorrow.
@@ -240,7 +251,9 @@ There could be another disaster shortly. 很快就会发生另一场灾难。
 - 最后，要理解should用来对说话人所希望发生的事进行推断。
 
 推测用法 (三) ：过去推测 (情态动词完成式)
-表示对过去的推测，英语的谓语形式要用“情态动词完成式”，常用的情态动词有must，may，might和could，所以要说成 must have been, may have been, might have been和could have been等形式；若是在否定句中，则需要将must换成can或could，说成can’t have done或couldn’t have done，
+表示对过去的推测，英语的谓语形式要用“情态动词完成式”，常用的情态动词有must，may，might和could，
+所以要说成 must have been, may have been, might have been和could have been等形式；
+若是在否定句中，则需要将must换成can或could，说成can’t have done或couldn’t have done，
 其中情态动词所表达的推测的确定程度与对现在的推测中所说的一样，即must表示非常确定的推测，may其次，might或could最不确定。
 A说 Why wasn’t John in class yesterday?约翰昨天怎么没来上课？
 B说 He was sick.他病了。
@@ -253,7 +266,8 @@ He should have had a covered bulletproof car, as most world leaders do today.
 他 (约翰·肯尼迪总统) 应该像如今的各国政要那样，乘坐封闭的防弹汽车才对。
 His death could have been prevented.
 他 (约翰·肯尼迪总统) 也就不会丧命了。
-这两句话并不是表示对过去的推测，而是表示对过去的虚拟。事实上，would，could，might，should do可以表示对现在或将来的推测，也可以表示对现在或将来的虚拟；would，could，might，should have done可以表示对过去的推测，也可以表示对过去的虚拟。
+这两句话并不是表示对过去的推测，而是表示对过去的虚拟。事实上，would，could，might，should do可以表示对现在或将来的推测，也可以表示对现在或将来的虚拟；
+would，could，might，should have done可以表示对过去的推测，也可以表示对过去的虚拟。
 
 例句1) I don’t know who killed John, but I guess his wife Mary could have killed him.
 我不知道是谁杀死了约翰，但我猜测他的妻子玛丽可能杀了他。
@@ -299,7 +313,8 @@ I assume now you had seen him before you came here.
 
 思维总结：
 对过去的推测，需要用“情态动词完成式”这一结构。这里的情态动词既可以是现在形式的may，can和will，也可以是过去形式的might，could，would和should。
-对于过去形式的情态动词could，might，would和should，在没有具体语境的情况下，可能会在“推测”与“虚拟”之间产生歧义。可以这样来分辨是推测还是虚拟：知道确切结果的是表示虚拟，而不知道确切结果表示推测。
+对于过去形式的情态动词could，might，would和should，在没有具体语境的情况下，可能会在“推测”与“虚拟”之间产生歧义。
+可以这样来分辨是推测还是虚拟：知道确切结果的是表示虚拟，而不知道确切结果表示推测。
 
 推测用法 (四) ：情态动词 (完成) 进行式
 情态动词接完成式、进行式及完成进行式时，情态动词均是表示推测的含义。所以，情态动词与进行式或完成进行式连用时，表达的意思与相应的进行时态或完成进行时态的意思差不多，只是增加了情态的意义——推测含义。
@@ -314,7 +329,8 @@ He is using the Internet now.
 
 《老友记》某个片段：
 She’s not here yet. She’s not here. She’s having my baby and she’s not here. God, I don’t believe this. She could be giving birth in the cab.
-could be giving是情态动词接进行式，表示在说话的时刻可能发生的事情。我们也看到，这里罗斯用了最不肯定的词could，一方面表明他不希望他的前妻在出租车上生孩子这件事真的发生，另一方面也说明了他的焦急程度——急得如此胡思乱想！如果他希望这件事发生，他就会用should了。
+could be giving是情态动词接进行式，表示在说话的时刻可能发生的事情。
+我们也看到，这里罗斯用了最不肯定的词could，一方面表明他不希望他的前妻在出租车上生孩子这件事真的发生，另一方面也说明了他的焦急程度——急得如此胡思乱想！如果他希望这件事发生，他就会用should了。
 她还没有到，她还没有到，她就要生下我的孩子了，可她现在却还没有到。天啊，真不敢相信。她现在或许正在出租车上生产。
 
 The plane should be landing now.
@@ -361,24 +377,30 @@ The theater can seat 10,000 people.
 上述例句都只是表明主语有完成这一行为的“潜能”，而并没有真正去实施。
 
 基本用法 (二) ：现实“可能”与理论“可能”
-can所表示的“可能”与前文讲过的could，may和might所表示的“推测”是完全不同的。尽管在汉语中都可译成“可能”，但两者的内涵是有巨大差别的。前面讨论的could，may和might所表示的“推测”，是强调“实际上的可能”。说话人要紧密结合当时的实际情况来判断某事发生的“确定程度”的大小，从而选择might， could或may，甚至是must来表达不同的确定程度。
-区分“理论上的可能”与“实际上的可能”的一个关键点，是看所说的可能情况与说话时的现状是否有联系。与说话时的现状有联系的，则是“实际上的可能”。这时往往是谈论一个具体的事件，这尤其用于针对一个现状或后果来推断其产生的原因。与说话当时的现状无关的，则是“理论上的可能”。
-由于can具有“潜能”这一特性，决定了它只能用来表示“理论上的可能”，而不能表示“实际上的可能”，即不能具体地谈一个事件。所以，上面提到的推测含义中，都没有提到用can，而说的是could，might和may。
+can所表示的“可能”与前文讲过的could，may和might所表示的“推测”是完全不同的。尽管在汉语中都可译成“可能”，但两者的内涵是有巨大差别的。
+前面讨论的could，may和might所表示的“推测”，是强调“实际上的可能”。说话人要紧密结合当时的实际情况来判断某事发生的“确定程度”的大小，从而选择might， could或may，甚至是must来表达不同的确定程度。
+区分“理论上的可能”与“实际上的可能”的一个关键点，是看所说的可能情况与说话时的现状是否有联系。
+与说话时的现状有联系的，则是“实际上的可能”。这时往往是谈论一个具体的事件，这尤其用于针对一个现状或后果来推断其产生的原因。与说话当时的现状无关的，则是“理论上的可能”。
+由于can具有“潜能”这一特性，决定了它只能用来表示“理论上的可能”，而不能表示“实际上的可能”，即不能具体地谈一个事件。
+所以，上面提到的推测含义中，都没有提到用can，而说的是could，might和may。
 
 The boy can be very naughty. (理论上、潜在的可能)
 The boy looks pale. He could be sick. (实际上、现实的可能)
 Grammar can be fun!
-这里的can表示一种“理论上的可能”。比如说现在市面上有很多枯燥乏味的英语语法书。于是我就想说“语法可能会很有趣”，并且我一直在努力这么做。只不过，这种理论上的可能，在实践中是要下一番苦功夫的。
+这里的can表示一种“理论上的可能”。比如说现在市面上有很多枯燥乏味的英语语法书。于是我就想说“语法可能会很有趣”，并且我一直在努力这么做。
+只不过，这种理论上的可能，在实践中是要下一番苦功夫的。
 语法可能会很有趣！
 He can be very rude. 他有时会非常粗鲁。
 
-注意，can这种“理论上的可能”往往只适用于肯定句中，不宜用于否定句。正如上文说过的，这种“理论上的可能”就意味着“世事无绝对”这样一个普遍的真理。如果用can’t来否定，就相当于说“什么事情都不可能发生”，这显然有悖于一般真理。比如不宜说：
+注意，can这种“理论上的可能”往往只适用于肯定句中，不宜用于否定句。正如上文说过的，这种“理论上的可能”就意味着“世事无绝对”这样一个普遍的真理。
+如果用can’t来否定，就相当于说“什么事情都不可能发生”，这显然有悖于一般真理。比如不宜说：
 Even experienced teachers can’t make mistakes.
 表示“即使再有经验的老师都不会犯错误”，这显然不符合常理，在中文里也讲不通。
 Even experienced teachers can’t make mistakes.
 由此可见，can表示“理论上的可能”时不宜用在否定句中。
 
-如果真的要用can’t来否定一个“可能性”，这个“可能性”一般就是“实际上的可能”或者说“具体的可能”，即否定具体特定的一件事情，而不是否定一般的真理，也就是上面谈到的 can’t表示否定推测的“不可能”。表示说话人的信心非常大，对应的是肯定推测的must。或者说can’t是用来帮助must构成否定句的。
+如果真的要用can’t来否定一个“可能性”，这个“可能性”一般就是“实际上的可能”或者说“具体的可能”，即否定具体特定的一件事情，而不是否定一般的真理，
+也就是上面谈到的 can’t表示否定推测的“不可能”。表示说话人的信心非常大，对应的是肯定推测的must。或者说can’t是用来帮助must构成否定句的。
 
 基本用法 (三) ：过去的能力
 如果是“今天我能去迪士尼乐园”，用英语可以这么说：
@@ -396,18 +418,23 @@ Yesterday I could have gone to Disneyland.
 所以，在英语中不存在“Yesterday I could go to Disneyland.”这样的句子。
 这个问题涉及could和was able to在表达“过去的能力”时的区别。
 汉语里完全可以说“昨天能够怎样怎样”，但在英语里却不能说“Yesterday I could…”这样的句子。can(或者)could的核心意思是表示一种“潜能”，强调的是“潜在的可能性”，而不一定真正去实施。
-“将来能够”或者是“今天能够”去迪士尼乐园，强调的都是一种“潜在的可能性”，而不一定真正去实施。也就是说，尽管理论上我可以去迪士尼乐园，但实际上我可能去，也可能不去。但如果我们谈一个具体的过去的事件，如“昨天能够去迪士尼乐园”，则表达一个确定的事实，没有“潜在的可能”的意思了，这就违背了can表示“潜能”这一核心意思。故不能说出“Yesterday I could go to Disneyland. ”这样的句子。
-could表示“过去的一般能力”，was able to表示“过去的具体能力”。具体地说，所谓“过去的一般能力”就是指在过去有能力想做某件事就随时可以去做，但并不说明真正实施了这个行为，即强调的是一种“潜能”，而不是某一次具体的过去行为。
+“将来能够”或者是“今天能够”去迪士尼乐园，强调的都是一种“潜在的可能性”，而不一定真正去实施。也就是说，尽管理论上我可以去迪士尼乐园，但实际上我可能去，也可能不去。
+但如果我们谈一个具体的过去的事件，如“昨天能够去迪士尼乐园”，则表达一个确定的事实，没有“潜在的可能”的意思了，这就违背了can表示“潜能”这一核心意思。
+故不能说出“Yesterday I could go to Disneyland. ”这样的句子。
+could表示“过去的一般能力”，was able to表示“过去的具体能力”。具体地说，所谓“过去的一般能力”就是指在过去有能力想做某件事就随时可以去做，
+但并不说明真正实施了这个行为，即强调的是一种“潜能”，而不是某一次具体的过去行为。
 
 I could run after a bus and catch it twenty years ago, but I can’t do that now.
 这里只是说明我过去有“追上汽车”的能力，而并没有强调我真的有过“追车”这个行为，即表示的是一种“潜能”或“一般能力”，所以用could来表示“潜在的可能”。这里不能用can，因为can表示的是现在或将来。
 20年前我可以追上汽车，但现在不行了。
 
-所谓过去的“具体的能力”，即表示主语在过去的某个特定场合所实施的具体行动，此时没有“潜在的可能性”，所以不能用could，而要用was(或者)were able to，表示“成功地做成了某事”。因此was(或者)were able to do可用succeeded in doing或managed to do替换
+所谓过去的“具体的能力”，即表示主语在过去的某个特定场合所实施的具体行动，此时没有“潜在的可能性”，所以不能用could，而要用was(或者)were able to，
+表示“成功地做成了某事”。因此was(或者)were able to do可用succeeded in doing或managed to do替换
 I ran after the bus yesterday and was able to catch it.
 昨天我追赶了一辆汽车，并成功地追上它了。
 这里用was able to表示的正是过去的一次具体的行为，说明具体实施了“追车”这一行为，而且成功地追上了，即表示“具体的能力”，而不是过去的“潜能”。
-综上所述，could同can一样，表示的是一种“潜能”或者说“过去的一般能力”，而不是“实际行动”；was(或者)were able to则更多的是用来表示过去的“实际行动”或者说“具体的能力”。但注意，也可以用was(或者)were able to表示“潜能”，但不如could常用。
+综上所述，could同can一样，表示的是一种“潜能”或者说“过去的一般能力”，而不是“实际行动”；was(或者)were able to则更多的是用来表示过去的“实际行动”或者说“具体的能力”。
+但注意，也可以用was(或者)were able to表示“潜能”，但不如could常用。
 
 表示过去的“潜能”
 He could(或者)was able to pull down a bull and acknowledged as a man with super strength.
