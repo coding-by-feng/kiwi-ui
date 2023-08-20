@@ -338,6 +338,29 @@ export default {
       this.isEnd = true
       this.startPlay()
     },
+    resumePlay() {
+      this.currentGrammarHowl.play()
+      noSleep.enable()
+      try {
+        that.cleaning(false, false, false, true)
+
+        that.prepareCurrentGrammarItemsShowTime()
+
+        that.increaseStopDuration()
+
+        that.setupCountdownFun()
+      } catch (e) {
+        console.error(e)
+      } finally {
+        that.isPlaying = true
+        that.thisStopStartTime = null
+        that.loading = false
+        this.isStopped = false
+        if (that.currentGrammarStartPlayTime === null) {
+          that.currentGrammarStartPlayTime = new Date().getTime()
+        }
+      }
+    },
     showPrevItemAgain(index) {
       if (index > 0) {
         return this.currentGrammarItems[index - 1]
@@ -400,6 +423,9 @@ export default {
                  @click="stopPlay"></el-button>
       <el-button v-loading="loading" v-if="currentGrammar && isStopped" icon="el-icon-refresh-right" size="mini"
                  @click="rePlay"></el-button>
+      <el-button v-loading="loading" v-if="!isPlaying && currentGrammar && isStopped" icon="el-icon-video-play"
+                 size="mini"
+                 @click="resumePlay"></el-button>
       <el-button v-if="currentGrammar" :icon="canAdjustCurrentItem ? 'el-icon-lock' : 'el-icon-unlock'" size="mini"
                  @click="adjustCurrentItem"></el-button>
       <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-top" size="mini"
