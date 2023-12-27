@@ -76,6 +76,11 @@ export default {
         DISABLE: 2
     },
 
+    IS_EN_TO_EN: {
+        ENABLE: true,
+        DISABLE: false
+    },
+
     /**
      * 词性类别
      */
@@ -148,6 +153,7 @@ export default {
         EN_PARA_TYPE: 'enPara_type',
         ENABLE_MSG_HINT: 'enable_msg_hint',
         IS_PLAY_EXAMPLE: 'is_play_example',
+        IS_EN_TO_EN: 'is_en_to_en',
         BGM: 'bgm',
         IS_NOT_CACHE: 'is_not_cache'
     }

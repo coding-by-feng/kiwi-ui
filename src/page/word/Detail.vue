@@ -8,6 +8,7 @@ import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
 import {isMobile} from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
+import kiwiConst from "@/const/kiwiConsts";
 
 let that
 
@@ -23,7 +24,7 @@ export default {
       loading: false,
       windowInnerHeight: window.innerHeight,
       dialogHelpVisible: false,
-      isShowParaphrase: true,
+      isShowParaphrase: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
       isShowExample: true,
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,

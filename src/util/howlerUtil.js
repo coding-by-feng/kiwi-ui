@@ -37,11 +37,15 @@ export default {
         urls.push(paraphraseEnUrl)
 
         let isExampleInvalid = IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0
+        console.log('extractedEn2ChUrls')
+        console.log('exampleList: ', exampleList)
+        console.log('isExampleInvalid: ', isExampleInvalid)
         if (isExampleInvalid) {
             return urls
         }
-        for (let example in exampleList) {
-            if (!example.exampleTranslate) {
+        for (let i = 0; i < 2 && i < exampleList.length; i++) {
+            let example = exampleList[i]
+            if (example.exampleTranslate === undefined || example.exampleTranslate === null || example.exampleTranslate === '') {
                 isExampleInvalid = true
                 break
             }
