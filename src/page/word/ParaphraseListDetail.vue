@@ -62,7 +62,7 @@ export default {
         reviewLoading: false,
         paraphraseVO: {},
         dialogVisible: false,
-        showTranslation: false,
+        showTranslation: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
         showWord: true,
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
         showIndex: 0,

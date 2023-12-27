@@ -34,6 +34,7 @@ export default {
          * 2：附带英文释义
          */
         isPlayExample: getStore({name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE}),
+        isEnToEn: getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
         bgm: getStore({name: kiwiConst.CONFIG_KEY.BGM}),
         keepInMindCount: 0,
         rememberCount: 0,
@@ -74,6 +75,13 @@ export default {
       setStore({
         name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE,
         content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
+        type: 'local'
+      })
+    }
+    if (this.user.isEnToEn === undefined || this.user.isEnToEn === null) {
+      setStore({
+        name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN,
+        content: kiwiConst.IS_EN_TO_EN.ENABLE,
         type: 'local'
       })
     }
@@ -154,6 +162,14 @@ export default {
       })
       this.user.isPlayExample = command
     },
+    isEnToEnChange(command) {
+      setStore({
+        name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN,
+        content: command,
+        type: 'local'
+      })
+      this.user.isEnToEn = command
+    },
     tranReviewType(val) {
       if (undefined === val) {
         setStore({
@@ -210,6 +226,21 @@ export default {
       if (val === kiwiConst.IS_PLAY_EXAMPLE.ENABLE) {
         return '开启'
       } else if (val === kiwiConst.IS_PLAY_EXAMPLE.DISABLE) {
+        return '关闭'
+      }
+      return '开启'
+    },
+    tranIsEnToEn(val) {
+      if (undefined === val) {
+        setStore({
+          name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN,
+          content: kiwiConst.IS_EN_TO_EN.ENABLE,
+          type: 'local'
+        })
+      }
+      if (val === kiwiConst.IS_EN_TO_EN.ENABLE) {
+        return '开启'
+      } else if (val === kiwiConst.IS_EN_TO_EN.DISABLE) {
         return '关闭'
       }
       return '开启'
@@ -316,17 +347,17 @@ export default {
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
-<!--
-    <el-dropdown size="mini"
-                 split-button type="info" @command="reviewTypeChange">
-      {{ `导播：${tranReviewType(user.reviewType)}` }}
-      <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">去除中文导播</el-dropdown-item>
-        <el-dropdown-item :command="2">附带中文导播</el-dropdown-item>
-      </el-dropdown-menu>
-    </el-dropdown>
-    <el-divider></el-divider>
--->
+    <!--
+        <el-dropdown size="mini"
+                     split-button type="info" @command="reviewTypeChange">
+          {{ `导播：${tranReviewType(user.reviewType)}` }}
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item :command="1">去除中文导播</el-dropdown-item>
+            <el-dropdown-item :command="2">附带中文导播</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        <el-divider></el-divider>
+    -->
     <el-dropdown size="mini"
                  split-button type="info" @command="spellTypeChange">
       {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}
@@ -360,6 +391,15 @@ export default {
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="1">开启</el-dropdown-item>
         <el-dropdown-item :command="2">关闭</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
+    <el-dropdown size="mini"
+                 split-button type="info" @command="isEnToEnChange">
+      {{ `是否英英模式：${tranIsEnToEn(user.isEnToEn)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item :command="true">开启</el-dropdown-item>
+        <el-dropdown-item :command="false">关闭</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
   </div>
