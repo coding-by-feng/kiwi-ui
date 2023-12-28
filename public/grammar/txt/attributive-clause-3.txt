@@ -1,0 +1,75 @@
+定语从句与同位语从句的区分
+二者在结构上有相似性，都是“名词that从句”，这里的名词都称作先行词。
+从结构上区分：that是否作成分
+that在定语从句中要充当成分，比如作从句的主语或宾语；而that在同位语从句中不充当任何成分，仅起连词的作用。
+换句话说，定语从句的结构是“名词+that+不完整的句子”，而同位语从句的结构是“名词that+完整的陈述句”。
+例句1）他到处散布的那个谣言，结果证明是假的。
+The rumor that he spread everywhere turned out to be untrue.
+例句2）有谣传说汤姆是小偷，结果证明是假的。
+The rumor that Tom was a thief turned out to be untrue.
+例句1）中的that在从句中充当spread的宾语，故此处为定语从句。
+例句2）中 的that在从句中不充当任何成分，因为从句“Tom was a thief”是一个完整的句子，不缺少任何成分。故其为同位语从句，作the rumor的同位语，补充说明the rumor的具体内容。
+
+例句1）我们讨论的这些情况很重要。
+The fact that we talked about is very important.
+例句2）他的实验取得了成功，这让大家很高兴。
+The fact that he succeeded in the experiment pleased everybody.
+例句1）中的that作talked about的宾语，故此处为定语从句。
+例句2）中的that不充当成分，因为“he succeeded in the experiment”是一个完整的陈述句，故其为同位语从句。
+
+从意义上区分：that引导的从句的意义不同
+定语从句相当于形容词, 对先行词起修饰、描述和限制的作用；同位语从句相当于一个名词，是对其前面名词内容的具体表述，二者是同位关系。
+1） The news that you heard is not true.
+2） The news that Lincoln was murdered at a theater is true.
+例句1）中的定语从句that you heard并不是表示news的内容，只是在限制news所指的范围，即“你听到的那个消息”。
+例句2）中的同位语从句that Lincoln was murdered at a theater是表示news的具体 内容，在意义上与news构成同位关系。
+1）你听到的那个消息并不是真实的。
+2）有消息说林肯是在一个剧院被刺杀的，这是真的。
+
+例句1）你指出的这一点，我很感兴趣。
+The fact that you pointed out made me interested.
+例句2）众所周知，月球上并没有生命存在。
+The fact that there are no lives on the moon is known to us all.
+例句1）中的定语从句that you pointed out并不是表示fact的内容，只是在限制fact的所指范围，即“你指出的这个事实”。
+例句2）中的同位语从句that there are no lives on the moon是表示fact的具体内容，在意义上与fact构成同位关系。
+
+带有插入语的定语从句
+定语从句的关系词后面插入一个主谓结构，往往是一些表达个人主观观点的主谓结构，如they think, he said, they believe, he claimed, they assume等等。这些主谓结构紧跟在关系代词后面。
+
+作主语的关系词+插入语+定语从句的谓语部分
+很多学生如果必须学一门他们认为很难的课程时，就会遇到很多问题。
+Many students face problems when they have to study a subject that they think is difficult.
+这里的定语从句本身的结构是that...is difficult，但现在关系代词that后面紧跟了一个插入语they think，定语从句的主语that和谓语部分is difficult被they think这个插入语分隔。
+
+作宾语的关系词+插入语+定语从句的主谓部分
+这个百万富翁有一个十分丑陋的女儿，可是让我难以想象的是，竟然有很多男孩子在追求她。
+The millionaire had a very ugly girl who I could not have dreamed many boys fell in love with.
+定语从句的宾语who和定语从句的主谓语many boys fell in love with被I could not have dreamed这个插入语分隔。
+
+他们指出了这些损坏，认为这是由昨晚的暴风雪造成的。
+They pointed out the damage which they supposed had been done by last night's storm.
+这里的定语从句本身的结构应该是which...had been done by last night's storm，修饰前面的名词damage。但现在关系代词which后面紧跟了一个插入语they supposed
+
+我最近看过一本书，它是由一个英国人写的，我还记得书里有一句十分有趣的话，作者认为这句话说明了美国人为什么是这种性格。
+There was a very interesting remark in a book by an Englishman that I read recently giving what he thought was a reason for this American characteristic.
+what引导的从句中带一个主谓结构的插入语he thought
+
+Our limited thinking prevents us from progress. There was a fisherman who, every time he caught a big fish, would throw it back into the river, keeping only the smaller ones.
+A man watching this unusual behavior asked the fisherman why he was doing this. The fisherman replied: “Because I have a small frying pan.”Most people never make it in life because they are carrying a small frying pan. That is limited thinking.
+我们局限性的思维会阻碍我们进步。比如，有个渔夫，每次捕到大鱼时都会把它丢回河里，而只把个头比较小的鱼留下。
+有个人看到了渔夫这种不寻常的行为，就问他为什么这样做。渔夫回答说：“因为我家只有一只很小的平底锅。”大部分人在生活中不能成功就是因为他们只带着一只小平底锅。这就是局限性的思维。
+
+并列定语从句，是指两个或两个以上的定语从句，通过and, but, or等并列连词连接共同修饰一个先行词。
+考试中所犯的错误，往往是因为某些知识点你不知道或者你认为自己知道（但实际上你不知道）。
+The errors occurring in the exam often result from the things that you don't know or that you think you know.
+两个定语从句that you don't know 和that you think you know由连词or连接，修饰同一个先行词the things。
+
+这样的定语从句不是并列定语从句：
+他在那件正要送到洗衣店去的西服里找到了他忘记的一美元。
+He found a dollar bill that he had forgotten in a suit that he was sending to the cleaner.
+两个定语从句that he had forgotten in a suit和that he was sending to the cleaner的先行词各不相同，前者的先行词是a dollar bill，后者的先行词是a suit。
+
+双层定语从句
+He is the only person that we know who speaks so many foreign languages.
+第一层定语从句that we know的先行词为the only person；第二层定语从句who speaks so many foreign languages的先行词为the only person that we know。
+他是我们所认识的人当中唯一一位会说这么多外语的人。

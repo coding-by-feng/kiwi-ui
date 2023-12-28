@@ -1,0 +1,502 @@
+英语语法之-状语从句
+
+时间连词when的用法特点
+when的意思相当于at that time（在……时刻），从句的谓语动词通常是短暂动词，表示某一时刻的动作（从句也可接延续动词，这时从句往往用过去进行时态）。
+
+主句一般过去时+从句一般过去时
+他走了之后，我才开始吃晚饭。
+I started my dinner when he left.
+我到了以后，他才离开。
+He left when I got there.
+
+下面这个知识点很重要：
+若主从句都用一般过去时，则表示从句动作先发生。要强调从句动作先发生，从句还可以用过去完成时。
+主句一般过去时+从句过去完成时
+I started my dinner when he had left.
+He left when I had got there.
+短暂动作用一般过去时，延续动作用过去进行时。
+
+主句一般过去时+从句过去进行时
+门铃响的时候，我正在打电话。
+The doorbell rang when I was telephoning.
+这里的短暂动作rang用一般过去时，延续动作telephone用过去进行时。
+
+主句过去完成时+从句一般过去时
+他走的时候，我已经开始吃晚饭了。
+I had started my dinner when he left.
+我到的时候，他已经离开了。
+He had already left when I got there.
+
+主句过去进行时+从句一般过去时
+I was telephoning when the doorbell rang. 我当时正在打电话，突然门铃响了。
+
+短动作才能接类似suddenly的词：
+例句1）The doorbell rang when suddenly I was telephoning. 是错误的
+例句2）I was telephoning when suddenly the doorbell rang. 才是正确的
+
+主句一般将来时+从句一般现在时
+在表示将来的动作时，主句显然要用一般将来时，而时间状语从句要用一般现在时表示将来，不能使用将来时态。
+等他到了我要和他说话。
+I’ll speak to him when he arrives.
+等他回来我要告诉他这件事。
+I’ll tell him about it when he comes back.
+
+主句一般将来时+从句现在完成时
+在when引导的从句中，除了用一般现在时表示将来之外，还可用现在完成时表示一个将要发生的动作，主句依然用一般将来时。
+从句中用完成时态是为了强调：在从句动作结束了之后，主句动作才开始发生。此时从句的动作一般都是需要持续一段时间的。
+我吃完饭就去。
+I’ll go when I have had my dinner.
+工作做完后，我就给你打电话。
+I’ll give you a call when I have finished the work.
+
+主句将来完成时+从句一般现在时
+一会我们到的时候，那位演奏家一定已经弹完那首曲子了。
+The performer will already have played the music when we get here.
+
+主句将来进行时+从句一般现在时
+The performer will be playing the music when we get there.
+一会我们到的时候，那位演奏家一定正在弹那首曲子。
+
+主从句都用一般现在时
+表示一般动作的when引导的从句往往是说明一般情况，阐明一个道理，因而常出现在名言警句、谚语或格言中。
+如果天堂里没有狗，那么我愿意死后不去天堂，而去有狗的地方。
+If there are no dogs in Heaven, then when I die I want to go where they went.
+
+whenever引导时间状语从句
+我们可以用whenever引导时间状语从句，表示“无论何时”，它相当于when的强调形式。
+无论何时说“我爱你”，请真心诚意。无论何时说“对不起”，请看着对方的眼睛。
+Whenever you say “I love you”, mean it. Whenever you say “I’m sorry”, look the person right in the eyes.
+
+面带微笑地接听电话，因为对方会感觉得到。
+Smile whenever you pick up the phone, for the caller will be able to notice it.
+
+时间连词while的用法特点
+当while用作时间连词时，意思相当于during that time（在……期间），表示某一时间段内发生的动作。因此，从句的谓语动词通常是延续动词。
+The phone rang while I was taking my bath.
+
+一个侦探逮捕了一名罪犯。他正准备给罪犯戴上手铐，这时刮起了一阵狂风，把侦探的帽子吹落了。罪犯立即说：“需要我去帮你把帽子捡起来吗？”侦探答道：“你把我当傻瓜啊？你在这里等着，我自己去捡！”
+A detective（侦探）arrested a criminal and was about to handcuff（给……戴手铐） him when a huge gust （一阵狂风） of wind blew the detective’s hat off.
+“Shall I go and fetch it?” the criminal asked. “Do you take me for a fool?” asked the detective. “You wait here while I go and get it!”
+此句中的go和get尽管是短暂动词，但两个动词连用表示的是在一段期间内的活动，所以用连词while。
+
+时间连词as的用法特点
+当as引导时间从句时，它相当于while，即后面要接延续动词，一般译成“正当……”，“随着……”或“一边……一边……”。与as引导的从句搭配的主句的谓语可以是延续动词，也可以是短暂动词。
+船在水面上行使时，箭突然掉进了河里。这名士兵想找回这支箭。
+The arrow fell into the river as the boat was drifting on the water. The soldier tried to retrieve it.
+
+日本的城市居民长期以来忍受着漫长的上下班往返时间以及拥挤的住房条件，但是，随着老龄人群和家庭的价值削弱，人们慢慢开始感受到不舒服了。
+Urban Japanese have long endured lengthy commutes （travels to and from work） and crowded living conditions, but as the old group and family values weaken, the discomfort is beginning to tell.
+从句的谓语weaken是延续动词，主句的谓语is beginning表示一个持续的过程。as在这里可以译成“随着……”。
+
+时间连词before的用法特点
+before主从句时态搭配中，比较常见的一种是“主句用过去完成时，从句用一般过去时”，before一般译成“在……之前”，但有时候可以有不同的译法。
+威廉斯先生是一位政府审计员，年收入为35,000美元，他这几年在这个赌场里输掉了175,000美元。而在该赌场送给他一张价值20美元的赌票之前，他从未赌博过。
+ 前后两个部分有一种转折的意味
+During several years of 赌博 in that 赌场, Williams, a state auditor earning $35,000 a year, lost approximately $175,000. He had never gambled before the 赌场 sent him a coupon for $20 worth of 赌博.
+土壤里的矿物质是无法被植物直接利用的，它们只有在溶于土壤的溶液里之后，才能为植物的根系所吸收。
+The mineral elements from the soil that are usable by the plant must be dissolved in the soil solution before they can be taken into the root.
+这里before引导的从句虽然是表示时间，但就上下文的逻辑关系来看，我们可以把它转译成一个条件从句，译成“只有……才……”。
+
+在before引导的从句之前若有一段时间，这时候before引导的从句一般可以翻译成“在多长时间之后才……”。
+经过了几个月的调查之后，情况才开始变得明朗。
+It took a few months of investigation before it became clear.
+这里before的前面有一个时间段a few months，如果按照原文的语序译成“在情况变得明朗之前，花了几个月时间的调查”，就有股“英语腔”，不符合汉语的表达习惯。
+
+In this factory, suggestions often have to wait for months before they are fully considered.
+在这家工厂里，建议往往要等上数月之后才能被考虑。
+
+时间连词after的用法特点
+常见的搭配是“主句用一般过去时，从句用过去完成时”。
+我学了十年英语后搬到了美国。
+I moved to America after I had learned English for ten years.
+
+时间连词since的用法特点
+现在完成时态+since+短暂动词的一般过去时
+自从我毕业，就一直在这家公司上班。
+I have worked in this company since I graduated.
+
+现在完成时态+since+延续动词的一般过去时
+若since后面的延续动词用一般过去时态，则表示从句动作“结束”以来，主句活动还在持续。
+自从我离开那家公司后，他就再没有和我联系过。
+He hasn't contacted me since I worked in that company.
+主句时间则是从work这个活动已经“结束”后开始算起的，即该句表示“我”不在这家公司工作了。
+
+现在完成时态+since+延续动词的现在完成时
+若since后面的延续动词用现在完成时态，则表示从句动作“开始”以来，主句活动在持续。
+He hasn't contacted me since I have worked in that company.
+自从我开始在那家公司工作后，他就再没有和我联系过。
+
+时间连词until的用法特点
+延续动词+until+短暂动词或时间点
+当主句或句子的谓语动词是延续动词时，通常用肯定形式。until的后面若接从句，则从句的谓语必定是短暂动词，或者接表示时间点的名词短语。
+Wait until he comes back.
+我将要离开办公室，要到下周二才能回来。
+I will be away from my office until next Tuesday.
+短暂动词+until+短暂动词或时间点
+若主句的谓语动词是短暂动词，则要用否定形式。因为否定之后表示的是一个状态，而状态则是延续的。
+not…until（直到……才）
+
+直到老板回来后，他才离开办公室。
+He didn’t leave the office until his boss came back.
+
+我昨晚12点才上床睡觉。
+I didn’t go to bed until 12 o’clock last night.
+
+表示“一……就”的结构
+从句动作先于主句动作
+表示这一时间关系的连词有：as soon as，once，the minute，the moment，the instant，immediately，directly和instantly等等。
+这些连词的用法和句式结构是一样的，主从句时态一般一致。若表示将来的动 作，则主句用一般将来时（simple future），从句用一般现在时（simple present）表示将来。
+雨一停，我们就动身。
+We will leave as soon as it stops raining.
+这里主句谓语的时态是一般将来时will leave，从句谓语的时态是一般现在时stops，但表示将来的动作。最后，这里从句的动作stops先发生，紧接着主句动作leave发生，即“雨先停，再离开”。
+
+我们刚开始吃晚饭，这时候门铃就响了。
+The doorbell rang as soon as we began having dinner.
+
+可以把连词as soon as换成其他连词，比如 immediately，instantly或directly。
+It began to rain immediately I arrived home.
+The doorbell rang immediately we began having dinner.
+或者换成带有定冠词the的连词，比如the moment，the minute或the instant。
+
+酒肉朋友就像一个银行家，正值阳光灿烂时他会把伞借给你，而一旦天下雨他就立即将伞收回。
+A fair-weather friend is like a banker who lends you his umbrella when the sun is shining and takes it back the minute it rains.
+一旦朋友陷入困境就会转身脱逃的人，我们不能信任！
+Don’t trust those who leave their friends the moment they get into difficulty!
+
+闪电一发生你就能看见，但你要过一会才能听见雷声。
+You see the lightning the instant it happens, but you hear the thunder later.
+这里主句的谓语动词see和从句的谓语动词happens都是短暂动词，即表示“一……就”。
+
+主句动作先于从句动作
+如果要表达在主句动作发生之后，紧接着从句动作就发生了。
+表示这一时间关系的连词有：hardly…when，scarcely…when和no sooner…than。这些连词的用法和句式结构是不一样的，主从句时态一般也不一致。
+例句1）我刚到家就开始下雨了。
+No sooner had I arrived home than it began to rain.
+例句2）我一到家就开始下雨了。
+It began to rain as soon as I arrived home.
+在例句1）中，连词than后面的it began to rain是从句，had I arrived home是主句；主句had I arrived home用了过去完成时且是倒装结构，从句it began to rain用一般过去时。
+在例句2）中，it began to rain是主句，I arrived home是从句；主句it began to rain和从句I arrived home都用一般过去时。
+
+No sooner had I started to type my paper than the telephone rang.
+我刚开始打我的论文，这时电话铃响了。
+
+还可以用`hardly/scarcely…when`这一结构来表达同样的意思。
+Hardly had I arrived home when it began to rain.
+Scarcely had I started to type my paper when the telephone rang.
+
+地点状语从句
+地点状语从句通常由where引导，用来表达主句的动作发生的场所。其结构通常就是“where+陈述句”，从句可以放在句首或句末。
+Stay where you are. 呆在原处别动。
+Generally, air will be heavily polluted where there are factories. 一般在有工厂的地方，空气污染都会很严重。
+
+地点状语从句若放在句首，在翻译时往往失去地点的含义，要灵活处理。
+Where there is a will, there is a way. 有志者，事竟成。
+Where there is Love, there is also Wealth and Success! 只要有爱，就会有成功和财富！
+
+原因状语从句
+常见连词的用法
+我们常用because，for，as和since这四个连词来引导原因状语从句。
+because的语气最强，只有它才能用来回答why的问句，所引出的原因往往是听话人所不知道的或最感兴趣的；也只有because才能被强调词如only，just和perhaps等来修饰。
+My friends dislike me because I’m handsome and successful.
+我的朋友都不喜欢我，是因为我长相英俊又事业有成。
+可能因为现在大多数跨国婚姻都是基于真爱，所以夫妇俩都很努力地克服双方的差异。
+Perhaps because most of today’s cross-cultural marriages occur because of“true love”, these couples work hard to overcome their differences.
+一般就不会说perhaps for*，perhaps as*或perhaps since*。
+
+连词since表示人们已知的事实，是不需强调的原因，所以常译成“既然”，通常放在句首。
+既然我们明天没有课，那么为什么不出去野餐呢？
+Since we don’t have class tomorrow, why not go out for a picnic?
+
+连词as与since的用法差不多，所引出的理由在说话人看来已经很明显，或已为听话人所熟悉而不需用because加以强调。
+由于周一是法定假日，所有的政府机关都将休息。
+As Monday is a national holiday, all government offices will be closed.
+
+连词for表示推断的理由，是对前面分句的内容加以解释或说明。
+昨晚下雨了，因为今天早上地是湿的。
+It rained last night, for the ground is wet this morning.
+
+相比较而言：
+- as和for引导的主、从句，二者处于平等位置；
+- because引导的从句显得比主句重要，强调原因；
+- since引导的从句显得次要，而主句重要，以说明将要做什么事。
+
+用介词表示因果关系
+常用的介词有：because of，due to和owing to。因为是介词，所以其后面不能接从句。
+由于他的粗心大意，我们出了车祸。
+We had an accident because he was careless.
+We had an accident due to his carelessness.
+Owing to his carelessness we had an accident.
+- 在例句1中，因为是从句，所以用连词because引导。
+- 在例句2中，因为是名词短语his carelessness，所以用介词连接。此处不能说due to he was careless。
+- 在例句3中，同样是名词短语his carelessness，所以要用介词。一般来说，owing to常置于句首，而due to通常不这么用。
+
+目的状语从句
+常用的引导目的状语从句的连词有：so that，in order that和that。另外，在目的状语从句中常含有情态动词，比如may/might或can/could等。
+我关掉了电视，好让我的室友安静地学习。
+I turned off the TV in order that my roommate could study in peace and quiet.
+这里的从句由in order that引导，表示目的，意为“以便”。从句含有情态动词could。
+
+小的时候，我睡觉时常常带着手电筒上床，这样我就可以偷看连环画册而不被父母发觉。
+When I was a child, I would take a flashlight to bed with me so that I could read comic books without my parents’ knowing about it.
+这里的从句由so that引导，表示目的，意为“以便”。从句含有情态动词could。
+
+我们爬到高处，以便能看得更清楚。
+We climbed high (so) that we might get a better view.
+
+目的状语从句一般位于主句之后。但若要强调目的状语从句，可将so that或in order that引导的目的状语从句置于句首：
+为了让我的室友能安静地学习，我关掉了电视。
+In order that my roommate could study in peace and quiet, I turned off the TV.
+
+结果状语从句
+结果状语从句都要放在主句之后，而不能提到句首。
+连词so…that的用法，so后面接形容词或副词。
+接形容词
+我们学校食堂的饭菜质量真差，连苍蝇都飞到那里去减肥。
+The food in our school canteen is so bad that flies go there to lose weight.
+接副词
+他一直不断地提出确定不疑的主张，以至于不仅他自己对他们深信不疑，而且还使得工商管理界相信他们都是真的。
+He has put forward unquestioned claims so consistently that he not only believes them himself, but has convinced industrial and business management that they are true.
+连词such…that的用法
+such后面要接名词（短语）。
+外交官和螃蟹是行为方式相同的动物，我们无法判断他们是要向前走还是想往后退。
+Diplomats and crabs are creatures who move in such a way that it is impossible to tell whether they are coming or going.
+
+他是一个好老师，所有人都喜欢他。
+He is such a good teacher that everyone likes him.
+He is so good a teacher that everyone likes him.
+注意这里冠词a的位置：a要紧跟在such的后面。
+
+结果状语从句的倒装
+such/so…that引导结果状语从句，为了强调，还可以将主句中的so或such引导的部分置于句首从而构成倒装结构。
+
+光的传播速度是如此之快，以至于我们无法想象它的速度。
+So fast does light travel that it is difficult for us to imagine its speed.
+这句话的正常语序为“Light travels so fast that it is difficult for us to imagine its speed.”。
+
+他真是愚蠢，连她都相信。
+Such a fool was he that he believed her.
+这句话的正常语序为“He was such a fool that he believed her.”。
+
+条件状语从句
+最常见的条件状语从句的引导词是if和unless。连词if表示“如果”，unless表示“如果不”或“除非”。
+If winter comes, can spring be far behind? 冬天来了，春天还会远吗？
+
+其他引导条件状语从句的连词有：suppose (that)，supposing (that)，providing/provided (that)，so long as，as long as和on condition that等。
+只要功夫深，铁杵磨成针。
+So long as you work hard enough, an iron rod can be ground into a needle.
+A man is not old as long as he is seeking something. A man is not old until regrets take the place of dreams.
+一个人只要还有追求，他就不算老。只有当心中不再有梦想，而只是满怀遗憾，这时他才真正老了。
+如果你知道自己的目标是什么，知识就能帮助你达到这个目标。
+Knowledge helps you to reach the destination provided you know what the destination is.
+
+让步状语从句，让步状语从句，属于状语从句中的一种。一般翻译为“尽管……”或“即使……”等，就是我们日常生活中用的“退一步说…”的感觉。
+常见的引导让步状语从句的词有though，although，even though和 even if。此时，主句前不可用but，但可用yet或still。
+尽管他努力了，但他还是失败了。
+Although he tried hard, (yet/still) he failed.
+对于每个人来说，家是不可或缺的，它永远为你守候，即使有一天你发现你不得不离开它。
+The family is the essential presence--the thing that never leaves you, even if you find you have to leave it.
+
+表示让步转折关系的介词
+这些介词主要有despite，in spite of和for all。需要注意的是，although和though是连词，因此后面只接从句（有时是省略形式的从句），而这里的介词只接名词（短语），不能接从句。
+尽管他没有经验，但是他表现得很不错。
+例句1） Though he was inexperienced, he did a very good job.
+例句2） In spite of his inexperience, he did a very good job.
+例句3） In spite of his being inexperienced, he did a very good job.
+在例句3）中，his being inexperienced是动名词短语的形式，也属于名词短语，所以这里也需要用介词。
+
+其他类似的例子还有：
+Although it was dangerous,…
+Despite the danger,…
+
+Though the weather was bad,…
+In spite of the bad weather,…
+介词后面除了接名词短语外，还可以接what引导的名词从句。
+
+___C___ tired, he wouldn’t stop working.
+A. Despite
+B. For all
+C. Though
+D. Whereas
+这是一个省略的状语从句，原句相当于“Though he was tired, he wouldn’t stop working.”。所以要用连词，而不是介词。
+
+介词后面可以接名词、名词短语、动名词或what引导的从句；
+连词后面可以接完整的陈述句、形容词（相当于省略句）、分词（相当于省略句）等。
+
+置于句首的while一般表示“尽管”
+尽管美国政府积极要求彻底拆分微软这个软件巨人，但是微软公司极力反对任何影响其市场竞争力的动议。
+While the government pushed for a total breakup of the software maker, Microsoft fought fiercely against any positions that would affect its ability to compete in the marketplace.
+
+as引导的倒装句表示让步
+形容词提至句首
+他虽然年轻，但知识渊博。
+Young as he is, he is knowledgeable.
+尽管他是我们车间最年长的一位，他工作起来最努力。
+Oldest in our workshop as he is, he works hardest.
+副词提至句首
+虽然我非常尊重他，但是我仍旧不同意他的意见。
+Much as I respect him, I can not agree with him.
+尽管他的试验再次失败了，但是他并不灰心。
+Again as he failed in doing this experiment, he didn’t lose his heart.
+分词提至句首
+Praised as he was, he remained modest. 尽管他受到了表扬，却仍旧很谦虚。
+名词提至句首
+他虽然还是个孩子，却知识渊博。
+Child as he is, he is knowledgeable.
+他虽然很懒惰，却乐于助人。
+Lazy a boy as he is, he is kind to help others.
+
+比较状语从句
+连词as的基本用法
+as引导比较状语从句，其基本结构是as…as，其中前一个as是副词，后一个as是比较状语从句的连词。
+结构1：as+形容词或副词+as
+这项工作不像你想象的那么难。
+The work is not as difficult as you think.
+结构2：as+形容词+a(n)+可数名词单数+as
+这里前一个as作为副词来修饰一个形容词，而这个形容词同时又修饰一个名词。使用时要特别注意这里形容词置于不定冠词之前这一特点。
+很少有哪项科技的发展能像电子技术的发展这样，对我们的社会、经济以及文化等诸多方面产生如此重要的影响。
+Rarely has a technological development had as great an impact on so many aspects of social, economic, and cultural development as the growth of electronics.
+若没有as修饰great，这句话原本的结构是a great impact，但现在将其放置在as…as结构中，则冠词和形容词的语序要互换，因此成了as great an impact as。
+另外要注意的是，整个句子是一个倒装句，正常语序为“A technological development has rarely had as great an impact on…as the growth of electronics.”。
+
+美国人的思维习惯是由小到大。我们举一个写信封地址的简单例子吧。
+Americans tend to think from small to large. Let us take as simple an example as the addressing of envelopes.
+若没有as修饰simple，这句话原本的结构是a simple example，但现在将其放置在as…as结构中，则冠词和形容词的语序要互换，因此成了as simple an example as，译成“像这样的一个简单例子”。
+虽然这里as…as结构并不是引导一个比较状语从句，举这个例子主要是为了说明“as+形容词+a(n)+可数名词单数+as”这一结构。
+
+在否定句中第一个as可用so代替
+这个房间没有我们昨天看到的那个大。
+This room is not so large as the one we saw yesterday.
+没有一个现代国家像美国这样，只把很少一部分财富投入到公共卫生事业中去。
+No other modern nation devotes so small a portion of its wealth to public health as the United States does.
+
+为了保持句子平衡，从句还可以用倒装结构
+此时的结构是“as…as+助动词+主语”。
+尽管蚂蚁很小，但是它同地球上的任何其他动物一样，也是一种动物。
+Small as it is, the ant is as much a creature as are all other animals on the earth.
+这里的as are all other animals on the earth是一个倒装结构，主语是all other animals on the earth。
+另外，这里的as much…as表示的是“在同等程度上”，翻译时可以处理成“和……一样”。
+
+计算机革命对于我们人类社会的改变之深刻，就如同当年的工业革命。
+The computer revolution may well change society as fundamentally as did the Industrial Revolution.
+这里的as did the Industrial Revolution是一个倒装结构。
+连词than的基本用法
+可比性问题
+可比性问题，指两个同类事物才能比较，如he和I。不是同类事物是无法比较的。
+He is taller than I (am). 他比我高。
+The weather of the South is wetter than the North. 这个句子是错误的
+因为the weather of the South和 the North是两个截然不同的事物，无法进行比较，应改为“The weather of the South is wetter than that of the North.”。
+比较形式问题
+在有than的比较句子里，主句中必须有比较级形式出现。
+很少有任何一项电子技术的应用能够像机器人这样，引起人们对未来就业机会的恐慌。
+There are few electronic applications more likely to raise fears regarding future employment opportunities than robots.
+
+总的来说，有远大抱负的学生比那些胸无大志的学生更可能取得学业上的成功。
+On the whole, ambitious students are 【much likely】 to succeed in their studies than are those with little ambition.
+B，应改为：more likely。
+为了保持句子平衡，从句还可以用全部或部分倒装
+此时的结构是：than 助动词+主语。
+On the whole, ambitious students are more likely to succeed in their studies than are those with little ambition.
+这里的than are those with little ambition是一个倒装结构，主语是those with little ambition。
+
+与太阳系中的其他行星相比，火星表面的情况同地球表面的情况最为相似。
+The surface conditions on the planet Mars are more like the Earth’s than are those of any other planet in the solar system.
+表示倍数比较的三种句型
+除了用than和as来对两个事物进行比较外，还可以用times和twice等词来说明两事物之间的倍数关系：
+- “倍数+比较级”结构：A is three times bigger （或其他形容词的比较级） than B
+- “倍数+as…as”结构：A is three times as big （或其他形容词的原级） as B
+- “倍数+名词”结构：A is three times the size （或其他形容词对应的名词形式） of B
+
+美国在二战后进入这样辉煌的历史时期时，其市场规模是任何竞争对手的八倍，这使其工业经济规模无可匹敌。
+When the United States entered just such a glowing period after the end of the Second World War, it had a market eight times larger than any competitor, giving its industries unparalleled economies of scale.
+这里是“倍数+比较级”结构。
+
+每出生100名女婴，就会有105名男婴出生，但这个比例在他们成年时下降为基本平衡，在70岁的老人中女性是男性的两倍。
+There are about 105 males born for every 100 females, but this ratio drops to near balance at the age of maturity, and among 70-year-olds there are twice as many women as men.
+这里是“倍数+as…as”结构。
+
+加拿大医疗信息协会的资料表明，自1997年以来，处方药费用的增长速度是整个医疗费用增长速度的两倍。
+According to the Canadian Institute for Health Information, prescription drug costs have risen since 1997 at twice the rate of overall health-care spending.
+这里是“倍数+名词”结构。
+
+the more…, the more句型
+“the more…, the more”结构的基本意思是“越……，越……”。
+比较级部分都必须在各自的分句中充当一定的成分，换句话说，相当于是将分句中的某个成分变为比较级之后提到了句首。
+
+你用词越准确，人们就能越容易理解你的意思。
+- 1） The more exact you use your words, the easier people will understand you.是错误的
+- 2） The more exactly you use your words, the more easily people will understand you.
+- 3） The more exact your words are, the easier it is for people to understand you.
+- 4） The more exact words you use, the more easily people will understand you.
+
+- 在句1）中，其各自引导的分句分别是you use your words和people will understand you，
+这里使用的形容词比较级the more exact和the easier不能修饰句子的谓语use和understand（因为形容词不能修饰动词），即比较级部分无法充当后面分句的任何成分。
+- 在句2）中，把比较级部分都改为副词的比较级the more exactly和the more easily，
+此时就能修饰句子的谓语use和understand（因为副词修饰动词），即比较级部分充当了后面分句的方式状语。
+- 在句3）中，形容词的比较级the more exact就在其后的分句your words are中作表语，相当于your words are more exact；
+形容词的比较级the easier就在分句it is for people to understand you中作表语，相当于it is easier for people to understand you。
+- 在句4）中，比较级部分the more exact words作后面分句的谓语use的宾语，相当于you use more exact words；
+比较级部分the more easily作后面分句谓语understand的方式状语，相当于people will more easily understand you。
+
+这个句型的三个用法要点：
+- 比较级部分都必须在各自引导的分句中充当一定的成分。
+- “the+比较级（从句），the+比较级（主句）”，这就是为什么前半句常用一般现在时态，而后半句常用一般将来时态，类似于其他状语从句的“主句用将来时，从句用一般现在时”的规则。
+
+朋友是冬天里的灯:朋友越老，灯越亮。
+Friends are lights in winter: the older the friend, the brighter the light.
+这个句子的比较部分是省略结构，完整的表达应该是the older the friend is, the brighter the light is，即这里省去了系动词is。
+所以，比较级都是在各自引导的分句中作表语。注意，在这个句型中，系动词常常会被省略。
+
+方式状语从句
+方式状语从句表示动作的方式，引导词有：as，like，as if，as though和the way等，它多用来谈论某人的行为或者做某事的方式。
+When in Rome, do as the Romans do.
+意思是“When traveling, follow the customs of the local people.”，相当于汉语中的“入乡随俗”。
+
+Do it the way you were taught. 按照教给你的那样做。
+He looks as though/as if he is an actor. 他看上去像个演员。
+
+去工作吧，犹如你不需要金钱。
+Work like you don’t need the money.
+去爱吧，犹如你从未曾被伤害过。
+Love like you’ve never been hurt.
+去舞蹈吧，犹如无人在一旁观看。
+Dance like nobody’s watching.
+去歌唱吧，犹如无人在一旁聆听。
+Sing like nobody’s listening.
+热爱生活吧，犹如这里是人间乐土。
+Live like it’s heaven on earth.
+
+状语从句的省略
+- 主句的主语和从句的主语一致，或从句主语是it；
+- 从句谓语中含有be动词的情况下，我们可将从句的主语和be动词省去。这种省略常见于时间、地点、条件及让步状语从句中。
+
+时间状语从句的省略
+零，只有和实数在一起使用才有意义；思想，只有付诸行动才能散发光芒。
+A zero can have its meaning only when used with real numbers; thoughts can give off brilliant light only when put into actions.
+这是when引导的时间状语从句的省略，还原后完整的句子结构应该是“A zero can have its meaning only when it is used with real numbers;
+thoughts can give off brilliant light only when they are put into actions.”。
+所以这里的两个when引导的从句分别省去了it is和they are。 这里的it指主句的主语zero，they指主句的主语thoughts。
+
+金属具有热胀冷缩的特性。
+Metals expand when heated and contract when cooled.
+还原后的完整的句子结构应该是“Metals expand when they are heated and contract when they are cooled.”。所以两个when引导的从句都是省略了they are。
+
+若不能同时满足主句与从句主语一致（或从句主语是it）、从句谓语中含有be动词这两个条件，则从句不能省略主语和be动词。
+例句1） When I was ten years old, my family moved to the city.
+例句2） When ten years old, my family moved to the city. 例句2是错的
+尽管句 2）很符合我们汉语的表达习惯：“在10岁的时候，我们家搬到城市里来了。”
+
+地点状语从句的省略
+这种树在潮湿的地方长得很好。
+The kind of tree grows favorably where wet.
+还原后的完整的句子结构应该是“The kind of tree grows favorably where it is wet.”。
+这里的it并不是指代主句的主语tree，而是泛指任何地方。所以我们看到，从句的主语若是it，则是可以省去的。
+
+条件状语从句的省略
+老虎只有在年幼时捉来才能被驯服。
+A tiger can't be tamed unless caught very young.
+还原后的完整的句子结构应该是“A tiger can't be tamed unless it is caught very young.”。
+
+让步状语从句的省略
+尽管史密斯博士本人不是经济学家，但他一直以来对政府的经济政策提出尖锐的批评。
+Although not an economist himself, Dr. Smith has long been a severe critic of the government's economic policies.
+还原后的完整的句子结构应该是“Although he is not an economist himself, Dr. Smith has long been a severe critic of the government's economic policies.”。

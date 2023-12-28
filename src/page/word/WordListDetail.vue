@@ -1,46 +1,47 @@
 <template>
-    <div style="margin-top: 10px">
-        <el-collapse accordion v-for="item in listItems">
-            <el-collapse-item :title="item.wordName" :name="item.wordId">
-                <div v-for="parahprase in item.parahpraseList">
-                    <p>
-                        {{parahprase.paraphraseEnglish}}
-                    </p>
-                    <div>
-                        {{isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面灯泡显示' }}
-                    </div>
-                </div>
-                <el-button type="text" style="color: #909399"
-                           size="mini"
-                           @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
-                </el-button>
-                <el-button type="text" style="color: #909399"
-                           size="mini"
-                           @click="showDetail(item.wordName)"><i class="el-icon-more-outline"></i>
-                </el-button>
-                <el-button type="text" style="color: #909399"
-                           size="mini"
-                           @click="removeWordStarListFun(item.wordId)"><i class="el-icon-remove-outline"></i>
-                </el-button>
-            </el-collapse-item>
-        </el-collapse>
-        <el-pagination
-                style="margin-top: 10px"
-                small
-                :page-size.sync="page.size"
-                :current-page.sync="page.current"
-                :page-count="page.pages"
-                :pager-count="5"
-                :page-sizes="[10,20,50,100]"
-                layout="prev,pager,next,jumper"
-                @size-change="pageChange"
-                @current-change="pageChange"
-                :total="page.total">
-        </el-pagination>
-    </div>
+  <div style="margin-top: 10px">
+    <el-collapse accordion v-for="item in listItems">
+      <el-collapse-item :title="item.wordName" :name="item.wordId">
+        <div v-for="parahprase in item.parahpraseList">
+          <p>
+            {{ parahprase.paraphraseEnglish }}
+          </p>
+          <div>
+            {{ isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面灯泡显示' }}
+          </div>
+        </div>
+        <el-button type="text" style="color: #909399"
+                   size="mini"
+                   @click="isShowParaphrase = !isShowParaphrase"><i class="el-icon-s-opportunity"></i>
+        </el-button>
+        <el-button type="text" style="color: #909399"
+                   size="mini"
+                   @click="showDetail(item.wordName)"><i class="el-icon-more-outline"></i>
+        </el-button>
+        <el-button type="text" style="color: #909399"
+                   size="mini"
+                   @click="removeWordStarListFun(item.wordId)"><i class="el-icon-remove-outline"></i>
+        </el-button>
+      </el-collapse-item>
+    </el-collapse>
+    <el-pagination
+        style="margin-top: 10px"
+        small
+        :page-size.sync="page.size"
+        :current-page.sync="page.current"
+        :page-count="page.pages"
+        :pager-count="5"
+        :page-sizes="[10,20,50,100]"
+        layout="prev,pager,next,jumper"
+        @size-change="pageChange"
+        @current-change="pageChange"
+        :total="page.total">
+    </el-pagination>
+  </div>
 </template>
 <script>
 import wordStarList from '@/api/wordStarList'
+import msgUtil from '@/util/msg'
 
 export default {
   name: 'wordStarListDetail',
@@ -54,7 +55,7 @@ export default {
       default: false
     }
   },
-  data () {
+  data() {
     return {
       page: {
         current: 1,
@@ -66,24 +67,25 @@ export default {
       listRefresh: false
     }
   },
-  mounted () {
+  mounted() {
     this.init()
   },
   watch: {
-    'listId' () {
+    'listId'() {
       this.init()
     }
   },
   methods: {
     ...wordStarList,
-    async init () {
+    ...msgUtil,
+    async init() {
       // todo 对listId进行非空等判断
       if (this.listId < 1) {
         return
       }
       await this.initList()
     },
-    async initList () {
+    async initList() {
       this.listRefresh = true
       await this.getListItems(this.page, this.listId).then(response => {
         this.listItems = response.data.data.records
@@ -94,31 +96,25 @@ export default {
       })
       this.listRefresh = false
     },
-    goBack () {
+    goBack() {
       this.$emit('tableVisibleToggle')
     },
-    showDetail (wordName) {
-      this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: wordName } })
+    showDetail(wordName) {
+      this.$router.push({path: '/index/vocabulary/detail', query: {active: 'search', word: wordName}})
     },
-    async removeWordStarListFun (wordId) {
-      this.removeWordStarList({ wordId: wordId, listId: this.listId })
-        .then(response => {
-          this.doSuccess()
-          this.initList()
-        })
-        .catch(e => {
-          console.error(e)
-          this.$message.error(e)
-        })
+    async removeWordStarListFun(wordId) {
+      this.removeWordStarList({wordId: wordId, listId: this.listId})
+          .then(response => {
+            this.operateSuccess(this)
+            this.initList()
+          })
+          .catch(e => {
+            console.error(e)
+            this.$message.error(e)
+          })
     },
-    pageChange () {
+    pageChange() {
       this.initList()
-    },
-    doSuccess () {
-      this.$message.success({
-        duration: 1000,
-        message: '操作成功'
-      })
     }
   }
 }

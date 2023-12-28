@@ -36,6 +36,7 @@
 </template>
 <script>
 import exampleStarList from '@/api/exampleStarList'
+import msgUtil from '@/util/msg'
 
 export default {
   name: 'exampleStarListDetail',
@@ -71,6 +72,7 @@ export default {
     }
   },
   methods: {
+    ...msgUtil,
     ...exampleStarList,
     async init () {
       if (this.listId < 1) {
@@ -95,7 +97,7 @@ export default {
     async removeExampleStarListFun (exampleId) {
       this.removeExampleStar({ exampleId: exampleId, listId: this.listId })
         .then(response => {
-          this.doSuccess()
+          this.operateSuccess(this)
           this.initList()
         })
         .catch(e => {
@@ -108,12 +110,6 @@ export default {
     },
     pageChange () {
       this.initList()
-    },
-    doSuccess () {
-      this.$message.success({
-        duration: 1000,
-        message: '操作成功'
-      })
     }
   }
 }

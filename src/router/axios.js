@@ -37,26 +37,22 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(res => {
   NProgress.done()
   const status = String(res.status) || '200'
-  const message = res.data.msg || responseCode[status] || responseCode['default']
+  const message = responseCode[status] || responseCode['default'] || res.data.msg
   let refreshToken = getStore({ name: 'refresh_token' })
   if (responseCode.UNAUTHORIZED == status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
-        // router.push({ path: website.auth.login })
-        console.log('自动刷新token成功')
+        Message({
+          message: responseCode['autoLoginSuccess'],
+          type: 'success',
+          center: true,
+          showClose: true
+        })
       })
-      return
     } else {
       store.dispatch('LogOut').then(() => {
-        let word = this.$route.query.word
-        if (word) {
-          this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: word } })
-        } else {
-          this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search' } })
-        }
-        window.location.reload()
+        window.location.href = '/#/index/vocabulary/detail?active=login'
       })
-      return
     }
   }
 

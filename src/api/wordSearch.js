@@ -1,4 +1,5 @@
 import request from '@/router/axios'
+import util from '@/util/util'
 
 export default {
 
@@ -10,21 +11,30 @@ export default {
       },
       method: 'post',
       params: {
-        wordName: word,
+        wordName: util.convertWord(word),
         current: current,
         size: size
       }
     })
   },
 
-  queryWordDetail (word) {
+  queryWordDetail (word, current, size) {
+    let url
+    if (util.isEmptyStr(word)) {
+      url = `/wordBiz/word/main/query/gate`
+    } else {
+      url = `/wordBiz/word/main/query/gate/${util.convertWord(word)}`
+    }
     return request({
-      url: '/wordBiz/word/main/query/' + word,
+      url: url,
       headers: {
         isToken: false
       },
-      method: 'get',
-      params: {}
+      method: 'post',
+      params: {
+        current: current,
+        size: size
+      }
     })
   },
 
@@ -41,7 +51,7 @@ export default {
 
   removeByWordName (wordName) {
     return request({
-      url: '/wordBiz/word/main/removeByWordName/' + wordName,
+      url: '/wordBiz/word/main/removeByWordName/' + util.convertWord(wordName),
       headers: {
         isToken: true
       },

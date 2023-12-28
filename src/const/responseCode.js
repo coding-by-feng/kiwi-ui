@@ -10,6 +10,8 @@ export default {
   '429': '请求过频繁',
   '479': '演示环境，没有权限操作',
   'default': 'kiwi词典开小差，请联系作者！',
+  'notLogin': '游客用户请登录！',
+  'autoLoginSuccess': '自动登录成功！',
 
   SUCCESS: 1,
   FAIL: 0,

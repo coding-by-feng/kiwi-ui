@@ -15,30 +15,23 @@ export default {
 
   removeExampleStar (data) {
     return request({
-      url: '/wordBiz/word/example/star/list/removeExampleStar',
+      url: `/wordBiz/word/example/star/list/removeExampleStar/${data.exampleId}/${data.listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
-      params: {
-        exampleId: data.exampleId,
-        listId: data.listId
-      }
+      method: 'delete'
     })
   },
 
   getExampleListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/example/star/list/getListItems/${page.size}/${page.current}`,
+      url: `/wordBiz/word/example/star/list/getListItems/${page.size}/${page.current}/${listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
-      params: {
-        listId: listId
-      }
+      method: 'get'
     })
   },
 
@@ -49,7 +42,7 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
+      method: 'put',
       params: data
     })
   },
@@ -61,7 +54,7 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post',
+      method: 'put',
       params: data
     })
   },
@@ -85,7 +78,7 @@ export default {
         isToken: true,
         'Content-Type': 'application/json'
       },
-      method: 'post'
+      method: 'delete'
     })
   }
 

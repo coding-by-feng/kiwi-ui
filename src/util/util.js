@@ -106,6 +106,38 @@ export function compileCode (src) {
   }
 }
 
-export default {
-  isObjectValueEqual
+export function isMobile () {
+  return navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
 }
+
+export function isEmptyStr (obj) {
+  return obj === undefined || obj === null || obj.trim() === ''
+}
+
+export function isNotEmptyStr (obj) {
+  return !isEmptyStr(obj)
+}
+
+export function convertWord (word) {
+  if (!isEmptyStr(word)) {
+    return word.replaceAll('/', ')(');
+  }
+  return word;
+}
+
+export function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+export function removeBlankLines(str) {
+  return str.replaceAll(/(\n[\s\t]*\r*\n)/g, '\n').replaceAll(/^[\n\r\n\t]*|[\n\r\n\t]*$/g, '')
+}
+
+export default {
+  isObjectValueEqual,
+  isMobile,
+  isEmptyStr,
+  convertWord,
+  sleep
+}
+
