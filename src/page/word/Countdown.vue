@@ -1,5 +1,5 @@
 <template>
-    <span style="color: #333333">{{this.time}}</span>
+  <span style="color: #333333">{{ this.time }}</span>
 </template>
 
 <script>
@@ -7,12 +7,16 @@ export default {
   name: 'Countdown',
   props: {
     endTime: {
-      type: [Number],
+      type: [Number, String],
       default: null
     },
-    endFun: Function
+    endFun: Function,
+    onlySec: {
+      type: [Boolean],
+      default: false
+    }
   },
-  data () {
+  data() {
     return {
       time: '',
       flag: false,
@@ -20,14 +24,14 @@ export default {
       countdownFun: null
     }
   },
-  mounted () {
+  mounted() {
     this.init()
   },
-  destroyed () {
+  destroyed() {
     clearInterval(this.countdownFun)
   },
   methods: {
-    init () {
+    init() {
       if (!this.endTime) {
         this.time = '0天0小时0分0秒'
         return
@@ -39,7 +43,7 @@ export default {
         this.timeDown()
       }, 200)
     },
-    timeDown () {
+    timeDown() {
       const end = new Date(this.endTime)
       const now = new Date()
       let leftTime = parseInt((end.getTime() - now.getTime()) / 1000)
@@ -48,18 +52,24 @@ export default {
         this.time = '倒计时已关闭'
         this.isTimeout = true
         this.$emit('endFun')
+        this.$destroy()
       } else {
-        let d = parseInt(leftTime / (24 * 60 * 60))
-        let h = parseInt(leftTime / (60 * 60) % 24)
-        let m = parseInt(leftTime / 60 % 60)
-        let s = parseInt(leftTime % 60)
-        // let h = this.format(parseInt(leftTime / (60 * 60) % 24))
-        // let m = this.format(parseInt(leftTime / 60 % 60))
-        // let s = this.format(parseInt(leftTime % 60))
-        this.time = `${d}天${h}小时${m}分${s}秒`
+        if (!this.onlySec) {
+          let d = parseInt(leftTime / (24 * 60 * 60))
+          let h = parseInt(leftTime / (60 * 60) % 24)
+          let m = parseInt(leftTime / 60 % 60)
+          let s = parseInt(leftTime % 60)
+          // let h = this.format(parseInt(leftTime / (60 * 60) % 24))
+          // let m = this.format(parseInt(leftTime / 60 % 60))
+          // let s = this.format(parseInt(leftTime % 60))
+          this.time = `${d}天${h}小时${m}分${s}秒`
+        } else {
+          let s = parseInt(leftTime % 60)
+          this.time = `${s}秒`
+        }
       }
     },
-    format (time) {
+    format(time) {
       if (time >= 10) {
         return time
       }

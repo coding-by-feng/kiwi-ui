@@ -17,7 +17,12 @@
                      v-if="lazy"
                      icon="el-icon-switch-button"
                      @click="closeLazy"></el-button>
-          <el-button slot="append" icon="el-icon-search" @click="onSubmit()"></el-button>
+          <el-button slot="prepend"
+                     size="mini"
+                     v-if="!lazy"
+                     icon="el-icon-brush"
+                     @click="brush"></el-button>
+          <el-button v-if="getWindowWidth > 400" slot="append" icon="el-icon-search" @click="onSubmit()"></el-button>
         </el-autocomplete>
       </el-col>
     </el-row>
@@ -32,25 +37,36 @@
 import wordSearch from '@/api/wordSearch'
 
 export default {
-  data () {
+  data() {
     return {
-      word: this.$route.query.word ? this.$route.query.word : '',
+      word: this.$route.query.word ? decodeURI(this.$route.query.word) : '',
       searchInputWidth: document.body.clientWidth / 1.5 + 'px',
-      lazy: this.$route.query.lazy === 'y'
+      lazy: this.$route.path.indexOf('lazy') > -1
     }
   },
-  mounted () {},
+  computed: {
+    getWindowWidth() {
+      return window.innerWidth
+    }
+  },
+  mounted() {
+  },
   watch: {
     $route: function () {
-      this.word = this.$route.query.word
+      this.word = this.$route.query.word ? decodeURI(this.$route.query.word) : ''
       this.lazy = this.$route.query.lazy
     }
   },
   methods: {
     ...wordSearch,
-    querySearch (queryString, callback) {
+    querySearch(queryString, callback) {
+      let real = queryString.trimLeft()
+      if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
+        callback([{value: '请按回车或搜索按钮'}])
+        return
+      }
       // var results = fuzzyQueryWord(queryString);
-      this.fuzzyQueryWord(queryString, 1, 20).then(response => {
+      this.fuzzyQueryWord(real.toLowerCase(), 1, 50).then(response => {
         callback(response.data.data)
       }).catch(e => {
         console.error(e)
@@ -59,29 +75,47 @@ export default {
       // 调用 callback 返回建议列表的数据
       // cb(results);
     },
-    querySelect (item) {
-      this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: item.value } })
+    querySelect(item) {
+      let real = item.value.trimLeft()
+      if (real === '') {
+        return
+      }
+      this.$router.push({
+        path: this.$route.path,
+        query: {active: 'search', word: encodeURI(real.toLowerCase()), now: new Date().getTime()}
+      })
     },
-    onSubmit () {
+    onSubmit() {
+      let real = this.word.trimLeft()
+      if (real === '') {
+        return
+      }
       this.$refs.auto.close()
-      this.$router.push({ path: '/index/vocabulary/detail', query: { active: 'search', word: this.word } })
+      this.$router.push({
+        path: this.$route.path,
+        query: {active: 'search', word: encodeURI(real.toLowerCase()), now: new Date().getTime()}
+      })
     },
-    handleOpen (key, keyPath) {
+    handleOpen(key, keyPath) {
       // console.log(key, keyPath)
     },
-    handleClose (key, keyPath) {
+    handleClose(key, keyPath) {
       // console.log(key, keyPath)
     },
-    closeLazy () {
+    brush() {
+      this.word = ''
+      this.$refs.auto.focus()
+    },
+    closeLazy() {
       let queryTmp = {}
       if (this.word) {
-        queryTmp = { word: this.word }
+        queryTmp = {word: this.word}
       }
       let query = {
         active: 'search',
         ...queryTmp
       }
-      this.$router.push({ path: '/index/vocabulary/detail', query: query })
+      this.$router.push({path: '/index/vocabulary/detail', query: query})
     }
   }
 }
