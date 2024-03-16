@@ -455,7 +455,6 @@ export default {
             this.isUSPronunciationPlaying = true
           }
         }
-        // let audio = this.pronunciationAudioMap.get(id)
         let audio = this.createNewAudio()
         if (this.source === kiwiConst.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
@@ -862,14 +861,14 @@ export default {
       let xhrPayload = {
         method: 'GET'
       }
-      if (this.isNotCacheConfig) {
-        xhrPayload = {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
-          }
-        }
-      }
+      // if (this.isNotCacheConfig) {
+      //   xhrPayload = {
+      //     method: 'GET',
+      //     headers: {
+      //       'Cache-Control': 'no-cache, no-store, must-revalidate'
+      //     }
+      //   }
+      // }
       console.log(xhrPayload)
 
       for (let i = 0; i < queueLength; i++) {
@@ -878,8 +877,8 @@ export default {
           src: urls[i],
           autoplay: false,
           loop: false,
-          volume: 0.5,
-          html5: true,
+          volume: 0.8,
+          html5: false,
           format: ['mp3'],
           xhr: xhrPayload,
           onend: async function () {

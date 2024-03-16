@@ -64,15 +64,15 @@ export default {
             urls.push(exampleEnUrl0)
             urls.push(exampleEnUrl0)
         } else {
-            let exampleChUrl0 = this.assembleReviseAudioUrl(exampleList[1].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_CH)
+            let exampleChUrl1 = this.assembleReviseAudioUrl(exampleList[1].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_CH)
             let exampleEnUrl1 = this.assembleReviseAudioUrl(exampleList[1].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_EN)
 
             urls.push(exampleChUrl0)
             urls.push(exampleChUrl0)
             urls.push(exampleEnUrl0)
             urls.push(exampleEnUrl0)
-            urls.push(exampleEnUrl0)
-            urls.push(exampleChUrl0)
+            urls.push(exampleEnUrl1)
+            urls.push(exampleChUrl1)
             urls.push(exampleEnUrl1)
             urls.push(exampleEnUrl1)
         }
