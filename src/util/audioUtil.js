@@ -1,6 +1,7 @@
 import kiwiConst from '@/const/kiwiConsts'
 import {getStore} from '@/util/store'
 import cacheUtil from "@/util/cacheUtil";
+import db from "@/util/db";
 
 let CH2_EN_INDEX_SLEEP_MS_MAP = null
 const IS_PLAY_EXAMPLE = getStore({name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE})
@@ -220,6 +221,68 @@ export default {
             return null
         }
         return new Window.File([blob], `${sourceId}_${type}.mp3`, {type: 'blob'})
+    },
+
+    rebuildUrls: async function (urls) {
+        let multipleThreads = []
+        let commonDbObject = null
+        await db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION)
+            .then(async dbObject => {
+                console.log('dbObject object', dbObject)
+                commonDbObject = dbObject
+            }).catch(err => {
+                throw err
+            })
+
+        for (let urlsKey in urls) {
+            let url = urls[urlsKey];
+            let thread = this.createThreadToBuildSound(commonDbObject, url, urls, urlsKey)
+            multipleThreads.push(thread)
+        }
+        await Promise.all(multipleThreads)
+            .then(response => {
+                console.log('multipleThreads handle ', response)
+            }).catch(err => {
+                throw err
+            })
+        return multipleThreads;
+    },
+
+    createThreadToBuildSound: function (commonDbObject, url, urls, urlsKey) {
+        return new Promise((resolve, reject) => {
+            let dataKey = db.buildDataKey(url, urlsKey)
+            db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
+                .then(async data => {
+                    if (data) {
+                        console.log('get audio data from DB', data)
+                        urls[urlsKey] = URL.createObjectURL(data.audio)
+                        resolve(kiwiConst.SUCCESS)
+                    } else {
+                        await fetch(url).then(async response => {
+                            console.log('Downloading audio from API', response)
+                            console.log('Downloading audio url', url)
+                            return response.blob()
+                        }).then(async buffer => {
+                            console.log('buffer', buffer)
+                            let blob = new Blob([buffer], {type: 'audio/mpeg'});
+                            await db.addData(commonDbObject, kiwiConst.DB_STORE_NAME, {
+                                sequenceKey: dataKey,
+                                audio: blob
+                            }).then(async response => {
+                                urls[urlsKey] = URL.createObjectURL(blob)
+                                resolve(kiwiConst.SUCCESS)
+                            }).catch(err => {
+                                throw err
+                            })
+                        }).catch(err => {
+                            throw err
+                        })
+                    }
+                }).catch(err => {
+                reject(kiwiConst.FAIL)
+                throw err
+            })
+        });
     }
 
 }

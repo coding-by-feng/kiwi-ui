@@ -7,7 +7,7 @@ export default {
 
     msgWarning: (that, msg) => {
         that.$message.warning({
-            duration: 2500,
+            duration: 3000,
             center: true,
             offset: 200,
             message: msg
@@ -22,9 +22,9 @@ export default {
         });
     },
 
-    msgSuccess: (that, msg) => {
+    msgSuccess: (that, msg, duration) => {
         that.$message.success({
-            duration: 2000,
+            duration: duration ? duration : 3000,
             center: true,
             offset: 200,
             message: msg

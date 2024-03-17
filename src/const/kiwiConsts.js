@@ -119,6 +119,7 @@ export default {
         STOCK_READ: 'stockRead',
         ENHANCE_REVIEW: 'enhanceReview',
         ENHANCE_READ: 'enhanceRead',
+        DOWNLOAD_REVIEW_AUDIO: 'downloadReviewAudio'
     },
 
     GRAMMAR_EN_TO_CH_HINT: new Map()
