@@ -5,11 +5,10 @@ import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
-import {Howl, Howler} from 'howler'
-import howlerUtil from '../../util/howlerUtil'
+import audioUtil from '../../util/audioUtil'
 import NoSleep from 'nosleep.js'
-import {readFile} from "@/util/fileUtil"
-import cacheUtil from "@/util/cacheUtil"
+import db from '@/util/db'
+import th from "element-ui/src/locale/lang/th";
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
@@ -72,9 +71,9 @@ export default {
         sleepClickSecondTime: null,
         previousReviewWord: null,
         apiKey: null,
-        howlerPlayerQueue: [],
-        howlerPlayer: null,
-        howlerPlayerToken: null,
+        audioPlayerQueue: [],
+        audioPlayer: null,
+        audioPlayerToken: null,
         isUnfoldOperateIcon: false,
         isEnableNoSleepMode: false
       },
@@ -103,8 +102,6 @@ export default {
   beforeCreate: function () {
     that = this
     noSleep = new NoSleep()
-    Howler.html5PoolSize = 30
-    Howler.autoSuspend = false
   },
   async mounted() {
     if (this.isNotCacheConfig) {
@@ -114,9 +111,9 @@ export default {
     this.listenerMinBrowser()
   },
   destroyed() {
-    if (this.detail.howlerPlayer) {
-      this.detail.howlerPlayer.stop()
-      this.detail.howlerPlayer = null
+    if (this.detail.audioPlayer) {
+      this.detail.audioPlayer.stop()
+      this.detail.audioPlayer = null
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
     }
@@ -209,7 +206,9 @@ export default {
         if (document.hidden) {
           that.isReviewStop = true
           that.isReviewPlaying = false
-          Howler.stop()
+          if (that.detail.audioPlayer) {
+            that.detail.audioPlayer.pause()
+          }
         } else {
           that.isReviewStop = false
           that.isReviewPlaying = true
@@ -246,7 +245,7 @@ export default {
             if (this.isListItemsNotEmpty) {
               await this.showDetail(this.listItems[0].paraphraseId, 0)
             }
-            this.detail.howlerPlayer.play()
+            this.detail.audioPlayer.play()
           } else {
             this.stockReviewStart()
           }
@@ -347,9 +346,9 @@ export default {
               console.error(e)
             })
       }
-      this.detail.howlerPlayerQueue = this.createReviseQueue(this.detail.howlerPlayerToken)
-      console.log('initNextReviewDetail this.detail.howlerPlayerQueue=' + this.detail.howlerPlayerQueue)
-      this.detail.howlerPlayer = this.detail.howlerPlayerQueue[0]
+      this.detail.audioPlayerQueue = await this.createReviseQueue(this.detail.audioPlayerToken)
+      console.log('initNextReviewDetail this.detail.audioPlayerQueue=' + this.detail.audioPlayerQueue)
+      this.detail.audioPlayer = this.detail.audioPlayerQueue[0]
       loading.close()
     },
     async showDetail(paraphraseId, index) {
@@ -492,7 +491,7 @@ export default {
         }
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
-              this.detail.howlerPlayer.play()
+              this.detail.audioPlayer.play()
             })
       } catch (e) {
         // alert('test' + e)
@@ -503,7 +502,7 @@ export default {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       await this.initNextReviseDetail(false)
           .then(() => {
-            that.detail.howlerPlayer.play()
+            that.detail.audioPlayer.play()
           })
     },
     getPronunciationVO: function (isUS) {
@@ -519,7 +518,7 @@ export default {
     },
     assemblePronunciationUrl(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList || this.detail.paraphraseVO.pronunciationVOList.length < 1) {
-        return howlerUtil.assembleReviseAudioUrl(this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.PHRASE_PRONUNCIATION)
+        return audioUtil.assembleReviseAudioUrl(this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.PHRASE_PRONUNCIATION)
       }
       return this.getPronunciationUrl(this.getPronunciationVO(isUS))
     },
@@ -541,7 +540,9 @@ export default {
       }
       this.isReviewStop = true
       this.isReviewPlaying = false
-      Howler.stop()
+      if (this.detail.audioPlayer) {
+        this.detail.audioPlayer.pause()
+      }
     },
     async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
@@ -719,7 +720,7 @@ export default {
             // 每个单词播放前要计算播放audio数量，词组和单词不一样
             await this.initNextReviseDetail(true)
                 .then(() => {
-                  that.detail.howlerPlayer.play()
+                  that.detail.audioPlayer.play()
                 }).catch(e => {
                   this.msgError(that, '初始化下一个释义详情异常!')
                   console.error('initNextReviseDetail error')
@@ -781,12 +782,14 @@ export default {
       })
     },
     async cleanRevising() {
-      Howler.unload()
-      this.reviseAudioCandidates = []
+      if (this.detail.audioPlayer) {
+        this.detail.audioPlayer.pause()
+      }
+      this.reviseAudioCandidates = [];
       this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
-      this.detail.howlerPlayerToken = new Date().getTime()
+      this.detail.audioPlayerToken = new Date().getTime()
     },
     async cleanInitRevising() {
       // stop playing
@@ -806,7 +809,7 @@ export default {
       await this.stopPlaying()
       await this.cleanRevising()
     },
-    extractHowlUrls: function () {
+    extractReviewAudioUrls: function () {
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
       let wordId = this.detail.paraphraseVO.wordId
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
@@ -814,28 +817,9 @@ export default {
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
       if (this.isChToEn) {
-        return howlerUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        return audioUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
       } else {
-        return howlerUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
-      }
-    },
-    extractHowlFiles: function () {
-      let ukPronunciationVO = this.getPronunciationVO(false)
-      let usPronunciationVO = this.getPronunciationVO(true)
-      let params = {
-        paraphraseId: this.detail.paraphraseVO.paraphraseId,
-        wordId: this.detail.paraphraseVO.wordId,
-        wordCharacter: this.detail.paraphraseVO.wordCharacter,
-        ukPronunciation: ukPronunciationVO,
-        usPronunciation: usPronunciationVO,
-        usPronunciationUrl: this.getPronunciationUrl(usPronunciationVO),
-        ukPronunciationUrl: this.getPronunciationUrl(ukPronunciationVO),
-        lastIsSame: this.detail.previousReviewWord === this.detail.paraphraseVO.wordName,
-        exampleList: this.detail.paraphraseVO.exampleVOList
-      }
-      if (this.isChToEn) {
-        return howlerUtil.extractedCh2En(params)
-      } else {
+        return audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
       }
     },
     switchIsNotCacheConfig: function () {
@@ -848,84 +832,137 @@ export default {
         msgUtil.notifySuccess(this, '音频缓存提示', '当前已经关闭自动缓存，复习过的音频不会被缓存，下次复习同个单词需要网络加载')
       }
     },
-    createReviseQueue(token) {
+    createThreadToBuildSound: function (commonDbObject, url, urls, urlsKey) {
+      return new Promise((resolve, reject) => {
+        let dataKey = db.buildDataKey(url, urlsKey)
+        db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
+            .then(async data => {
+              if (data) {
+                console.log('get audio data from DB', data)
+                urls[urlsKey] = URL.createObjectURL(data.audio)
+                resolve(kiwiConst.SUCCESS)
+              } else {
+                await fetch(url).then(async response => {
+                  console.log('Downloading audio from API', response)
+                  console.log('Downloading audio url', url)
+                  return response.blob()
+                }).then(async buffer => {
+                  console.log('buffer', buffer)
+                  let blob = new Blob([buffer], {type: 'audio/mpeg'});
+                  await db.addData(commonDbObject, kiwiConst.DB_STORE_NAME, {
+                    sequenceKey: dataKey,
+                    audio: blob
+                  }).then(async response => {
+                    urls[urlsKey] = URL.createObjectURL(blob)
+                    resolve(kiwiConst.SUCCESS)
+                  }).catch(err => {
+                    throw err
+                  })
+                }).catch(err => {
+                  throw err
+                })
+              }
+            }).catch(err => {
+          reject(kiwiConst.FAIL)
+          throw err
+        })
+      });
+    },
+    rebuildUrls: async function (urls) {
+      let multipleThreads = []
+      let commonDbObject = null
+      await db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION)
+          .then(async dbObject => {
+            console.log('dbObject object', dbObject)
+            commonDbObject = dbObject
+          }).catch(err => {
+            throw err
+          })
+
+      for (let urlsKey in urls) {
+        let url = urls[urlsKey];
+        let thread = this.createThreadToBuildSound(commonDbObject, url, urls, urlsKey)
+        multipleThreads.push(thread)
+      }
+      await Promise.all(multipleThreads)
+          .then(response => {
+            console.log('multipleThreads handle ', response)
+          }).catch(err => {
+            throw err
+          })
+      return multipleThreads;
+    },
+    buildReviewSounds: function (queueLength, urls, ch2EnIndexSleepMsMap, playIndex, token) {
       let sounds = []
-      if (token !== that.detail.howlerPlayerToken) {
-        return sounds
-      }
-
-      let urls = this.extractHowlUrls()
-      let queueLength = urls.length
-      let playIndex = 0
-      let ch2EnIndexSleepMsMap = howlerUtil.acquireCh2EnIndexSleepMsMap()
-      let xhrPayload = {
-        method: 'GET'
-      }
-      // if (this.isNotCacheConfig) {
-      //   xhrPayload = {
-      //     method: 'GET',
-      //     headers: {
-      //       'Cache-Control': 'no-cache, no-store, must-revalidate'
-      //     }
-      //   }
-      // }
-      console.log(xhrPayload)
-
       for (let i = 0; i < queueLength; i++) {
         // noinspection JSUnusedGlobalSymbols
-        let sound = new Howl({
-          src: urls[i],
-          autoplay: false,
-          loop: false,
-          volume: 0.8,
-          html5: false,
-          format: ['mp3'],
-          xhr: xhrPayload,
-          onend: async function () {
-            // console.log('onend playIndex=' + playIndex)
-            // console.log('onend: ' + urls[playIndex])
-            that.isReviewPlaying = false
-            if (that.isChToEn) {
-              let sleepMs = ch2EnIndexSleepMsMap.get(playIndex)
-              if (sleepMs) {
-                that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
-                await util.sleep(sleepMs)
-                    .then(() => {
-                      if (playIndex === 1) {
-                        that.detail.showWord = true
-                      }
-                    })
-              }
+        let sound = new Audio(urls[i])
+        sound.pause()
+        sound.loop = false
+        sound.addEventListener('ended', async function () {
+          // console.log('onend playIndex=' + playIndex)
+          // console.log('onend: ' + urls[playIndex])
+          that.isReviewPlaying = false
+          if (that.isChToEn) {
+            let sleepMs = ch2EnIndexSleepMsMap.get(playIndex)
+            if (sleepMs) {
+              that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
+              await util.sleep(sleepMs)
+                  .then(() => {
+                    if (playIndex === 1) {
+                      that.detail.showWord = true
+                    }
+                  })
             }
-            if (token !== that.detail.howlerPlayerToken || that.isReviewStop) {
-              return
-            }
-            if (++playIndex < queueLength) {
-              that.detail.howlerPlayer = sounds[playIndex]
-              that.detail.howlerPlayer.play()
-            } else {
-              // console.log('that.playWordIndex++ ' + that.playWordIndex)
-              ++that.playWordIndex
-            }
-          },
-          onloaderror: async function () {
-            // console.log('onloaderror: ' + urls[playIndex])
-            that.isReviewPlaying = false
-            that.detail.reviewLoading = false
-          },
-          onplay: function () {
-            // console.log('onplay: ' + urls[playIndex])
-            that.isReviewPlaying = true
-            that.detail.reviewLoading = false
-          },
-          onpause: function () {
-            // console.log('onpause: ' + urls[playIndex])
-            that.isReviewPlaying = false
+          }
+          if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
+            return
+          }
+          if (++playIndex < queueLength) {
+            that.detail.audioPlayer = sounds[playIndex]
+            that.detail.audioPlayer.play()
+          } else {
+            // console.log('that.playWordIndex++ ' + that.playWordIndex)
+            ++that.playWordIndex
           }
         })
+        sound.addEventListener('play', function () {
+          // console.log('onplay: ' + urls[playIndex])
+          that.isReviewPlaying = true
+          that.detail.reviewLoading = false
+        })
+        sound.addEventListener('pause', function () {
+          // console.log('onpause: ' + urls[playIndex])
+          that.isReviewPlaying = false
+        })
+        sound.addEventListener('error', function () {
+          // console.log('onloaderror: ' + urls[playIndex])
+          that.isReviewPlaying = false
+          that.detail.reviewLoading = false
+        })
+
         sounds.push(sound)
       }
       return sounds
+    },
+    async createReviseQueue(token) {
+      if (token !== that.detail.audioPlayerToken) {
+        return []
+      }
+
+      let urls = this.extractReviewAudioUrls()
+      await this.rebuildUrls(urls);
+
+      // console.log('after rebuild urls vvvvvv')
+      // for (let urlsKey in urls) {
+      //   console.log('key', urlsKey)
+      //   console.log('url', urls[urlsKey])
+      // }
+
+      let queueLength = urls.length
+      let playIndex = 0
+      let ch2EnIndexSleepMsMap = audioUtil.acquireCh2EnIndexSleepMsMap()
+      return this.buildReviewSounds(queueLength, urls, ch2EnIndexSleepMsMap, playIndex, token)
     },
 
   }

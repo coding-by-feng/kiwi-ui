@@ -156,6 +156,13 @@ export default {
         IS_EN_TO_EN: 'is_en_to_en',
         BGM: 'bgm',
         IS_NOT_CACHE: 'is_not_cache'
-    }
+    },
+
+    DB_NAME: 'KIWI_VOCABULARY',
+    DB_STORE_NAME: 'REVIEW_AUDIO_STORE',
+    DB_VERSION: 1,
+
+    SUCCESS: 'S',
+    FAIL: 'F'
 
 }

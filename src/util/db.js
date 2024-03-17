@@ -1,3 +1,5 @@
+import kiwiConst from '@/const/kiwiConsts'
+
 /**
  * 打开数据库
  * @param {object} dbName 数据库的名字
@@ -33,16 +35,10 @@ export function openDB(dbName, version = 1) {
             db = event.target.result; // 数据库对象
             var objectStore;
             // 创建存储库
-            objectStore = db.createObjectStore("signalChat", {
-                keyPath: "sequenceId", // 这是主键
-                // autoIncrement: true // 实现自增
+            objectStore = db.createObjectStore(kiwiConst.DB_STORE_NAME, {
+                keyPath: "sequenceKey" // 这是主键
             });
             // 创建索引，在后面查询数据的时候可以根据索引查
-            objectStore.createIndex("link", "link", {unique: false});
-            objectStore.createIndex("sequenceId", "sequenceId", {unique: false});
-            objectStore.createIndex("messageType", "messageType", {
-                unique: false,
-            });
         };
     });
 }
@@ -54,18 +50,22 @@ export function openDB(dbName, version = 1) {
  * @param {string} data 数据
  */
 export function addData(db, storeName, data) {
-    var request = db
-        .transaction([storeName], "readwrite") // 事务对象 指定表格名称和操作模式（"只读"或"读写"）
-        .objectStore(storeName) // 仓库对象
-        .add(data);
+    return new Promise((resolve, reject) => {
+        let request = db
+            .transaction([storeName], "readwrite") // 事务对象 指定表格名称和操作模式（"只读"或"读写"）
+            .objectStore(storeName) // 仓库对象
+            .add(data);
 
-    request.onsuccess = function (event) {
-        console.log("数据写入成功");
-    };
+        request.onsuccess = function (event) {
+            console.log("数据写入成功");
+            resolve(kiwiConst.SUCCESS)
+        };
 
-    request.onerror = function (event) {
-        console.log("数据写入失败");
-    };
+        request.onerror = function (event) {
+            console.log("数据写入失败");
+            reject(kiwiConst.FAIL);
+        };
+    });
 }
 
 /**
@@ -113,4 +113,16 @@ export function cursorGetData(db, storeName) {
             console.log("游标读取的数据：", list);
         }
     };
+}
+
+export function buildDataKey(url, urlsKey) {
+    return url + '_' + urlsKey;
+}
+
+
+export default {
+    openDB,
+    addData,
+    getDataByKey,
+    buildDataKey
 }
