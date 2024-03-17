@@ -276,10 +276,6 @@ export default {
           }
         }
         let audio = new Audio()
-        // document.body.appendChild(audio)
-        // audio.pause()
-        // audio.loop = false
-        // audio.type = 'audio/ogg'
         let source = getStore({name: 'pronunciation_source'})
         if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id

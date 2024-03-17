@@ -121,7 +121,18 @@ export default {
             },
             method: 'delete'
         })
-    }
+    },
+
+    downloadAudio(url) {
+        return request({
+            url: url,
+            headers: {
+                isToken: true
+            },
+            method: 'get'
+        })
+    },
+
 
 }
 

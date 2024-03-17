@@ -210,7 +210,6 @@ export default {
     assembleReviseAudioUrl(sourceId, type) {
         return `/wordBiz/word/review/downloadReviewAudio/${sourceId}/${type}`
     },
-
     assembleCharacterReviseAudioUrl(characterCode) {
         return `/wordBiz/word/review/character/downloadReviewAudio/${characterCode}`
     },
