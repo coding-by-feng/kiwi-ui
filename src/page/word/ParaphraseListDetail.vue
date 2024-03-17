@@ -7,14 +7,21 @@ import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import audioUtil from '../../util/audioUtil'
 import NoSleep from 'nosleep.js'
-import db from '@/util/db'
-import th from "element-ui/src/locale/lang/th";
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 
 let that
 let noSleep
+
+const buildNotGlobalLoading = function () {
+  return that.$loading({
+    lock: true,
+    text: `正在操作`,
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+}
 
 export default {
   name: 'paraphraseStarListDetail',
@@ -147,6 +154,9 @@ export default {
     showWordSpelling() {
       return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
     },
+    isDownloadReviewAudio() {
+      return this.reviewMode === kiwiConst.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO
+    },
     isStockReviewModel() {
       return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_REVIEW
           || this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_READ)
@@ -224,6 +234,7 @@ export default {
         if (this.isReview) {
           // clean data
           await this.cleanInitRevising()
+          this.enableNoSleepMode()
 
           try {
             await this.initList()
@@ -235,7 +246,7 @@ export default {
             return
           }
 
-          if (!this.isFirstIncome) {
+          if (!this.isFirstIncome && !this.isDownloadReviewAudio) {
             this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
             this.notifySuccess(this, '复习模式', '即将开始复习，请稍等！')
           }
@@ -245,9 +256,17 @@ export default {
             if (this.isListItemsNotEmpty) {
               await this.showDetail(this.listItems[0].paraphraseId, 0)
             }
-            this.detail.audioPlayer.play()
+            if (this.isDownloadReviewAudio) {
+              ++this.playWordIndex
+            } else {
+              this.detail.audioPlayer.play();
+            }
           } else {
-            this.stockReviewStart()
+            if (this.isDownloadReviewAudio) {
+              this.playWordIndex = this.detail.audioPlayerQueue.length;
+            } else {
+              this.stockReviewStart()
+            }
           }
         } else {
           await this.initList()
@@ -331,7 +350,6 @@ export default {
     async initNextReviseDetail(isGetDetail) {
       console.log('initNextReviewDetail this.playWordIndex = ' + this.playWordIndex)
       console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
-      let loading = this.buildNotGlobalLoading()
       this.prepareReview()
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
@@ -342,16 +360,18 @@ export default {
               }
             })
             .catch(e => {
-              loading.close()
               console.error(e)
             })
       }
       this.detail.audioPlayerQueue = await this.createReviseQueue(this.detail.audioPlayerToken)
+          .catch(e => {
+            throw e
+          })
       console.log('initNextReviewDetail this.detail.audioPlayerQueue=' + this.detail.audioPlayerQueue)
       this.detail.audioPlayer = this.detail.audioPlayerQueue[0]
-      loading.close()
     },
     async showDetail(paraphraseId, index) {
+      let loading = buildNotGlobalLoading()
       if (null !== index && undefined !== index) {
         this.detail.showIndex = index
       }
@@ -363,10 +383,11 @@ export default {
             }
             // 如果是复习最近收藏
             this.detail.listId = this.listItems[this.detail.showIndex].listId
-          })
-          .catch(e => {
+          }).catch(e => {
             console.error(e)
             that.msgError(that, '加载释义详情异常')
+          }).finally(() => {
+            loading.close()
           })
       this.detail.dialogVisible = true
 
@@ -403,8 +424,6 @@ export default {
               console.error(e)
               that.msgError(that, '删除单词收藏操作异常')
             })
-      }).finally(() => {
-        loading.close()
       })
     },
     handleDetailClose() {
@@ -482,7 +501,6 @@ export default {
     },
     stockReviewStart() {
       try {
-        this.enableNoSleepMode()
         this.playWordIndex = 0
         this.autoPlayDialogVisible++
         this.isFirstIncome = false
@@ -502,7 +520,11 @@ export default {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       await this.initNextReviseDetail(false)
           .then(() => {
-            that.detail.audioPlayer.play()
+            if (this.isDownloadReviewAudio) {
+              ++that.playWordIndex
+            } else {
+              that.detail.audioPlayer.play()
+            }
           })
     },
     getPronunciationVO: function (isUS) {
@@ -546,7 +568,7 @@ export default {
     },
     async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
-      this.notifySuccess(this, '操作提示', '复习下一次单词')
+      this.notifySuccess(this, '操作提示', `${this.isDownloadReviewAudio ? '下载' : '复习'}下一个单词`)
       await this.cleanDetailRevising()
       this.isReviewStop = false
     },
@@ -574,14 +596,6 @@ export default {
         await this.keepInMindFun()
       }
     },
-    buildNotGlobalLoading: function () {
-      return this.$loading({
-        lock: true,
-        text: `正在操作`,
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
-    },
     previousPageFun() {
       this.page.current--
       this.pageChange()
@@ -592,7 +606,6 @@ export default {
     },
     async rememberOneFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经记住')
-      let loading = this.buildNotGlobalLoading()
       await this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
@@ -602,13 +615,9 @@ export default {
             console.error(e)
             that.msgError(that, '记住单词操作异常')
           })
-          .finally(() => {
-            loading.close()
-          })
     },
     async keepInMindFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经牢记')
-      let loading = this.buildNotGlobalLoading()
       await this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
@@ -618,13 +627,9 @@ export default {
             console.error(e)
             that.msgError(that, '牢记单词操作异常')
           })
-          .finally(() => {
-            loading.close()
-          })
     },
     async forgetOneFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经忘记')
-      let loading = this.buildNotGlobalLoading()
       await this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
@@ -633,9 +638,6 @@ export default {
           .catch(e => {
             console.error(e)
             that.msgError(that, '忘记单词操作异常')
-          })
-          .finally(() => {
-            loading.close()
           })
     },
     countdownSelectHandle(command) {
@@ -698,6 +700,8 @@ export default {
         let lastIndexPerPage = this.isLastIndexPerPage()
         let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
+        console.log('skipCurrent wordName = ' + this.detail.paraphraseVO.wordName)
+        console.log('skipCurrent audioPlayerQueue = ' + this.detail.audioPlayerQueue.length)
         console.log('skipCurrent lastPage = ' + lastPage)
         console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
         console.log('skipCurrent lastIndexPerPage = ' + lastIndexPerPage)
@@ -720,7 +724,11 @@ export default {
             // 每个单词播放前要计算播放audio数量，词组和单词不一样
             await this.initNextReviseDetail(true)
                 .then(() => {
-                  that.detail.audioPlayer.play()
+                  if (that.isDownloadReviewAudio) {
+                    ++that.playWordIndex
+                  } else {
+                    that.detail.audioPlayer.play()
+                  }
                 }).catch(e => {
                   this.msgError(that, '初始化下一个释义详情异常!')
                   console.error('initNextReviseDetail error')
@@ -759,7 +767,6 @@ export default {
       this.isNotCacheConfig = false
     },
     async reGenReviewAudio() {
-      let loading = this.buildNotGlobalLoading()
       let currentParaphraseId = this.detail.paraphraseVO.paraphraseId
       this.enableIsNotCacheConfig()
 
@@ -778,13 +785,9 @@ export default {
         msgUtil.msgError(that, '重新生成复习音频失败')
       }).finally(() => {
         that.disableIsNotCacheConfig()
-        loading.close()
       })
     },
     async cleanRevising() {
-      if (this.detail.audioPlayer) {
-        this.detail.audioPlayer.pause()
-      }
       this.reviseAudioCandidates = [];
       this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
       this.detail.paraphraseVO = {}
@@ -816,83 +819,49 @@ export default {
       let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
-      if (this.isChToEn) {
-        return audioUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+      if (this.isDownloadReviewAudio) {
+        let ch2EnUrls = audioUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let en2ChUrls = audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        return util.mergeAndFilter(ch2EnUrls, en2ChUrls)
       } else {
-        return audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        if (this.isChToEn) {
+          return audioUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+        } else {
+          return audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+        }
       }
     },
     switchIsNotCacheConfig: function () {
       let isNotCache = getStore({name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE})
       if (isNotCache) {
         this.disableIsNotCacheConfig()
-        msgUtil.notifySuccess(this, '音频缓存提示', '当前已经开启自动缓存，复习过的音频将被缓存，下次复习同个单词不需要网络加载')
+        this.notifySuccess(this, '音频缓存提示', '当前已经开启自动缓存，复习过的音频将被缓存，下次复习同个单词不需要网络加载')
       } else {
         this.enableIsNotCacheConfig()
-        msgUtil.notifySuccess(this, '音频缓存提示', '当前已经关闭自动缓存，复习过的音频不会被缓存，下次复习同个单词需要网络加载')
+        this.notifySuccess(this, '音频缓存提示', '当前已经关闭自动缓存，复习过的音频不会被缓存，下次复习同个单词需要网络加载')
       }
     },
-    createThreadToBuildSound: function (commonDbObject, url, urls, urlsKey) {
-      return new Promise((resolve, reject) => {
-        let dataKey = db.buildDataKey(url, urlsKey)
-        db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
-            .then(async data => {
-              if (data) {
-                console.log('get audio data from DB', data)
-                urls[urlsKey] = URL.createObjectURL(data.audio)
-                resolve(kiwiConst.SUCCESS)
-              } else {
-                await fetch(url).then(async response => {
-                  console.log('Downloading audio from API', response)
-                  console.log('Downloading audio url', url)
-                  return response.blob()
-                }).then(async buffer => {
-                  console.log('buffer', buffer)
-                  let blob = new Blob([buffer], {type: 'audio/mpeg'});
-                  await db.addData(commonDbObject, kiwiConst.DB_STORE_NAME, {
-                    sequenceKey: dataKey,
-                    audio: blob
-                  }).then(async response => {
-                    urls[urlsKey] = URL.createObjectURL(blob)
-                    resolve(kiwiConst.SUCCESS)
-                  }).catch(err => {
-                    throw err
-                  })
-                }).catch(err => {
-                  throw err
-                })
-              }
-            }).catch(err => {
-          reject(kiwiConst.FAIL)
-          throw err
-        })
-      });
-    },
-    rebuildUrls: async function (urls) {
-      let multipleThreads = []
-      let commonDbObject = null
-      await db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION)
-          .then(async dbObject => {
-            console.log('dbObject object', dbObject)
-            commonDbObject = dbObject
-          }).catch(err => {
-            throw err
-          })
+    async createReviseQueue(token) {
+      if (token !== this.detail.audioPlayerToken) {
+        return []
+      }
 
-      for (let urlsKey in urls) {
-        let url = urls[urlsKey];
-        let thread = this.createThreadToBuildSound(commonDbObject, url, urls, urlsKey)
-        multipleThreads.push(thread)
+      if (this.isDownloadReviewAudio) {
+        this.msgSuccess(this, `${this.detail.paraphraseVO.wordName} audio resources is downloading`, 4000);
       }
-      await Promise.all(multipleThreads)
-          .then(response => {
-            console.log('multipleThreads handle ', response)
-          }).catch(err => {
-            throw err
-          })
-      return multipleThreads;
-    },
-    buildReviewSounds: function (queueLength, urls, ch2EnIndexSleepMsMap, playIndex, token) {
+
+      let urls = this.extractReviewAudioUrls()
+      await audioUtil.rebuildUrls(urls);
+
+      if (this.isDownloadReviewAudio) {
+        let msg = `${this.detail.paraphraseVO.wordName} audio resources successfully downloaded`;
+        this.msgSuccess(this, msg, 4000)
+        console.log(msg)
+      }
+
+      let queueLength = urls.length
+      let playIndex = 0
+      let ch2EnIndexSleepMsMap = audioUtil.acquireCh2EnIndexSleepMsMap()
       let sounds = []
       for (let i = 0; i < queueLength; i++) {
         // noinspection JSUnusedGlobalSymbols
@@ -944,25 +913,6 @@ export default {
         sounds.push(sound)
       }
       return sounds
-    },
-    async createReviseQueue(token) {
-      if (token !== that.detail.audioPlayerToken) {
-        return []
-      }
-
-      let urls = this.extractReviewAudioUrls()
-      await this.rebuildUrls(urls);
-
-      // console.log('after rebuild urls vvvvvv')
-      // for (let urlsKey in urls) {
-      //   console.log('key', urlsKey)
-      //   console.log('url', urls[urlsKey])
-      // }
-
-      let queueLength = urls.length
-      let playIndex = 0
-      let ch2EnIndexSleepMsMap = audioUtil.acquireCh2EnIndexSleepMsMap()
-      return this.buildReviewSounds(queueLength, urls, ch2EnIndexSleepMsMap, playIndex, token)
     },
 
   }
@@ -1162,6 +1112,7 @@ export default {
       </el-dialog>
       <el-dialog
           :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
+          v-if="!isDownloadReviewAudio"
           :visible="enableFirstIncomeReviewMode"
           :show-close="false"
           width="300px">
