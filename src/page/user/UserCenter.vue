@@ -345,17 +345,6 @@ export default {
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
-    <!--
-        <el-dropdown size="mini"
-                     split-button type="info" @command="reviewTypeChange">
-          {{ `导播：${tranReviewType(user.reviewType)}` }}
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item :command="1">去除中文导播</el-dropdown-item>
-            <el-dropdown-item :command="2">附带中文导播</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <el-divider></el-divider>
-    -->
     <el-dropdown size="mini"
                  split-button type="info" @command="spellTypeChange">
       {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}

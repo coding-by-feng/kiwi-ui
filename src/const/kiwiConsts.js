@@ -155,8 +155,7 @@ export default {
         ENABLE_MSG_HINT: 'enable_msg_hint',
         IS_PLAY_EXAMPLE: 'is_play_example',
         IS_EN_TO_EN: 'is_en_to_en',
-        BGM: 'bgm',
-        IS_NOT_CACHE: 'is_not_cache'
+        BGM: 'bgm'
     },
 
     DB_NAME: 'KIWI_VOCABULARY',

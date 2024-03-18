@@ -91,7 +91,6 @@ export default {
       spellType: getStore({name: 'spell_type'}),
       enParaType: getStore({name: 'enPara_type'}),
       isPlayExample: getStore({name: 'is_play_example'}),
-      isNotCacheConfig: getStore({name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE}),
       listItems: [],
       autoPlayDialogVisible: 0,
       isFirstIncome: true,
@@ -111,9 +110,6 @@ export default {
     noSleep = new NoSleep()
   },
   async mounted() {
-    if (this.isNotCacheConfig) {
-      this.switchIsNotCacheConfig()
-    }
     await this.init()
     this.listenerMinBrowser()
   },
@@ -750,43 +746,6 @@ export default {
       this.prepareReview()
       await this.recursiveReview()
     },
-    enableIsNotCacheConfig: function () {
-      setStore({
-        name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE,
-        content: kiwiConst.IS_NOT_CACHE.TRUE,
-        type: kiwiConst.STORE_TYPE.LOCAL
-      })
-      this.isNotCacheConfig = true
-    },
-    disableIsNotCacheConfig: function () {
-      setStore({
-        name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE,
-        content: kiwiConst.IS_NOT_CACHE.FALSE,
-        type: kiwiConst.STORE_TYPE.LOCAL
-      })
-      this.isNotCacheConfig = false
-    },
-    async reGenReviewAudio() {
-      let currentParaphraseId = this.detail.paraphraseVO.paraphraseId
-      this.enableIsNotCacheConfig()
-
-      this.notifySuccess(this, '操作提示', '正在重新生成复习音频资源')
-      await this.cleanDetailRevising()
-      review.reGenReviewAudio(currentParaphraseId).then(res => {
-        console.log(res)
-        if (res.data.code === 1) {
-          that.prepareReview()
-          that.recursiveReview()
-        } else {
-          msgUtil.msgError(that, '重新生成复习音频失败')
-        }
-      }).catch(err => {
-        console.log(err)
-        msgUtil.msgError(that, '重新生成复习音频失败')
-      }).finally(() => {
-        that.disableIsNotCacheConfig()
-      })
-    },
     async cleanRevising() {
       this.reviseAudioCandidates = [];
       this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
@@ -829,16 +788,6 @@ export default {
         } else {
           return audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
         }
-      }
-    },
-    switchIsNotCacheConfig: function () {
-      let isNotCache = getStore({name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE})
-      if (isNotCache) {
-        this.disableIsNotCacheConfig()
-        this.notifySuccess(this, '音频缓存提示', '当前已经开启自动缓存，复习过的音频将被缓存，下次复习同个单词不需要网络加载')
-      } else {
-        this.enableIsNotCacheConfig()
-        this.notifySuccess(this, '音频缓存提示', '当前已经关闭自动缓存，复习过的音频不会被缓存，下次复习同个单词需要网络加载')
       }
     },
     async createReviseQueue(token) {
@@ -1129,13 +1078,6 @@ export default {
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
       <el-button type="primary"
-                 v-if="enableSwitchIsNotCacheConfigIcon"
-                 @click="switchIsNotCacheConfig"
-                 size="mini">
-        <i class="el-icon-smoking" v-if="isNotCacheConfig"></i>
-        <i class="el-icon-no-smoking" v-if="!isNotCacheConfig"></i>
-      </el-button>
-      <el-button type="primary"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
@@ -1160,11 +1102,6 @@ export default {
       </el-button>
       <el-button v-if="enableShowNextIcon" type="primary" size="mini" @click="showNext">
         <i class="el-icon-arrow-right"></i>
-      </el-button>
-      <el-button
-          v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
-          type="primary" size="mini" @click="reGenReviewAudio">
-        <i class="el-icon-s-release"></i>
       </el-button>
       <el-button type="primary"
                  v-if="enableStopPlayingIcon"
