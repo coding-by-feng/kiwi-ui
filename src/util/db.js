@@ -39,6 +39,7 @@ export function openDB(dbName, version = 1) {
                 keyPath: "sequenceKey" // 这是主键
             });
             // 创建索引，在后面查询数据的时候可以根据索引查
+            objectStore.createIndex("sequenceKey", "sequenceKey", {unique: true});
         };
     });
 }

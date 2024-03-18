@@ -138,7 +138,10 @@ export default {
       </el-tab-pane>
       <el-tab-pane name="grammarListener" v-if="isLogin">
         <span slot="label"><i class=el-icon-school></i></span>
-        <router-view name="grammarListener"></router-view>
+        <span>该功能暂时关闭</span>
+        <!--
+                <router-view name="grammarListener"></router-view>
+        -->
       </el-tab-pane>
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label"><i class="el-icon-user"></i></span>
