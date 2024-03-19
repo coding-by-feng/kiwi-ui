@@ -116,10 +116,10 @@ export function cursorGetData(db, storeName) {
     };
 }
 
-export function buildDataKey(url) {
+export function buildDataKey(url, urlsKey) {
     return url.replaceAll('/wordBiz/word/review/downloadReviewAudio', 'RA')
         .replaceAll('/wordBiz/word/pronunciation/downloadVoice', 'PA')
-        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA')
+        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA') + '_' + urlsKey
 }
 
 

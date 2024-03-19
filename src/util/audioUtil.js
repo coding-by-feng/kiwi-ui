@@ -250,7 +250,7 @@ export default {
 
     createThreadToBuildSound: function (commonDbObject, url, urls, urlsKey) {
         return new Promise((resolve, reject) => {
-            let dataKey = db.buildDataKey(url)
+            let dataKey = db.buildDataKey(url, urlsKey)
             db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
                 .then(async data => {
                     if (data) {

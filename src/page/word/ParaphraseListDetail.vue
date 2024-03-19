@@ -10,6 +10,12 @@ import NoSleep from 'nosleep.js'
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
+const skipWorkSpellingIndexEn2Ch = 10
+const skipWorkSpellingIndexWhenLastIsSameEn2Ch = 4
+const skipWorkSpellingIndexCh2En = 12
+const skipWorkSpellingIndexWhenLastIsSameCh2En = 7
+const audioVolumesEn2Ch = [0.3, 0.3, 1, 1, 1, 0.3, 0.3, 1, 1, 1, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
+const audioVolumesEn2ChWhenLastIsSame = [0.3, 0.3, 0.3, 0.3, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
 
 let that
 let noSleep
@@ -71,18 +77,18 @@ export default {
         showTranslation: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
         showWord: true,
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
+        playIndex: 0,
         showIndex: 0,
         isSleepMode: false,
         listId: null,
-        sleepClickFirstTime: null,
-        sleepClickSecondTime: null,
         previousReviewWord: null,
         apiKey: null,
         audioPlayerQueue: [],
         audioPlayer: null,
         audioPlayerToken: null,
         isUnfoldOperateIcon: false,
-        isEnableNoSleepMode: false
+        isEnableNoSleepMode: false,
+        isDoubleClick: false
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -115,7 +121,7 @@ export default {
   },
   destroyed() {
     if (this.detail.audioPlayer) {
-      this.detail.audioPlayer.stop()
+      this.pauseAllPalyingAudio()
       this.detail.audioPlayer = null
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
@@ -149,6 +155,9 @@ export default {
     },
     showWordSpelling() {
       return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
+    },
+    lastIsSame: function () {
+      return this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
     },
     isDownloadReviewAudio() {
       return this.reviewMode === kiwiConst.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO
@@ -212,9 +221,7 @@ export default {
         if (document.hidden) {
           that.isReviewStop = true
           that.isReviewPlaying = false
-          if (that.detail.audioPlayer) {
-            that.detail.audioPlayer.pause()
-          }
+          that.pauseAllPalyingAudio()
         } else {
           that.isReviewStop = false
           that.isReviewPlaying = true
@@ -558,9 +565,7 @@ export default {
       }
       this.isReviewStop = true
       this.isReviewPlaying = false
-      if (this.detail.audioPlayer) {
-        this.detail.audioPlayer.pause()
-      }
+      this.pauseAllPalyingAudio()
     },
     async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
@@ -568,22 +573,8 @@ export default {
       await this.cleanDetailRevising()
       this.isReviewStop = false
     },
-    isDoubleClick() {
-      let diff = 1000
-      if (this.detail.sleepClickFirstTime) {
-        this.detail.sleepClickSecondTime = new Date().getTime()
-        diff = this.detail.sleepClickSecondTime - this.detail.sleepClickFirstTime
-        this.detail.sleepClickFirstTime = null
-        this.detail.sleepClickSecondTime = null
-      } else {
-        this.detail.sleepClickFirstTime = new Date().getTime()
-      }
-      console.log('diff = ' + diff)
-      return diff < 800
-    },
-    async rememberInSleepMode(isSleep) {
-      // 如果是睡眠模式
-      if (isSleep && !this.isDoubleClick()) {
+    async rememberInSleepMode(ignoreDoubleClick) {
+      if (ignoreDoubleClick) {
         return
       }
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
@@ -661,12 +652,7 @@ export default {
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-    async showNext(isCheckDoubleClick) {
-      // 如果是睡眠模式
-      if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
-        return
-      }
-
+    reviewNextWord: async function () {
       if (this.isReview) {
         if (this.detail.showIndex !== this.playWordIndex) {
           this.detail.showIndex = this.playWordIndex
@@ -677,6 +663,51 @@ export default {
         this.detail.showIndex++
       }
       await this.skipCurrent()
+    },
+    pauseAllPalyingAudio: function () {
+      this.detail.audioPlayerQueue.forEach(audio => audio.pause())
+    },
+    skipSomeAudio: function () {
+      this.pauseAllPalyingAudio()
+      if (!this.isChToEn) {
+        if (this.lastIsSame) {
+          this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameEn2Ch
+          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexWhenLastIsSameEn2Ch]
+        } else {
+          this.detail.playIndex = skipWorkSpellingIndexEn2Ch
+          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexEn2Ch]
+        }
+      } else {
+        if (this.lastIsSame) {
+          this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameCh2En
+          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexWhenLastIsSameCh2En]
+        } else {
+          this.detail.playIndex = skipWorkSpellingIndexCh2En
+          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexCh2En]
+        }
+      }
+      this.detail.audioPlayer.play()
+    },
+    async showNext(isDoubleClick) {
+      console.log('isDoubleClick', isDoubleClick)
+      this.detail.isDoubleClick = isDoubleClick
+      // 如果是睡眠模式
+      if (this.detail.isSleepMode) {
+        if (!isDoubleClick) {
+          setTimeout(async () => {
+            if (that.detail.isDoubleClick) {
+              return
+            }
+            await this.reviewNextWord()
+          }, 600)
+        } else {
+          clearTimeout()
+          // skip the work spelling audio play
+          this.skipSomeAudio()
+        }
+      } else {
+        await this.reviewNextWord()
+      }
     },
     isLastIndexPerPage: function () {
       return this.playWordIndex >= playCountOnce
@@ -775,18 +806,17 @@ export default {
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
       let wordId = this.detail.paraphraseVO.wordId
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
-      let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
       if (this.isDownloadReviewAudio) {
-        let ch2EnUrls = audioUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
-        let en2ChUrls = audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let ch2EnUrls = audioUtil.extractedCh2EnUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let en2ChUrls = audioUtil.extractedEn2ChUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
         return util.mergeAndFilter(ch2EnUrls, en2ChUrls)
       } else {
         if (this.isChToEn) {
-          return audioUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+          return audioUtil.extractedCh2EnUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
         } else {
-          return audioUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+          return audioUtil.extractedEn2ChUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
         }
       }
     },
@@ -810,25 +840,32 @@ export default {
       }
 
       let queueLength = urls.length
-      let playIndex = 0
+      this.detail.playIndex = 0
       let ch2EnIndexSleepMsMap = audioUtil.acquireCh2EnIndexSleepMsMap()
       let sounds = []
       for (let i = 0; i < queueLength; i++) {
         // noinspection JSUnusedGlobalSymbols
         let sound = new Audio(urls[i])
         sound.pause()
-        sound.loop = false
+        if (!this.isChToEn) {
+          if (!this.lastIsSame && i < audioVolumesEn2Ch.length) {
+            sound.volume = audioVolumesEn2Ch[i]
+          } else if (this.lastIsSame && i < audioVolumesEn2ChWhenLastIsSame.length) {
+            sound.volume = audioVolumesEn2ChWhenLastIsSame[i]
+          }
+        }
+        sound.loop = false;
         sound.addEventListener('ended', async function () {
-          // console.log('onend playIndex=' + playIndex)
-          // console.log('onend: ' + urls[playIndex])
+          // console.log('onend playIndex=', that.detail.playIndex)
+          // console.log('onend: ' + urls[that.detail.playIndex])
           that.isReviewPlaying = false
           if (that.isChToEn) {
-            let sleepMs = ch2EnIndexSleepMsMap.get(playIndex)
+            let sleepMs = ch2EnIndexSleepMsMap.get(that.detail.playIndex)
             if (sleepMs) {
               that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
               await util.sleep(sleepMs)
                   .then(() => {
-                    if (playIndex === 1) {
+                    if (that.detail.playIndex === 1) {
                       that.detail.showWord = true
                     }
                   })
@@ -837,8 +874,8 @@ export default {
           if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
             return
           }
-          if (++playIndex < queueLength) {
-            that.detail.audioPlayer = sounds[playIndex]
+          if (++that.detail.playIndex < queueLength) {
+            that.detail.audioPlayer = sounds[that.detail.playIndex]
             that.detail.audioPlayer.play()
           } else {
             // console.log('that.playWordIndex++ ' + that.playWordIndex)
@@ -846,16 +883,16 @@ export default {
           }
         })
         sound.addEventListener('play', function () {
-          // console.log('onplay: ' + urls[playIndex])
+          // console.log('onplay: ' + urls[that.detail.playIndex])
           that.isReviewPlaying = true
           that.detail.reviewLoading = false
         })
         sound.addEventListener('pause', function () {
-          // console.log('onpause: ' + urls[playIndex])
+          // console.log('onpause: ' + urls[that.detail.playIndex])
           that.isReviewPlaying = false
         })
         sound.addEventListener('error', function () {
-          // console.log('onloaderror: ' + urls[playIndex])
+          // console.log('onloaderror: ' + urls[that.detail.playIndex])
           that.isReviewPlaying = false
           that.detail.reviewLoading = false
         })
@@ -943,7 +980,8 @@ export default {
           </div>
           <div v-if="detail.isSleepMode"
                :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '50%;'}"
-               @click.stop="showNext(false)">
+               @click="showNext(false)"
+               @dblclick="showNext(true)">
           </div>
           <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;"
