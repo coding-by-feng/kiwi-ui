@@ -116,8 +116,10 @@ export function cursorGetData(db, storeName) {
     };
 }
 
-export function buildDataKey(url, urlsKey) {
-    return url + '_' + urlsKey;
+export function buildDataKey(url) {
+    return url.replaceAll('/wordBiz/word/review/downloadReviewAudio', 'RA')
+        .replaceAll('/wordBiz/word/pronunciation/downloadVoice', 'PA')
+        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA')
 }
 
 

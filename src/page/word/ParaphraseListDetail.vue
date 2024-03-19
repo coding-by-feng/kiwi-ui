@@ -800,6 +800,7 @@ export default {
       }
 
       let urls = this.extractReviewAudioUrls()
+      console.log('extracting urls', urls)
       await audioUtil.rebuildUrls(urls);
 
       if (this.isDownloadReviewAudio) {
