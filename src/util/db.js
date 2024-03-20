@@ -77,9 +77,9 @@ export function addData(db, storeName, data) {
  */
 export function getDataByKey(db, storeName, key) {
     return new Promise((resolve, reject) => {
-        var transaction = db.transaction([storeName]); // 事务
-        var objectStore = transaction.objectStore(storeName); // 仓库对象
-        var request = objectStore.get(key); // 通过主键获取数据
+        let transaction = db.transaction([storeName]); // 事务
+        let objectStore = transaction.objectStore(storeName); // 仓库对象
+        let request = objectStore.get(key); // 通过主键获取数据
 
         request.onerror = function (event) {
             console.log("事务失败");
@@ -98,34 +98,47 @@ export function getDataByKey(db, storeName, key) {
  * @param {string} storeName 仓库名称
  */
 export function cursorGetData(db, storeName) {
-    let list = [];
-    var store = db
-        .transaction(storeName, "readwrite") // 事务
-        .objectStore(storeName); // 仓库对象
-    var request = store.openCursor(); // 指针对象
-    // 游标开启成功，逐行读数据
-    request.onsuccess = function (e) {
-        var cursor = e.target.result;
-        if (cursor) {
-            // 必须要检查
-            list.push(cursor.value);
-            cursor.continue(); // 遍历了存储对象中的所有内容
-        } else {
-            console.log("游标读取的数据：", list);
-        }
-    };
+    return new Promise((resolve, reject) => {
+        let store = db
+            .transaction([storeName]) // 事务
+            .objectStore(storeName) // 仓库对象
+        let request = store.openCursor() // 指针对象
+
+        request.onerror = function (event) {
+            console.log("游标读取失败")
+            reject(event)
+        };
+
+        let allData = []
+        request.onsuccess = function (event) {
+            // 游标开启成功，逐行读数据
+            let cursor = event.target.result
+            if (cursor) {
+                // 必须要检查
+                console.log(cursor.value);
+                allData.push(cursor.value);
+                cursor.continue(); // 遍历了存储对象中的所有内容
+            } else {
+                resolve(allData);
+            }
+        };
+    })
 }
 
 export function buildDataKey(url, urlsKey) {
-    return url.replaceAll('/wordBiz/word/review/downloadReviewAudio', 'RA')
+    let keyPrefix = url.replaceAll('/wordBiz/word/review/downloadReviewAudio', 'RA')
         .replaceAll('/wordBiz/word/pronunciation/downloadVoice', 'PA')
-        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA') + '_' + urlsKey
+        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA');
+    if (urlsKey) {
+        return keyPrefix + '_' + urlsKey;
+    }
+    return keyPrefix;
 }
-
 
 export default {
     openDB,
     addData,
     getDataByKey,
-    buildDataKey
+    buildDataKey,
+    cursorGetData
 }

@@ -22,7 +22,6 @@ export default {
       tabsWidth: window.innerWidth - 20 + 'px',
       activeName: this.$route.query.active ? this.$route.query.active : 'search',
       query: this.$route.query,
-      bgm: getStore({name: 'bgm'}),
       user: {
         userName: getStore({name: 'user_name'})
       }
@@ -157,11 +156,7 @@ export default {
       </el-tab-pane>
       <el-tab-pane name="bgm">
         <span slot="label"><i class="el-icon-headset"></i></span>
-        <span v-if="!bgm">背景音乐已关闭，请在个人中心打开</span>
-        <div v-if="bgm">
-          <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=450
-                  src="//music.163.com/outchain/player?type=0&id=9224410042&auto=1&height=430"></iframe>
-        </div>
+        <router-view name="bgm"></router-view>
       </el-tab-pane>
     </el-tabs>
     <el-card class="box-card">
