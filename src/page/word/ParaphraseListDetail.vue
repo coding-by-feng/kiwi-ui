@@ -249,6 +249,8 @@ export default {
             return
           }
 
+          // alert('Initial finished')
+
           if (!this.isFirstIncome && !this.isDownloadReviewAudio) {
             this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
             this.notifySuccess(this, '复习模式', '即将开始复习，请稍等！')
@@ -257,12 +259,14 @@ export default {
           // 手动触发过的直接播放即可
           if (this.autoPlayDialogVisible > 1) {
             if (this.isListItemsNotEmpty) {
+              // alert('this.isListItemsNotEmpty')
               await this.showDetail(this.listItems[0].paraphraseId, 0)
             }
             if (this.isDownloadReviewAudio) {
               ++this.playWordIndex
             } else {
-              this.detail.audioPlayer.play();
+              // alert('this.detail.audioPlayer.play()')
+              this.detail.audioPlayer.play()
             }
           } else {
             if (this.isDownloadReviewAudio) {
@@ -366,12 +370,15 @@ export default {
               console.error(e)
             })
       }
-      this.detail.audioPlayerQueue = await this.createReviseQueue(this.detail.audioPlayerToken)
+      await this.createReviseQueue(this.detail.audioPlayerToken)
+          .then($ => {
+            // alert('createReviseQueue success')
+            console.log('initNextReviewDetail this.detail.audioPlayerQueue', this.detail.audioPlayerQueue)
+            this.detail.audioPlayer = this.detail.audioPlayerQueue[0]
+          })
           .catch(e => {
             throw e
           })
-      console.log('initNextReviewDetail this.detail.audioPlayerQueue=' + this.detail.audioPlayerQueue)
-      this.detail.audioPlayer = this.detail.audioPlayerQueue[0]
     },
     async showDetail(paraphraseId, index) {
       let loading = buildNotGlobalLoading()
@@ -504,6 +511,7 @@ export default {
     },
     stockReviewStart() {
       try {
+        // alert('stockReviewStart')
         this.playWordIndex = 0
         this.autoPlayDialogVisible++
         this.isFirstIncome = false
@@ -512,7 +520,7 @@ export default {
         }
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
-              this.detail.audioPlayer.play()
+              that.detail.audioPlayer.play()
             })
       } catch (e) {
         // alert('test' + e)
@@ -779,7 +787,7 @@ export default {
     },
     async cleanRevising() {
       this.reviseAudioCandidates = [];
-      this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
+      this.detail.previousReviewWord = null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
       this.detail.audioPlayerToken = new Date().getTime()
@@ -899,7 +907,7 @@ export default {
 
         sounds.push(sound)
       }
-      return sounds
+      this.detail.audioPlayerQueue = sounds
     },
 
   }

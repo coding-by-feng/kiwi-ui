@@ -269,11 +269,7 @@ export default {
         })
       }
       if (val === 1) {
-        return '【轻音乐】'
-      } else if (val === 2) {
-        return '【白噪音】篝火'
-      } else if (val === 3) {
-        return '【ASMR】颂钵疗愈'
+        return '开启'
       } else {
         return '关闭'
       }
@@ -340,8 +336,8 @@ export default {
                  split-button type="info" @command="bgmChange">
       {{ `背景音乐：${tranBGM(user.bgm)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">【轻音乐】</el-dropdown-item>
-        <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
+        <el-dropdown-item :command="1">开启</el-dropdown-item>
+        <el-dropdown-item :command="null">关闭</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
