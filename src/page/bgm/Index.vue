@@ -15,7 +15,7 @@ export default {
   },
   data() {
     return {
-      allDbData: [],
+      allDataSize: 0,
       bgmData: [
         {id: 4010190, name: 'Death'},
         {id: 1462458705, name: 'GOOD NIGHT'},
@@ -50,9 +50,8 @@ export default {
     countDbAudio() {
       db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION).then(dbObject => {
         db.cursorGetData(dbObject, kiwiConst.DB_STORE_NAME)
-            .then(allData => {
-              console.log('that.allDbData', allData)
-              that.allDbData = allData
+            .then(allDataSize => {
+              that.allDataSize = allDataSize
             })
       })
     },
@@ -90,7 +89,7 @@ export default {
   <div>
     <el-card class="box-card">
       <el-button type="info" @click="countDbAudio">
-        Count the DB audio: {{ allDbData.length }}
+        Count the DB audio: {{ allDataSize }}
       </el-button>
       <el-divider></el-divider>
       <div v-for="(item, index) in bgmData" :key="index">

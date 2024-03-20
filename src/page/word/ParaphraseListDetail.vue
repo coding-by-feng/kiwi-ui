@@ -23,7 +23,7 @@ let noSleep
 const buildNotGlobalLoading = function () {
   return that.$loading({
     lock: true,
-    text: `正在操作`,
+    text: `正在加载`,
     spinner: 'el-icon-loading',
     background: 'rgba(0, 0, 0, 0.7)'
   })
@@ -357,6 +357,7 @@ export default {
     async initNextReviseDetail(isGetDetail) {
       console.log('initNextReviewDetail this.playWordIndex = ' + this.playWordIndex)
       console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
+      let loading = buildNotGlobalLoading()
       this.prepareReview()
       if (isGetDetail) {
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
@@ -379,6 +380,7 @@ export default {
           .catch(e => {
             throw e
           })
+      loading.close()
     },
     async showDetail(paraphraseId, index) {
       let loading = buildNotGlobalLoading()
@@ -396,9 +398,9 @@ export default {
           }).catch(e => {
             console.error(e)
             that.msgError(that, '加载释义详情异常')
-          }).finally(() => {
             loading.close()
           })
+
       this.detail.dialogVisible = true
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
@@ -406,6 +408,8 @@ export default {
       }
       // noinspection ES6MissingAwait
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
+
+      loading.close()
     },
 
     async showDetailNotLoadData() {
@@ -707,7 +711,7 @@ export default {
               return
             }
             await this.reviewNextWord()
-          }, 600)
+          }, 400)
         } else {
           clearTimeout()
           // skip the work spelling audio play

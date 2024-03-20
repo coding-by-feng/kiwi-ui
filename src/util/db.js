@@ -109,17 +109,17 @@ export function cursorGetData(db, storeName) {
             reject(event)
         };
 
-        let allData = []
+        let allData = 0
         request.onsuccess = function (event) {
             // 游标开启成功，逐行读数据
             let cursor = event.target.result
             if (cursor) {
                 // 必须要检查
-                console.log(cursor.value);
-                allData.push(cursor.value);
-                cursor.continue(); // 遍历了存储对象中的所有内容
+                console.log(cursor.value)
+                ++allData
+                cursor.continue()
             } else {
-                resolve(allData);
+                resolve(allData)
             }
         };
     })
