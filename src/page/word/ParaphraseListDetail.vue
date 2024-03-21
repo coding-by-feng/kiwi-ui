@@ -83,7 +83,8 @@ export default {
         listId: null,
         previousReviewWord: null,
         apiKey: null,
-        audioPlayerQueue: [],
+        audioPlayerUrls: [],
+        audioPlayerMap: new Map(),
         audioPlayer: null,
         audioPlayerToken: null,
         isUnfoldOperateIcon: false,
@@ -206,9 +207,6 @@ export default {
     enableParaphraseExamples() {
       return this.detail.paraphraseVO.exampleVOList && this.detail.paraphraseVO.exampleVOList.length < 1
     },
-    isDetailLoading() {
-      return this.isReview && this.detail.reviewLoading
-    },
     isListItemsNotEmpty() {
       return this.listItems && this.listItems.length > 0
     },
@@ -259,7 +257,6 @@ export default {
           // 手动触发过的直接播放即可
           if (this.autoPlayDialogVisible > 1) {
             if (this.isListItemsNotEmpty) {
-              // alert('this.isListItemsNotEmpty')
               await this.showDetail(this.listItems[0].paraphraseId, 0)
             }
             if (this.isDownloadReviewAudio) {
@@ -270,7 +267,7 @@ export default {
             }
           } else {
             if (this.isDownloadReviewAudio) {
-              this.playWordIndex = this.detail.audioPlayerQueue.length;
+              this.playWordIndex = this.detail.audioPlayerUrls.length;
             } else {
               this.stockReviewStart()
             }
@@ -374,8 +371,7 @@ export default {
       await this.createReviseQueue(this.detail.audioPlayerToken)
           .then($ => {
             // alert('createReviseQueue success')
-            console.log('initNextReviewDetail this.detail.audioPlayerQueue', this.detail.audioPlayerQueue)
-            this.detail.audioPlayer = this.detail.audioPlayerQueue[0]
+            this.detail.audioPlayer = this.getCurrentAudioPlayer(0)
           })
           .catch(e => {
             throw e
@@ -389,12 +385,14 @@ export default {
       }
       await this.getItemDetail(paraphraseId)
           .then(response => {
+            // alert('getItemDetail success')
             this.detail.paraphraseVO = response.data.data
             if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
               this.detail.paraphraseVO.wordCharacter = kiwiConst.WORD_CHARACTER.PHRASE
             }
             // 如果是复习最近收藏
             this.detail.listId = this.listItems[this.detail.showIndex].listId
+            loading.close()
           }).catch(e => {
             console.error(e)
             that.msgError(that, '加载释义详情异常')
@@ -408,8 +406,6 @@ export default {
       }
       // noinspection ES6MissingAwait
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
-
-      loading.close()
     },
 
     async showDetailNotLoadData() {
@@ -515,7 +511,7 @@ export default {
     },
     stockReviewStart() {
       try {
-        // alert('stockReviewStart')
+        // alert('stockReviewStart ')
         this.playWordIndex = 0
         this.autoPlayDialogVisible++
         this.isFirstIncome = false
@@ -525,6 +521,7 @@ export default {
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
               that.detail.audioPlayer.play()
+              // alert('audioPlayer')
             })
       } catch (e) {
         // alert('test' + e)
@@ -677,25 +674,29 @@ export default {
       await this.skipCurrent()
     },
     pauseAllPalyingAudio: function () {
-      this.detail.audioPlayerQueue.forEach(audio => audio.pause())
+      this.detail.audioPlayerMap.forEach((key, value) => {
+        console.log('this.detail.audioPlayerMap key', key)
+        console.log('this.detail.audioPlayerMap value', value)
+        key.pause()
+      })
     },
     skipSomeAudio: function () {
       this.pauseAllPalyingAudio()
       if (!this.isChToEn) {
         if (this.lastIsSame) {
           this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameEn2Ch
-          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexWhenLastIsSameEn2Ch]
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexWhenLastIsSameEn2Ch)
         } else {
           this.detail.playIndex = skipWorkSpellingIndexEn2Ch
-          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexEn2Ch]
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexEn2Ch)
         }
       } else {
         if (this.lastIsSame) {
           this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameCh2En
-          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexWhenLastIsSameCh2En]
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexWhenLastIsSameCh2En)
         } else {
           this.detail.playIndex = skipWorkSpellingIndexCh2En
-          this.detail.audioPlayer = this.detail.audioPlayerQueue[skipWorkSpellingIndexCh2En]
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexCh2En)
         }
       }
       this.detail.audioPlayer.play()
@@ -739,8 +740,9 @@ export default {
         let lastIndexPerPage = this.isLastIndexPerPage()
         let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
-        console.log('skipCurrent wordName = ' + this.detail.paraphraseVO.wordName)
-        console.log('skipCurrent audioPlayerQueue = ' + this.detail.audioPlayerQueue.length)
+        console.log('skipCurrent wordName = ', this.detail.paraphraseVO.wordName)
+        console.log('skipCurrent audioPlayerUrls = ', this.detail.audioPlayerUrls)
+        console.log('skipCurrent audioPlayerMap = ', this.detail.audioPlayerMap)
         console.log('skipCurrent lastPage = ' + lastPage)
         console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
         console.log('skipCurrent lastIndexPerPage = ' + lastIndexPerPage)
@@ -795,6 +797,7 @@ export default {
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
       this.detail.audioPlayerToken = new Date().getTime()
+      this.detail.audioPlayerMap.clear()
     },
     async cleanInitRevising() {
       // stop playing
@@ -832,6 +835,61 @@ export default {
         }
       }
     },
+    getCurrentAudioPlayer: function (index) {
+      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[index ? index : this.detail.playIndex]);
+    },
+    setSoundListener: function (sound, token) {
+      sound.addEventListener('ended', async function () {
+        // that.notifySuccess(that, 'ended ' + i)
+
+        that.isReviewPlaying = false
+        if (that.isChToEn) {
+          let sleepMs = audioUtil.acquireCh2EnIndexSleepMsMap().get(that.detail.playIndex)
+          if (sleepMs) {
+            that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
+            await util.sleep(sleepMs)
+                .then(() => {
+                  if (that.detail.playIndex === 1) {
+                    that.detail.showWord = true
+                  }
+                })
+          }
+        }
+        if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
+          return
+        }
+        if (++that.detail.playIndex < that.detail.audioPlayerUrls.length) {
+          that.detail.audioPlayer = that.getCurrentAudioPlayer()
+          that.detail.audioPlayer.play()
+        } else {
+          // console.log('that.playWordIndex++ ' + that.playWordIndex)
+          ++that.playWordIndex
+        }
+      })
+      sound.addEventListener('play', function () {
+        // console.log('onplay: ' + urls[that.detail.playIndex])
+        // that.notifySuccess(that, 'play ' + i)
+        that.isReviewPlaying = true
+        that.detail.reviewLoading = false
+      })
+      // sound.addEventListener('loadstart', function () {
+      //   that.notifySuccess(that, 'loadstart ' + i)
+      // })
+      // sound.addEventListener('playing', function () {
+      //   that.notifySuccess(that, 'playing ' + i)
+      // })
+      // sound.addEventListener('readystatechange', function () {
+      //   that.notifySuccess(that, 'readystatechange ' + i)
+      // })
+      sound.addEventListener('pause', function () {
+        that.isReviewPlaying = false
+      })
+      sound.addEventListener('error', function () {
+        // that.notifySuccess(that, 'error ' + i)
+        that.isReviewPlaying = false
+        that.detail.reviewLoading = false
+      })
+    },
     async createReviseQueue(token) {
       if (token !== this.detail.audioPlayerToken) {
         return []
@@ -843,7 +901,10 @@ export default {
 
       let urls = this.extractReviewAudioUrls()
       console.log('extracting urls', urls)
-      await audioUtil.rebuildUrls(urls);
+      await audioUtil.rebuildUrls(urls)
+      console.log('rebuildUrls', urls)
+
+      this.detail.audioPlayerUrls = urls
 
       if (this.isDownloadReviewAudio) {
         let msg = `${this.detail.paraphraseVO.wordName} audio resources successfully downloaded`;
@@ -851,67 +912,28 @@ export default {
         console.log(msg)
       }
 
-      let queueLength = urls.length
       this.detail.playIndex = 0
-      let ch2EnIndexSleepMsMap = audioUtil.acquireCh2EnIndexSleepMsMap()
-      let sounds = []
-      for (let i = 0; i < queueLength; i++) {
+      for (let i = 0; i < this.detail.audioPlayerUrls.length; i++) {
         // noinspection JSUnusedGlobalSymbols
-        let sound = new Audio(urls[i])
-        sound.pause()
-        if (!this.isChToEn) {
-          if (!this.lastIsSame && i < audioVolumesEn2Ch.length) {
-            sound.volume = audioVolumesEn2Ch[i]
-          } else if (this.lastIsSame && i < audioVolumesEn2ChWhenLastIsSame.length) {
-            sound.volume = audioVolumesEn2ChWhenLastIsSame[i]
-          }
-        }
-        sound.loop = false;
-        sound.addEventListener('ended', async function () {
-          // console.log('onend playIndex=', that.detail.playIndex)
-          // console.log('onend: ' + urls[that.detail.playIndex])
-          that.isReviewPlaying = false
-          if (that.isChToEn) {
-            let sleepMs = ch2EnIndexSleepMsMap.get(that.detail.playIndex)
-            if (sleepMs) {
-              that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
-              await util.sleep(sleepMs)
-                  .then(() => {
-                    if (that.detail.playIndex === 1) {
-                      that.detail.showWord = true
-                    }
-                  })
+        let sound = this.detail.audioPlayerMap.get(urls[i]);
+        console.log('this.detail.audioPlayerMap', this.detail.audioPlayerMap)
+        console.log('this.detail.audioPlayerMap sound', sound)
+        if (sound === null || sound === undefined) {
+          sound = new Audio(urls[i])
+          if (!this.isChToEn) {
+            if (!this.lastIsSame && i < audioVolumesEn2Ch.length) {
+              sound.volume = audioVolumesEn2Ch[i]
+            } else if (this.lastIsSame && i < audioVolumesEn2ChWhenLastIsSame.length) {
+              sound.volume = audioVolumesEn2ChWhenLastIsSame[i]
             }
           }
-          if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
-            return
-          }
-          if (++that.detail.playIndex < queueLength) {
-            that.detail.audioPlayer = sounds[that.detail.playIndex]
-            that.detail.audioPlayer.play()
-          } else {
-            // console.log('that.playWordIndex++ ' + that.playWordIndex)
-            ++that.playWordIndex
-          }
-        })
-        sound.addEventListener('play', function () {
-          // console.log('onplay: ' + urls[that.detail.playIndex])
-          that.isReviewPlaying = true
-          that.detail.reviewLoading = false
-        })
-        sound.addEventListener('pause', function () {
-          // console.log('onpause: ' + urls[that.detail.playIndex])
-          that.isReviewPlaying = false
-        })
-        sound.addEventListener('error', function () {
-          // console.log('onloaderror: ' + urls[that.detail.playIndex])
-          that.isReviewPlaying = false
-          that.detail.reviewLoading = false
-        })
+          sound.loop = false;
+          this.setSoundListener(sound, token)
 
-        sounds.push(sound)
+          console.log('this.detail.audioPlayerMap.set(urls[i], sound)', urls[i], sound)
+          this.detail.audioPlayerMap.set(urls[i], sound)
+        }
       }
-      this.detail.audioPlayerQueue = sounds
     },
 
   }
@@ -980,7 +1002,6 @@ export default {
 
       <!--释义详情弹窗-->
       <el-dialog
-          v-loading="isDetailLoading"
           ref="detailDialog"
           :visible.sync="detail.dialogVisible"
           fullscreen
@@ -1128,39 +1149,39 @@ export default {
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button type="primary"
+      <el-button type="info"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
       </el-button>
-      <el-button type="primary" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
+      <el-button type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
         <i class="el-icon-d-arrow-left"></i>
       </el-button>
       <el-button v-if="showNextPageIcon"
-                 type="primary" size="mini" @click="nextPageFun">
+                 type="info" size="mini" @click="nextPageFun">
         <i class="el-icon-d-arrow-right"></i>
       </el-button>
 
       <br/>
 
-      <el-button v-if="enableStopwatchIcon" type="primary" size="mini" @click="switchStopWatchMode">
+      <el-button v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
         <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
         <i class="el-icon-switch-button" v-if="countdownMode"></i>
       </el-button>
-      <el-button v-if="enableShowPreviousIcon" type="primary" size="mini" @click="showPrevious">
+      <el-button v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
         <i class="el-icon-arrow-left"></i>
       </el-button>
-      <el-button v-if="enableShowNextIcon" type="primary" size="mini" @click="showNext">
+      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext">
         <i class="el-icon-arrow-right"></i>
       </el-button>
-      <el-button type="primary"
+      <el-button type="info"
                  v-if="enableStopPlayingIcon"
                  @click="stopPlaying"
                  size="mini">
         <i class="el-icon-video-pause"></i>
       </el-button>
-      <el-button type="primary"
+      <el-button type="info"
                  v-if="enableRefreshReviseDetailIcon"
                  @click="refreshReviseDetail()"
                  size="mini">
@@ -1169,29 +1190,29 @@ export default {
 
       <br/>
 
-      <el-button v-if="enableShowDetailIcon" type="primary" size="mini"
+      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
       </el-button>
       <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
-                 type="primary" size="mini" @click="rememberOneFun">
+                 type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
       </el-button>
       <el-button
           v-if="isEnhanceReviewModel && !detail.isUnfoldOperateIcon"
-          type="primary" size="mini" @click="keepInMindFun">
+          type="info" size="mini" @click="keepInMindFun">
         <i class="el-icon-medal"></i>
       </el-button>
-      <el-button type="primary" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
+      <el-button type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
       </el-button>
       <el-button
           v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
-          type="primary" size="mini" @click="forgetOneFun">
+          type="info" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
       </el-button>
-      <el-button type="primary" size="mini"
+      <el-button type="info" size="mini"
                  @click="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon">
         <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
         <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>
