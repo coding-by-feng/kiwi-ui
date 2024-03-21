@@ -224,7 +224,7 @@ export default {
     },
 
     rebuildUrls: async function (urls) {
-        // let multipleThreads = []
+        let multipleThreads = []
         let commonDbObject = null
         await db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION)
             .then(async dbObject => {
@@ -237,34 +237,34 @@ export default {
         let uniqueRebuiltUrls = new Map()
         for (let urlsKey in urls) {
             let url = urls[urlsKey];
-            let builtUrl = uniqueRebuiltUrls.get(url);
-            if (builtUrl) {
-                urls[urlsKey] = builtUrl
+            let builtUrl = uniqueRebuiltUrls.get(url)
+            if (builtUrl === 1) {
                 continue
             }
-            await this.createThreadToBuildSound(commonDbObject, urls, urlsKey, uniqueRebuiltUrls)
-            // let thread = this.createThreadToBuildSound(commonDbObject, urls, urlsKey, uniqueRebuiltUrls)
-            // multipleThreads.push(thread)
+            uniqueRebuiltUrls.set(url, 1)
         }
-        // await Promise.all(multipleThreads)
-        //     .then(response => {
-        //         console.log('multipleThreads handle ', response)
-        //     }).catch(err => {
-        //         throw err
-        //     })
+        uniqueRebuiltUrls.forEach((key, originalUrl) => {
+            multipleThreads.push(this.createUniqueThreadToRebuildSoundUrl(commonDbObject, originalUrl, uniqueRebuiltUrls))
+        })
+        await Promise.all(multipleThreads)
+            .then(response => {
+                console.log('multipleThreads handle ', response)
+                for (let urlsKey in urls) {
+                    urls[urlsKey] = uniqueRebuiltUrls.get(urls[urlsKey])
+                }
+            }).catch(err => {
+                throw err
+            })
     },
-
-    createThreadToBuildSound: function (commonDbObject, urls, urlsKey, uniqueRebuiltUrls) {
+    createUniqueThreadToRebuildSoundUrl: function (commonDbObject, url, uniqueRebuiltUrls) {
         return new Promise((resolve, reject) => {
-            let url = urls[urlsKey]
             let dataKey = db.buildDataKey(url)
             db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
                 .then(async data => {
                     if (data) {
                         console.log('get audio data from DB', data)
                         let reBuiltUrl = URL.createObjectURL(data.audio);
-                        uniqueRebuiltUrls.set(urls[urlsKey], reBuiltUrl)
-                        urls[urlsKey] = reBuiltUrl
+                        uniqueRebuiltUrls.set(url, reBuiltUrl)
                         resolve(kiwiConst.SUCCESS)
                     } else {
                         await fetch(url).then(async response => {
@@ -279,8 +279,7 @@ export default {
                                 audio: blob
                             }).then(async response => {
                                 let reBuiltUrl = URL.createObjectURL(blob);
-                                uniqueRebuiltUrls.set(urls[urlsKey], reBuiltUrl)
-                                urls[urlsKey] = reBuiltUrl
+                                uniqueRebuiltUrls.set(url, reBuiltUrl)
                                 resolve(kiwiConst.SUCCESS)
                             }).catch(err => {
                                 throw err
@@ -295,5 +294,4 @@ export default {
             })
         });
     }
-
 }
