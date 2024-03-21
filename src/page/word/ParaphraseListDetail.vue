@@ -1,5 +1,5 @@
 <script>
-import {getStore, setStore} from '@/util/store'
+import {getStore} from '@/util/store'
 import msgUtil from '@/util/msg'
 import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
@@ -177,9 +177,6 @@ export default {
     enableShowDetailIcon() {
       return !this.detail.isUnfoldOperateIcon && !this.detail.dialogVisible && this.detail.paraphraseVO.paraphraseId
     },
-    enableCloseDetailIcon() {
-      return !this.detail.isUnfoldOperateIcon && this.detail.dialogVisible
-    },
     enableStopwatchIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview
     },
@@ -190,9 +187,6 @@ export default {
       return !this.detail.isUnfoldOperateIcon
     },
     enableSleepModeIcon() {
-      return !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible
-    },
-    enableSwitchIsNotCacheConfigIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible
     },
     enableStopPlayingIcon() {
@@ -369,7 +363,7 @@ export default {
             })
       }
       await this.createReviseQueue(this.detail.audioPlayerToken)
-          .then($ => {
+          .then(() => {
             // alert('createReviseQueue success')
             this.detail.audioPlayer = this.getCurrentAudioPlayer(0)
           })
