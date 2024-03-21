@@ -38,7 +38,7 @@ export default {
 
         that.$notify({
             title: title,
-            message: msg,
+            message: msg ? msg : 'msg missing',
             type: 'success'
         });
     },
