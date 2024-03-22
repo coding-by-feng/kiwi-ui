@@ -397,6 +397,7 @@ export default {
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
+        this.detail.previousReviewWord = this.detail.paraphraseVO.wordName
       }
       // noinspection ES6MissingAwait
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
@@ -668,6 +669,9 @@ export default {
       await this.skipCurrent()
     },
     pauseAllPalyingAudio: function () {
+      if (this.detail.audioPlayer) {
+        this.detail.audioPlayer.pause()
+      }
       this.detail.audioPlayerMap.forEach((key, value) => {
         console.log('this.detail.audioPlayerMap key', key)
         console.log('this.detail.audioPlayerMap value', value)
@@ -1006,7 +1010,7 @@ export default {
                @click.stop="rememberInSleepMode(false)">
           </div>
           <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '50%;'}"
+               :style="{height: innerHeightHalfPx, background: '#DCDFE6', marginTop: '50%;'}"
                @click="showNext(false)"
                @dblclick="showNext(true)">
           </div>
@@ -1027,8 +1031,8 @@ export default {
           <div slot="header">
             <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
               <el-col>
-                <el-tag type="success">{{ detail.paraphraseVO.wordCharacter }}</el-tag>
-                <el-tag v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
+                <el-tag type="info">{{ detail.paraphraseVO.wordCharacter }}</el-tag>
+                <el-tag type="info" v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
                   {{ detail.paraphraseVO.wordLabel }}
                 </el-tag>
               </el-col>
@@ -1036,8 +1040,8 @@ export default {
             <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end"
                     style="background-color: #8c939d;padding-top: 5px;">
               <el-col v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
-                <el-tag
-                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                <el-tag type="info"
+                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                   <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                      v-show="!isUKPronunciationPlaying"
@@ -1058,8 +1062,8 @@ export default {
                  v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
               <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
                 <el-col>
-                  <el-tag
-                      @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                  <el-tag type="info"
+                          @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                     {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                     <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                        v-show="!isUKPronunciationPlaying"
@@ -1088,7 +1092,7 @@ export default {
                   center>
                 <div slot="title">
                   <div v-for="phrase in detail.paraphraseVO.phraseList">
-                    <el-tag type="warning">{{ phrase }}</el-tag>
+                    <el-tag type="info">{{ phrase }}</el-tag>
                   </div>
                   <br v-if="detail.paraphraseVO.phraseList"/>
                   <p>{{ this.detail.paraphraseVO.codes }}</p>
@@ -1143,6 +1147,10 @@ export default {
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
+      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
+                 @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
+        <i class="el-icon-document"></i>
+      </el-button>
       <el-button type="info"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
@@ -1184,10 +1192,6 @@ export default {
 
       <br/>
 
-      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
-                 @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
-        <i class="el-icon-document"></i>
-      </el-button>
       <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
                  type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>

@@ -1,8 +1,9 @@
 <script>
-import db from "@/util/db";
+import db, {cleanDb} from "@/util/db";
 import kiwiConst from "@/const/kiwiConsts";
 import {getStore} from "@/util/store";
 import it from "element-ui/src/locale/lang/it";
+import msgUtil from '@/util/msg'
 
 let that
 
@@ -15,6 +16,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       allDataSize: 0,
       bgmData: [
         {id: 4010190, name: 'Death'},
@@ -45,6 +47,7 @@ export default {
     if (this.bgm) {
       this.playBgm(0)
     }
+    this.countDbAudio()
   },
   methods: {
     countDbAudio() {
@@ -55,8 +58,20 @@ export default {
             })
       })
     },
+    cleanDb() {
+      this.loading = true
+      db.cleanDbData(kiwiConst.DB_NAME, kiwiConst.DB_VERSION, kiwiConst.DB_STORE_NAME)
+          .then(() => {
+            that.countDbAudio()
+            that.loading = false
+          })
+          .catch($ => {
+            that.loading = false
+            msgUtil.msgError(that, 'handling error, please refresh and try again')
+          })
+    },
     playBgm(index) {
-      this.currentPlayBgm.src = `http://music.163.com/song/media/outer/url?id=${this.bgmData[index].id}.mp3`
+      this.currentPlayBgm.src = `bgm/${this.bgmData[index].id}.mp3`
       this.currentPlayBgm.play()
       this.currentPlayBgmIndex = index
     },
@@ -87,9 +102,9 @@ export default {
 
 <template>
   <div>
-    <el-card class="box-card">
-      <el-button type="info" @click="countDbAudio">
-        Count the DB audio: {{ allDataSize }}
+    <el-card class="box-card" v-loading="loading">
+      <el-button type="info" @click="cleanDb">
+        CLean all data, totally {{ allDataSize }}
       </el-button>
       <el-divider></el-divider>
       <div v-for="(item, index) in bgmData" :key="index">

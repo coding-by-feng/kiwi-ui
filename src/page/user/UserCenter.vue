@@ -53,7 +53,7 @@ export default {
     if (!this.user.bgm) {
       setStore({
         name: 'bgm',
-        content: null,
+        content: 1,
         type: 'local'
       })
     }
