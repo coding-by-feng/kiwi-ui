@@ -44,6 +44,37 @@ export function openDB(dbName, version = 1) {
     });
 }
 
+export function cleanDbData(dbName, version = 1, storeName) {
+    return new Promise((resolve, reject) => {
+        // 打开 IndexedDB 数据库
+        let request = window.indexedDB.open(dbName, version)
+
+        request.onerror = function (event) {
+            console.log("Database error: " + event.target.errorCode)
+            reject()
+        };
+
+        request.onsuccess = function (event) {
+            let db = event.target.result;
+
+            // 检查指定的仓库是否存在
+            if (db.objectStoreNames.contains(storeName)) {
+                // 开启一个读写事务
+                var transaction = db.transaction([storeName], "readwrite")
+
+                // 删除指定的仓库
+                transaction.objectStore(storeName).clear()
+
+                console.log("Object store cleared.")
+                resolve()
+            } else {
+                console.log("Object store not found.")
+                resolve()
+            }
+        };
+    });
+}
+
 /**
  * 新增数据
  * @param {object} db 数据库实例
@@ -137,6 +168,7 @@ export function buildDataKey(url, urlsKey) {
 
 export default {
     openDB,
+    cleanDbData,
     addData,
     getDataByKey,
     buildDataKey,
