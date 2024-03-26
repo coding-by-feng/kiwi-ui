@@ -456,8 +456,7 @@ export default {
     switchSleepMode() {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
-        this.notifySuccess(this, '操作提示', '睡眠模式已开启')
-        this.notifySuccess(this, '睡眠模式', '上滑显示更多信息，左滑记住单词，右滑跳过当前单词，单击跳过当前单词的拼写播放')
+        this.notifySuccess(this, '睡眠模式', '上滑动两边白色区域可以显示更多信息和关闭睡眠模式，左滑记住单词，右滑跳过当前单词，单击跳过当前单词的拼写播放', 15000)
       } else {
         this.notifySuccess(this, '操作提示', '睡眠模式已关闭')
       }
@@ -676,7 +675,7 @@ export default {
       }
       await this.skipCurrent()
     },
-    pauseAllPalyingAudio: function () {
+    pauseAllPalyingAudio() {
       if (this.detail.audioPlayer) {
         this.detail.audioPlayer.pause()
       }
@@ -1013,6 +1012,7 @@ export default {
           width="100%">
         <div slot="title" style="margin-bottom: -35px">
           <v-touch
+              @click.stop="autoPlayDialogVisible++"
               @swipeleft="rememberInSleepMode(false)"
               @swiperight="showNext(false)">
             <div v-if="detail.isSleepMode"

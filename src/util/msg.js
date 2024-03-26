@@ -31,7 +31,7 @@ export default {
         })
     },
 
-    notifySuccess: (that, title, msg) => {
+    notifySuccess: (that, title, msg, duration) => {
         if (enableMsgHint === kiwiConst.ENABLE_MSG_HINT.DISABLE) {
             return
         }
@@ -39,7 +39,9 @@ export default {
         that.$notify({
             title: title,
             message: msg ? msg : 'msg missing',
-            type: 'success'
+            type: 'success',
+            duration: duration ? duration : 3000,
+            position: 'bottom-right'
         });
     },
 
