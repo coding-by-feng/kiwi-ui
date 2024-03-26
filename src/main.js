@@ -13,10 +13,12 @@ import * as urls from "@/config/env";
 import './styles/common.scss'
 import basicContainer from './components/basic-container/main'
 import './permission' // 权限
+import VueTouch from 'vue-touch'
 
 Vue.config.devtools = true
 
 Vue.use(VueAxios, axios);
+Vue.use(VueTouch, {name: 'v-touch'});
 
 Vue.use(ElementUI, {
     size: 'medium',

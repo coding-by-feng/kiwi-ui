@@ -81,15 +81,15 @@ export default {
         showIndex: 0,
         isSleepMode: false,
         listId: null,
-        previousReviewWord: null,
+        firstReviewWord: null,
+        secondReviewWord: null,
         apiKey: null,
         audioPlayerUrls: [],
         audioPlayerMap: new Map(),
         audioPlayer: null,
         audioPlayerToken: null,
         isUnfoldOperateIcon: false,
-        isEnableNoSleepMode: false,
-        isDoubleClick: false
+        isEnableNoSleepMode: false
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -156,9 +156,6 @@ export default {
     },
     showWordSpelling() {
       return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
-    },
-    lastIsSame: function () {
-      return this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
     },
     isDownloadReviewAudio() {
       return this.reviewMode === kiwiConst.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO
@@ -345,12 +342,24 @@ export default {
     goBack() {
       this.$emit('tableVisibleToggle')
     },
+    isLastReviewWordSame() {
+      console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
+      console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
+      return this.detail.firstReviewWord === this.detail.secondReviewWord
+    },
+    handoffReviewWordSame() {
+      console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
+      console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
+      this.detail.firstReviewWord = this.detail.secondReviewWord
+      this.detail.secondReviewWord = this.detail.paraphraseVO.wordName
+    },
     async initNextReviseDetail(isGetDetail) {
       console.log('initNextReviewDetail this.playWordIndex = ' + this.playWordIndex)
       console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
       let loading = buildNotGlobalLoading()
       this.prepareReview()
       if (isGetDetail) {
+        this.handoffReviewWordSame()
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
               this.detail.paraphraseVO = response.data.data
@@ -377,9 +386,9 @@ export default {
       if (null !== index && undefined !== index) {
         this.detail.showIndex = index
       }
+      this.handoffReviewWordSame()
       await this.getItemDetail(paraphraseId)
           .then(response => {
-            // alert('getItemDetail success')
             this.detail.paraphraseVO = response.data.data
             if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
               this.detail.paraphraseVO.wordCharacter = kiwiConst.WORD_CHARACTER.PHRASE
@@ -397,7 +406,6 @@ export default {
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
-        this.detail.previousReviewWord = this.detail.paraphraseVO.wordName
       }
       // noinspection ES6MissingAwait
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
@@ -449,7 +457,7 @@ export default {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
         this.notifySuccess(this, '操作提示', '睡眠模式已开启')
-        this.notifySuccess(this, '睡眠模式', '上滑显示更多信息，双击上边区域记住单词，双击下边区域跳过当前单词')
+        this.notifySuccess(this, '睡眠模式', '上滑显示更多信息，左滑记住单词，右滑跳过当前单词，单击跳过当前单词的拼写播放')
       } else {
         this.notifySuccess(this, '操作提示', '睡眠模式已关闭')
       }
@@ -679,9 +687,12 @@ export default {
       })
     },
     skipSomeAudio: function () {
+      console.log('skip some audio')
       this.pauseAllPalyingAudio()
+      console.log('this.isLastReviewWordSame()', this.isLastReviewWordSame())
       if (!this.isChToEn) {
-        if (this.lastIsSame) {
+        if (this.isLastReviewWordSame()) {
+          console.log('skipWorkSpellingIndexWhenLastIsSameEn2Ch', skipWorkSpellingIndexWhenLastIsSameEn2Ch)
           this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameEn2Ch
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexWhenLastIsSameEn2Ch)
         } else {
@@ -689,7 +700,7 @@ export default {
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexEn2Ch)
         }
       } else {
-        if (this.lastIsSame) {
+        if (this.isLastReviewWordSame()) {
           this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameCh2En
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexWhenLastIsSameCh2En)
         } else {
@@ -697,24 +708,18 @@ export default {
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexCh2En)
         }
       }
+      console.log('this.detail.audioPlayer', this.detail.audioPlayer)
       this.detail.audioPlayer.play()
     },
-    async showNext(isDoubleClick) {
-      console.log('isDoubleClick', isDoubleClick)
-      this.detail.isDoubleClick = isDoubleClick
+    async showNext(isSkipSomeAudio) {
+      console.log('isSkipSomeAudio', isSkipSomeAudio)
+      console.log('this.detail.isSleepMode', this.detail.isSleepMode)
       // 如果是睡眠模式
       if (this.detail.isSleepMode) {
-        if (!isDoubleClick) {
-          setTimeout(async () => {
-            if (that.detail.isDoubleClick) {
-              return
-            }
-            await this.reviewNextWord()
-          }, 400)
-        } else {
-          clearTimeout()
-          // skip the work spelling audio play
+        if (isSkipSomeAudio) {
           this.skipSomeAudio()
+        } else {
+          await this.reviewNextWord()
         }
       } else {
         await this.reviewNextWord()
@@ -790,8 +795,9 @@ export default {
       await this.recursiveReview()
     },
     async cleanRevising() {
-      this.reviseAudioCandidates = [];
-      this.detail.previousReviewWord = null
+      this.reviseAudioCandidates = []
+      this.detail.firstReviewWord = null
+      this.detail.secondReviewWord = null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
       this.detail.audioPlayerToken = new Date().getTime()
@@ -816,20 +822,21 @@ export default {
       await this.cleanRevising()
     },
     extractReviewAudioUrls: function () {
+      console.log('this.isLastReviewWordSame() in extractReviewAudioUrls', this.isLastReviewWordSame())
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
       let wordId = this.detail.paraphraseVO.wordId
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
       if (this.isDownloadReviewAudio) {
-        let ch2EnUrls = audioUtil.extractedCh2EnUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
-        let en2ChUrls = audioUtil.extractedEn2ChUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let ch2EnUrls = audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let en2ChUrls = audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
         return util.mergeAndFilter(ch2EnUrls, en2ChUrls)
       } else {
         if (this.isChToEn) {
-          return audioUtil.extractedCh2EnUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+          return audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
         } else {
-          return audioUtil.extractedEn2ChUrls(this.lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+          return audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
         }
       }
     },
@@ -919,9 +926,9 @@ export default {
         if (sound === null || sound === undefined) {
           sound = new Audio(urls[i])
           if (!this.isChToEn) {
-            if (!this.lastIsSame && i < audioVolumesEn2Ch.length) {
+            if (!this.isLastReviewWordSame() && i < audioVolumesEn2Ch.length) {
               sound.volume = audioVolumesEn2Ch[i]
-            } else if (this.lastIsSame && i < audioVolumesEn2ChWhenLastIsSame.length) {
+            } else if (this.isLastReviewWordSame() && i < audioVolumesEn2ChWhenLastIsSame.length) {
               sound.volume = audioVolumesEn2ChWhenLastIsSame[i]
             }
           }
@@ -1005,15 +1012,14 @@ export default {
           fullscreen
           width="100%">
         <div slot="title" style="margin-bottom: -35px">
-          <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#909399'}"
-               @click.stop="rememberInSleepMode(false)">
-          </div>
-          <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#DCDFE6', marginTop: '50%;'}"
-               @click="showNext(false)"
-               @dblclick="showNext(true)">
-          </div>
+          <v-touch
+              @swipeleft="rememberInSleepMode(false)"
+              @swiperight="showNext(false)">
+            <div v-if="detail.isSleepMode"
+                 @click="showNext(true)"
+                 :style="{height: innerHeightPx, background: '#909399'}">
+            </div>
+          </v-touch>
           <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;"
                   @click="detail.showWord = !detail.showWord">

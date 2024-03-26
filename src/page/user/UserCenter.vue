@@ -345,8 +345,8 @@ export default {
                  split-button type="info" @command="spellTypeChange">
       {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">去除单词拼写</el-dropdown-item>
-        <el-dropdown-item :command="2">附带单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="0">去除单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="1">附带单词拼写</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
@@ -354,8 +354,8 @@ export default {
                  split-button type="info" @command="enParaTypeChange">
       {{ `英文释义播报：${tranEnParaType(user.enParaType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">去除英文释义</el-dropdown-item>
-        <el-dropdown-item :command="2">附带英文释义</el-dropdown-item>
+        <el-dropdown-item :command="0">去除英文释义</el-dropdown-item>
+        <el-dropdown-item :command="1">附带英文释义</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>

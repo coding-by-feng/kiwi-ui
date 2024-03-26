@@ -42,8 +42,8 @@ export default {
      * 2：附带英文释义
      */
     ENGLISH_PARAPHRASE_TYPE: {
-        DISABLE: 1,
-        ENABLE: 2
+        DISABLE: 0,
+        ENABLE: 1
     },
 
     /**
@@ -62,8 +62,8 @@ export default {
      * 2：附带单词拼写
      */
     SPELL_TYPE: {
-        DISABLE: 1,
-        ENABLE: 2
+        DISABLE: 0,
+        ENABLE: 1
     },
 
     /**
@@ -73,7 +73,7 @@ export default {
      */
     IS_PLAY_EXAMPLE: {
         ENABLE: 1,
-        DISABLE: 2
+        DISABLE: 0
     },
 
     IS_EN_TO_EN: {
