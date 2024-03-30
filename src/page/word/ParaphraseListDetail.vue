@@ -60,7 +60,7 @@ export default {
     return {
       loading: false,
       innerHeightPx: window.innerHeight + 'px',
-      innerHeightHalfPx: window.innerHeight / 2 + 'px',
+      innerHeightSleepModePx: window.innerHeight * 9 / 10 + 'px',
       innerWidthPx: window.innerWidth + 'px',
       innerWidthHalfPx: window.innerWidth / 2 + 'px',
       page: {
@@ -191,6 +191,9 @@ export default {
     },
     enableRefreshReviseDetailIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview && this.isReviewStop && !this.isReviewPlaying
+    },
+    enableSkipSomeAudioIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.isReview
     },
     enableFirstIncomeReviewMode() {
       return this.isFirstIncome && this.isReview && !this.isReviewStop
@@ -456,7 +459,7 @@ export default {
     switchSleepMode() {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
-        this.notifySuccess(this, '睡眠模式', '上滑动两边白色区域可以显示更多信息和关闭睡眠模式，左滑记住单词，右滑跳过当前单词，单击跳过当前单词的拼写播放', 15000)
+        this.notifySuccess(this, '睡眠模式', '睡眠模式已开启')
       } else {
         this.notifySuccess(this, '操作提示', '睡眠模式已关闭')
       }
@@ -682,6 +685,9 @@ export default {
       this.detail.audioPlayerMap.forEach((key, value) => {
         console.log('this.detail.audioPlayerMap key', key)
         console.log('this.detail.audioPlayerMap value', value)
+        if (key.paused) {
+          return
+        }
         key.pause()
       })
     },
@@ -713,13 +719,8 @@ export default {
     async showNext(isSkipSomeAudio) {
       console.log('isSkipSomeAudio', isSkipSomeAudio)
       console.log('this.detail.isSleepMode', this.detail.isSleepMode)
-      // 如果是睡眠模式
-      if (this.detail.isSleepMode) {
-        if (isSkipSomeAudio) {
-          this.skipSomeAudio()
-        } else {
-          await this.reviewNextWord()
-        }
+      if (isSkipSomeAudio) {
+        this.skipSomeAudio()
       } else {
         await this.reviewNextWord()
       }
@@ -1013,11 +1014,27 @@ export default {
         <div slot="title" style="margin-bottom: -35px">
           <v-touch
               @click.stop="autoPlayDialogVisible++"
+              @swipeup="stopPlaying"
+              @swipedown="showNext(true)"
               @swipeleft="rememberInSleepMode(false)"
               @swiperight="showNext(false)">
             <div v-if="detail.isSleepMode"
-                 @click="showNext(true)"
-                 :style="{height: innerHeightPx, background: '#909399'}">
+                 @click="refreshReviseDetail"
+                 :style="{height: innerHeightSleepModePx, background: '#909399'}">
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-right"/>&nbsp;右滑跳过</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-back"/>&nbsp;左滑记住</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-thumb"/>&nbsp;单击从头开始听当前单词/当音频卡住时也可用
+              </el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-top"/>&nbsp;上滑暂停当前播放单词</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-bottom"/>&nbsp;下滑跳过spelling</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-document-copy"/>&nbsp;滑动两边或者底部白色区域可以下拉或者上拉
+              </el-tag>
             </div>
           </v-touch>
           <el-divider v-if="detail.isSleepMode"></el-divider>
@@ -1172,7 +1189,10 @@ export default {
       </el-button>
 
       <br/>
-
+      <el-button v-if="enableSkipSomeAudioIcon" type="info" size="mini"
+                 @click="showNext(true)">
+        <i class="el-icon-finished"></i>
+      </el-button>
       <el-button v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
         <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
         <i class="el-icon-switch-button" v-if="countdownMode"></i>
@@ -1191,7 +1211,7 @@ export default {
       </el-button>
       <el-button type="info"
                  v-if="enableRefreshReviseDetailIcon"
-                 @click="refreshReviseDetail()"
+                 @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-brush"></i>
       </el-button>
