@@ -719,10 +719,10 @@ export default {
     async showNext(isSkipSomeAudio) {
       console.log('isSkipSomeAudio', isSkipSomeAudio)
       console.log('this.detail.isSleepMode', this.detail.isSleepMode)
-      if (isSkipSomeAudio) {
-        this.skipSomeAudio()
+      if (isSkipSomeAudio === false || isSkipSomeAudio === undefined) {
+        await this.reviewNextWord();
       } else {
-        await this.reviewNextWord()
+        this.skipSomeAudio();
       }
     },
     isLastIndexPerPage: function () {
@@ -1200,7 +1200,7 @@ export default {
       <el-button v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
         <i class="el-icon-arrow-left"></i>
       </el-button>
-      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext">
+      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
         <i class="el-icon-arrow-right"></i>
       </el-button>
       <el-button type="info"
