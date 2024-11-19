@@ -1,5 +1,3 @@
-import 'babel-polyfill'
-import 'classlist-polyfill'
 import Vue from 'vue'
 import axios from './router/axios'
 import VueAxios from "vue-axios";
@@ -8,11 +6,9 @@ import ElementUI from "element-ui";
 import 'element-ui/lib/theme-chalk/index.css'
 import router from './router/router'
 import store from './store'
-import {loadStyle} from './util/util'
 import * as urls from "@/config/env";
-import './styles/common.scss'
-import basicContainer from './components/basic-container/main'
-import './permission' // 权限
+import '@/styles/common.scss'
+import '@/permission' // 权限
 import VueTouch from 'vue-touch'
 
 Vue.config.devtools = true
@@ -26,10 +22,6 @@ Vue.use(ElementUI, {
 });
 
 Vue.use(router);
-
-// 注册全局容器
-Vue.component('basicContainer', basicContainer)
-
 
 Vue.config.productionTip = false
 

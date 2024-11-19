@@ -50,10 +50,10 @@ export default {
         type: 'local'
       })
     }
-    if (!this.user.bgm) {
+    if (this.user.bgm === undefined || this.user.bgm === null) {
       setStore({
-        name: 'bgm',
-        content: 1,
+        name: kiwiConst.CONFIG_KEY.BGM,
+        content: kiwiConst.ENABLE_BGM.ENABLE,
         type: 'local'
       })
     }
@@ -261,14 +261,14 @@ export default {
       return '附带单词拼写'
     },
     tranBGM(val) {
-      if (undefined === val) {
+      if (undefined === val || null === val) {
         setStore({
           name: 'bgm',
-          content: 1,
+          content: kiwiConst.ENABLE_BGM.DISABLE,
           type: 'local'
         })
       }
-      if (val === 1) {
+      if (val === kiwiConst.ENABLE_BGM.ENABLE) {
         return '开启'
       } else {
         return '关闭'
@@ -337,7 +337,7 @@ export default {
       {{ `背景音乐：${tranBGM(user.bgm)}` }}
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item :command="1">开启</el-dropdown-item>
-        <el-dropdown-item :command="null">关闭</el-dropdown-item>
+        <el-dropdown-item :command="0">关闭</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>

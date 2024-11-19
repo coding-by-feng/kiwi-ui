@@ -56,6 +56,11 @@ export default {
         ENABLE: 1
     },
 
+    ENABLE_BGM: {
+        DISABLE: 0,
+        ENABLE: 1
+    },
+
     /**
      * 是否播放单词拼写
      * 1：去除单词拼写
