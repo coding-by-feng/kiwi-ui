@@ -11,9 +11,13 @@ import NoSleep from 'nosleep.js'
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
 const skipWorkSpellingIndexEn2Ch = 10
+const skipWorkSpellingIndexEn2Ch_2nd = 17
 const skipWorkSpellingIndexWhenLastIsSameEn2Ch = 4
+const skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd = 11
 const skipWorkSpellingIndexCh2En = 12
+const skipWorkSpellingIndexCh2En_2nd = 19
 const skipWorkSpellingIndexWhenLastIsSameCh2En = 7
+const skipWorkSpellingIndexWhenLastIsSameCh2En_2nd = 14
 const audioVolumesEn2Ch = [0.3, 0.3, 1, 1, 1, 0.3, 0.3, 1, 1, 1, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
 const audioVolumesEn2ChWhenLastIsSame = [0.3, 0.3, 0.3, 0.3, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
 
@@ -89,7 +93,8 @@ export default {
         audioPlayer: null,
         audioPlayerToken: null,
         isUnfoldOperateIcon: false,
-        isEnableNoSleepMode: false
+        isEnableNoSleepMode: false,
+        skippedCount: 0,
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -695,22 +700,29 @@ export default {
       console.log('skip some audio')
       this.pauseAllPalyingAudio()
       console.log('this.isLastReviewWordSame()', this.isLastReviewWordSame())
+      const isFirstSkip = this.detail.skippedCount % 2 === 0
+      this.detail.skippedCount++
+      console.log('kiwi isFirstSkip', isFirstSkip)
       if (!this.isChToEn) {
         if (this.isLastReviewWordSame()) {
-          console.log('skipWorkSpellingIndexWhenLastIsSameEn2Ch', skipWorkSpellingIndexWhenLastIsSameEn2Ch)
-          this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameEn2Ch
-          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexWhenLastIsSameEn2Ch)
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexWhenLastIsSameEn2Ch : skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         } else {
-          this.detail.playIndex = skipWorkSpellingIndexEn2Ch
-          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexEn2Ch)
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexEn2Ch : skipWorkSpellingIndexEn2Ch_2nd
+          console.log('kiwi skipIndex', skipIndex)
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         }
       } else {
         if (this.isLastReviewWordSame()) {
-          this.detail.playIndex = skipWorkSpellingIndexWhenLastIsSameCh2En
-          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexWhenLastIsSameCh2En)
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexWhenLastIsSameCh2En : skipWorkSpellingIndexWhenLastIsSameCh2En_2nd
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         } else {
-          this.detail.playIndex = skipWorkSpellingIndexCh2En
-          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipWorkSpellingIndexCh2En)
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexCh2En : skipWorkSpellingIndexCh2En_2nd
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         }
       }
       console.log('this.detail.audioPlayer', this.detail.audioPlayer)
@@ -841,7 +853,7 @@ export default {
       }
     },
     getCurrentAudioPlayer: function (index) {
-      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[index ? index : this.detail.playIndex]);
+      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[index ? index : this.detail.playIndex])
     },
     setSoundListener: function (sound, token) {
       sound.addEventListener('ended', async function () {

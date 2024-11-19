@@ -8,7 +8,7 @@ import msgUtil from '@/util/msg'
 let that
 
 export default {
-  name: 'about',
+  name: 'bgmPage',
   computed: {
     it() {
       return it
@@ -71,9 +71,13 @@ export default {
           })
     },
     playBgm(index) {
-      this.currentPlayBgm.src = `bgm/${this.bgmData[index].id}.mp3`
-      this.currentPlayBgm.play()
-      this.currentPlayBgmIndex = index
+      console.log('playBgm accepted')
+      console.log('this.currentPlayBgm.paused', this.currentPlayBgm.paused)
+      if (this.currentPlayBgm.paused) {
+        this.currentPlayBgm.src = `bgm/${this.bgmData[index].id}.mp3`
+        this.currentPlayBgm.play()
+        this.currentPlayBgmIndex = index
+      }
     },
     playAudioData(index) {
       if (this.currentPlayBgmIndex === index) {
