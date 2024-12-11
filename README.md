@@ -34,3 +34,7 @@ Then find Kiwi to quickly open the dictionary.
 http://kiwidict.com/#/index/vocabulary/detail?active=search&lazy=y&word={query}
 
 The {query} after the URL represents the word to look up. For example, to search for the word "test," the URL would be:
+
+## The automatic repetition review function.
+
+After logging in to your account, you can use the word review function in the word collection interface. This feature is mainly designed so that when your hands or even glasses cannot focus on the screen, you can listen to the audio to review words while doing other tasks, such as cooking, cleaning, running, or working out.
