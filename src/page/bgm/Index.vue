@@ -19,15 +19,7 @@ export default {
       loading: false,
       allDataSize: 0,
       bgmData: [
-        {id: 4010190, name: 'Death'},
-        {id: 1462458705, name: 'GOOD NIGHT'},
-        {id: 5023712, name: 'The Thunderstorm'},
-        {id: 541145531, name: '篝火在森林'},
-        {id: 1369840010, name: 'Burning Fire'},
-        {id: 494462972, name: '武林外传BGM2'},
-        {id: 1329073196, name: 'The Moon'},
-        {id: 1329073193, name: 'Sound of Silence'},
-        {id: 1329073189, name: 'Healing Reiki Wellness Spa'},
+        {id: 4010190, name: 'Death'}
       ],
       currentPlayBgmIndex: null,
       currentPlayBgm: null,
