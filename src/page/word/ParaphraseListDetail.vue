@@ -1,21 +1,37 @@
 <script>
-import {getStore, setStore} from '@/util/store'
+import {getStore} from '@/util/store'
 import msgUtil from '@/util/msg'
 import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
-import {Howl, Howler} from 'howler'
-import howlerUtil from '../../util/howlerUtil'
+import audioUtil from '../../util/audioUtil'
 import NoSleep from 'nosleep.js'
-import {readFile} from "@/util/fileUtil"
-import cacheUtil from "@/util/cacheUtil"
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
+const skipWorkSpellingIndexEn2Ch = 10
+const skipWorkSpellingIndexEn2Ch_2nd = 17
+const skipWorkSpellingIndexWhenLastIsSameEn2Ch = 4
+const skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd = 11
+const skipWorkSpellingIndexCh2En = 12
+const skipWorkSpellingIndexCh2En_2nd = 19
+const skipWorkSpellingIndexWhenLastIsSameCh2En = 7
+const skipWorkSpellingIndexWhenLastIsSameCh2En_2nd = 14
+const audioVolumesEn2Ch = [0.3, 0.3, 1, 1, 1, 0.3, 0.3, 1, 1, 1, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
+const audioVolumesEn2ChWhenLastIsSame = [0.3, 0.3, 0.3, 0.3, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
 
 let that
 let noSleep
+
+const buildNotGlobalLoading = function () {
+  return that.$loading({
+    lock: true,
+    text: `正在加载`,
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+}
 
 export default {
   name: 'paraphraseStarListDetail',
@@ -48,7 +64,7 @@ export default {
     return {
       loading: false,
       innerHeightPx: window.innerHeight + 'px',
-      innerHeightHalfPx: window.innerHeight / 2 + 'px',
+      innerHeightSleepModePx: window.innerHeight * 9 / 10 + 'px',
       innerWidthPx: window.innerWidth + 'px',
       innerWidthHalfPx: window.innerWidth / 2 + 'px',
       page: {
@@ -65,18 +81,20 @@ export default {
         showTranslation: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
         showWord: true,
         hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
+        playIndex: 0,
         showIndex: 0,
         isSleepMode: false,
         listId: null,
-        sleepClickFirstTime: null,
-        sleepClickSecondTime: null,
-        previousReviewWord: null,
+        firstReviewWord: null,
+        secondReviewWord: null,
         apiKey: null,
-        howlerPlayerQueue: [],
-        howlerPlayer: null,
-        howlerPlayerToken: null,
+        audioPlayerUrls: [],
+        audioPlayerMap: new Map(),
+        audioPlayer: null,
+        audioPlayerToken: null,
         isUnfoldOperateIcon: false,
-        isEnableNoSleepMode: false
+        isEnableNoSleepMode: false,
+        skippedCount: 0,
       },
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -85,7 +103,6 @@ export default {
       spellType: getStore({name: 'spell_type'}),
       enParaType: getStore({name: 'enPara_type'}),
       isPlayExample: getStore({name: 'is_play_example'}),
-      isNotCacheConfig: getStore({name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE}),
       listItems: [],
       autoPlayDialogVisible: 0,
       isFirstIncome: true,
@@ -103,20 +120,15 @@ export default {
   beforeCreate: function () {
     that = this
     noSleep = new NoSleep()
-    Howler.html5PoolSize = 30
-    Howler.autoSuspend = false
   },
   async mounted() {
-    if (this.isNotCacheConfig) {
-      this.switchIsNotCacheConfig()
-    }
     await this.init()
     this.listenerMinBrowser()
   },
   destroyed() {
-    if (this.detail.howlerPlayer) {
-      this.detail.howlerPlayer.stop()
-      this.detail.howlerPlayer = null
+    if (this.detail.audioPlayer) {
+      this.pauseAllPalyingAudio()
+      this.detail.audioPlayer = null
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
     }
@@ -150,6 +162,9 @@ export default {
     showWordSpelling() {
       return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
     },
+    isDownloadReviewAudio() {
+      return this.reviewMode === kiwiConst.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO
+    },
     isStockReviewModel() {
       return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_REVIEW
           || this.reviewMode === kiwiConst.REVIEW_MODEL.STOCK_READ)
@@ -164,9 +179,6 @@ export default {
     enableShowDetailIcon() {
       return !this.detail.isUnfoldOperateIcon && !this.detail.dialogVisible && this.detail.paraphraseVO.paraphraseId
     },
-    enableCloseDetailIcon() {
-      return !this.detail.isUnfoldOperateIcon && this.detail.dialogVisible
-    },
     enableStopwatchIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview
     },
@@ -179,23 +191,20 @@ export default {
     enableSleepModeIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible
     },
-    enableSwitchIsNotCacheConfigIcon() {
-      return !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible
-    },
     enableStopPlayingIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview && !this.isReviewStop
     },
     enableRefreshReviseDetailIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview && this.isReviewStop && !this.isReviewPlaying
     },
+    enableSkipSomeAudioIcon() {
+      return !this.detail.isUnfoldOperateIcon && this.isReview
+    },
     enableFirstIncomeReviewMode() {
       return this.isFirstIncome && this.isReview && !this.isReviewStop
     },
     enableParaphraseExamples() {
       return this.detail.paraphraseVO.exampleVOList && this.detail.paraphraseVO.exampleVOList.length < 1
-    },
-    isDetailLoading() {
-      return this.isReview && this.detail.reviewLoading
     },
     isListItemsNotEmpty() {
       return this.listItems && this.listItems.length > 0
@@ -209,7 +218,7 @@ export default {
         if (document.hidden) {
           that.isReviewStop = true
           that.isReviewPlaying = false
-          Howler.stop()
+          that.pauseAllPalyingAudio()
         } else {
           that.isReviewStop = false
           that.isReviewPlaying = true
@@ -225,6 +234,7 @@ export default {
         if (this.isReview) {
           // clean data
           await this.cleanInitRevising()
+          this.enableNoSleepMode()
 
           try {
             await this.initList()
@@ -236,7 +246,9 @@ export default {
             return
           }
 
-          if (!this.isFirstIncome) {
+          // alert('Initial finished')
+
+          if (!this.isFirstIncome && !this.isDownloadReviewAudio) {
             this.autoPlayDialogVisible++ // 只有第一次进入复习需要手动触发
             this.notifySuccess(this, '复习模式', '即将开始复习，请稍等！')
           }
@@ -246,9 +258,18 @@ export default {
             if (this.isListItemsNotEmpty) {
               await this.showDetail(this.listItems[0].paraphraseId, 0)
             }
-            this.detail.howlerPlayer.play()
+            if (this.isDownloadReviewAudio) {
+              ++this.playWordIndex
+            } else {
+              // alert('this.detail.audioPlayer.play()')
+              this.detail.audioPlayer.play()
+            }
           } else {
-            this.stockReviewStart()
+            if (this.isDownloadReviewAudio) {
+              this.playWordIndex = this.detail.audioPlayerUrls.length;
+            } else {
+              this.stockReviewStart()
+            }
           }
         } else {
           await this.initList()
@@ -329,12 +350,24 @@ export default {
     goBack() {
       this.$emit('tableVisibleToggle')
     },
+    isLastReviewWordSame() {
+      console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
+      console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
+      return this.detail.firstReviewWord === this.detail.secondReviewWord
+    },
+    handoffReviewWordSame() {
+      console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
+      console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
+      this.detail.firstReviewWord = this.detail.secondReviewWord
+      this.detail.secondReviewWord = this.detail.paraphraseVO.wordName
+    },
     async initNextReviseDetail(isGetDetail) {
       console.log('initNextReviewDetail this.playWordIndex = ' + this.playWordIndex)
       console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
-      let loading = this.buildNotGlobalLoading()
+      let loading = buildNotGlobalLoading()
       this.prepareReview()
       if (isGetDetail) {
+        this.handoffReviewWordSame()
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
             .then(response => {
               this.detail.paraphraseVO = response.data.data
@@ -343,19 +376,25 @@ export default {
               }
             })
             .catch(e => {
-              loading.close()
               console.error(e)
             })
       }
-      this.detail.howlerPlayerQueue = this.createReviseQueue(this.detail.howlerPlayerToken)
-      console.log('initNextReviewDetail this.detail.howlerPlayerQueue=' + this.detail.howlerPlayerQueue)
-      this.detail.howlerPlayer = this.detail.howlerPlayerQueue[0]
+      await this.createReviseQueue(this.detail.audioPlayerToken)
+          .then(() => {
+            // alert('createReviseQueue success')
+            this.detail.audioPlayer = this.getCurrentAudioPlayer(0)
+          })
+          .catch(e => {
+            throw e
+          })
       loading.close()
     },
     async showDetail(paraphraseId, index) {
+      let loading = buildNotGlobalLoading()
       if (null !== index && undefined !== index) {
         this.detail.showIndex = index
       }
+      this.handoffReviewWordSame()
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
@@ -364,11 +403,13 @@ export default {
             }
             // 如果是复习最近收藏
             this.detail.listId = this.listItems[this.detail.showIndex].listId
-          })
-          .catch(e => {
+            loading.close()
+          }).catch(e => {
             console.error(e)
             that.msgError(that, '加载释义详情异常')
+            loading.close()
           })
+
       this.detail.dialogVisible = true
 
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
@@ -404,8 +445,6 @@ export default {
               console.error(e)
               that.msgError(that, '删除单词收藏操作异常')
             })
-      }).finally(() => {
-        loading.close()
       })
     },
     handleDetailClose() {
@@ -425,8 +464,7 @@ export default {
     switchSleepMode() {
       this.detail.isSleepMode = !this.detail.isSleepMode
       if (this.detail.isSleepMode) {
-        this.notifySuccess(this, '操作提示', '睡眠模式已开启')
-        this.notifySuccess(this, '睡眠模式', '上滑显示更多信息，双击上边区域记住单词，双击下边区域跳过当前单词')
+        this.notifySuccess(this, '睡眠模式', '睡眠模式已开启')
       } else {
         this.notifySuccess(this, '操作提示', '睡眠模式已关闭')
       }
@@ -455,7 +493,6 @@ export default {
             this.isUSPronunciationPlaying = true
           }
         }
-        // let audio = this.pronunciationAudioMap.get(id)
         let audio = this.createNewAudio()
         if (this.source === kiwiConst.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
@@ -484,7 +521,7 @@ export default {
     },
     stockReviewStart() {
       try {
-        this.enableNoSleepMode()
+        // alert('stockReviewStart ')
         this.playWordIndex = 0
         this.autoPlayDialogVisible++
         this.isFirstIncome = false
@@ -493,7 +530,8 @@ export default {
         }
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
-              this.detail.howlerPlayer.play()
+              that.detail.audioPlayer.play()
+              // alert('audioPlayer')
             })
       } catch (e) {
         // alert('test' + e)
@@ -504,7 +542,11 @@ export default {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       await this.initNextReviseDetail(false)
           .then(() => {
-            that.detail.howlerPlayer.play()
+            if (this.isDownloadReviewAudio) {
+              ++that.playWordIndex
+            } else {
+              that.detail.audioPlayer.play()
+            }
           })
     },
     getPronunciationVO: function (isUS) {
@@ -520,7 +562,7 @@ export default {
     },
     assemblePronunciationUrl(isUS) {
       if (!this.detail.paraphraseVO.pronunciationVOList || this.detail.paraphraseVO.pronunciationVOList.length < 1) {
-        return howlerUtil.assembleReviseAudioUrl(this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.PHRASE_PRONUNCIATION)
+        return audioUtil.assembleReviseAudioUrl(this.detail.paraphraseVO.wordId, kiwiConst.REVIEW_AUDIO_TYPE.PHRASE_PRONUNCIATION)
       }
       return this.getPronunciationUrl(this.getPronunciationVO(isUS))
     },
@@ -542,30 +584,16 @@ export default {
       }
       this.isReviewStop = true
       this.isReviewPlaying = false
-      Howler.stop()
+      this.pauseAllPalyingAudio()
     },
     async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
-      this.notifySuccess(this, '操作提示', '复习下一次单词')
+      this.notifySuccess(this, '操作提示', `${this.isDownloadReviewAudio ? '下载' : '复习'}下一个单词`)
       await this.cleanDetailRevising()
       this.isReviewStop = false
     },
-    isDoubleClick() {
-      let diff = 1000
-      if (this.detail.sleepClickFirstTime) {
-        this.detail.sleepClickSecondTime = new Date().getTime()
-        diff = this.detail.sleepClickSecondTime - this.detail.sleepClickFirstTime
-        this.detail.sleepClickFirstTime = null
-        this.detail.sleepClickSecondTime = null
-      } else {
-        this.detail.sleepClickFirstTime = new Date().getTime()
-      }
-      console.log('diff = ' + diff)
-      return diff < 800
-    },
-    async rememberInSleepMode(isSleep) {
-      // 如果是睡眠模式
-      if (isSleep && !this.isDoubleClick()) {
+    async rememberInSleepMode(ignoreDoubleClick) {
+      if (ignoreDoubleClick) {
         return
       }
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
@@ -573,14 +601,6 @@ export default {
       } else {
         await this.keepInMindFun()
       }
-    },
-    buildNotGlobalLoading: function () {
-      return this.$loading({
-        lock: true,
-        text: `正在操作`,
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
     },
     previousPageFun() {
       this.page.current--
@@ -592,7 +612,6 @@ export default {
     },
     async rememberOneFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经记住')
-      let loading = this.buildNotGlobalLoading()
       await this.rememberOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
@@ -602,13 +621,9 @@ export default {
             console.error(e)
             that.msgError(that, '记住单词操作异常')
           })
-          .finally(() => {
-            loading.close()
-          })
     },
     async keepInMindFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经牢记')
-      let loading = this.buildNotGlobalLoading()
       await this.keepInMind(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
@@ -618,13 +633,9 @@ export default {
             console.error(e)
             that.msgError(that, '牢记单词操作异常')
           })
-          .finally(() => {
-            loading.close()
-          })
     },
     async forgetOneFun() {
       this.notifySuccess(this, '操作提示', '正在标记标记单词已经忘记')
-      let loading = this.buildNotGlobalLoading()
       await this.forgetOne(this.detail.paraphraseVO.paraphraseId, this.detail.listId)
           .then(() => {
             that.notifySuccess(that, '操作提示', '操作成功')
@@ -633,9 +644,6 @@ export default {
           .catch(e => {
             console.error(e)
             that.msgError(that, '忘记单词操作异常')
-          })
-          .finally(() => {
-            loading.close()
           })
     },
     countdownSelectHandle(command) {
@@ -663,12 +671,7 @@ export default {
       }
       await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
     },
-    async showNext(isCheckDoubleClick) {
-      // 如果是睡眠模式
-      if (this.detail.isSleepMode && isCheckDoubleClick && !this.isDoubleClick()) {
-        return
-      }
-
+    reviewNextWord: async function () {
       if (this.isReview) {
         if (this.detail.showIndex !== this.playWordIndex) {
           this.detail.showIndex = this.playWordIndex
@@ -679,6 +682,60 @@ export default {
         this.detail.showIndex++
       }
       await this.skipCurrent()
+    },
+    pauseAllPalyingAudio() {
+      if (this.detail.audioPlayer) {
+        this.detail.audioPlayer.pause()
+      }
+      this.detail.audioPlayerMap.forEach((key, value) => {
+        console.log('this.detail.audioPlayerMap key', key)
+        console.log('this.detail.audioPlayerMap value', value)
+        if (key.paused) {
+          return
+        }
+        key.pause()
+      })
+    },
+    skipSomeAudio: function () {
+      console.log('skip some audio')
+      this.pauseAllPalyingAudio()
+      console.log('this.isLastReviewWordSame()', this.isLastReviewWordSame())
+      const isFirstSkip = this.detail.skippedCount % 2 === 0
+      this.detail.skippedCount++
+      console.log('kiwi isFirstSkip', isFirstSkip)
+      if (!this.isChToEn) {
+        if (this.isLastReviewWordSame()) {
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexWhenLastIsSameEn2Ch : skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
+        } else {
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexEn2Ch : skipWorkSpellingIndexEn2Ch_2nd
+          console.log('kiwi skipIndex', skipIndex)
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
+        }
+      } else {
+        if (this.isLastReviewWordSame()) {
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexWhenLastIsSameCh2En : skipWorkSpellingIndexWhenLastIsSameCh2En_2nd
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
+        } else {
+          const skipIndex = isFirstSkip ? skipWorkSpellingIndexCh2En : skipWorkSpellingIndexCh2En_2nd
+          this.detail.playIndex = skipIndex
+          this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
+        }
+      }
+      console.log('this.detail.audioPlayer', this.detail.audioPlayer)
+      this.detail.audioPlayer.play()
+    },
+    async showNext(isSkipSomeAudio) {
+      console.log('isSkipSomeAudio', isSkipSomeAudio)
+      console.log('this.detail.isSleepMode', this.detail.isSleepMode)
+      if (isSkipSomeAudio === false || isSkipSomeAudio === undefined) {
+        await this.reviewNextWord();
+      } else {
+        this.skipSomeAudio();
+      }
     },
     isLastIndexPerPage: function () {
       return this.playWordIndex >= playCountOnce
@@ -698,6 +755,9 @@ export default {
         let lastIndexPerPage = this.isLastIndexPerPage()
         let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
+        console.log('skipCurrent wordName = ', this.detail.paraphraseVO.wordName)
+        console.log('skipCurrent audioPlayerUrls = ', this.detail.audioPlayerUrls)
+        console.log('skipCurrent audioPlayerMap = ', this.detail.audioPlayerMap)
         console.log('skipCurrent lastPage = ' + lastPage)
         console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
         console.log('skipCurrent lastIndexPerPage = ' + lastIndexPerPage)
@@ -720,7 +780,11 @@ export default {
             // 每个单词播放前要计算播放audio数量，词组和单词不一样
             await this.initNextReviseDetail(true)
                 .then(() => {
-                  that.detail.howlerPlayer.play()
+                  if (that.isDownloadReviewAudio) {
+                    ++that.playWordIndex
+                  } else {
+                    that.detail.audioPlayer.play()
+                  }
                 }).catch(e => {
                   this.msgError(that, '初始化下一个释义详情异常!')
                   console.error('initNextReviseDetail error')
@@ -742,52 +806,14 @@ export default {
       this.prepareReview()
       await this.recursiveReview()
     },
-    enableIsNotCacheConfig: function () {
-      setStore({
-        name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE,
-        content: kiwiConst.IS_NOT_CACHE.TRUE,
-        type: kiwiConst.STORE_TYPE.LOCAL
-      })
-      this.isNotCacheConfig = true
-    },
-    disableIsNotCacheConfig: function () {
-      setStore({
-        name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE,
-        content: kiwiConst.IS_NOT_CACHE.FALSE,
-        type: kiwiConst.STORE_TYPE.LOCAL
-      })
-      this.isNotCacheConfig = false
-    },
-    async reGenReviewAudio() {
-      let loading = this.buildNotGlobalLoading()
-      let currentParaphraseId = this.detail.paraphraseVO.paraphraseId
-      this.enableIsNotCacheConfig()
-
-      this.notifySuccess(this, '操作提示', '正在重新生成复习音频资源')
-      await this.cleanDetailRevising()
-      review.reGenReviewAudio(currentParaphraseId).then(res => {
-        console.log(res)
-        if (res.data.code === 1) {
-          that.prepareReview()
-          that.recursiveReview()
-        } else {
-          msgUtil.msgError(that, '重新生成复习音频失败')
-        }
-      }).catch(err => {
-        console.log(err)
-        msgUtil.msgError(that, '重新生成复习音频失败')
-      }).finally(() => {
-        that.disableIsNotCacheConfig()
-        loading.close()
-      })
-    },
     async cleanRevising() {
-      Howler.unload()
       this.reviseAudioCandidates = []
-      this.detail.previousReviewWord = this.detail.paraphraseVO ? this.detail.paraphraseVO.wordName : null
+      this.detail.firstReviewWord = null
+      this.detail.secondReviewWord = null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
-      this.detail.howlerPlayerToken = new Date().getTime()
+      this.detail.audioPlayerToken = new Date().getTime()
+      this.detail.audioPlayerMap.clear()
     },
     async cleanInitRevising() {
       // stop playing
@@ -807,126 +833,124 @@ export default {
       await this.stopPlaying()
       await this.cleanRevising()
     },
-    extractHowlUrls: function () {
+    extractReviewAudioUrls: function () {
+      console.log('this.isLastReviewWordSame() in extractReviewAudioUrls', this.isLastReviewWordSame())
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
       let wordId = this.detail.paraphraseVO.wordId
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
-      let lastIsSame = this.detail.previousReviewWord === this.detail.paraphraseVO.wordName
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
-      if (this.isChToEn) {
-        return howlerUtil.extractedCh2EnUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+      if (this.isDownloadReviewAudio) {
+        let ch2EnUrls = audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let en2ChUrls = audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        return util.mergeAndFilter(ch2EnUrls, en2ChUrls)
       } else {
-        return howlerUtil.extractedEn2ChUrls(lastIsSame, paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
-      }
-    },
-    extractHowlFiles: function () {
-      let ukPronunciationVO = this.getPronunciationVO(false)
-      let usPronunciationVO = this.getPronunciationVO(true)
-      let params = {
-        paraphraseId: this.detail.paraphraseVO.paraphraseId,
-        wordId: this.detail.paraphraseVO.wordId,
-        wordCharacter: this.detail.paraphraseVO.wordCharacter,
-        ukPronunciation: ukPronunciationVO,
-        usPronunciation: usPronunciationVO,
-        usPronunciationUrl: this.getPronunciationUrl(usPronunciationVO),
-        ukPronunciationUrl: this.getPronunciationUrl(ukPronunciationVO),
-        lastIsSame: this.detail.previousReviewWord === this.detail.paraphraseVO.wordName,
-        exampleList: this.detail.paraphraseVO.exampleVOList
-      }
-      if (this.isChToEn) {
-        return howlerUtil.extractedCh2En(params)
-      } else {
-      }
-    },
-    switchIsNotCacheConfig: function () {
-      let isNotCache = getStore({name: kiwiConst.CONFIG_KEY.IS_NOT_CACHE})
-      if (isNotCache) {
-        this.disableIsNotCacheConfig()
-        msgUtil.notifySuccess(this, '音频缓存提示', '当前已经开启自动缓存，复习过的音频将被缓存，下次复习同个单词不需要网络加载')
-      } else {
-        this.enableIsNotCacheConfig()
-        msgUtil.notifySuccess(this, '音频缓存提示', '当前已经关闭自动缓存，复习过的音频不会被缓存，下次复习同个单词需要网络加载')
-      }
-    },
-    createReviseQueue(token) {
-      let sounds = []
-      if (token !== that.detail.howlerPlayerToken) {
-        return sounds
-      }
-
-      let urls = this.extractHowlUrls()
-      let queueLength = urls.length
-      let playIndex = 0
-      let ch2EnIndexSleepMsMap = howlerUtil.acquireCh2EnIndexSleepMsMap()
-      let xhrPayload = {
-        method: 'GET'
-      }
-      if (this.isNotCacheConfig) {
-        xhrPayload = {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
-          }
+        if (this.isChToEn) {
+          return audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+        } else {
+          return audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
         }
       }
-      console.log(xhrPayload)
+    },
+    getCurrentAudioPlayer: function (index) {
+      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[index ? index : this.detail.playIndex])
+    },
+    setSoundListener: function (sound, token) {
+      sound.addEventListener('ended', async function () {
+        // that.notifySuccess(that, 'ended ' + i)
 
-      for (let i = 0; i < queueLength; i++) {
-        // noinspection JSUnusedGlobalSymbols
-        let sound = new Howl({
-          src: urls[i],
-          autoplay: false,
-          loop: false,
-          volume: 0.5,
-          html5: true,
-          format: ['mp3'],
-          xhr: xhrPayload,
-          onend: async function () {
-            // console.log('onend playIndex=' + playIndex)
-            // console.log('onend: ' + urls[playIndex])
-            that.isReviewPlaying = false
-            if (that.isChToEn) {
-              let sleepMs = ch2EnIndexSleepMsMap.get(playIndex)
-              if (sleepMs) {
-                that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
-                await util.sleep(sleepMs)
-                    .then(() => {
-                      if (playIndex === 1) {
-                        that.detail.showWord = true
-                      }
-                    })
-              }
-            }
-            if (token !== that.detail.howlerPlayerToken || that.isReviewStop) {
-              return
-            }
-            if (++playIndex < queueLength) {
-              that.detail.howlerPlayer = sounds[playIndex]
-              that.detail.howlerPlayer.play()
-            } else {
-              // console.log('that.playWordIndex++ ' + that.playWordIndex)
-              ++that.playWordIndex
-            }
-          },
-          onloaderror: async function () {
-            // console.log('onloaderror: ' + urls[playIndex])
-            that.isReviewPlaying = false
-            that.detail.reviewLoading = false
-          },
-          onplay: function () {
-            // console.log('onplay: ' + urls[playIndex])
-            that.isReviewPlaying = true
-            that.detail.reviewLoading = false
-          },
-          onpause: function () {
-            // console.log('onpause: ' + urls[playIndex])
-            that.isReviewPlaying = false
+        that.isReviewPlaying = false
+        if (that.isChToEn) {
+          let sleepMs = audioUtil.acquireCh2EnIndexSleepMsMap().get(that.detail.playIndex)
+          if (sleepMs) {
+            that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
+            await util.sleep(sleepMs)
+                .then(() => {
+                  if (that.detail.playIndex === 1) {
+                    that.detail.showWord = true
+                  }
+                })
           }
-        })
-        sounds.push(sound)
+        }
+        if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
+          return
+        }
+        if (++that.detail.playIndex < that.detail.audioPlayerUrls.length) {
+          that.detail.audioPlayer = that.getCurrentAudioPlayer()
+          that.detail.audioPlayer.play()
+        } else {
+          // console.log('that.playWordIndex++ ' + that.playWordIndex)
+          ++that.playWordIndex
+        }
+      })
+      sound.addEventListener('play', function () {
+        // console.log('onplay: ' + urls[that.detail.playIndex])
+        // that.notifySuccess(that, 'play ' + i)
+        that.isReviewPlaying = true
+        that.detail.reviewLoading = false
+      })
+      // sound.addEventListener('loadstart', function () {
+      //   that.notifySuccess(that, 'loadstart ' + i)
+      // })
+      // sound.addEventListener('playing', function () {
+      //   that.notifySuccess(that, 'playing ' + i)
+      // })
+      // sound.addEventListener('readystatechange', function () {
+      //   that.notifySuccess(that, 'readystatechange ' + i)
+      // })
+      sound.addEventListener('pause', function () {
+        that.isReviewPlaying = false
+      })
+      sound.addEventListener('error', function () {
+        // that.notifySuccess(that, 'error ' + i)
+        that.isReviewPlaying = false
+        that.detail.reviewLoading = false
+      })
+    },
+    async createReviseQueue(token) {
+      if (token !== this.detail.audioPlayerToken) {
+        return []
       }
-      return sounds
+
+      if (this.isDownloadReviewAudio) {
+        this.msgSuccess(this, `${this.detail.paraphraseVO.wordName} audio resources is downloading`, 4000);
+      }
+
+      let urls = this.extractReviewAudioUrls()
+      console.log('extracting urls', urls)
+      await audioUtil.rebuildUrls(urls)
+      console.log('rebuildUrls', urls)
+
+      this.detail.audioPlayerUrls = urls
+
+      if (this.isDownloadReviewAudio) {
+        let msg = `${this.detail.paraphraseVO.wordName} audio resources successfully downloaded`;
+        this.msgSuccess(this, msg, 4000)
+        console.log(msg)
+      }
+
+      this.detail.playIndex = 0
+      for (let i = 0; i < this.detail.audioPlayerUrls.length; i++) {
+        // noinspection JSUnusedGlobalSymbols
+        let sound = this.detail.audioPlayerMap.get(urls[i]);
+        console.log('this.detail.audioPlayerMap', this.detail.audioPlayerMap)
+        console.log('this.detail.audioPlayerMap sound', sound)
+        if (sound === null || sound === undefined) {
+          sound = new Audio(urls[i])
+          if (!this.isChToEn) {
+            if (!this.isLastReviewWordSame() && i < audioVolumesEn2Ch.length) {
+              sound.volume = audioVolumesEn2Ch[i]
+            } else if (this.isLastReviewWordSame() && i < audioVolumesEn2ChWhenLastIsSame.length) {
+              sound.volume = audioVolumesEn2ChWhenLastIsSame[i]
+            }
+          }
+          sound.loop = false;
+          this.setSoundListener(sound, token)
+
+          console.log('this.detail.audioPlayerMap.set(urls[i], sound)', urls[i], sound)
+          this.detail.audioPlayerMap.set(urls[i], sound)
+        }
+      }
     },
 
   }
@@ -995,20 +1019,36 @@ export default {
 
       <!--释义详情弹窗-->
       <el-dialog
-          v-loading="isDetailLoading"
           ref="detailDialog"
           :visible.sync="detail.dialogVisible"
           fullscreen
           width="100%">
         <div slot="title" style="margin-bottom: -35px">
-          <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#909399'}"
-               @click.stop="rememberInSleepMode(false)">
-          </div>
-          <div v-if="detail.isSleepMode"
-               :style="{height: innerHeightHalfPx, background: '#DEB887', marginTop: '50%;'}"
-               @click.stop="showNext(false)">
-          </div>
+          <v-touch
+              @click.stop="autoPlayDialogVisible++"
+              @swipeup="stopPlaying"
+              @swipedown="showNext(true)"
+              @swipeleft="rememberInSleepMode(false)"
+              @swiperight="showNext(false)">
+            <div v-if="detail.isSleepMode"
+                 @click="refreshReviseDetail"
+                 :style="{height: innerHeightSleepModePx, background: '#909399'}">
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-right"/>&nbsp;右滑跳过</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-back"/>&nbsp;左滑记住</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-thumb"/>&nbsp;单击从头开始听当前单词/当音频卡住时也可用
+              </el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-top"/>&nbsp;上滑暂停当前播放单词</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-bottom"/>&nbsp;下滑跳过spelling</el-tag>
+              <br/>
+              <el-tag type="info" effect="dark"><i class="el-icon-document-copy"/>&nbsp;滑动两边或者底部白色区域可以下拉或者上拉
+              </el-tag>
+            </div>
+          </v-touch>
           <el-divider v-if="detail.isSleepMode"></el-divider>
           <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;"
                   @click="detail.showWord = !detail.showWord">
@@ -1026,8 +1066,8 @@ export default {
           <div slot="header">
             <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
               <el-col>
-                <el-tag type="success">{{ detail.paraphraseVO.wordCharacter }}</el-tag>
-                <el-tag v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
+                <el-tag type="info">{{ detail.paraphraseVO.wordCharacter }}</el-tag>
+                <el-tag type="info" v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
                   {{ detail.paraphraseVO.wordLabel }}
                 </el-tag>
               </el-col>
@@ -1035,8 +1075,8 @@ export default {
             <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end"
                     style="background-color: #8c939d;padding-top: 5px;">
               <el-col v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
-                <el-tag
-                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                <el-tag type="info"
+                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                   <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                      v-show="!isUKPronunciationPlaying"
@@ -1057,8 +1097,8 @@ export default {
                  v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
               <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
                 <el-col>
-                  <el-tag
-                      @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                  <el-tag type="info"
+                          @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                     {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                     <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                        v-show="!isUKPronunciationPlaying"
@@ -1087,7 +1127,7 @@ export default {
                   center>
                 <div slot="title">
                   <div v-for="phrase in detail.paraphraseVO.phraseList">
-                    <el-tag type="warning">{{ phrase }}</el-tag>
+                    <el-tag type="info">{{ phrase }}</el-tag>
                   </div>
                   <br v-if="detail.paraphraseVO.phraseList"/>
                   <p>{{ this.detail.paraphraseVO.codes }}</p>
@@ -1126,6 +1166,7 @@ export default {
       </el-dialog>
       <el-dialog
           :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
+          v-if="!isDownloadReviewAudio"
           :visible="enableFirstIncomeReviewMode"
           :show-close="false"
           width="300px">
@@ -1141,82 +1182,73 @@ export default {
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button type="primary"
-                 v-if="enableSwitchIsNotCacheConfigIcon"
-                 @click="switchIsNotCacheConfig"
-                 size="mini">
-        <i class="el-icon-smoking" v-if="isNotCacheConfig"></i>
-        <i class="el-icon-no-smoking" v-if="!isNotCacheConfig"></i>
+      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
+                 @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
+        <i class="el-icon-document"></i>
       </el-button>
-      <el-button type="primary"
+      <el-button type="info"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
       </el-button>
-      <el-button type="primary" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
+      <el-button type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
         <i class="el-icon-d-arrow-left"></i>
       </el-button>
       <el-button v-if="showNextPageIcon"
-                 type="primary" size="mini" @click="nextPageFun">
+                 type="info" size="mini" @click="nextPageFun">
         <i class="el-icon-d-arrow-right"></i>
       </el-button>
 
       <br/>
-
-      <el-button v-if="enableStopwatchIcon" type="primary" size="mini" @click="switchStopWatchMode">
+      <el-button v-if="enableSkipSomeAudioIcon" type="info" size="mini"
+                 @click="showNext(true)">
+        <i class="el-icon-finished"></i>
+      </el-button>
+      <el-button v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
         <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
         <i class="el-icon-switch-button" v-if="countdownMode"></i>
       </el-button>
-      <el-button v-if="enableShowPreviousIcon" type="primary" size="mini" @click="showPrevious">
+      <el-button v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
         <i class="el-icon-arrow-left"></i>
       </el-button>
-      <el-button v-if="enableShowNextIcon" type="primary" size="mini" @click="showNext">
+      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
         <i class="el-icon-arrow-right"></i>
       </el-button>
-      <el-button
-          v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
-          type="primary" size="mini" @click="reGenReviewAudio">
-        <i class="el-icon-s-release"></i>
-      </el-button>
-      <el-button type="primary"
+      <el-button type="info"
                  v-if="enableStopPlayingIcon"
                  @click="stopPlaying"
                  size="mini">
         <i class="el-icon-video-pause"></i>
       </el-button>
-      <el-button type="primary"
+      <el-button type="info"
                  v-if="enableRefreshReviseDetailIcon"
-                 @click="refreshReviseDetail()"
+                 @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-brush"></i>
       </el-button>
 
       <br/>
 
-      <el-button v-if="enableShowDetailIcon" type="primary" size="mini"
-                 @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
-        <i class="el-icon-document"></i>
-      </el-button>
       <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
-                 type="primary" size="mini" @click="rememberOneFun">
+                 type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
       </el-button>
       <el-button
           v-if="isEnhanceReviewModel && !detail.isUnfoldOperateIcon"
-          type="primary" size="mini" @click="keepInMindFun">
+          type="info" size="mini" @click="keepInMindFun">
         <i class="el-icon-medal"></i>
       </el-button>
-      <el-button type="primary" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
+      <el-button type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
       </el-button>
       <el-button
           v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
-          type="primary" size="mini" @click="forgetOneFun">
+          type="info" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
       </el-button>
-      <el-button type="primary" size="mini"
+      <el-button type="info" size="mini"
                  @click="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon">
         <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
         <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>

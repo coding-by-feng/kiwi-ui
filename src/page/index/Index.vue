@@ -22,7 +22,6 @@ export default {
       tabsWidth: window.innerWidth - 20 + 'px',
       activeName: this.$route.query.active ? this.$route.query.active : 'search',
       query: this.$route.query,
-      bgm: getStore({name: 'bgm'}),
       user: {
         userName: getStore({name: 'user_name'})
       }
@@ -133,11 +132,15 @@ export default {
       <el-tab-pane name="starList" v-if="isLogin">
         <span slot="label"><i class="el-icon-tickets"></i></span>
         <router-view name="starList" v-if="isAdmin"></router-view>
-        <span v-if="!isAdmin">超级背单词功能升级中，非VIP用户请联系管理员试用，让你不需要看屏幕，不需要手指操作即可背单词的功能</span>
+        <span
+            v-if="!isAdmin">超级背单词功能升级中，非VIP用户请联系管理员试用，让你不需要看屏幕，不需要手指操作即可背单词的功能</span>
       </el-tab-pane>
       <el-tab-pane name="grammarListener" v-if="isLogin">
         <span slot="label"><i class=el-icon-school></i></span>
-        <router-view name="grammarListener"></router-view>
+        <span>该功能暂时关闭</span>
+        <!--
+                <router-view name="grammarListener"></router-view>
+        -->
       </el-tab-pane>
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label"><i class="el-icon-user"></i></span>
@@ -153,15 +156,7 @@ export default {
       </el-tab-pane>
       <el-tab-pane name="bgm">
         <span slot="label"><i class="el-icon-headset"></i></span>
-        <span v-if="!bgm">背景音乐已关闭，请在个人中心打开</span>
-        <el-card class="box-card" v-if="bgm">
-          <iframe v-if="bgm===1" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-                  src="https://music.163.com/outchain/player?type=0&id=57330170&auto=1&height=430"></iframe>
-          <iframe v-if="bgm===2" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-                  src="https://music.163.com/outchain/player?type=0&id=5295152134&auto=0&height=430"></iframe>
-          <iframe v-if="bgm===3" frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=450
-                  src="https://music.163.com/outchain/player?type=0&id=5131166224&auto=0&height=430"></iframe>
-        </el-card>
+        <router-view name="bgm"></router-view>
       </el-tab-pane>
     </el-tabs>
     <el-card class="box-card">

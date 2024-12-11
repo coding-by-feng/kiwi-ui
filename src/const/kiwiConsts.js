@@ -42,8 +42,8 @@ export default {
      * 2：附带英文释义
      */
     ENGLISH_PARAPHRASE_TYPE: {
-        DISABLE: 1,
-        ENABLE: 2
+        DISABLE: 0,
+        ENABLE: 1
     },
 
     /**
@@ -56,14 +56,19 @@ export default {
         ENABLE: 1
     },
 
+    ENABLE_BGM: {
+        DISABLE: 0,
+        ENABLE: 1
+    },
+
     /**
      * 是否播放单词拼写
      * 1：去除单词拼写
      * 2：附带单词拼写
      */
     SPELL_TYPE: {
-        DISABLE: 1,
-        ENABLE: 2
+        DISABLE: 0,
+        ENABLE: 1
     },
 
     /**
@@ -73,7 +78,7 @@ export default {
      */
     IS_PLAY_EXAMPLE: {
         ENABLE: 1,
-        DISABLE: 2
+        DISABLE: 0
     },
 
     IS_EN_TO_EN: {
@@ -119,6 +124,7 @@ export default {
         STOCK_READ: 'stockRead',
         ENHANCE_REVIEW: 'enhanceReview',
         ENHANCE_READ: 'enhanceRead',
+        DOWNLOAD_REVIEW_AUDIO: 'downloadReviewAudio'
     },
 
     GRAMMAR_EN_TO_CH_HINT: new Map()
@@ -154,8 +160,14 @@ export default {
         ENABLE_MSG_HINT: 'enable_msg_hint',
         IS_PLAY_EXAMPLE: 'is_play_example',
         IS_EN_TO_EN: 'is_en_to_en',
-        BGM: 'bgm',
-        IS_NOT_CACHE: 'is_not_cache'
-    }
+        BGM: 'bgm'
+    },
+
+    DB_NAME: 'KIWI_VOCABULARY',
+    DB_STORE_NAME: 'REVIEW_AUDIO_STORE',
+    DB_VERSION: 1,
+
+    SUCCESS: 'S',
+    FAIL: 'F'
 
 }

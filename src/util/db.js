@@ -1,3 +1,5 @@
+import kiwiConst from '@/const/kiwiConsts'
+
 /**
  * 打开数据库
  * @param {object} dbName 数据库的名字
@@ -33,16 +35,42 @@ export function openDB(dbName, version = 1) {
             db = event.target.result; // 数据库对象
             var objectStore;
             // 创建存储库
-            objectStore = db.createObjectStore("signalChat", {
-                keyPath: "sequenceId", // 这是主键
-                // autoIncrement: true // 实现自增
+            objectStore = db.createObjectStore(kiwiConst.DB_STORE_NAME, {
+                keyPath: "sequenceKey" // 这是主键
             });
             // 创建索引，在后面查询数据的时候可以根据索引查
-            objectStore.createIndex("link", "link", {unique: false});
-            objectStore.createIndex("sequenceId", "sequenceId", {unique: false});
-            objectStore.createIndex("messageType", "messageType", {
-                unique: false,
-            });
+            objectStore.createIndex("sequenceKey", "sequenceKey", {unique: true});
+        };
+    });
+}
+
+export function cleanDbData(dbName, version = 1, storeName) {
+    return new Promise((resolve, reject) => {
+        // 打开 IndexedDB 数据库
+        let request = window.indexedDB.open(dbName, version)
+
+        request.onerror = function (event) {
+            console.log("Database error: " + event.target.errorCode)
+            reject()
+        };
+
+        request.onsuccess = function (event) {
+            let db = event.target.result;
+
+            // 检查指定的仓库是否存在
+            if (db.objectStoreNames.contains(storeName)) {
+                // 开启一个读写事务
+                var transaction = db.transaction([storeName], "readwrite")
+
+                // 删除指定的仓库
+                transaction.objectStore(storeName).clear()
+
+                console.log("Object store cleared.")
+                resolve()
+            } else {
+                console.log("Object store not found.")
+                resolve()
+            }
         };
     });
 }
@@ -54,18 +82,22 @@ export function openDB(dbName, version = 1) {
  * @param {string} data 数据
  */
 export function addData(db, storeName, data) {
-    var request = db
-        .transaction([storeName], "readwrite") // 事务对象 指定表格名称和操作模式（"只读"或"读写"）
-        .objectStore(storeName) // 仓库对象
-        .add(data);
+    return new Promise((resolve, reject) => {
+        let request = db
+            .transaction([storeName], "readwrite") // 事务对象 指定表格名称和操作模式（"只读"或"读写"）
+            .objectStore(storeName) // 仓库对象
+            .add(data);
 
-    request.onsuccess = function (event) {
-        console.log("数据写入成功");
-    };
+        request.onsuccess = function (event) {
+            console.log("数据写入成功");
+            resolve(kiwiConst.SUCCESS)
+        };
 
-    request.onerror = function (event) {
-        console.log("数据写入失败");
-    };
+        request.onerror = function (event) {
+            console.log("数据写入失败");
+            reject(kiwiConst.FAIL);
+        };
+    });
 }
 
 /**
@@ -76,9 +108,9 @@ export function addData(db, storeName, data) {
  */
 export function getDataByKey(db, storeName, key) {
     return new Promise((resolve, reject) => {
-        var transaction = db.transaction([storeName]); // 事务
-        var objectStore = transaction.objectStore(storeName); // 仓库对象
-        var request = objectStore.get(key); // 通过主键获取数据
+        let transaction = db.transaction([storeName]); // 事务
+        let objectStore = transaction.objectStore(storeName); // 仓库对象
+        let request = objectStore.get(key); // 通过主键获取数据
 
         request.onerror = function (event) {
             console.log("事务失败");
@@ -97,20 +129,48 @@ export function getDataByKey(db, storeName, key) {
  * @param {string} storeName 仓库名称
  */
 export function cursorGetData(db, storeName) {
-    let list = [];
-    var store = db
-        .transaction(storeName, "readwrite") // 事务
-        .objectStore(storeName); // 仓库对象
-    var request = store.openCursor(); // 指针对象
-    // 游标开启成功，逐行读数据
-    request.onsuccess = function (e) {
-        var cursor = e.target.result;
-        if (cursor) {
-            // 必须要检查
-            list.push(cursor.value);
-            cursor.continue(); // 遍历了存储对象中的所有内容
-        } else {
-            console.log("游标读取的数据：", list);
-        }
-    };
+    return new Promise((resolve, reject) => {
+        let store = db
+            .transaction([storeName]) // 事务
+            .objectStore(storeName) // 仓库对象
+        let request = store.openCursor() // 指针对象
+
+        request.onerror = function (event) {
+            console.log("游标读取失败")
+            reject(event)
+        };
+
+        let allData = 0
+        request.onsuccess = function (event) {
+            // 游标开启成功，逐行读数据
+            let cursor = event.target.result
+            if (cursor) {
+                // 必须要检查
+                console.log(cursor.value)
+                ++allData
+                cursor.continue()
+            } else {
+                resolve(allData)
+            }
+        };
+    })
+}
+
+export function buildDataKey(url, urlsKey) {
+    let keyPrefix = url.replaceAll('/wordBiz/word/review/downloadReviewAudio', 'RA')
+        .replaceAll('/wordBiz/word/pronunciation/downloadVoice', 'PA')
+        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA');
+    if (urlsKey) {
+        return keyPrefix + '_' + urlsKey;
+    }
+    return keyPrefix;
+}
+
+export default {
+    openDB,
+    cleanDbData,
+    addData,
+    getDataByKey,
+    buildDataKey,
+    cursorGetData
 }

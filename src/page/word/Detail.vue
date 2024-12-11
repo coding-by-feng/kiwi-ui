@@ -276,10 +276,6 @@ export default {
           }
         }
         let audio = new Audio()
-        // document.body.appendChild(audio)
-        // audio.pause()
-        // audio.loop = false
-        // audio.type = 'audio/ogg'
         let source = getStore({name: 'pronunciation_source'})
         if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
           audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
@@ -506,8 +502,10 @@ export default {
 
 <style>
 .row-bg {
+  width: 88%;
   padding-top: 10px;
-  background-color: #f9fafc;
+  background-color: #DCDFE6;
+  margin: 0 auto;
 }
 
 .box-card {
@@ -624,9 +622,9 @@ export default {
         <p v-if="defaultHint && defaultHint.length>0" style="color: #ed3f14">{{ defaultHint }}</p>
         <el-alert
             v-if="''!==wordInfo.wordName"
-            type="warning"
+            type="info"
+            effect="dark"
             :closable="false"
-            effect="light"
             center>
           <div slot="title">
             <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
@@ -648,13 +646,13 @@ export default {
         <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
           <el-row type="flex" class="row-bg" justify="end">
             <el-col>
-              <el-tag type="success" v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
+              <el-tag type="info" effect="dark" v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
                 {{ wordCharacterVO.characterCode }}
               </el-tag>
-              <el-tag v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">{{ wordCharacterVO.tag }}</el-tag>
+              <el-tag type="info" effect="dark" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">{{ wordCharacterVO.tag }}</el-tag>
               &nbsp;
               <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-                <el-tag
+                <el-tag type="info" effect="dark"
                     @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                   <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
@@ -677,7 +675,7 @@ export default {
           <el-row v-if="!isSmallWindow && !isLargeWindow"
                   type="flex" class="row-bg" justify="end">
             <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-              <el-tag
+              <el-tag type="info" effect="dark"
                   @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                 <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
@@ -697,9 +695,9 @@ export default {
           </el-row>
           <div v-if="isSmallWindow"
                v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-            <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
+            <el-row type="flex" justify="end" class="row-bg">
               <el-col>
-                <el-tag
+                <el-tag type="info" effect="dark"
                     @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                   <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
