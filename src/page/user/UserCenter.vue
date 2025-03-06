@@ -50,10 +50,10 @@ export default {
         type: 'local'
       })
     }
-    if (!this.user.bgm) {
+    if (this.user.bgm === undefined || this.user.bgm === null) {
       setStore({
-        name: 'bgm',
-        content: null,
+        name: kiwiConst.CONFIG_KEY.BGM,
+        content: kiwiConst.ENABLE_BGM.ENABLE,
         type: 'local'
       })
     }
@@ -261,19 +261,15 @@ export default {
       return '附带单词拼写'
     },
     tranBGM(val) {
-      if (undefined === val) {
+      if (undefined === val || null === val) {
         setStore({
           name: 'bgm',
-          content: 1,
+          content: kiwiConst.ENABLE_BGM.DISABLE,
           type: 'local'
         })
       }
-      if (val === 1) {
-        return '【轻音乐】我的世界'
-      } else if (val === 2) {
-        return '【白噪音】篝火'
-      } else if (val === 3) {
-        return '【ASMR】颂钵疗愈'
+      if (val === kiwiConst.ENABLE_BGM.ENABLE) {
+        return '开启'
       } else {
         return '关闭'
       }
@@ -340,30 +336,17 @@ export default {
                  split-button type="info" @command="bgmChange">
       {{ `背景音乐：${tranBGM(user.bgm)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">【轻音乐】我的世界</el-dropdown-item>
-        <el-dropdown-item :command="2">【白噪音】篝火</el-dropdown-item>
-        <el-dropdown-item :command="3">【ASMR】颂钵疗愈</el-dropdown-item>
-        <el-dropdown-item :command="null"> 关闭背景音乐</el-dropdown-item>
+        <el-dropdown-item :command="1">开启</el-dropdown-item>
+        <el-dropdown-item :command="0">关闭</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
-    <!--
-        <el-dropdown size="mini"
-                     split-button type="info" @command="reviewTypeChange">
-          {{ `导播：${tranReviewType(user.reviewType)}` }}
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item :command="1">去除中文导播</el-dropdown-item>
-            <el-dropdown-item :command="2">附带中文导播</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <el-divider></el-divider>
-    -->
     <el-dropdown size="mini"
                  split-button type="info" @command="spellTypeChange">
       {{ `字母拼写播报：${tranSpellType(user.spellType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">去除单词拼写</el-dropdown-item>
-        <el-dropdown-item :command="2">附带单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="0">去除单词拼写</el-dropdown-item>
+        <el-dropdown-item :command="1">附带单词拼写</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
@@ -371,8 +354,8 @@ export default {
                  split-button type="info" @command="enParaTypeChange">
       {{ `英文释义播报：${tranEnParaType(user.enParaType)}` }}
       <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item :command="1">去除英文释义</el-dropdown-item>
-        <el-dropdown-item :command="2">附带英文释义</el-dropdown-item>
+        <el-dropdown-item :command="0">去除英文释义</el-dropdown-item>
+        <el-dropdown-item :command="1">附带英文释义</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>

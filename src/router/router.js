@@ -3,7 +3,6 @@ import VueRouter from "vue-router";
 import PageRouter from "./page";
 import AvueRouter from './avue-router'
 import Store from "../store";
-import NProgress from 'nprogress' // progress bar
 
 Vue.use(VueRouter);
 

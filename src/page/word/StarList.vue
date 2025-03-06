@@ -3,6 +3,7 @@ import {getStore, setStore} from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
+import kiwiConst from '@/const/kiwiConsts'
 
 function emptyExampleStars() {
   setStore({
@@ -362,7 +363,10 @@ export default {
         this.multiModeReview(command.id, 'stockReview')
       } else if (command.mode === 'totalReviewChToEn') {
         this.list.isChToEn = true
-        this.totalReview(command.id)
+        this.totalReview(command.id, command.mode)
+      } else if (command.mode === kiwiConst.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO) {
+        this.list.isChToEn = true
+        this.totalReview(command.id, command.mode)
       }
     },
     async listTypeClick(command) {
@@ -423,13 +427,13 @@ export default {
       }
       this.$router.push({path: '/index/vocabulary/detail', query: query})
     },
-    totalReview(listId) {
+    totalReview(listId, currentMode) {
       let query
-      this.list.reviewMode = 'totalReview'
+      this.list.reviewMode = currentMode
       if ('word' === this.list.listType) {
         query = {
           active: 'search',
-          mode: 'totalReview',
+          mode: currentMode,
           listId: listId,
           listType: this.list.listType,
           now: new Date().getTime()
@@ -438,7 +442,7 @@ export default {
         this.selectOneList(listId, true)
         query = {
           active: 'starList',
-          mode: 'totalReview',
+          mode: currentMode,
           listId: listId,
           listType: this.list.listType,
           now: new Date().getTime()
@@ -500,6 +504,7 @@ export default {
           <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读</el-dropdown-item>
           <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读</el-dropdown-item>
           <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读</el-dropdown-item>
+          <el-dropdown-item :command="{mode: 'downloadReviewAudio', id: 0}">下载资源</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
       &nbsp;

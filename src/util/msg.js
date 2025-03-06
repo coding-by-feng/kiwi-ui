@@ -7,7 +7,7 @@ export default {
 
     msgWarning: (that, msg) => {
         that.$message.warning({
-            duration: 2500,
+            duration: 3000,
             center: true,
             offset: 200,
             message: msg
@@ -22,24 +22,26 @@ export default {
         });
     },
 
-    msgSuccess: (that, msg) => {
+    msgSuccess: (that, msg, duration) => {
         that.$message.success({
-            duration: 2000,
+            duration: duration ? duration : 3000,
             center: true,
             offset: 200,
             message: msg
         })
     },
 
-    notifySuccess: (that, title, msg) => {
+    notifySuccess: (that, title, msg, duration) => {
         if (enableMsgHint === kiwiConst.ENABLE_MSG_HINT.DISABLE) {
             return
         }
 
         that.$notify({
             title: title,
-            message: msg,
-            type: 'success'
+            message: msg ? msg : 'msg missing',
+            type: 'success',
+            duration: duration ? duration : 3000,
+            position: 'bottom-right'
         });
     },
 

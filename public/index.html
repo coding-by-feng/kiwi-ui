@@ -13,11 +13,16 @@
         continue.</strong>
 </noscript>
 <div id="app">
-    <p>Loading, Please wait.</p>
+    <p>Loading; Please wait; your first visit might take at least several seconds.</p>
 </div>
 <!-- built files will be auto injected -->
 </body>
 
 <script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js" charset="utf-8"></script>
+<script type="text/javascript">
+    document.body.addEventListener('dblclick', function(event) {
+        event.preventDefault();
+    });
+</script>
 
 </html>
