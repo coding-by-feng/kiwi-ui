@@ -135,12 +135,12 @@ export default {
           <div class="login-code">
             <img :src="code.src"
                  class="login-code-img"
-                 @click="refreshCode" alt="点击刷新"/>
+                 @click="refreshCode" alt="Refresh"/>
           </div>
         </el-col>
       </el-row>
     </el-form-item>
-    <el-button type="info" @click="handleLogin">登录</el-button>
-    <el-button @click="handleRegister">一键获取用户</el-button>
+    <el-button type="info" @click="handleLogin">Login</el-button>
+    <el-button @click="handleRegister">Once-click Registration</el-button>
   </el-form>
 </template>
