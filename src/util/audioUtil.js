@@ -1,6 +1,7 @@
 import kiwiConst from '@/const/kiwiConsts'
 import {getStore} from '@/util/store'
 import cacheUtil from "@/util/cacheUtil";
+import db from "@/util/db";
 
 let CH2_EN_INDEX_SLEEP_MS_MAP = null
 const IS_PLAY_EXAMPLE = getStore({name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE})
@@ -64,15 +65,15 @@ export default {
             urls.push(exampleEnUrl0)
             urls.push(exampleEnUrl0)
         } else {
-            let exampleChUrl0 = this.assembleReviseAudioUrl(exampleList[1].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_CH)
+            let exampleChUrl1 = this.assembleReviseAudioUrl(exampleList[1].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_CH)
             let exampleEnUrl1 = this.assembleReviseAudioUrl(exampleList[1].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_EN)
 
             urls.push(exampleChUrl0)
             urls.push(exampleChUrl0)
             urls.push(exampleEnUrl0)
             urls.push(exampleEnUrl0)
-            urls.push(exampleEnUrl0)
-            urls.push(exampleChUrl0)
+            urls.push(exampleEnUrl1)
+            urls.push(exampleChUrl1)
             urls.push(exampleEnUrl1)
             urls.push(exampleEnUrl1)
         }
@@ -210,7 +211,6 @@ export default {
     assembleReviseAudioUrl(sourceId, type) {
         return `/wordBiz/word/review/downloadReviewAudio/${sourceId}/${type}`
     },
-
     assembleCharacterReviseAudioUrl(characterCode) {
         return `/wordBiz/word/review/character/downloadReviewAudio/${characterCode}`
     },
@@ -221,6 +221,77 @@ export default {
             return null
         }
         return new Window.File([blob], `${sourceId}_${type}.mp3`, {type: 'blob'})
-    }
+    },
 
+    rebuildUrls: async function (urls) {
+        let multipleThreads = []
+        let commonDbObject = null
+        await db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION)
+            .then(async dbObject => {
+                console.log('dbObject object', dbObject)
+                commonDbObject = dbObject
+            }).catch(err => {
+                throw err
+            })
+
+        let uniqueRebuiltUrls = new Map()
+        for (let urlsKey in urls) {
+            let url = urls[urlsKey];
+            let builtUrl = uniqueRebuiltUrls.get(url)
+            if (builtUrl === 1) {
+                continue
+            }
+            uniqueRebuiltUrls.set(url, 1)
+        }
+        uniqueRebuiltUrls.forEach((key, originalUrl) => {
+            multipleThreads.push(this.createUniqueThreadToRebuildSoundUrl(commonDbObject, originalUrl, uniqueRebuiltUrls))
+        })
+        await Promise.all(multipleThreads)
+            .then(response => {
+                console.log('multipleThreads handle ', response)
+                for (let urlsKey in urls) {
+                    urls[urlsKey] = uniqueRebuiltUrls.get(urls[urlsKey])
+                }
+            }).catch(err => {
+                throw err
+            })
+    },
+    createUniqueThreadToRebuildSoundUrl: function (commonDbObject, url, uniqueRebuiltUrls) {
+        return new Promise((resolve, reject) => {
+            let dataKey = db.buildDataKey(url)
+            db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
+                .then(async data => {
+                    if (data) {
+                        console.log('get audio data from DB', data)
+                        let reBuiltUrl = URL.createObjectURL(data.audio);
+                        uniqueRebuiltUrls.set(url, reBuiltUrl)
+                        resolve(kiwiConst.SUCCESS)
+                    } else {
+                        await fetch(url).then(async response => {
+                            console.log('Downloading audio from API', response)
+                            console.log('Downloading audio url', url)
+                            return response.blob()
+                        }).then(async buffer => {
+                            console.log('buffer', buffer)
+                            let blob = new Blob([buffer], {type: 'audio/mpeg'});
+                            await db.addData(commonDbObject, kiwiConst.DB_STORE_NAME, {
+                                sequenceKey: dataKey,
+                                audio: blob
+                            }).then(async response => {
+                                let reBuiltUrl = URL.createObjectURL(blob);
+                                uniqueRebuiltUrls.set(url, reBuiltUrl)
+                                resolve(kiwiConst.SUCCESS)
+                            }).catch(err => {
+                                throw err
+                            })
+                        }).catch(err => {
+                            throw err
+                        })
+                    }
+                }).catch(err => {
+                reject(kiwiConst.FAIL)
+                throw err
+            })
+        });
+    }
 }

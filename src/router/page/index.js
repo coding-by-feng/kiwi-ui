@@ -7,6 +7,7 @@ import GrammarListener from '@/page/word/GrammarListener'
 import UserLogin from '@/page/login/UserLogin'
 import UserCenter from '@/page/user/UserCenter'
 import About from '@/page/about/Index'
+import Bgm from '@/page/bgm/Index'
 
 export default [{
   path: '/',
@@ -28,7 +29,8 @@ export default [{
       grammarListener: GrammarListener,
       userLogin: UserLogin,
       userCenter: UserCenter,
-      about: About
+      about: About,
+      bgm: Bgm
     },
     children: [{
       path: 'detail',

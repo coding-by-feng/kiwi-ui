@@ -10,15 +10,6 @@ module.exports = {
     publicPath: publicPath,
     lintOnSave: true,
     productionSourceMap: false,
-    chainWebpack: config => {
-        const entry = config.entry('app')
-        entry
-            .add('babel-polyfill')
-            .end()
-        entry
-            .add('classlist-polyfill')
-            .end()
-    },
     configureWebpack: {
         resolve: {
             alias: {
@@ -55,9 +46,17 @@ module.exports = {
                         name(module) {
                             // get the name. E.g. node_modules/packageName/not/this/part.js
                             // or node_modules/packageName
-                            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1]
-                            // npm package names are URL-safe, but some servers don't like @ symbols
-                            return `npm.${packageName.replace('@', '')}`
+                            console.log(module.context)
+                            const packages = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+                            if (packages) {
+                                console.log('packages-->');
+                                console.log(packages)
+                                const packageName = packages[1]
+                                console.log('packageName-->')
+                                console.log(packageName)
+                                // npm package names are URL-safe, but some servers don't like @ symbols
+                                return `npm.${packageName.replace('@', '')}`
+                            }
                         }
                     }
                 }

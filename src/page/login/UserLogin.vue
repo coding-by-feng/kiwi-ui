@@ -8,7 +8,7 @@ export default {
   data () {
     return {
       loginForm: {
-        username: '',
+        username: 'test',
         password: '123456',
         code: '',
         randomStr: ''
@@ -22,15 +22,13 @@ export default {
       },
       loginRules: {
         username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' }
+          { required: true, message: 'Input username', trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, message: '密码长度最少为6位', trigger: 'blur' }
+          { required: true, message: 'Input password', trigger: 'blur' }
         ],
         code: [
-          { required: true, message: '请输入验证码', trigger: 'blur' },
-          { min: 4, max: 4, message: '验证码长度为4位', trigger: 'blur' }
+          { required: true, message: 'Input verification code', trigger: 'blur' }
         ]
       },
     }
@@ -97,21 +95,31 @@ export default {
            :model="loginForm"
            size="mini"
            label-width="80px">
-    <el-form-item prop="username" label="账号：" style="width: 80%">
+    <el-form-item prop="username" label="Username:" style="width: 80%">
       <el-input size="small"
                 v-model="loginForm.username"
-                placeholder="请输入账号">
+                placeholder="Input username">
         <i class="icon-yonghu"></i>
       </el-input>
+      <el-alert
+          v-if="loginForm.username==='test'"
+          title="Default username 'test' for feature testing, please input verification code to log in."
+          type="info">
+      </el-alert>
     </el-form-item>
-    <el-form-item prop="password" label="密码：" style="width: 80%">
+    <el-form-item prop="password" label="Password:" style="width: 80%">
       <el-input size="small"
                 :type="passwordType"
                 v-model="loginForm.password"
-                placeholder="请输入密码">
+                placeholder="Input password">
       </el-input>
+      <el-alert
+          v-if="loginForm.username==='test'"
+          title="Default passcode '123456' for feature testing."
+          type="info">
+      </el-alert>
     </el-form-item>
-    <el-form-item prop="code" label="验证码：" style="width: 100%">
+    <el-form-item prop="code" label="Verification:" style="width: 100%">
       <el-row :span="24">
         <el-col :span="10">
           <el-input size="small"
@@ -119,7 +127,7 @@ export default {
                     :maxlength="code.len"
                     v-model="loginForm.code"
                     auto-complete="off"
-                    placeholder="请输入验证码">
+                    placeholder="Input Verification code">
             <i class="icon-yanzhengma"></i>
           </el-input>
         </el-col>
@@ -127,12 +135,12 @@ export default {
           <div class="login-code">
             <img :src="code.src"
                  class="login-code-img"
-                 @click="refreshCode" alt="点击刷新"/>
+                 @click="refreshCode" alt="Refresh"/>
           </div>
         </el-col>
       </el-row>
     </el-form-item>
-    <el-button type="info" @click="handleLogin">登录</el-button>
-    <el-button @click="handleRegister">一键获取用户</el-button>
+    <el-button type="info" @click="handleLogin">Login</el-button>
+    <el-button @click="handleRegister">Once-click Registration</el-button>
   </el-form>
 </template>
