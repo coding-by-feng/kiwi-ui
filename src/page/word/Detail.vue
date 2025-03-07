@@ -51,8 +51,6 @@ export default {
       },
       showCharacterId: 0,
       showCharacter: true,
-      isQueryNotResult: false,
-      isShowYoudao: false,
       countdownTime: 0,
       isForceRequest: true,
 
@@ -91,13 +89,6 @@ export default {
     },
     isLargeWindow() {
       return window.innerWidth >= 800
-    },
-    getYoudaoQueryUrl() {
-      if (isMobile()) {
-        return `https://m.youdao.com/dict?le=eng&q=${this.keyword}`
-      } else {
-        return `https://dict.youdao.com/w/${this.keyword}/#keyfrom=dict2.top`
-      }
     }
   },
   async mounted() {
@@ -156,8 +147,8 @@ export default {
     },
     async initDetail(w) {
       let word = w
-      if (this.$route.query.word) {
-        word = decodeURI(this.$route.query.word)
+      if (this.$route.query.originalText) {
+        word = decodeURI(this.$route.query.originalText)
       }
       if (word === this.wordInfo.wordName || !word) {
         return
@@ -188,23 +179,21 @@ export default {
             this.isQueryNotResult = false
             this.defaultHint = null
           }
-          this.isShowYoudao = false
           this.pages = response.data.data.pages
           this.total = response.data.data.total
           this.isForceRequest = false
         } else {
-          this.isShowYoudao = true
-          if (this.countdownTime < 1) {
-            this.isQueryNotResult = true
-            this.defaultHint = '单词未收录，正在收录'
-            this.isForceRequest = true
-          } else {
-            this.isQueryNotResult = false
-            this.defaultHint = '单词数据从Cambridge抓取不到，请联系作者'
-            this.isForceRequest = false
-          }
-          this.wordInfo = {wordName: ''}
-          this.countdownTime = 0
+          let originalText = this.$route?.query?.originalText ? this.$route.query.originalText : ''
+          this.$router.push({
+            path: '/index/vocabulary/aiResponseDetail',
+            query: {
+              active: 'search',
+              selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
+              language: kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+              originalText: encodeURI(originalText.toLowerCase()),
+              now: new Date().getTime()
+            }
+          })
         }
         this.keyword = word
       }).catch(e => {
@@ -587,7 +576,7 @@ export default {
         </div>
         <el-dialog
             v-loading="loading"
-            :title="decodeURI($route.query.word)"
+            :title="decodeURI($route.query.originalText)"
             :visible.sync="showWordSelect">
           <el-collapse>
             <el-collapse-item v-for="word in wordInfoList">
@@ -633,27 +622,21 @@ export default {
       </div>
     </el-header>
     <el-main>
-      <Countdown v-if="isQueryNotResult"
-                 :onlySec="true"
-                 :endTime="getDateOn8Sec" @endFun="countdownEndFun"></Countdown>
-      <el-divider v-if="isQueryNotResult"></el-divider>
-      <iframe v-if="isShowYoudao && keyword" :src="getYoudaoQueryUrl"
-              frameborder="1"
-              width="100%"
-              :height="windowInnerHeight"
-              scrolling="auto"></iframe>
       <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
         <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
           <el-row type="flex" class="row-bg" justify="end">
             <el-col>
-              <el-tag type="info" effect="dark" v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
+              <el-tag type="info" effect="dark"
+                      v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
                 {{ wordCharacterVO.characterCode }}
               </el-tag>
-              <el-tag type="info" effect="dark" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">{{ wordCharacterVO.tag }}</el-tag>
+              <el-tag type="info" effect="dark" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">
+                {{ wordCharacterVO.tag }}
+              </el-tag>
               &nbsp;
               <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
                 <el-tag type="info" effect="dark"
-                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                   <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                      v-show="!isUKPronunciationPlaying"
@@ -676,7 +659,7 @@ export default {
                   type="flex" class="row-bg" justify="end">
             <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
               <el-tag type="info" effect="dark"
-                  @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                      @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                 {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                 <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                    v-show="!isUKPronunciationPlaying"
@@ -698,7 +681,7 @@ export default {
             <el-row type="flex" justify="end" class="row-bg">
               <el-col>
                 <el-tag type="info" effect="dark"
-                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                   <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
                      v-show="!isUKPronunciationPlaying"

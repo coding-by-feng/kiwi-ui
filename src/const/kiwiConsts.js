@@ -168,6 +168,73 @@ export default {
     DB_VERSION: 1,
 
     SUCCESS: 'S',
-    FAIL: 'F'
+    FAIL: 'F',
+
+    SEARCH_DEFAULT_MODE: 'detail',
+    ROUTER_VIEW_DEFAULT_MODE: 'detail',
+    ROUTER_VIEW_AI_MODE: 'aiResponseDetail',
+
+    SEARCH_MODES: {
+        DETAIL: {label: 'Dictionary', value: 'detail'},
+        DIRECTLY_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation'},
+        TRANSLATION_AND_EXPLANATION: {label: 'Translation + Explanation', value: 'translation-and-explanation'},
+        GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation'},
+        GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction'},
+        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'}
+    },
+
+    SEARCH_MODES_DATA: Object.freeze({
+        DICTIONARY: {label: 'Dictionary', value: 'detail', width: '110px'},
+        DIRECT_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation', width: '140px'},
+        TRANSLATION_AND_EXPLANATION: {
+            label: 'Translation + Explanation',
+            value: 'translation-and-explanation',
+            width: '190px'
+        },
+        GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation', width: '170px'},
+        GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction', width: '160px'},
+        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'}
+    }),
+
+    TOGGLE: {
+        OFF: 'off',
+        ON: 'on'
+    },
+
+    INPUT_TYPE: {
+        TEXT: 'text',
+        TEXTAREA: 'textarea'
+    },
+
+    TRANSLATION_LANGUAGE_CODE: {
+        English: 'EN',
+        Simplified_Chinese: 'ZH_CN',
+        Traditional_TW_Chinese: 'ZH_TW',
+        Traditional_HK_Chinese: 'ZH_HK',
+        Japanese: 'JA',
+        Korean: 'KO',
+        French: 'FR',
+        German: 'DE',
+        Spanish: 'ES',
+        Italian: 'IT',
+        Portuguese: 'PT',
+        Russian: 'RU',
+        Vietnamese: 'VI',
+        Polish: 'PL',
+        Danish: 'DA',
+        Finnish: 'FI',
+        Swedish: 'SV',
+        Dutch: 'NL',
+        Norwegian: 'NO',
+        Greek: 'EL'
+    },
+
+    SEARCH_PLACEHOLDER_SUGGESTIONS: {
+        DICTIONARY: 'input vocabulary',
+        DIRECTLY_TRANSLATION: 'input anything',
+        TRANSLATION_AND_EXPLANATION: 'input anything',
+        GRAMMAR_EXPLANATION: 'input anything',
+        GRAMMAR_CORRECTION: 'input anything'
+    }
 
 }
