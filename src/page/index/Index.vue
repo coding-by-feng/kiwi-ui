@@ -159,9 +159,5 @@ export default {
         <router-view name="bgm"></router-view>
       </el-tab-pane>
     </el-tabs>
-    <el-card class="box-card">
-      <a href="https://beian.miit.gov.cn" style="color: #409EFF">粤ICP备2020080500号</a>
-      <p>&nbsp;</p>
-    </el-card>
   </div>
 </template>

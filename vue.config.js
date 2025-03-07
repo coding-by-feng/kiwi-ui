@@ -79,6 +79,13 @@ module.exports = {
                     '^/wordBiz': '/wordBiz'
                 }
             },
+            '/ai-biz': {
+                target: url,
+                ws: true,
+                pathRewrite: {
+                    '^/ai-biz': '/ai-biz'
+                }
+            },
             '/code': {
                 target: url,
                 ws: true,
