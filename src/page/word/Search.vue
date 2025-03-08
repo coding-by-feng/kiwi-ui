@@ -41,7 +41,7 @@
     <el-row>
       <!-- Add el-select for language selection -->
       <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini" placeholder="Select Language"
-                 :style="'margin-right: 10px;'">
+                 :style="'margin-right: 10px;'" @change="selectedLanguageChange">
         <el-option
             v-for="(code, language) in languageCodes"
             :key="code"
@@ -72,7 +72,7 @@ const AI_MODES = [kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value, kiwiConsts
 export default {
   data() {
     return {
-      originalText: '',
+      originalText: this.$route.query.originalText ? decodeURI(this.$route.query.originalText) : '',
       searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: kiwiConsts.SEARCH_DEFAULT_MODE, // Default value for el-select
@@ -170,6 +170,19 @@ export default {
         query: {
           active: 'search',
           selectedMode: item,
+          originalText: this.originalText,
+          now: new Date().getTime()
+        }
+      })
+    },
+    selectedLanguageChange(item) {
+      console.log('selectedLanguageChange', item)
+      this.$router.push({
+        path: this.$route.path,
+        query: {
+          active: 'search',
+          selectedMode: this.selectedMode,
+          language: item,
           originalText: this.originalText,
           now: new Date().getTime()
         }

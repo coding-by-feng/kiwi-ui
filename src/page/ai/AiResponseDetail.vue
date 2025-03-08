@@ -1,8 +1,7 @@
 <template>
   <div>
     <h1>{{ getTitle }}</h1>
-    <p>{{ aiResponseVO.originalText }}</p>
-    <p>{{ aiResponseVO.responseText }}</p>
+    <div v-html="parsedResponseText" style="text-align: justify"></div>
   </div>
 </template>
 
@@ -10,6 +9,9 @@
 import {callAiChatCompletion} from '@/api/ai'
 import util from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
+import MarkdownIt from 'markdown-it';
+
+const md = new MarkdownIt();
 
 export default {
   data() {
@@ -33,10 +35,16 @@ export default {
       const mode = Object.values(kiwiConsts.SEARCH_MODES).find(mode => mode.value === this.selectedMode);
       return mode ? mode.label : value; // Fallback to the value if not found
     },
+    parsedResponseText() {
+      if (this.aiResponseVO.responseText) {
+        return md.render(this.aiResponseVO.responseText);
+      }
+      return '';
+    }
   },
   methods: {
     async init() {
-      let originalText = this.$route.query.originalText;
+      let originalText = decodeURI(this.$route.query.originalText);
       let language = this.$route.query.language
       let urlPrefix = this.$route.query.selectedMode
       console.log('original text: ' + originalText + ' language: ' + language)
