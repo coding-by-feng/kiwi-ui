@@ -183,7 +183,7 @@ export default {
           this.total = response.data.data.total
           this.isForceRequest = false
         } else {
-          let originalText = this.$route?.query?.originalText ? this.$route.query.originalText : ''
+          let originalText = this.$route?.query?.originalText ? decodeURI(this.$route.query.originalText) : ''
           this.$router.push({
             path: '/index/vocabulary/aiResponseDetail',
             query: {
