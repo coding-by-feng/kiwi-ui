@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>{{ getTitle }}</h1>
-    <div v-html="parsedResponseText" style="text-align: justify"></div>
+    <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading"></div>
   </div>
 </template>
 
@@ -17,7 +17,8 @@ export default {
   data() {
     return {
       aiResponseVO: {},
-      selectedMode: this.$route.query.selectedMode
+      selectedMode: this.$route.query.selectedMode,
+      apiLoading: false
     }
   },
   async mounted() {
@@ -49,9 +50,13 @@ export default {
       let urlPrefix = this.$route.query.selectedMode
       console.log('original text: ' + originalText + ' language: ' + language)
       if (!util.isEmptyStr(originalText) && !util.isEmptyStr(language)) {
-        const response = await callAiChatCompletion(urlPrefix, language, originalText)
-        console.log('ai response', response)
-        this.aiResponseVO = response.data.data
+        this.apiLoading = true;
+        callAiChatCompletion(urlPrefix, language, originalText)
+            .then(response => {
+              console.log('ai response', response)
+              this.aiResponseVO = response.data.data
+              this.apiLoading = false;
+            })
       }
     },
   }
