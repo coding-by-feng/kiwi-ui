@@ -72,10 +72,10 @@ const AI_MODES = [kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value, kiwiConsts
 export default {
   data() {
     return {
-      originalText: this.$route.query.originalText ? decodeURI(this.$route.query.originalText) : '',
+      originalText: this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText) : '',
       searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
-      selectedMode: kiwiConsts.SEARCH_DEFAULT_MODE, // Default value for el-select
+      selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE, // Default value for el-select
       searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA),
       selectedLanguage: kiwiConsts.TRANSLATION_LANGUAGE_CODE.English,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
@@ -135,7 +135,7 @@ export default {
     ...wordSearch,
     updateFromRoute() {
       console.log('this.$route', this.$route);
-      this.originalText = this.$route.query.originalText ? decodeURI(this.$route.query.originalText) : this.originalText;
+      this.originalText = this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText) : this.originalText;
       this.lazy = this.$route.path.indexOf('lazy') > -1;
       this.selectedMode = this.$route.query.selectedMode || this.selectedMode;
       this.selectedLanguage = this.$route.query.language || this.selectedLanguage;
@@ -160,7 +160,7 @@ export default {
       }
       this.$router.push({
         path: this.$route.path,
-        query: {active: 'search', originalText: encodeURI(real.toLowerCase()), now: new Date().getTime()}
+        query: {active: 'search', originalText: encodeURIComponent(real.toLowerCase()), now: new Date().getTime()}
       })
     },
     selectedModeChange(item) {
@@ -207,6 +207,8 @@ export default {
       }
       this.$refs.auto.close()
 
+      const encodedOriginalText = encodeURIComponent(real.toLowerCase())
+      console.log('encodedOriginalText', encodedOriginalText)
       if (AI_MODES.includes(this.selectedMode)) {
         this.$router.push({
           path: '/index/vocabulary/aiResponseDetail',
@@ -214,14 +216,14 @@ export default {
             active: 'search',
             selectedMode: this.selectedMode,
             language: this.selectedLanguage,
-            originalText: encodeURI(real.toLowerCase()),
+            originalText: encodedOriginalText,
             now: new Date().getTime()
           }
         })
       } else {
         this.$router.push({
           path: '/index/vocabulary/detail',
-          query: {active: 'search', originalText: encodeURI(real.toLowerCase()), now: new Date().getTime()}
+          query: {active: 'search', originalText: encodedOriginalText, now: new Date().getTime()}
         })
       }
     },

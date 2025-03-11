@@ -148,7 +148,7 @@ export default {
     async initDetail(w) {
       let word = w
       if (this.$route.query.originalText) {
-        word = decodeURI(this.$route.query.originalText)
+        word = decodeURIComponent(this.$route.query.originalText)
       }
       if (word === this.wordInfo.wordName || !word) {
         return
@@ -183,7 +183,7 @@ export default {
           this.total = response.data.data.total
           this.isForceRequest = false
         } else {
-          let originalText = this.$route?.query?.originalText ? decodeURI(this.$route.query.originalText) : ''
+          let originalText = this.$route?.query?.originalText ? decodeURIComponent(this.$route.query.originalText) : ''
           this.$router.push({
             path: '/index/vocabulary/aiResponseDetail',
             query: {
@@ -576,7 +576,7 @@ export default {
         </div>
         <el-dialog
             v-loading="loading"
-            :title="decodeURI($route.query.originalText)"
+            :title="decodeURIComponent($route.query.originalText)"
             :visible.sync="showWordSelect">
           <el-collapse>
             <el-collapse-item v-for="word in wordInfoList">

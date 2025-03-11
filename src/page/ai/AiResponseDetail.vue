@@ -45,7 +45,7 @@ export default {
   },
   methods: {
     async init() {
-      let originalText = decodeURI(this.$route.query.originalText);
+      let originalText = this.$route.query.originalText;
       let language = this.$route.query.language
       let urlPrefix = this.$route.query.selectedMode
       console.log('original text: ' + originalText + ' language: ' + language)
