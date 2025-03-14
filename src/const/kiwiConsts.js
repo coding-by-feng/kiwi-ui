@@ -180,7 +180,9 @@ export default {
         TRANSLATION_AND_EXPLANATION: {label: 'Translation + Explanation', value: 'translation-and-explanation'},
         GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation'},
         GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction'},
-        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'}
+        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'},
+        SYNONYM: {label: 'Synonym', value: 'synonym'},
+        ANTONYM: {label: 'Antonym', value: 'antonym'},
     },
 
     SEARCH_MODES_DATA: Object.freeze({
@@ -193,7 +195,9 @@ export default {
         },
         GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation', width: '170px'},
         GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction', width: '160px'},
-        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'}
+        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'},
+        SYNONYM: {label: 'Synonym', value: 'synonym', width: '100px'},
+        ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
     }),
 
     TOGGLE: {
@@ -234,7 +238,9 @@ export default {
         DIRECTLY_TRANSLATION: 'input anything',
         TRANSLATION_AND_EXPLANATION: 'input anything',
         GRAMMAR_EXPLANATION: 'input anything',
-        GRAMMAR_CORRECTION: 'input anything'
+        GRAMMAR_CORRECTION: 'input anything',
+        SYNONYM: 'input vocabulary',
+        ANTONYM: 'input vocabulary',
     }
 
 }
