@@ -132,8 +132,10 @@ export default {
       <el-tab-pane name="starList" v-if="isLogin">
         <span slot="label"><i class="el-icon-tickets"></i></span>
         <router-view name="starList" v-if="isAdmin"></router-view>
-        <span
-            v-if="!isAdmin">超级背单词功能升级中，非VIP用户请联系管理员试用，让你不需要看屏幕，不需要手指操作即可背单词的功能</span>
+      </el-tab-pane>
+      <el-tab-pane name="youtubePlayer">
+        <span slot="label"><i class="el-icon-video-camera"></i></span>
+        <router-view name="youtubePlayer" v-if="isAdmin"></router-view>
       </el-tab-pane>
       <el-tab-pane name="grammarListener" v-if="isLogin">
         <span slot="label"><i class=el-icon-school></i></span>

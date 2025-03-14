@@ -67,7 +67,8 @@ import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
 
 const AI_MODES = [kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value, kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
-  kiwiConsts.SEARCH_MODES.GRAMMAR_EXPLANATION.value, kiwiConsts.SEARCH_MODES.GRAMMAR_CORRECTION.value, kiwiConsts.SEARCH_MODES.VOCABULARY_EXPLANATION.value]
+  kiwiConsts.SEARCH_MODES.GRAMMAR_EXPLANATION.value, kiwiConsts.SEARCH_MODES.GRAMMAR_CORRECTION.value, kiwiConsts.SEARCH_MODES.VOCABULARY_EXPLANATION.value,
+  kiwiConsts.SEARCH_MODES.SYNONYM.value, kiwiConsts.SEARCH_MODES.ANTONYM.value]
 
 export default {
   data() {

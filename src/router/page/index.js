@@ -9,6 +9,7 @@ import UserCenter from '@/page/user/UserCenter'
 import About from '@/page/about/Index'
 import Bgm from '@/page/bgm/Index'
 import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
+import YoutubePlayer from '@/page/ai/YoutubePlayer.vue'
 
 export default [{
     path: '/',
@@ -32,7 +33,8 @@ export default [{
             userCenter: UserCenter,
             about: About,
             bgm: Bgm,
-            aiResponseDetail: AiResponseDetail
+            aiResponseDetail: AiResponseDetail,
+            youtubePlayer: YoutubePlayer
         },
         children: [{
             path: 'detail',
