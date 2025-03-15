@@ -17,16 +17,16 @@
       </button>
     </div>
 
-    <!-- Video Player (Top Half) -->
-    <div class="video-container" v-if="videoBlobUrl">
-      <video
+    <!-- Video Player (Top Half) - Using YouTube IFrame -->
+    <div class="video-container" v-if="videoId">
+      <iframe
           ref="videoPlayer"
-          controls
-          :src="videoBlobUrl"
+          :src="`https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
           class="video-player"
-      >
-        Your browser does not support the video tag.
-      </video>
+      ></iframe>
     </div>
 
     <!-- Subtitles (Bottom Half) -->
@@ -44,15 +44,15 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
-import { downloadVideo, downloadVideoSubtitles } from '@/api/ai';
+import { defineComponent, ref, nextTick } from 'vue';
+import { downloadVideoSubtitles } from '@/api/ai';
 
 export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
   data() {
     return {
       videoUrl: '',
-      videoBlobUrl: null,
+      videoId: null, // Store the extracted video ID
       subtitles: [],
       statusMessage: '',
       isLoading: false
@@ -67,7 +67,7 @@ export default defineComponent({
     async loadContent() {
       this.statusMessage = 'Loading content...';
       this.isLoading = true;
-      this.videoBlobUrl = null;
+      this.videoId = null;
       this.subtitles = [];
 
       try {
@@ -78,30 +78,24 @@ export default defineComponent({
           return;
         }
 
-        // Fetch video and subtitles concurrently using Promise.all
-        const [videoResponse, subtitleResponse] = await Promise.all([
-          downloadVideo(this.videoUrl).catch(error => {
-            console.error('Error downloading video:', error);
-            throw new Error('Failed to download video');
-          }),
-          downloadVideoSubtitles(this.videoUrl).catch(error => {
-            console.error('Error downloading subtitles:', error);
-            return { status: 500, data: { data: null } };
-          })
-        ]);
+        this.videoId = videoId; // Set the video ID for the iframe
 
-        if (videoResponse.status !== 200) {
-          throw new Error('Failed to download video');
-        }
-        const videoBlob = new Blob([videoResponse.data], { type: 'video/mp4' });
-        this.videoBlobUrl = URL.createObjectURL(videoBlob);
-        console.log('Video loaded successfully');
+        // Fetch subtitles using the existing API
+        const subtitleResponse = await downloadVideoSubtitles(this.videoUrl).catch(error => {
+          console.error('Error downloading subtitles:', error);
+          return { status: 500, data: { data: null } };
+        });
 
         if (subtitleResponse.status !== 200 || !subtitleResponse.data.data) {
           this.statusMessage = 'Video loaded, but no subtitles available';
         } else {
           this.parseSubtitles(subtitleResponse.data.data);
           this.statusMessage = 'Content loaded successfully!';
+          // Scroll to the top of the subtitles container after loading
+          await nextTick();
+          if (this.subtitleArea.value) {
+            this.subtitleArea.value.scrollTop = 0;
+          }
         }
       } catch (error) {
         console.error('Error loading content:', error);
@@ -113,18 +107,19 @@ export default defineComponent({
     extractVideoId(url) {
       try {
         const urlObj = new URL(url);
+        let videoId;
 
         if (urlObj.hostname === 'www.youtube.com' && urlObj.pathname === '/watch') {
-          return urlObj.searchParams.get('v') || url.match(/[?&]v=([^&]+)/)?.[1];
-        }
-
-        if (urlObj.hostname === 'youtu.be') {
+          videoId = urlObj.searchParams.get('v') || url.match(/[?&]v=([^&]+)/)?.[1];
+        } else if (urlObj.hostname === 'youtu.be') {
           const pathSegments = urlObj.pathname.split('/').filter(Boolean);
-          return pathSegments[0] || null;
+          videoId = pathSegments[0] || null;
+        } else {
+          const match = url.match(/[?&]v=([^&]+)/) || url.match(/youtu.be\/([^?&]+)/);
+          videoId = match ? match[1] : null;
         }
 
-        const match = url.match(/[?&]v=([^&]+)/) || url.match(/youtu\.be\/([^?&]+)/);
-        return match ? match[1] : null;
+        return videoId;
       } catch (e) {
         console.error('Invalid URL:', e);
         return null;
@@ -160,26 +155,14 @@ export default defineComponent({
       const [hours, minutes, seconds] = timeStr.split(':');
       const [secs, ms] = seconds.split('.');
       const totalSeconds = parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
-      console.log(`Parsed time ${timeStr} to ${totalSeconds} seconds`);
       return totalSeconds;
     }
   },
   watch: {
-    videoBlobUrl(newUrl) {
-      if (newUrl && this.videoPlayer?.value) {
-        this.videoPlayer.value.load();
-        console.log('Video blob URL updated:', newUrl);
+    videoId(newId) {
+      if (newId && this.videoPlayer?.value) {
+        // No need to load manually; the iframe handles it
       }
-    }
-  },
-  mounted() {
-    if (this.subtitleArea.value) {
-      this.subtitleArea.value.addEventListener('scroll', () => console.log('User scrolling detected'));
-    }
-  },
-  beforeUnmount() {
-    if (this.subtitleArea.value) {
-      this.subtitleArea.value.removeEventListener('scroll', () => {});
     }
   }
 });
@@ -214,21 +197,27 @@ export default defineComponent({
   overflow: hidden;
   padding: 0;
   margin-bottom: 10px;
+  position: relative; /* Ensure iframe is positioned correctly */
 }
 
 .video-container .video-player {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  border: none; /* Remove default iframe border */
 }
 
 .subtitles-container {
   flex: 1 0 55%;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 0;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   min-height: 100px;
+}
+
+.subtitles-container p {
+  margin: 5px 0;
+  padding: 8px;
 }
 
 .scroll-filler {
@@ -241,5 +230,15 @@ export default defineComponent({
   margin: 0;
   color: #d32f2f;
   flex-shrink: 0;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .video-container {
+    flex: 1 0 30%;
+  }
+  .subtitles-container {
+    flex: 1 0 65%;
+  }
 }
 </style>
