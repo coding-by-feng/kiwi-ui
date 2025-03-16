@@ -65,6 +65,8 @@
 import wordSearch from '@/api/wordSearch'
 import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
+import {getStore, setStore} from "@/util/store";
+import kiwiConst from "@/const/kiwiConsts";
 
 const AI_MODES = [kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value, kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
   kiwiConsts.SEARCH_MODES.GRAMMAR_EXPLANATION.value, kiwiConsts.SEARCH_MODES.GRAMMAR_CORRECTION.value, kiwiConsts.SEARCH_MODES.VOCABULARY_EXPLANATION.value,
@@ -78,7 +80,7 @@ export default {
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE, // Default value for el-select
       searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA),
-      selectedLanguage: kiwiConsts.TRANSLATION_LANGUAGE_CODE.English,
+      selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
     }
   },
@@ -166,12 +168,17 @@ export default {
     },
     selectedModeChange(item) {
       console.log('selectedModeChange', item)
+      setStore({
+        name: kiwiConst.CONFIG_KEY.SELECTED_LANGUAGE,
+        content: item,
+        type: 'local'
+      })
       this.$router.push({
         path: this.$route.path,
         query: {
           active: 'search',
           selectedMode: item,
-          originalText: this.originalText,
+          originalText: encodeURIComponent(this.originalText),
           now: new Date().getTime()
         }
       })
@@ -184,7 +191,7 @@ export default {
           active: 'search',
           selectedMode: this.selectedMode,
           language: item,
-          originalText: this.originalText,
+          originalText: encodeURIComponent(this.originalText),
           now: new Date().getTime()
         }
       })

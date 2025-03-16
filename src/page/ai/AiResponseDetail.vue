@@ -10,6 +10,7 @@ import {callAiChatCompletion} from '@/api/ai'
 import util from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 import MarkdownIt from 'markdown-it';
+import {getStore} from '@/util/store'
 
 const md = new MarkdownIt();
 
@@ -18,7 +19,8 @@ export default {
     return {
       aiResponseVO: {},
       selectedMode: this.$route.query.selectedMode,
-      apiLoading: false
+      apiLoading: false,
+      defaultSelectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     }
   },
   async mounted() {
@@ -46,12 +48,12 @@ export default {
   methods: {
     async init() {
       let originalText = this.$route.query.originalText;
-      let language = this.$route.query.language
+      let language = this.$route.query.language ? this.$route.query.language : this.defaultSelectedLanguage;
       let urlPrefix = this.$route.query.selectedMode
       console.log('original text: ' + originalText + ' language: ' + language)
       if (!util.isEmptyStr(originalText) && !util.isEmptyStr(language)) {
         this.apiLoading = true;
-        callAiChatCompletion(urlPrefix, language, originalText)
+        callAiChatCompletion(urlPrefix, language, encodeURIComponent(originalText))
             .then(response => {
               console.log('ai response', response)
               this.aiResponseVO = response.data.data

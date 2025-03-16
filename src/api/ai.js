@@ -1,6 +1,7 @@
 import request from '@/router/axios'
 
 export function callAiChatCompletion(urlPrefix, language, originalText) {
+    console.log('callAiChatCompletion urlPrefix: ' + urlPrefix + ' language: ' + language + ' originalText: ' + originalText)
     return request({
         url: `/ai-biz/ai/${urlPrefix}/${language}/${originalText}`,
         headers: {
