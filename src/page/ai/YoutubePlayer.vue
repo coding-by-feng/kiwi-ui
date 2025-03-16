@@ -1,9 +1,9 @@
 <template>
   <div class="youtube-player">
-    <h1>YouTube Player</h1>
+    <h1 id="playHeader" v-show="!isPlaying">YouTube Player</h1>
 
     <!-- Input and Button for YouTube URL -->
-    <div class="input-container">
+    <div class="input-container" v-show="!isPlaying">
       <div class="url-input-group">
         <el-input
             v-model="videoUrl"
@@ -21,24 +21,26 @@
       </div>
     </div>
 
+    <!-- Status Message -->
+    <p class="status-message" v-show="!isPlaying">{{ statusMessage }}</p>
+
     <!-- Video Player Section -->
-    <div class="video-section" v-if="videoId">
+    <div class="video-section" v-if="videoUrl && videoUrl !== ''">
       <!-- Video Player -->
       <div class="video-container">
         <div id="youtube-player-container"></div>
       </div>
 
       <!-- Enhanced Subtitle Display with Previous, Current, and Next Lines -->
-      <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length">
+      <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length"
+           @mouseup="handleTextSelection"
+           @touchend="handleTextSelection"
+      >
         <div v-if="hasPreviousSubtitle" class="previous-subtitle">
           {{ subtitles[currentSubtitleIndex - 1]?.text }}
         </div>
 
-        <div
-            class="current-subtitle-display"
-            @mouseup="handleTextSelection"
-            @touchend="handleTextSelection"
-        >
+        <div class="current-subtitle-display">
           {{ subtitles[currentSubtitleIndex]?.text }}
         </div>
 
@@ -53,7 +55,7 @@
           class="vocabulary-popup"
           @click="navigateToVocabulary"
       >
-        Look up "{{ selectedText }}"
+        <i class="el-icon-search"></i> "{{ selectedText }}"
       </div>
     </div>
 
@@ -67,8 +69,10 @@
     </div>
 
     <!-- Subtitles List -->
-    <div class="subtitles-container" ref="subtitleArea" v-if="subtitles.length">
-      <div class="subtitles-wrapper">
+    <div class="subtitles-container" v-if="subtitles.length">
+      <div class="subtitles-wrapper"
+           @mouseup="handleTextSelection"
+           @touchend="handleTextSelection">
         <p
             v-for="(subtitle, index) in subtitles"
             :key="index"
@@ -86,21 +90,20 @@
         <div class="scroll-filler" v-if="subtitles.length > 0"> </div>
       </div>
     </div>
-
-    <!-- Status Message -->
-    <p class="status-message">{{ statusMessage }}</p>
   </div>
 </template>
 
 <script>
-import { defineComponent, ref, nextTick, onMounted, onBeforeUnmount, computed } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { downloadVideoSubtitles } from '@/api/ai';
+import msgUtil from '@/util/msg'
+import kiwiConsts from "@/const/kiwiConsts";
 
 export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
   data() {
     return {
-      videoUrl: '',
+      videoUrl: null,
       videoId: null,
       subtitles: [],
       statusMessage: '',
@@ -108,7 +111,6 @@ export default defineComponent({
       player: null,
       currentSubtitleIndex: -1,
       subtitleInterval: null,
-      youtubeAPILoaded: false,
       autoScrollEnabled: true, // Always enabled by default
       userInteracting: false,
       lastScrollTime: 0,
@@ -116,12 +118,9 @@ export default defineComponent({
 
       // Text selection and popup properties
       selectedText: '',
-      showSelectionPopup: false
+      showSelectionPopup: false,
+      isPlaying: false,
     };
-  },
-  setup() {
-    const subtitleArea = ref(null);
-    return { subtitleArea };
   },
   computed: {
     // Check if there is a previous subtitle available
@@ -138,26 +137,26 @@ export default defineComponent({
     // Load YouTube API
     this.loadYouTubeAPI();
 
-    // Add event listener for manual scrolling to detect when user manually scrolls
-    if (this.subtitleArea && this.subtitleArea.value) {
-      this.subtitleArea.value.addEventListener('scroll', this.handleUserScroll);
-      this.subtitleArea.value.addEventListener('mousedown', () => { this.userInteracting = true; });
-      this.subtitleArea.value.addEventListener('touchstart', () => { this.userInteracting = true; });
-
-      // Add document-level listeners to detect when user stops interacting
-      document.addEventListener('mouseup', () => {
-        setTimeout(() => { this.userInteracting = false; }, 500);
-      });
-      document.addEventListener('touchend', () => {
-        setTimeout(() => { this.userInteracting = false; }, 500);
-      });
-    }
-
     // Add keyboard shortcuts
     document.addEventListener('keydown', this.handleKeyPress);
 
     // Add click listener to document to close popup when clicking outside
     document.addEventListener('click', this.handleClickOutside);
+
+    msgUtil.notifySuccess(this, 'YouTuBe PlayerUsage Tips', 'The searching input and button will be hided when the video is playing.', 6000)
+  },
+  watch: {
+    videoId: {
+      handler(newVideoId, oldVideoId) {
+        if (newVideoId && oldVideoId && newVideoId !== oldVideoId) {
+          if (this.player) {
+            this.player.destroy();
+            this.player = null;
+          }
+          this.initializePlayer();
+        }
+      }
+    }
   },
   methods: {
     // Text selection and vocabulary lookup methods
@@ -178,8 +177,20 @@ export default defineComponent({
     },
 
     navigateToVocabulary() {
-      const encodedText = encodeURIComponent(this.selectedText);
-      window.location.href = `/#/index/vocabulary/aiResponseDetail?active=search&selectedMode=translation-and-explanation&language=EN&originalText=${encodedText}`;
+      const cleanedText = this.selectedText.replace(/\n/g, ' ').trim();
+      const encodedText = encodeURIComponent(cleanedText);
+      console.log('encodedText = ', encodedText)
+      this.player.pauseVideo();
+      this.$router.push({
+        path: '/index/vocabulary/aiResponseDetail',
+        query: {
+          active: 'search',
+          selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
+          language: this.selectedLanguage,
+          originalText: encodedText,
+          now: new Date().getTime()
+        }
+      })
     },
 
     closePopup() {
@@ -207,7 +218,7 @@ export default defineComponent({
           this.videoUrl = text.trim();
           // Optional: Auto-load content when URL is pasted
           if (this.extractVideoId(this.videoUrl)) {
-            this.loadContent();
+            await this.loadContent();
           }
         }
       } catch (error) {
@@ -259,11 +270,6 @@ export default defineComponent({
       }
     },
     loadYouTubeAPI() {
-      if (window.YT && window.YT.Player) {
-        this.youtubeAPILoaded = true;
-        return;
-      }
-
       // Add YouTube API script if it doesn't exist
       if (!document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
@@ -275,17 +281,12 @@ export default defineComponent({
 
       // Set up callback for when YouTube API is ready
       window.onYouTubeIframeAPIReady = () => {
-        this.youtubeAPILoaded = true;
         if (this.videoId) {
           this.initializePlayer();
         }
       };
     },
     initializePlayer() {
-      if (!this.youtubeAPILoaded || !this.videoId) {
-        return;
-      }
-
       // Create YouTube player
       this.player = new YT.Player('youtube-player-container', {
         height: '100%',
@@ -306,30 +307,18 @@ export default defineComponent({
       console.log('Player ready');
     },
     onPlayerStateChange(event) {
+      this.isPlaying = false;
       // Handle player state changes
       if (event.data === YT.PlayerState.PLAYING) {
         // Start syncing subtitles when video is playing
         this.startSubtitleSync();
-        // Always start visibility checking since auto-scroll is always enabled
-        this.startVisibilityCheck();
+        this.isPlaying = true;
       } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
         // Stop syncing when video is paused or ended
         this.stopSubtitleSync();
         this.stopVisibilityCheck();
       }
     },
-    startVisibilityCheck() {
-      // Clear any existing interval
-      this.stopVisibilityCheck();
-
-      // Check if subtitle is visible every 500ms
-      this.visibilityCheckInterval = setInterval(() => {
-        if (this.autoScrollEnabled && !this.userInteracting && this.currentSubtitleIndex !== -1) {
-          this.ensureSubtitleVisible();
-        }
-      }, 500);
-    },
-
     stopVisibilityCheck() {
       if (this.visibilityCheckInterval) {
         clearInterval(this.visibilityCheckInterval);
@@ -381,65 +370,17 @@ export default defineComponent({
           this.scrollToCurrentSubtitle();
         }
       }
-      // Even if the subtitle hasn't changed, check if it's visible and scroll if needed
-      else if (this.autoScrollEnabled && !this.userInteracting && this.currentSubtitleIndex !== -1) {
-        this.ensureSubtitleVisible();
-      }
-    },
-
-    // New method to check if the current subtitle is visible and scroll if needed
-    ensureSubtitleVisible() {
-      nextTick(() => {
-        const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-        if (!subtitleElement || !this.subtitleArea.value) return;
-
-        const containerRect = this.subtitleArea.value.getBoundingClientRect();
-        const subtitleRect = subtitleElement.getBoundingClientRect();
-
-        // Check if the subtitle is fully visible
-        const isVisible =
-            subtitleRect.top >= containerRect.top &&
-            subtitleRect.bottom <= containerRect.bottom;
-
-        // If not visible, scroll to make it visible
-        if (!isVisible) {
-          this.scrollToCurrentSubtitle(false);
-        }
-      });
-    },
-    scrollToCurrentSubtitle(forceScroll = false) {
-      // If force scroll is true or auto-scroll is enabled
-      if (forceScroll) {
-        this.autoScrollEnabled = true;
-      }
-
-      if (!this.autoScrollEnabled && !forceScroll) {
-        return;
-      }
-
-      nextTick(() => {
-        const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-        if (subtitleElement && this.subtitleArea.value) {
-          // Calculate scroll position (always use center position)
-          const containerHeight = this.subtitleArea.value.clientHeight;
-          const scrollTop = subtitleElement.offsetTop - (containerHeight / 2) + (subtitleElement.offsetHeight / 2);
-
-          // Apply smooth scrolling
-          this.subtitleArea.value.scrollTo({
-            top: scrollTop,
-            behavior: forceScroll ? 'smooth' : 'auto' // Only use smooth for manual focus
-          });
-
-          // Add a brief highlight animation effect
-          subtitleElement.classList.add('focus-pulse');
-          setTimeout(() => {
-            subtitleElement.classList.remove('focus-pulse');
-          }, 1000);
-        }
-      });
     },
     async loadContent() {
-      this.statusMessage = 'Loading content...';
+      // Reset state for new video
+      if (this.player) {
+        this.stopSubtitleSync();
+        this.stopVisibilityCheck();
+        this.player.destroy();
+        this.player = null;
+      }
+
+      this.statusMessage = 'Loading video and subtitles...';
       this.isLoading = true;
       this.videoId = null;
       this.subtitles = [];
@@ -471,12 +412,6 @@ export default defineComponent({
 
           // Initialize the player now that we have the video ID
           this.initializePlayer();
-
-          // Scroll to the top of the subtitles container after loading
-          await nextTick();
-          if (this.subtitleArea.value) {
-            this.subtitleArea.value.scrollTop = 0;
-          }
         }
       } catch (error) {
         console.error('Error loading content:', error);
@@ -539,8 +474,7 @@ export default defineComponent({
     parseTime(timeStr) {
       const [hours, minutes, seconds] = timeStr.split(':');
       const [secs, ms] = seconds.split('.');
-      const totalSeconds = parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
-      return totalSeconds;
+      return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
     }
   },
   beforeUnmount() {
@@ -550,13 +484,6 @@ export default defineComponent({
     if (this.player) {
       this.player.destroy();
       this.player = null;
-    }
-
-    // Remove event listeners
-    if (this.subtitleArea && this.subtitleArea.value) {
-      this.subtitleArea.value.removeEventListener('scroll', this.handleUserScroll);
-      this.subtitleArea.value.removeEventListener('mousedown', () => { this.userInteracting = true; });
-      this.subtitleArea.value.removeEventListener('touchstart', () => { this.userInteracting = true; });
     }
 
     document.removeEventListener('mouseup', () => { this.userInteracting = false; });
@@ -608,12 +535,6 @@ export default defineComponent({
 
 .paste-icon {
   font-size: 18px;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
 }
 
 .input-container button {
@@ -719,26 +640,6 @@ export default defineComponent({
   background-color: #7b8291;
 }
 
-/* Current subtitle header at the top of subtitles area */
-.current-subtitle-header {
-  background-color: #43a047; /* Green background */
-  color: white;
-  padding: 10px;
-  font-weight: bold;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid #2e7d32;
-  margin-bottom: 5px;
-}
-
-.current-subtitle-text {
-  white-space: pre-wrap;
-  max-height: 80px;
-  overflow-y: auto;
-}
-
 .ytb-controls-container {
   display: flex;
   flex-direction: column;
@@ -840,10 +741,6 @@ export default defineComponent({
 
 .future-subtitle {
   color: #333;
-}
-
-.focus-pulse {
-  animation: pulse 1s;
 }
 
 @keyframes pulse {
