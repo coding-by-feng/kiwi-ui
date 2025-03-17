@@ -12,10 +12,7 @@
             @keyup.enter="loadContent"
             style="width: 100%; max-width: 500px;"
         />
-        <button @click="pasteFromClipboard" class="ytb-player-button paste-button" title="Paste from clipboard">
-          <span class="paste-icon">📋</span>
-        </button>
-        <button @click="loadContent" :disabled="!videoUrl || isLoading" class="ytb-player-button paste-button">
+        <button @click="loadContent" :disabled="!videoUrl || isLoading" class="ytb-player-button">
           {{ isLoading ? 'Loading...' : 'Load' }}
         </button>
       </div>
@@ -40,6 +37,7 @@
         <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length"
              @mouseup="handleTextSelection"
              @touchend="handleTextSelection"
+             @touchstart="pauseVideo"
         >
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
@@ -125,6 +123,7 @@ import { defineComponent, ref } from 'vue';
 import { downloadVideoSubtitles } from '@/api/ai';
 import msgUtil from '@/util/msg'
 import kiwiConsts from "@/const/kiwiConsts";
+import {getStore, setStore} from "@/util/store";
 
 export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
@@ -166,9 +165,6 @@ export default defineComponent({
     // Load YouTube API
     this.loadYouTubeAPI();
 
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', this.handleKeyPress);
-
     // Add click listener to document to close popup when clicking outside
     document.addEventListener('click', this.handleClickOutside);
 
@@ -177,6 +173,11 @@ export default defineComponent({
 
     // Add resize listener to handle screen size changes
     window.addEventListener('resize', this.checkScreenSize);
+
+    // Apply touch callout/highlight prevention to subtitle elements
+    this.applyTouchPreventions();
+
+    msgUtil.notifySuccess(this, 'YouTube Player Usage Tips', 'The searching input and button will be hidden when the video is playing.', 6000);
   },
   watch: {
     videoId: {
@@ -192,7 +193,42 @@ export default defineComponent({
     }
   },
   methods: {
-    // Text selection and vocabulary lookup methods
+    // Utility method to detect mobile devices
+    isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+          || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+    },
+
+    // Apply CSS to prevent native selection UI
+    applyTouchPreventions() {
+      this.$nextTick(() => {
+        const subtitleElements = document.querySelectorAll('.current-subtitle-display, .previous-subtitle, .next-subtitle, .subtitles-wrapper p');
+        subtitleElements.forEach(el => {
+          if (el) {
+            el.style.webkitTouchCallout = 'none';
+            el.style.webkitUserSelect = 'text'; // Keep text selectable
+            el.style.khtmlUserSelect = 'text';
+            el.style.mozUserSelect = 'text';
+            el.style.msUserSelect = 'text';
+            el.style.userSelect = 'text';
+            el.addEventListener('contextmenu', (e) => {
+              if (this.isMobileDevice()) {
+                e.preventDefault();
+              }
+            });
+          }
+        });
+      });
+    },
+
+    // Add a dedicated method to pause the video
+    pauseVideo() {
+      if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
+        this.player.pauseVideo();
+      }
+    },
+
+    // Text selection and vocabulary lookup methods with mobile optimization
     handleTextSelection(event) {
       const selection = window.getSelection();
       const selectedText = selection.toString().trim();
@@ -200,12 +236,21 @@ export default defineComponent({
       if (selectedText) {
         this.selectedText = selectedText;
 
-        // Show popup first so it's in the DOM
-        this.showSelectionPopup = true;
-
         // Calculate position for popup based on selection
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
+
+        // Clear the selection on mobile to prevent native popup
+        if (this.isMobileDevice()) {
+          // Get position before clearing
+          setTimeout(() => {
+            selection.removeAllRanges();
+          }, 10);
+          event.preventDefault();
+        }
+
+        // Show popup first so it's in the DOM
+        this.showSelectionPopup = true;
 
         // Use nextTick to ensure popup is rendered before positioning
         this.$nextTick(() => {
@@ -232,7 +277,7 @@ export default defineComponent({
           }
         });
 
-        // Prevent default to maintain the selection
+        // Prevent default to maintain the selection temporarily
         event.preventDefault();
       } else {
         this.closePopup();
@@ -248,8 +293,8 @@ export default defineComponent({
         path: '/index/vocabulary/aiResponseDetail',
         query: {
           active: 'search',
-          selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
-          language: this.selectedLanguage,
+          selectedMode: kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value,
+          language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
           originalText: encodedText,
           now: new Date().getTime()
         }
@@ -265,62 +310,16 @@ export default defineComponent({
       // Close the popup if clicking outside of popup and subtitle display
       const popup = document.querySelector('.vocabulary-popup');
       const subtitleDisplay = document.querySelector('.subtitles-context-display');
+      const subtitlesContainer = document.querySelector('.subtitles-container');
 
-      if (popup && subtitleDisplay &&
-          !popup.contains(event.target) &&
-          !subtitleDisplay.contains(event.target)) {
+      if (popup &&
+          !(popup.contains(event.target) ||
+              (subtitleDisplay && subtitleDisplay.contains(event.target)) ||
+              (subtitlesContainer && subtitlesContainer.contains(event.target)))) {
         this.closePopup();
       }
     },
 
-    // Original methods from the component
-    async pasteFromClipboard() {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          this.videoUrl = text.trim();
-          // Optional: Auto-load content when URL is pasted
-          if (this.extractVideoId(this.videoUrl)) {
-            await this.loadContent();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to read clipboard contents:', error);
-        this.statusMessage = 'Unable to access clipboard. Please paste manually.';
-        setTimeout(() => {
-          if (this.statusMessage === 'Unable to access clipboard. Please paste manually.') {
-            this.statusMessage = '';
-          }
-        }, 3000);
-      }
-    },
-    handleKeyPress(event) {
-      // Only handle keyboard shortcuts if player is initialized
-      if (!this.player) return;
-
-      switch(event.key) {
-        case ' ': // Space bar - Play/Pause
-          this.togglePlayPause();
-          event.preventDefault();
-          break;
-        case 'v': // If Ctrl+V is pressed, handle paste (for accessibility)
-          if (event.ctrlKey) {
-            this.pasteFromClipboard();
-            event.preventDefault();
-          }
-          break;
-      }
-    },
-    togglePlayPause() {
-      if (!this.player) return;
-
-      const state = this.player.getPlayerState();
-      if (state === YT.PlayerState.PLAYING) {
-        this.player.pauseVideo();
-      } else {
-        this.player.playVideo();
-      }
-    },
     jumpToSubtitle(index) {
       if (!this.player || !this.subtitles[index]) return;
 
@@ -467,8 +466,6 @@ export default defineComponent({
           return;
         }
 
-        this.videoId = videoId;
-
         // Fetch subtitles
         const subtitleResponse = await downloadVideoSubtitles(this.videoUrl).catch(error => {
           console.error('Error downloading subtitles:', error);
@@ -479,10 +476,17 @@ export default defineComponent({
           this.statusMessage = 'Video loaded, but no subtitles available';
         } else {
           this.parseSubtitles(subtitleResponse.data.data);
-          this.statusMessage = 'Content loaded successfully!';
+          this.statusMessage = ''
+          this.videoId = videoId;
+          msgUtil.msgSuccess(this, 'Content loaded successfully!', 2000);
 
           // Initialize the player now that we have the video ID
           this.initializePlayer();
+
+          // Re-apply touch preventions for the new subtitles
+          this.$nextTick(() => {
+            this.applyTouchPreventions();
+          });
         }
       } catch (error) {
         console.error('Error loading content:', error);
@@ -572,11 +576,22 @@ export default defineComponent({
 
     document.removeEventListener('mouseup', () => { this.userInteracting = false; });
     document.removeEventListener('touchend', () => { this.userInteracting = false; });
-    document.removeEventListener('keydown', this.handleKeyPress);
     window.removeEventListener('resize', this.checkScreenSize);
 
     // Remove text selection related event listeners
     document.removeEventListener('click', this.handleClickOutside);
+
+    // Clean up contextmenu listeners
+    const subtitleElements = document.querySelectorAll('.current-subtitle-display, .previous-subtitle, .next-subtitle, .subtitles-wrapper p');
+    subtitleElements.forEach(el => {
+      if (el) {
+        el.removeEventListener('contextmenu', e => {
+          if (this.isMobileDevice()) {
+            e.preventDefault();
+          }
+        });
+      }
+    });
   }
 });
 </script>
@@ -606,20 +621,6 @@ export default defineComponent({
   position: relative;
   align-items: center;
   justify-content: center;
-}
-
-.paste-button {
-  margin-left: 8px;
-  padding: 4px 10px;
-  font-size: 14px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.paste-icon {
-  font-size: 18px;
 }
 
 .input-container button {
@@ -667,6 +668,9 @@ export default defineComponent({
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid #ddd;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: text; /* Safari - keep text selectable */
+  user-select: text;
 }
 
 /* Previous subtitle line styling */
@@ -677,6 +681,9 @@ export default defineComponent({
   background-color: #e0e0e0;
   border-bottom: 1px solid #ccc;
   white-space: pre-wrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Current subtitle display below video */
@@ -691,8 +698,10 @@ export default defineComponent({
   max-height: 80px;
   overflow-y: auto;
   user-select: text; /* Make text selectable */
+  -webkit-user-select: text;
   cursor: text; /* Show text cursor when hovering */
   position: relative;
+  -webkit-touch-callout: none;
 }
 
 /* Next subtitle line styling */
@@ -703,6 +712,9 @@ export default defineComponent({
   background-color: #e8e8e8;
   border-top: 1px solid #ccc;
   white-space: pre-wrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* New vocabulary popup styles */
@@ -718,7 +730,7 @@ export default defineComponent({
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   transition: all 0.2s ease;
   white-space: nowrap;
-  max-width: 100%;
+  max-width: 50%;
   text-overflow: ellipsis;
   overflow: hidden;
   width: fit-content;

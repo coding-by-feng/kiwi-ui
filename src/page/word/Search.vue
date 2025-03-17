@@ -11,7 +11,7 @@
             placeholder="input anything"
             size="mini"
             :trigger-on-focus="false"
-            @keyup.enter.native="onSubmit"
+            @keydown.native="handleKeyDown"
             :clearable="true"
             :autosize="true"
             :autocomplete="VocabularyModeOnOrOff"
@@ -52,6 +52,8 @@
       <el-button v-if="!ifVocabularyMode" icon="el-icon-back" type="info" plain
                  size="mini" @click="onBack()"></el-button>
       <el-button v-if="!ifVocabularyMode" icon="el-icon-search" type="info" plain
+                 size="mini" @click="onSubmit()"></el-button>
+      <el-button v-if="!ifVocabularyMode" icon="el-icon-question" type="info" plain
                  size="mini" @click="onSubmit()"></el-button>
     </el-row>
     <el-divider></el-divider>
@@ -168,11 +170,6 @@ export default {
     },
     selectedModeChange(item) {
       console.log('selectedModeChange', item)
-      setStore({
-        name: kiwiConst.CONFIG_KEY.SELECTED_LANGUAGE,
-        content: item,
-        type: 'local'
-      })
       this.$router.push({
         path: this.$route.path,
         query: {
@@ -185,6 +182,11 @@ export default {
     },
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
+      setStore({
+        name: kiwiConst.CONFIG_KEY.SELECTED_LANGUAGE,
+        content: item,
+        type: 'local'
+      })
       this.$router.push({
         path: this.$route.path,
         query: {
@@ -207,6 +209,54 @@ export default {
           now: new Date().getTime()
         }
       })
+    },
+    explainMore() {
+      let real = this.originalText.trim()
+      if (util.isEmptyStr(real)) {
+        return
+      }
+      this.$refs.auto.close()
+
+      const encodedOriginalText = encodeURIComponent(real.toLowerCase())
+      this.$router.push({
+        path: '/index/vocabulary/aiResponseDetail',
+        query: {
+          active: 'search',
+          selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
+          language: this.selectedLanguage,
+          originalText: encodedOriginalText,
+          now: new Date().getTime()
+        }
+      })
+    },
+    // Add the new handleKeyDown method here
+    handleKeyDown(event) {
+      // Check if Ctrl or Cmd key is pressed with Enter
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey || event.shiftKey)) {
+        // If this is a textarea, insert a newline
+        if (this.getInputType === kiwiConsts.INPUT_TYPE.TEXTAREA) {
+          // Prevent the default behavior
+          event.preventDefault();
+
+          // Get the current cursor position
+          const cursorPos = event.target.selectionStart;
+          const textBefore = this.originalText.substring(0, cursorPos);
+          const textAfter = this.originalText.substring(cursorPos);
+
+          // Insert a newline at the cursor position
+          this.originalText = textBefore + '\n' + textAfter;
+
+          // Set the cursor position after the newline
+          this.$nextTick(() => {
+            event.target.selectionStart = event.target.selectionEnd = cursorPos + 1;
+          });
+        }
+      }
+      // Regular Enter key without modifiers
+      else if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+        // Call onSubmit as before
+        this.onSubmit();
+      }
     },
     onSubmit() {
       let real = this.originalText.trim()
