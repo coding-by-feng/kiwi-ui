@@ -177,8 +177,6 @@ export default defineComponent({
 
     // Add resize listener to handle screen size changes
     window.addEventListener('resize', this.checkScreenSize);
-
-    msgUtil.notifySuccess(this, 'YouTuBe PlayerUsage Tips', 'The searching input and button will be hided when the video is playing.', 6000)
   },
   watch: {
     videoId: {
