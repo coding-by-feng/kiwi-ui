@@ -5,6 +5,16 @@
     <!-- Input and Button for YouTube URL -->
     <div class="input-container" v-show="!isPlaying && !forceHideInput">
       <div class="url-input-group">
+        <!-- Language dropdown that shows only when translation is enabled -->
+        <el-select v-show="ifNotTranslation" v-model="selectedLanguage" placeholder="Select Language"
+                   @change="selectedLanguageChange">
+          <el-option
+              v-for="(code, language) in languageCodes"
+              :key="code"
+              :label="language.replace('_', ' ')"
+              :value="code">
+          </el-option>
+        </el-select>
         <el-input
             v-model="videoUrl"
             type="text"
@@ -15,6 +25,15 @@
         <button @click="loadContent" :disabled="!videoUrl || isLoading" class="ytb-player-button">
           {{ isLoading ? 'Loading...' : 'Load' }}
         </button>
+        <!-- New translation toggle with switch -->
+      </div>
+      <div style="margin-top: 10px;">
+        <el-switch
+            v-model="ifNotTranslation"
+            active-text="Include translation"
+            inactive-text="Exclude translation"
+            style="margin-right: 5px;">
+        </el-switch>
       </div>
     </div>
 
@@ -100,7 +119,7 @@
               {{ subtitle.text }}
             </p>
             <!-- Add a dummy element to ensure the last subtitle is fully visible -->
-            <div class="scroll-filler" v-if="subtitles.length > 0"> </div>
+            <div class="scroll-filler" v-if="subtitles.length > 0"></div>
           </div>
         </div>
       </div>
@@ -119,17 +138,21 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
-import { downloadVideoSubtitles } from '@/api/ai';
+import {defineComponent, ref} from 'vue';
+import {downloadVideoSubtitles} from '@/api/ai';
 import msgUtil from '@/util/msg'
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
+import kiwiConst from "@/const/kiwiConsts";
 
 export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
   data() {
     return {
       videoUrl: null,
+      ifNotTranslation: getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) ? getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) : false,
+      selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) : null,
+      languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
       videoId: null,
       subtitles: [],
       statusMessage: '',
@@ -197,6 +220,20 @@ export default defineComponent({
     isMobileDevice() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
           || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+    },
+
+    selectedLanguageChange(item) {
+      console.log('selectedLanguageChange', item)
+      setStore({
+        name: kiwiConst.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE,
+        content: item,
+        type: 'local'
+      })
+      setStore({
+        name: kiwiConst.CONFIG_KEY.IF_SUBTITLES_TRANSLATION,
+        content: true,
+        type: 'local'
+      })
     },
 
     // Apply CSS to prevent native selection UI
@@ -438,7 +475,7 @@ export default defineComponent({
       // Scroll to current subtitle
       const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
       if (subtitleElement) {
-        subtitleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        subtitleElement.scrollIntoView({behavior: 'smooth', block: 'center'});
       }
     },
     async loadContent() {
@@ -467,9 +504,9 @@ export default defineComponent({
         }
 
         // Fetch subtitles
-        const subtitleResponse = await downloadVideoSubtitles(this.videoUrl).catch(error => {
+        const subtitleResponse = await downloadVideoSubtitles(this.videoUrl, this.selectedLanguage).catch(error => {
           console.error('Error downloading subtitles:', error);
-          return { status: 500, data: { data: null } };
+          return {status: 500, data: {data: null}};
         });
 
         if (subtitleResponse.status !== 200 || !subtitleResponse.data.data) {
@@ -574,8 +611,12 @@ export default defineComponent({
       this.player = null;
     }
 
-    document.removeEventListener('mouseup', () => { this.userInteracting = false; });
-    document.removeEventListener('touchend', () => { this.userInteracting = false; });
+    document.removeEventListener('mouseup', () => {
+      this.userInteracting = false;
+    });
+    document.removeEventListener('touchend', () => {
+      this.userInteracting = false;
+    });
     window.removeEventListener('resize', this.checkScreenSize);
 
     // Remove text selection related event listeners
@@ -727,7 +768,7 @@ export default defineComponent({
   font-size: 14px;
   cursor: pointer;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
   white-space: nowrap;
   max-width: 50%;
@@ -1062,5 +1103,6 @@ input:checked + .toggle-slider:before {
     font-size: 12px;
     padding: 6px 10px;
   }
+
 }
 </style>

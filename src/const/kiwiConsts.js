@@ -161,7 +161,9 @@ export default {
         IS_PLAY_EXAMPLE: 'is_play_example',
         IS_EN_TO_EN: 'is_en_to_en',
         BGM: 'bgm',
-        SELECTED_LANGUAGE: 'selected_language'
+        SELECTED_LANGUAGE: 'selected_language',
+        SUBTITLES_TRANSLATION_SELECTED_LANGUAGE: 'subtitles_translation_selected_language',
+        IF_SUBTITLES_TRANSLATION: true,
     },
 
     DB_NAME: 'KIWI_VOCABULARY',
