@@ -1,9 +1,9 @@
 <template>
   <div class="youtube-player">
-    <h1 id="playHeader" v-show="!isPlaying">YouTube Player</h1>
+    <h1 id="playHeader" v-show="!isPlaying && !forceHideInput">YouTube Player</h1>
 
     <!-- Input and Button for YouTube URL -->
-    <div class="input-container" v-show="!isPlaying">
+    <div class="input-container" v-show="!isPlaying && !forceHideInput">
       <div class="url-input-group">
         <el-input
             v-model="videoUrl"
@@ -22,72 +22,99 @@
     </div>
 
     <!-- Status Message -->
-    <p class="status-message" v-show="!isPlaying">{{ statusMessage }}</p>
+    <p class="status-message" v-show="!isPlaying && !forceHideInput">{{ statusMessage }}</p>
 
-    <!-- Video Player Section -->
-    <div class="video-section" v-if="videoUrl && videoUrl !== ''">
-      <!-- Video Player -->
-      <div class="video-container">
-        <div id="youtube-player-container"></div>
+    <!-- Responsive Content Container -->
+    <div class="content-container" v-if="videoUrl && videoUrl !== ''">
+      <!-- Left Panel (video and controls) -->
+      <div class="left-panel">
+        <!-- Video Player Section -->
+        <div class="video-section">
+          <!-- Video Player -->
+          <div class="video-container">
+            <div id="youtube-player-container"></div>
+          </div>
+        </div>
+
+        <!-- Enhanced Subtitle Display with Previous, Current, and Next Lines -->
+        <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length"
+             @mouseup="handleTextSelection"
+             @touchend="handleTextSelection"
+        >
+          <div v-if="hasPreviousSubtitle" class="previous-subtitle">
+            {{ subtitles[currentSubtitleIndex - 1]?.text }}
+          </div>
+
+          <div class="current-subtitle-display">
+            {{ subtitles[currentSubtitleIndex]?.text }}
+          </div>
+
+          <div v-if="hasNextSubtitle" class="next-subtitle">
+            {{ subtitles[currentSubtitleIndex + 1]?.text }}
+          </div>
+        </div>
+
+        <!-- Controls for Subtitle View -->
+        <div class="ytb-controls-container" v-if="subtitles.length && player">
+          <div class="ytb-controls-row">
+            <div class="controls-left">
+              <div class="auto-scroll-toggle" v-if="!isSmallScreen">
+                <label class="toggle-switch">
+                  <input type="checkbox" v-model="autoScrollEnabled">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Auto-scroll</span>
+              </div>
+              <div class="input-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" v-model="forceHideInput">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Hide input</span>
+              </div>
+            </div>
+            <span class="current-line-info" v-if="currentSubtitleIndex !== -1">
+              Line {{ currentSubtitleIndex + 1 }} of {{ subtitles.length }}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <!-- Enhanced Subtitle Display with Previous, Current, and Next Lines -->
-      <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length"
-           @mouseup="handleTextSelection"
-           @touchend="handleTextSelection"
-      >
-        <div v-if="hasPreviousSubtitle" class="previous-subtitle">
-          {{ subtitles[currentSubtitleIndex - 1]?.text }}
-        </div>
+      <!-- Right Panel (subtitles) -->
+      <div class="right-panel">
 
-        <div class="current-subtitle-display">
-          {{ subtitles[currentSubtitleIndex]?.text }}
-        </div>
-
-        <div v-if="hasNextSubtitle" class="next-subtitle">
-          {{ subtitles[currentSubtitleIndex + 1]?.text }}
+        <!-- Subtitles List -->
+        <div class="subtitles-container" v-if="subtitles.length">
+          <div class="subtitles-wrapper"
+               @mouseup="handleTextSelection"
+               @touchend="handleTextSelection">
+            <p
+                v-for="(subtitle, index) in subtitles"
+                :key="index"
+                :class="{
+                  'active-subtitle': currentSubtitleIndex === index,
+                  'past-subtitle': index < currentSubtitleIndex,
+                  'future-subtitle': index > currentSubtitleIndex
+                }"
+                :id="`subtitle-${index}`"
+                @click="jumpToSubtitle(index)"
+            >
+              {{ subtitle.text }}
+            </p>
+            <!-- Add a dummy element to ensure the last subtitle is fully visible -->
+            <div class="scroll-filler" v-if="subtitles.length > 0"> </div>
+          </div>
         </div>
       </div>
 
       <!-- Vocabulary Lookup Popup -->
       <div
           v-if="showSelectionPopup"
+          ref="vocabularyPopup"
           class="vocabulary-popup"
           @click="navigateToVocabulary"
       >
         <i class="el-icon-search"></i> "{{ selectedText }}"
-      </div>
-    </div>
-
-    <!-- Controls for Subtitle View -->
-    <div class="ytb-controls-container" v-if="subtitles.length && player">
-      <div class="ytb-controls-row">
-        <span class="current-line-info" v-if="currentSubtitleIndex !== -1">
-          Line {{ currentSubtitleIndex + 1 }} of {{ subtitles.length }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Subtitles List -->
-    <div class="subtitles-container" v-if="subtitles.length">
-      <div class="subtitles-wrapper"
-           @mouseup="handleTextSelection"
-           @touchend="handleTextSelection">
-        <p
-            v-for="(subtitle, index) in subtitles"
-            :key="index"
-            :class="{
-              'active-subtitle': currentSubtitleIndex === index,
-              'past-subtitle': index < currentSubtitleIndex,
-              'future-subtitle': index > currentSubtitleIndex
-            }"
-            :id="`subtitle-${index}`"
-            @click="jumpToSubtitle(index)"
-        >
-          {{ subtitle.text }}
-        </p>
-        <!-- Add a dummy element to ensure the last subtitle is fully visible -->
-        <div class="scroll-filler" v-if="subtitles.length > 0"> </div>
       </div>
     </div>
   </div>
@@ -111,10 +138,12 @@ export default defineComponent({
       player: null,
       currentSubtitleIndex: -1,
       subtitleInterval: null,
-      autoScrollEnabled: true, // Always enabled by default
       userInteracting: false,
       lastScrollTime: 0,
       visibilityCheckInterval: null,
+      autoScrollEnabled: true, // Add back auto-scroll flag with default true
+      forceHideInput: false, // New toggle for hiding input area
+      isSmallScreen: false, // Track if we're on a small screen
 
       // Text selection and popup properties
       selectedText: '',
@@ -143,6 +172,12 @@ export default defineComponent({
     // Add click listener to document to close popup when clicking outside
     document.addEventListener('click', this.handleClickOutside);
 
+    // Check if on small screen and disable auto-scroll if needed
+    this.checkScreenSize();
+
+    // Add resize listener to handle screen size changes
+    window.addEventListener('resize', this.checkScreenSize);
+
     msgUtil.notifySuccess(this, 'YouTuBe PlayerUsage Tips', 'The searching input and button will be hided when the video is playing.', 6000)
   },
   watch: {
@@ -166,8 +201,38 @@ export default defineComponent({
 
       if (selectedText) {
         this.selectedText = selectedText;
-        // Show popup at the bottom of the current subtitle line (position is set in CSS)
+
+        // Show popup first so it's in the DOM
         this.showSelectionPopup = true;
+
+        // Calculate position for popup based on selection
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+
+        // Use nextTick to ensure popup is rendered before positioning
+        this.$nextTick(() => {
+          const popup = document.querySelector('.vocabulary-popup');
+          if (popup) {
+            // Calculate the position relative to the viewport
+            const viewportWidth = window.innerWidth;
+            const popupWidth = popup.offsetWidth;
+
+            // Keep popup within viewport bounds
+            let left = rect.left + (rect.width / 2);
+
+            // Ensure popup doesn't go off-screen
+            if (left - (popupWidth / 2) < 10) {
+              left = 10 + (popupWidth / 2); // Keep 10px from left edge
+            } else if (left + (popupWidth / 2) > viewportWidth - 10) {
+              left = viewportWidth - 10 - (popupWidth / 2); // Keep 10px from right edge
+            }
+
+            // Apply the calculated position
+            popup.style.left = `${left}px`;
+            popup.style.top = `${rect.bottom + 10}px`;
+            popup.style.transform = 'translateX(-50%)';
+          }
+        });
 
         // Prevent default to maintain the selection
         event.preventDefault();
@@ -327,7 +392,7 @@ export default defineComponent({
     },
 
     handleUserScroll() {
-      // With auto-scroll always enabled, we just temporarily pause scrolling during user interaction
+      // Mark user is interacting with scrolling
       this.userInteracting = true;
       this.lastScrollTime = Date.now();
 
@@ -371,6 +436,13 @@ export default defineComponent({
         }
       }
     },
+    scrollToCurrentSubtitle() {
+      // Scroll to current subtitle
+      const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
+      if (subtitleElement) {
+        subtitleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
     async loadContent() {
       // Reset state for new video
       if (this.player) {
@@ -386,7 +458,7 @@ export default defineComponent({
       this.subtitles = [];
       this.currentSubtitleIndex = -1;
       this.stopSubtitleSync();
-      this.autoScrollEnabled = true;
+      // Keep auto-scroll setting as is (don't reset it)
 
       try {
         const videoId = this.extractVideoId(this.videoUrl);
@@ -475,6 +547,19 @@ export default defineComponent({
       const [hours, minutes, seconds] = timeStr.split(':');
       const [secs, ms] = seconds.split('.');
       return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
+    },
+
+    checkScreenSize() {
+      // Consider small screen as less than 768px (typical mobile breakpoint)
+      const isSmallScreen = window.innerWidth < 768;
+
+      if (isSmallScreen) {
+        // Disable auto-scroll on small screens
+        this.autoScrollEnabled = false;
+      }
+
+      // Store screen size status for conditional rendering
+      this.isSmallScreen = isSmallScreen;
     }
   },
   beforeUnmount() {
@@ -489,6 +574,7 @@ export default defineComponent({
     document.removeEventListener('mouseup', () => { this.userInteracting = false; });
     document.removeEventListener('touchend', () => { this.userInteracting = false; });
     document.removeEventListener('keydown', this.handleKeyPress);
+    window.removeEventListener('resize', this.checkScreenSize);
 
     // Remove text selection related event listeners
     document.removeEventListener('click', this.handleClickOutside);
@@ -542,12 +628,28 @@ export default defineComponent({
   font-size: 16px;
 }
 
+/* Main container for side-by-side layout */
+.content-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100vh - 120px); /* Adjust based on header height */
+  overflow: hidden;
+}
+
 /* Video section containing player and current subtitle */
 .video-section {
   display: flex;
   flex-direction: column;
-  flex: 1 0 40%;
+  flex: 1 0 auto; /* Changed to auto for better responsiveness */
   position: relative;
+}
+
+/* Apply min-height only on larger screens */
+@media (min-width: 768px) {
+  .video-section {
+    min-height: 50vh;
+  }
 }
 
 .video-container {
@@ -561,10 +663,11 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   position: relative;
-  margin-bottom: 45px; /* Make room for the popup below */
+  margin: 10px 0; /* Add space above and below */
   background-color: #f5f5f5;
   border-radius: 4px;
   overflow: hidden;
+  border: 1px solid #ddd;
 }
 
 /* Previous subtitle line styling */
@@ -605,7 +708,7 @@ export default defineComponent({
 
 /* New vocabulary popup styles */
 .vocabulary-popup {
-  position: absolute;
+  position: fixed; /* Use fixed positioning */
   background-color: rgb(148, 154, 165);
   color: white;
   padding: 8px 12px;
@@ -619,9 +722,6 @@ export default defineComponent({
   max-width: 100%;
   text-overflow: ellipsis;
   overflow: hidden;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
   width: fit-content;
 }
 
@@ -643,15 +743,79 @@ export default defineComponent({
 .ytb-controls-container {
   display: flex;
   flex-direction: column;
-  padding: 0 10px;
+  padding: 10px 10px;
   margin-bottom: 8px;
 }
 
 .ytb-controls-row {
   display: flex;
-  justify-content: flex-end; /* Right-align the line counter */
+  justify-content: space-between; /* Space between toggle and counter */
   align-items: center;
   margin-bottom: 5px;
+  margin-right: 30px;
+}
+
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Add space between the toggles */
+}
+
+/* Toggle switch styling */
+.auto-scroll-toggle, .input-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #43a047;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.toggle-label {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #666;
 }
 
 .current-line-info {
@@ -684,31 +848,37 @@ export default defineComponent({
 
 .subtitles-container {
   flex: 1 0 45%;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 0;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   min-height: 100px;
   position: relative;
   scrollbar-width: thin; /* For Firefox */
+  /* Ensure scrollbar is always visible */
+  overflow-y: scroll;
 }
 
 /* Style scrollbar for webkit browsers (Chrome, Safari, Edge) */
 .subtitles-container::-webkit-scrollbar {
   width: 8px;
+  display: block;
 }
 
 .subtitles-container::-webkit-scrollbar-track {
   background: #f1f1f1;
+  display: block;
 }
 
 .subtitles-container::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 4px;
+  display: block;
 }
 
 .subtitles-container::-webkit-scrollbar-thumb:hover {
   background: #555;
+  display: block;
 }
 
 .subtitles-wrapper {
@@ -766,6 +936,70 @@ export default defineComponent({
   margin: 0;
   color: #d32f2f;
   flex-shrink: 0;
+}
+
+/* Hide controls on small screens */
+@media (max-width: 767px) {
+  .ytb-controls-container {
+    display: none !important;
+  }
+}
+
+/* Media query for larger screens (PC, laptop, tablet) */
+@media (min-width: 992px) {
+  /* Change to horizontal layout for larger screens */
+  .content-container {
+    flex-direction: row;
+  }
+
+  /* Left side - video area */
+  .left-panel {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Right side - subtitles area */
+  .right-panel {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 1px solid #ddd;
+  }
+
+  /* Adjust video section */
+  .video-section {
+    flex: 1 0 auto;
+  }
+
+  /* Apply min-height only on larger screens */
+  @media (min-width: 768px) {
+    .video-section {
+      min-height: 50vh;
+    }
+  }
+
+  /* Make controls stay in left panel */
+  .ytb-controls-container {
+    width: 100%;
+  }
+
+  /* Make subtitle display remain in left panel */
+  .subtitles-context-display {
+    margin-bottom: 10px;
+    max-height: 150px;
+  }
+
+  /* Adjust subtitles list container */
+  .subtitles-container {
+    flex: 1;
+    height: calc(100% - 160px); /* Account for context display */
+    margin-bottom: 0;
+  }
 }
 
 /* Responsive adjustments for mobile */
