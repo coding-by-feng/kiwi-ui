@@ -431,7 +431,8 @@ export default defineComponent({
       // If the subtitle has changed, update and scroll if auto-scroll is enabled
       if (index !== -1 && index !== this.currentSubtitleIndex) {
         this.currentSubtitleIndex = index;
-        if (this.autoScrollEnabled && !this.userInteracting) {
+        // Only auto-scroll if enabled AND not on small screen AND not user interacting
+        if (this.autoScrollEnabled && !this.isSmallScreen && !this.userInteracting) {
           this.scrollToCurrentSubtitle();
         }
       }
@@ -855,8 +856,6 @@ input:checked + .toggle-slider:before {
   min-height: 100px;
   position: relative;
   scrollbar-width: thin; /* For Firefox */
-  /* Ensure scrollbar is always visible */
-  overflow-y: scroll;
 }
 
 /* Style scrollbar for webkit browsers (Chrome, Safari, Edge) */
@@ -927,8 +926,6 @@ input:checked + .toggle-slider:before {
 
 .scroll-filler {
   margin-top: 10px;
-  /* Increase the height to ensure there's always enough content to scroll */
-  height: calc(50vh + 150px);
 }
 
 .status-message {
@@ -938,10 +935,28 @@ input:checked + .toggle-slider:before {
   flex-shrink: 0;
 }
 
-/* Hide controls on small screens */
+/* Media queries for small screens (mobile) */
 @media (max-width: 767px) {
   .ytb-controls-container {
     display: none !important;
+  }
+
+  /* Show scrollbar explicitly on small screens */
+  .subtitles-container {
+    overflow-y: scroll !important;
+    max-height: 40vh;
+    -webkit-overflow-scrolling: touch; /* Better scrolling on iOS */
+  }
+
+  /* Make scrollbars more visible on small screens */
+  .subtitles-container::-webkit-scrollbar {
+    width: 10px !important;
+    display: block !important;
+  }
+
+  .subtitles-container::-webkit-scrollbar-thumb {
+    background: #666 !important;
+    border-radius: 5px !important;
   }
 }
 
