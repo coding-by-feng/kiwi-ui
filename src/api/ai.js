@@ -12,14 +12,20 @@ export function callAiChatCompletion(urlPrefix, language, originalText) {
 }
 
 // YouTube-related API calls (based on YouTuBeController)
-export function downloadVideoSubtitles(videoUrl) {
+export function downloadVideoSubtitles(videoUrl, language) {
+    let url;
+    if (language) {
+        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
+    } else {
+        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}`;
+    }
     return request({
-        url: `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}`,
+        url: url,
         headers: {
             isToken: true // Adjust based on your authentication requirements
         },
         method: 'get'
-    })
+    });
 }
 
 export function downloadVideo(videoUrl) {
