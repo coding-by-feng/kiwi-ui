@@ -6,12 +6,12 @@
     <div class="input-container" v-show="!isPlaying && !forceHideInput">
       <div class="url-input-group">
         <!-- Language dropdown that shows only when translation is enabled -->
-        <el-select v-show="ifNotTranslation" v-model="selectedLanguage" placeholder="Select Language"
+        <el-select v-show="ifTranslation" v-model="selectedLanguage" placeholder="Select Language"
                    @change="selectedLanguageChange">
           <el-option
               v-for="(code, language) in languageCodes"
               :key="code"
-              :label="language.replace('_', ' ')"
+              :label="language.replaceAll('_', ' ')"
               :value="code">
           </el-option>
         </el-select>
@@ -27,11 +27,23 @@
         </button>
         <!-- New translation toggle with switch -->
       </div>
-      <div style="margin-top: 10px;">
+      <div style="margin-top: 5px;">
         <el-switch
-            v-model="ifNotTranslation"
+            v-model="ifTranslation"
             active-text="Include translation"
             inactive-text="Exclude translation"
+            @change="ifTranslationOnChange"
+            style="margin-right: 5px;">
+        </el-switch>
+      </div>
+    </div>
+    <div>
+      <div style="margin-top: 0px; margin-bottom: 5px;">
+        <el-switch
+            v-model="forceHideInput"
+            active-text="Force to hide searching"
+            inactive-text="Keep searching"
+            @change="ifTranslationOnChange"
             style="margin-right: 5px;">
         </el-switch>
       </div>
@@ -53,11 +65,10 @@
         </div>
 
         <!-- Enhanced Subtitle Display with Previous, Current, and Next Lines -->
-        <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length"
+        <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length && ifTranslation"
              @mouseup="handleTextSelection"
              @touchend="handleTextSelection"
-             @touchstart="pauseVideo"
-        >
+             @touchstart="pauseVideo">
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
@@ -82,13 +93,6 @@
                 </label>
                 <span class="toggle-label">Auto-scroll</span>
               </div>
-              <div class="input-toggle">
-                <label class="toggle-switch">
-                  <input type="checkbox" v-model="forceHideInput">
-                  <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Hide input</span>
-              </div>
             </div>
             <span class="current-line-info" v-if="currentSubtitleIndex !== -1">
               Line {{ currentSubtitleIndex + 1 }} of {{ subtitles.length }}
@@ -105,18 +109,20 @@
           <div class="subtitles-wrapper"
                @mouseup="handleTextSelection"
                @touchend="handleTextSelection">
-            <p
-                v-for="(subtitle, index) in subtitles"
-                :key="index"
-                :class="{
+            <p v-if="!ifTranslation"
+               v-for="(subtitle, index) in subtitles"
+               :key="index"
+               :class="{
                   'active-subtitle': currentSubtitleIndex === index,
                   'past-subtitle': index < currentSubtitleIndex,
                   'future-subtitle': index > currentSubtitleIndex
                 }"
-                :id="`subtitle-${index}`"
-                @click="jumpToSubtitle(index)"
+               :id="`subtitle-${index}`"
+               @click="jumpToSubtitle(index)"
             >
               {{ subtitle.text }}
+            </p>
+            <p v-if="ifTranslation" v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;">
             </p>
             <!-- Add a dummy element to ensure the last subtitle is fully visible -->
             <div class="scroll-filler" v-if="subtitles.length > 0"></div>
@@ -141,20 +147,26 @@
 import {defineComponent, ref} from 'vue';
 import {downloadVideoSubtitles} from '@/api/ai';
 import msgUtil from '@/util/msg'
+import util from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
 import kiwiConst from "@/const/kiwiConsts";
+import MarkdownIt from 'markdown-it';
+
+const md = new MarkdownIt();
 
 export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
   data() {
     return {
       videoUrl: null,
-      ifNotTranslation: getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) ? getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) : false,
+      ifTranslation: getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) ? getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) : false,
       selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) : null,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
       videoId: null,
       subtitles: [],
+      translatedSubtitles: '',
+      subtitlesType: null,
       statusMessage: '',
       isLoading: false,
       player: null,
@@ -174,6 +186,12 @@ export default defineComponent({
     };
   },
   computed: {
+    parsedResponseText() {
+      if (this.translatedSubtitles) {
+        return md.render(this.translatedSubtitles);
+      }
+      return '';
+    },
     // Check if there is a previous subtitle available
     hasPreviousSubtitle() {
       return this.currentSubtitleIndex > 0;
@@ -220,6 +238,13 @@ export default defineComponent({
     isMobileDevice() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
           || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+    },
+    ifTranslationOnChange(item) {
+      setStore({
+        name: kiwiConst.CONFIG_KEY.IF_SUBTITLES_TRANSLATION,
+        content: item,
+        type: 'local'
+      })
     },
 
     selectedLanguageChange(item) {
@@ -504,16 +529,20 @@ export default defineComponent({
         }
 
         // Fetch subtitles
-        const subtitleResponse = await downloadVideoSubtitles(this.videoUrl, this.selectedLanguage).catch(error => {
+        const subtitleResponse = await downloadVideoSubtitles(this.videoUrl, this.ifTranslation ? this.selectedLanguage : null).catch(error => {
           console.error('Error downloading subtitles:', error);
           return {status: 500, data: {data: null}};
         });
 
-        if (subtitleResponse.status !== 200 || !subtitleResponse.data.data) {
+        let scrollingSubtitles = subtitleResponse?.data?.data?.scrollingSubtitles;
+        let translatedOrRetouchedSubtitles = subtitleResponse?.data?.data?.translatedOrRetouchedSubtitles;
+        this.subtitlesType = subtitleResponse?.data?.data?.type;
+        if (subtitleResponse.status !== 200 || !scrollingSubtitles) {
           this.statusMessage = 'Video loaded, but no subtitles available';
         } else {
-          this.parseSubtitles(subtitleResponse.data.data);
-          this.statusMessage = ''
+          this.parseSubtitles(scrollingSubtitles);
+          this.translatedSubtitles = translatedOrRetouchedSubtitles;
+          this.statusMessage = '';
           this.videoId = videoId;
           msgUtil.msgSuccess(this, 'Content loaded successfully!', 2000);
 
@@ -553,8 +582,8 @@ export default defineComponent({
         return null;
       }
     },
-    parseSubtitles(webvttText) {
-      const lines = webvttText.split('\n').filter(line => line.trim());
+    parseSubtitles(scrollingSubtitles) {
+      const lines = scrollingSubtitles.split('\n').filter(line => line.trim());
       const subtitles = [];
       let currentSubtitle = null;
       let parsingCue = false;
@@ -811,12 +840,6 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 15px; /* Add space between the toggles */
-}
-
-/* Toggle switch styling */
-.auto-scroll-toggle, .input-toggle {
-  display: flex;
-  align-items: center;
 }
 
 .toggle-switch {

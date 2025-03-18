@@ -244,6 +244,13 @@ export default {
         GRAMMAR_CORRECTION: 'input anything',
         SYNONYM: 'input vocabulary',
         ANTONYM: 'input vocabulary',
-    }
+    },
+
+    SUBTITLES_TYPE: {
+        SMALL_AUTO_GENERATED_VTT_RETURN_STRING: "auto_generated_return_string",
+        LARGE_AUTO_GENERATED_VTT_RETURN_LIST: "auto_generated_return_list",
+        SMALL_PROFESSIONAL_SRT_RETURN_STRING: "small_professional_return_string",
+        LARGE_PROFESSIONAL_SRT_RETURN_LIST: "large_professional_return_list"
+    },
 
 }
