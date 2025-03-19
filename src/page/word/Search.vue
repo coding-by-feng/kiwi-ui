@@ -54,7 +54,7 @@
       <el-button v-if="!ifVocabularyMode" icon="el-icon-search" type="info" plain
                  size="mini" @click="onSubmit()"></el-button>
       <el-button v-if="!ifVocabularyMode" icon="el-icon-question" type="info" plain
-                 size="mini" @click="onSubmit()"></el-button>
+                 size="mini" @click="explainMore()"></el-button>
     </el-row>
     <el-divider></el-divider>
     <el-row justify="center">

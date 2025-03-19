@@ -27,28 +27,37 @@
         </button>
         <!-- New translation toggle with switch -->
       </div>
-      <div style="margin-top: 5px;">
+    </div>
+    <div class="switches-container">
+      <div class="switch-row" v-show="!isPlaying && !forceHideInput">
         <el-switch
             v-model="ifTranslation"
             active-text="Include translation"
-            inactive-text="Exclude translation"
             @change="ifTranslationOnChange"
-            style="margin-right: 5px;">
+            class="switch-element">
         </el-switch>
       </div>
-    </div>
-    <div>
-      <div style="margin-top: 0px; margin-bottom: 5px;">
+      <div class="switch-row">
         <el-switch
             v-model="forceHideInput"
-            active-text="Force to hide searching"
-            inactive-text="Keep searching"
+            active-text="Force to hide searching while playing"
             @change="ifTranslationOnChange"
-            style="margin-right: 5px;">
+            class="switch-element">
+        </el-switch>
+      </div>
+      <div class="switch-row">
+        <el-switch
+            v-model="autoScrollEnabled"
+            active-text="Auto-Scroll"
+            class="switch-element">
+        </el-switch>
+        <el-switch
+            v-model="middleControlEnabled"
+            active-text="Middle-Control"
+            class="switch-element">
         </el-switch>
       </div>
     </div>
-
     <!-- Status Message -->
     <p class="status-message" v-show="!isPlaying && !forceHideInput">{{ statusMessage }}</p>
 
@@ -65,7 +74,9 @@
         </div>
 
         <!-- Enhanced Subtitle Display with Previous, Current, and Next Lines -->
-        <div class="subtitles-context-display" v-if="currentSubtitleIndex !== -1 && subtitles.length && ifTranslation"
+        <div class="subtitles-context-display"
+             v-if="isSafariOrIOS || currentSubtitleIndex !== -1 && subtitles.length && (ifTranslation || (!ifTranslation && !ifProfessionalSubtitles))"
+             v-show="middleControlEnabled"
              @mouseup="handleTextSelection"
              @touchend="handleTextSelection"
              @touchstart="pauseVideo">
@@ -73,30 +84,12 @@
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
 
-          <div class="current-subtitle-display">
+          <div v-if="subtitles.length" class="current-subtitle-display">
             {{ subtitles[currentSubtitleIndex]?.text }}
           </div>
 
           <div v-if="hasNextSubtitle" class="next-subtitle">
             {{ subtitles[currentSubtitleIndex + 1]?.text }}
-          </div>
-        </div>
-
-        <!-- Controls for Subtitle View -->
-        <div class="ytb-controls-container" v-if="subtitles.length && player">
-          <div class="ytb-controls-row">
-            <div class="controls-left">
-              <div class="auto-scroll-toggle" v-if="!isSmallScreen">
-                <label class="toggle-switch">
-                  <input type="checkbox" v-model="autoScrollEnabled">
-                  <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Auto-scroll</span>
-              </div>
-            </div>
-            <span class="current-line-info" v-if="currentSubtitleIndex !== -1">
-              Line {{ currentSubtitleIndex + 1 }} of {{ subtitles.length }}
-            </span>
           </div>
         </div>
       </div>
@@ -109,7 +102,7 @@
           <div class="subtitles-wrapper"
                @mouseup="handleTextSelection"
                @touchend="handleTextSelection">
-            <p v-if="!ifTranslation"
+            <p v-show="!ifTranslation"
                v-for="(subtitle, index) in subtitles"
                :key="index"
                :class="{
@@ -122,7 +115,7 @@
             >
               {{ subtitle.text }}
             </p>
-            <p v-if="ifTranslation" v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;">
+            <p v-show="ifTranslation" v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;">
             </p>
             <!-- Add a dummy element to ensure the last subtitle is fully visible -->
             <div class="scroll-filler" v-if="subtitles.length > 0"></div>
@@ -172,10 +165,10 @@ export default defineComponent({
       player: null,
       currentSubtitleIndex: -1,
       subtitleInterval: null,
-      userInteracting: false,
       lastScrollTime: 0,
       visibilityCheckInterval: null,
       autoScrollEnabled: true, // Add back auto-scroll flag with default true
+      middleControlEnabled: true, // Add back auto-scroll flag with default true
       forceHideInput: false, // New toggle for hiding input area
       isSmallScreen: false, // Track if we're on a small screen
 
@@ -187,10 +180,8 @@ export default defineComponent({
   },
   computed: {
     parsedResponseText() {
-      if (this.translatedSubtitles) {
-        return md.render(this.translatedSubtitles);
-      }
-      return '';
+      console.log('this.translatedSubtitles', this.translatedSubtitles)
+      return md.render(this.translatedSubtitles);
     },
     // Check if there is a previous subtitle available
     hasPreviousSubtitle() {
@@ -200,7 +191,12 @@ export default defineComponent({
     // Check if there is a next subtitle available
     hasNextSubtitle() {
       return this.currentSubtitleIndex < this.subtitles.length - 1;
-    }
+    },
+
+    ifProfessionalSubtitles() {
+      return kiwiConsts.SUBTITLES_TYPE.LARGE_PROFESSIONAL_SRT_RETURN_LIST === this.subtitlesType
+          || kiwiConsts.SUBTITLES_TYPE.SMALL_PROFESSIONAL_SRT_RETURN_STRING === this.subtitlesType;
+    },
   },
   mounted() {
     // Load YouTube API
@@ -234,6 +230,18 @@ export default defineComponent({
     }
   },
   methods: {
+    isSafariOrIOS() {
+      // Check for Safari browser
+      const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+      // Check for iOS devices (including iPad)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      // If iOS, we're likely dealing with Safari, even if it's embedded in another app
+      return isSafariBrowser || isIOS;
+    },
+
     // Utility method to detect mobile devices
     isMobileDevice() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -245,6 +253,7 @@ export default defineComponent({
         content: item,
         type: 'local'
       })
+      console.log('ifTranslationOnChange', this.ifTranslation)
     },
 
     selectedLanguageChange(item) {
@@ -450,16 +459,6 @@ export default defineComponent({
       }
     },
 
-    handleUserScroll() {
-      // Mark user is interacting with scrolling
-      this.userInteracting = true;
-      this.lastScrollTime = Date.now();
-
-      // After a brief period, re-enable automatic scrolling
-      setTimeout(() => {
-        this.userInteracting = false;
-      }, 2000);
-    },
     startSubtitleSync() {
       // Clear any existing interval
       this.stopSubtitleSync();
@@ -473,34 +472,6 @@ export default defineComponent({
       if (this.subtitleInterval) {
         clearInterval(this.subtitleInterval);
         this.subtitleInterval = null;
-      }
-    },
-    updateCurrentSubtitle() {
-      if (!this.player || !this.subtitles.length) return;
-
-      const currentTime = this.player.getCurrentTime();
-
-      // Find the subtitle that matches the current playback time
-      const index = this.subtitles.findIndex(
-          (sub, i) =>
-              currentTime >= sub.start &&
-              (i === this.subtitles.length - 1 || currentTime < this.subtitles[i + 1].start)
-      );
-
-      // If the subtitle has changed, update and scroll if auto-scroll is enabled
-      if (index !== -1 && index !== this.currentSubtitleIndex) {
-        this.currentSubtitleIndex = index;
-        // Only auto-scroll if enabled AND not on small screen AND not user interacting
-        if (this.autoScrollEnabled && !this.isSmallScreen && !this.userInteracting) {
-          this.scrollToCurrentSubtitle();
-        }
-      }
-    },
-    scrollToCurrentSubtitle() {
-      // Scroll to current subtitle
-      const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-      if (subtitleElement) {
-        subtitleElement.scrollIntoView({behavior: 'smooth', block: 'center'});
       }
     },
     async loadContent() {
@@ -518,6 +489,7 @@ export default defineComponent({
       this.subtitles = [];
       this.currentSubtitleIndex = -1;
       this.stopSubtitleSync();
+      this.forceHideInput = true;
       // Keep auto-scroll setting as is (don't reset it)
 
       try {
@@ -544,6 +516,7 @@ export default defineComponent({
           this.translatedSubtitles = translatedOrRetouchedSubtitles;
           this.statusMessage = '';
           this.videoId = videoId;
+
           msgUtil.msgSuccess(this, 'Content loaded successfully!', 2000);
 
           // Initialize the player now that we have the video ID
@@ -553,6 +526,9 @@ export default defineComponent({
           this.$nextTick(() => {
             this.applyTouchPreventions();
           });
+
+          this.middleControlEnabled = this.ifTranslation;
+          this.isLoading = false;
         }
       } catch (error) {
         console.error('Error loading content:', error);
@@ -618,18 +594,100 @@ export default defineComponent({
       return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
     },
 
-    checkScreenSize() {
-      // Consider small screen as less than 768px (typical mobile breakpoint)
-      const isSmallScreen = window.innerWidth < 768;
-
-      if (isSmallScreen) {
-        // Disable auto-scroll on small screens
-        this.autoScrollEnabled = false;
+    // --- Safari-compatible scrollToCurrentSubtitle method ---
+    scrollToCurrentSubtitle() {
+      // If translation is enabled, no need for scrolling
+      if (this.ifTranslation) {
+        return;
       }
 
-      // Store screen size status for conditional rendering
-      this.isSmallScreen = isSmallScreen;
-    }
+      const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
+      if (!subtitleElement) return;
+
+      // Get the container element
+      const subtitlesContainer = document.querySelector('.subtitles-container');
+      if (!subtitlesContainer) return;
+
+      // Detect Safari browser - needed for special handling
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+      // Different approach for Safari
+      if (isSafari) {
+        // For Safari, we'll use a more direct approach to scrolling
+        // Calculate the element's position relative to the container
+        const containerRect = subtitlesContainer.getBoundingClientRect();
+        const elementRect = subtitleElement.getBoundingClientRect();
+
+        // Calculate the target scroll position (element's top position relative to container)
+        const relativePosition = elementRect.top - containerRect.top;
+        const targetScrollTop = subtitlesContainer.scrollTop + relativePosition - (containerRect.height / 2) + (elementRect.height / 2);
+
+        // Use manual scrollTop setting for Safari (most reliable method)
+        subtitlesContainer.scrollTop = targetScrollTop;
+      } else {
+        // For non-Safari browsers, use the previous method with requestAnimationFrame for smoother scrolling
+        window.requestAnimationFrame(() => {
+          // Calculate the scroll position
+          const containerRect = subtitlesContainer.getBoundingClientRect();
+          const elementRect = subtitleElement.getBoundingClientRect();
+          const scrollPosition = (elementRect.top - containerRect.top) + subtitlesContainer.scrollTop - (containerRect.height / 2) + (elementRect.height / 2);
+
+          // Use scrollTo with smooth behavior
+          subtitlesContainer.scrollTo({
+            top: scrollPosition,
+            behavior: 'smooth'
+          });
+        });
+      }
+    },
+
+    // --- Safari-compatible updateCurrentSubtitle method ---
+    updateCurrentSubtitle() {
+      if (!this.player || !this.subtitles.length) return;
+
+      const currentTime = this.player.getCurrentTime();
+
+      // Find the subtitle that matches the current playback time
+      const index = this.subtitles.findIndex(
+          (sub, i) =>
+              currentTime >= sub.start &&
+              (i === this.subtitles.length - 1 || currentTime < this.subtitles[i + 1].start)
+      );
+
+      // If the subtitle has changed, update and scroll
+      if (index !== -1 && index !== this.currentSubtitleIndex) {
+        this.currentSubtitleIndex = index;
+
+        // Detect Safari browser
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        // Always auto-scroll on mobile and Safari
+        const isMobile = this.isMobileDevice() || window.innerWidth < 768;
+        if (isMobile || isSafari || this.autoScrollEnabled) {
+          // For Safari, we need a different timing approach
+          if (isSafari) {
+            // Immediate scroll for Safari (no delay seems to work better)
+            this.scrollToCurrentSubtitle();
+          } else {
+            // Small delay for other browsers
+            setTimeout(() => {
+              this.scrollToCurrentSubtitle();
+            }, 50);
+          }
+        }
+      }
+    },
+
+    // --- Improved checkScreenSize method with better auto-scroll handling ---
+    checkScreenSize() {
+      const wasSmallScreen = this.isSmallScreen;
+      this.isSmallScreen = window.innerWidth < 768;
+
+      // If transitioning from large to small screen, force auto-scroll on
+      if (!wasSmallScreen && this.isSmallScreen) {
+        this.autoScrollEnabled = true;
+      }
+    },
   },
   beforeUnmount() {
     // Clean up
@@ -640,12 +698,6 @@ export default defineComponent({
       this.player = null;
     }
 
-    document.removeEventListener('mouseup', () => {
-      this.userInteracting = false;
-    });
-    document.removeEventListener('touchend', () => {
-      this.userInteracting = false;
-    });
     window.removeEventListener('resize', this.checkScreenSize);
 
     // Remove text selection related event listeners
@@ -821,81 +873,10 @@ export default defineComponent({
   background-color: #7b8291;
 }
 
-.ytb-controls-container {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 10px;
-  margin-bottom: 8px;
-}
-
-.ytb-controls-row {
-  display: flex;
-  justify-content: space-between; /* Space between toggle and counter */
-  align-items: center;
-  margin-bottom: 5px;
-  margin-right: 30px;
-}
-
-.controls-left {
-  display: flex;
-  align-items: center;
-  gap: 15px; /* Add space between the toggles */
-}
-
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 20px;
-}
-
 .toggle-switch input {
   opacity: 0;
   width: 0;
   height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .toggle-slider {
-  background-color: #43a047;
-}
-
-input:checked + .toggle-slider:before {
-  transform: translateX(20px);
-}
-
-.toggle-label {
-  margin-left: 8px;
-  font-size: 14px;
-  color: #666;
-}
-
-.current-line-info {
-  font-size: 14px;
-  color: #666;
 }
 
 .ytb-player-button {
@@ -1072,11 +1053,6 @@ input:checked + .toggle-slider:before {
     }
   }
 
-  /* Make controls stay in left panel */
-  .ytb-controls-container {
-    width: 100%;
-  }
-
   /* Make subtitle display remain in left panel */
   .subtitles-context-display {
     margin-bottom: 10px;
@@ -1101,15 +1077,6 @@ input:checked + .toggle-slider:before {
     flex: 1 0 55%;
   }
 
-  .ytb-controls-container {
-    flex-direction: column;
-  }
-
-  .ytb-controls-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .current-subtitle-display {
     font-size: 14px;
     padding: 8px;
@@ -1127,5 +1094,23 @@ input:checked + .toggle-slider:before {
     padding: 6px 10px;
   }
 
+  .switches-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .switch-row {
+    margin-top: 0;
+    margin-left: 10px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .switch-element {
+    margin-right: 5px;
+  }
 }
 </style>
