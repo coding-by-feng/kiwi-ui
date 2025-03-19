@@ -127,7 +127,7 @@ export default {
   },
   destroyed() {
     if (this.detail.audioPlayer) {
-      this.pauseAllPalyingAudio()
+      this.pauseAllPlayingAudio()
       this.detail.audioPlayer = null
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
@@ -138,9 +138,10 @@ export default {
       this.init()
     },
     'playWordIndex'(newVal) {
-      console.log('this.playWordIndex = ' + this.playWordIndex)
+      console.log('watching this.playWordIndex = ' + this.playWordIndex)
       // noinspection JSVoidFunctionReturnValueUsed
       if (this.isNeedStopReview() || this.isReviewPlaying || newVal === 0) {
+        console.log('watching this.')
         return
       }
 
@@ -218,7 +219,7 @@ export default {
         if (document.hidden) {
           that.isReviewStop = true
           that.isReviewPlaying = false
-          that.pauseAllPalyingAudio()
+          that.pauseAllPlayingAudio()
         } else {
           that.isReviewStop = false
           that.isReviewPlaying = true
@@ -531,7 +532,6 @@ export default {
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
               that.detail.audioPlayer.play()
-              // alert('audioPlayer')
             })
       } catch (e) {
         // alert('test' + e)
@@ -584,7 +584,7 @@ export default {
       }
       this.isReviewStop = true
       this.isReviewPlaying = false
-      this.pauseAllPalyingAudio()
+      this.pauseAllPlayingAudio()
     },
     async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
@@ -683,7 +683,7 @@ export default {
       }
       await this.skipCurrent()
     },
-    pauseAllPalyingAudio() {
+    pauseAllPlayingAudio() {
       if (this.detail.audioPlayer) {
         this.detail.audioPlayer.pause()
       }
@@ -698,7 +698,7 @@ export default {
     },
     skipSomeAudio: function () {
       console.log('skip some audio')
-      this.pauseAllPalyingAudio()
+      this.pauseAllPlayingAudio()
       console.log('this.isLastReviewWordSame()', this.isLastReviewWordSame())
       const isFirstSkip = this.detail.skippedCount % 2 === 0
       this.detail.skippedCount++
@@ -771,6 +771,7 @@ export default {
             return
           }
         }
+        console.log('kason skipping... lastIndexPerPage', lastIndexPerPage)
         if (lastIndexPerPage) {
           this.page.current++
           await this.init()
@@ -857,8 +858,6 @@ export default {
     },
     setSoundListener: function (sound, token) {
       sound.addEventListener('ended', async function () {
-        // that.notifySuccess(that, 'ended ' + i)
-
         that.isReviewPlaying = false
         if (that.isChToEn) {
           let sleepMs = audioUtil.acquireCh2EnIndexSleepMsMap().get(that.detail.playIndex)
@@ -875,12 +874,16 @@ export default {
         if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
           return
         }
+        console.log('kason 1 that.detail.playIndex++ ' + that.detail.playIndex)
+        console.log('that.detail.audioPlayerMap', that.detail.audioPlayerMap)
+        console.log('that.detail.audioPlayerUrls', that.detail.audioPlayerUrls)
         if (++that.detail.playIndex < that.detail.audioPlayerUrls.length) {
           that.detail.audioPlayer = that.getCurrentAudioPlayer()
+          console.log('that.detail.audioPlayer', that.detail.audioPlayer)
           that.detail.audioPlayer.play()
         } else {
-          // console.log('that.playWordIndex++ ' + that.playWordIndex)
           ++that.playWordIndex
+          console.log('kason 2 that.playWordIndex++ ' + that.playWordIndex)
         }
       })
       sound.addEventListener('play', function () {
@@ -889,15 +892,6 @@ export default {
         that.isReviewPlaying = true
         that.detail.reviewLoading = false
       })
-      // sound.addEventListener('loadstart', function () {
-      //   that.notifySuccess(that, 'loadstart ' + i)
-      // })
-      // sound.addEventListener('playing', function () {
-      //   that.notifySuccess(that, 'playing ' + i)
-      // })
-      // sound.addEventListener('readystatechange', function () {
-      //   that.notifySuccess(that, 'readystatechange ' + i)
-      // })
       sound.addEventListener('pause', function () {
         that.isReviewPlaying = false
       })

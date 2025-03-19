@@ -111,7 +111,7 @@ export function isMobile() {
 }
 
 export function isEmptyStr(obj) {
-    return obj === undefined || obj === null || obj.trim() === ''
+    return obj === undefined || obj === null || obj === ''
 }
 
 export function isNotEmptyStr(obj) {

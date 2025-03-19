@@ -3,6 +3,7 @@ import website from '@/const/website'
 import {getStore, setStore} from '@/util/store'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
+import util from '@/util/util'
 
 const USER_NAME = 'user_name';
 
@@ -43,42 +44,42 @@ export default {
     }
   },
   mounted() {
-    if (!this.user.pronunciationSource) {
+    if (util.isEmptyStr(this.user.pronunciationSource)) {
       setStore({
         name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE,
         content: kiwiConst.PRONUNCIATION_SOURCE.LOCAL,
         type: 'local'
       })
     }
-    if (this.user.bgm === undefined || this.user.bgm === null) {
+    if (util.isEmptyStr(this.user.bgm)) {
       setStore({
         name: kiwiConst.CONFIG_KEY.BGM,
         content: kiwiConst.ENABLE_BGM.ENABLE,
         type: 'local'
       })
     }
-    if (!this.user.reviewType) {
+    if (util.isEmptyStr(this.user.reviewType)) {
       setStore({
         name: kiwiConst.CONFIG_KEY.REVIEW_TYPE,
         content: kiwiConst.REVIEW_TYPE.ONLY_ENGLISH,
         type: 'local'
       })
     }
-    if (!this.user.spellType) {
+    if (util.isEmptyStr(this.user.spellType)) {
       setStore({
         name: kiwiConst.CONFIG_KEY.SPELL_TYPE,
         content: kiwiConst.SPELL_TYPE.ENABLE,
         type: 'local'
       })
     }
-    if (!this.user.isPlayExample) {
+    if (util.isEmptyStr(this.user.isPlayExample)) {
       setStore({
         name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE,
         content: kiwiConst.IS_PLAY_EXAMPLE.ENABLE,
         type: 'local'
       })
     }
-    if (this.user.isEnToEn === undefined || this.user.isEnToEn === null) {
+    if (util.isEmptyStr(this.user.isEnToEn)) {
       setStore({
         name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN,
         content: kiwiConst.IS_EN_TO_EN.ENABLE,
