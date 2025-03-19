@@ -5,6 +5,7 @@ import db from "@/util/db";
 
 let CH2_EN_INDEX_SLEEP_MS_MAP = null
 const IS_PLAY_EXAMPLE = getStore({name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE})
+const SPELL_TYPE = getStore({name: kiwiConst.CONFIG_KEY.SPELL_TYPE})
 
 export default {
 
@@ -17,14 +18,15 @@ export default {
 
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
-        if (!lastIsSame) {
+        let isPlaySpelling = SPELL_TYPE === kiwiConst.SPELL_TYPE.ENABLE;
+        if (!lastIsSame && isPlaySpelling) {
             urls.push(wordSpellingUrl)
             urls.push(wordSpellingUrl)
             urls.push(wordSpellingUrl)
         }
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
-        if (!lastIsSame) {
+        if (!lastIsSame && isPlaySpelling) {
             urls.push(wordSpellingUrl)
             urls.push(wordSpellingUrl)
             urls.push(wordSpellingUrl)

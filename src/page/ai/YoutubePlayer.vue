@@ -25,7 +25,7 @@
         <button @click="loadContent" :disabled="!videoUrl || isLoading" class="ytb-player-button">
           {{ isLoading ? 'Loading...' : 'Load' }}
         </button>
-        <!-- New translation toggle with switch -->
+        <el-button type="info" icon="el-icon-delete" size="mini" circle @click="cleanSubtitles"></el-button>
       </div>
     </div>
     <div class="switches-container">
@@ -138,9 +138,8 @@
 
 <script>
 import {defineComponent, ref} from 'vue';
-import {downloadVideoSubtitles} from '@/api/ai';
+import {downloadVideoSubtitles, deleteVideoSubtitles} from '@/api/ai';
 import msgUtil from '@/util/msg'
-import util from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
 import kiwiConst from "@/const/kiwiConsts";
@@ -213,8 +212,6 @@ export default defineComponent({
 
     // Apply touch callout/highlight prevention to subtitle elements
     this.applyTouchPreventions();
-
-    msgUtil.notifySuccess(this, 'YouTube Player Usage Tips', 'The searching input and button will be hidden when the video is playing.', 6000);
   },
   watch: {
     videoId: {
@@ -688,6 +685,12 @@ export default defineComponent({
         this.autoScrollEnabled = true;
       }
     },
+
+    cleanSubtitles() {
+      deleteVideoSubtitles(this.videoUrl, this.selectedLanguage).then(() => {
+        msgUtil.msgSuccess(this, 'Subtitles cleaned successfully!', 2000);
+      })
+    },
   },
   beforeUnmount() {
     // Clean up
@@ -880,7 +883,7 @@ export default defineComponent({
 }
 
 .ytb-player-button {
-  background-color: #949aa5;
+  background-color: #909399;
   color: white;
   border: none;
   border-radius: 4px;
@@ -891,6 +894,7 @@ export default defineComponent({
   align-items: center;
   transition: background-color 0.3s;
   margin-left: 5px;
+  margin-right: 5px;
 }
 
 .ytb-player-button:hover {

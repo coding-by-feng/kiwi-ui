@@ -28,6 +28,22 @@ export function downloadVideoSubtitles(videoUrl, language) {
     });
 }
 
+export function deleteVideoSubtitles(videoUrl, language) {
+    let url;
+    if (language) {
+        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
+    } else {
+        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}`;
+    }
+    return request({
+        url: url,
+        headers: {
+            isToken: true // Adjust based on your authentication requirements
+        },
+        method: 'delete'
+    });
+}
+
 export function downloadVideo(videoUrl) {
     return request({
         url: `/ai-biz/ai/ytb/video/download?url=${encodeURIComponent(videoUrl)}`,

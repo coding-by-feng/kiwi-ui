@@ -8,8 +8,9 @@ let publicPath = './'
 module.exports = {
     publicPath: publicPath,
     lintOnSave: true,
-    productionSourceMap: false,
+    productionSourceMap: true,
     configureWebpack: {
+        devtool: 'source-map',
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, './src'),
