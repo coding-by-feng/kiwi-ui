@@ -29,7 +29,7 @@
       </div>
     </div>
     <div>
-      <div class="switch-row" v-show="!isPlaying && !forceHideInput">
+      <div class="switch-row" v-show="!forceHideInput">
         <el-switch
             v-model="ifTranslation"
             active-text="Include translation"
@@ -79,7 +79,7 @@
              v-show="middleControlEnabled"
              @mouseup="handleTextSelection"
              @touchend="handleTextSelection"
-             @touchstart="pauseVideo">
+             @touchstart="pauseOrResumeVideo">
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
@@ -290,9 +290,11 @@ export default defineComponent({
     },
 
     // Add a dedicated method to pause the video
-    pauseVideo() {
+    pauseOrResumeVideo() {
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
+      }else if (this.player && this.player.getPlayerState() === YT.PlayerState.PAUSED) {
+        this.player.playVideo();
       }
     },
 

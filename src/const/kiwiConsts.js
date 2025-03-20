@@ -180,7 +180,7 @@ export default {
     SEARCH_MODES: {
         DETAIL: {label: 'Dictionary', value: 'detail'},
         DIRECTLY_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation'},
-        TRANSLATION_AND_EXPLANATION: {label: 'Translation + Explanation', value: 'translation-and-explanation'},
+        TRANSLATION_AND_EXPLANATION: {label: 'Explanation', value: 'translation-and-explanation'},
         GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation'},
         GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction'},
         VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'},
@@ -192,7 +192,7 @@ export default {
         DICTIONARY: {label: 'Dictionary', value: 'detail', width: '110px'},
         DIRECT_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation', width: '140px'},
         TRANSLATION_AND_EXPLANATION: {
-            label: 'Translation + Explanation',
+            label: 'Explanation',
             value: 'translation-and-explanation',
             width: '190px'
         },

@@ -7,14 +7,13 @@
             :type="getInputType"
             v-model="originalText"
             :style="{width: searchInputWidth}"
-            :fetch-suggestions="disableSuggestions ? noSuggestions : querySearch"
+            :fetch-suggestions="querySearch"
             placeholder="input anything"
             size="mini"
             :trigger-on-focus="false"
             @keydown.native="handleKeyDown"
             :clearable="true"
             :autosize="true"
-            :autocomplete="VocabularyModeOnOrOff"
             @select="querySelect">
           <el-button slot="prepend"
                      size="mini"
@@ -45,7 +44,7 @@
         <el-option
             v-for="(code, language) in languageCodes"
             :key="code"
-            :label="language"
+            :label="language.replaceAll('_', ' ')"
             :value="code">
         </el-option>
       </el-select>
@@ -105,14 +104,6 @@ export default {
         return kiwiConsts.ROUTER_VIEW_AI_MODE
       }
     },
-    VocabularyModeOnOrOff() {
-      if (util.isEmptyStr(this.$route.query.selectedMode) || this.$route.query.selectedMode === kiwiConsts.SEARCH_DEFAULT_MODE) {
-        return kiwiConsts.TOGGLE.ON
-      } else {
-        console.log('the value of this.$route.query.selectedMode', this.$route.query.selectedMode)
-        return kiwiConsts.TOGGLE.OFF
-      }
-    },
     ifVocabularyMode() {
       return util.isEmptyStr(this.$route.query.selectedMode) || this.$route.query.selectedMode === kiwiConsts.SEARCH_DEFAULT_MODE
     },
@@ -146,9 +137,14 @@ export default {
       this.selectedLanguage = this.$route.query.language || this.selectedLanguage;
     },
     querySearch(queryString, callback) {
-      let real = queryString.trimLeft()
+      if (!util.isEmptyStr(this.$route.query.selectedMode) && this.$route.query.selectedMode !== kiwiConsts.SEARCH_DEFAULT_MODE) {
+        console.log('Not default mode')
+        callback([])
+        return
+      }
+      let real = queryString.trimLeft();
       if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
-        callback([{value: '请按回车或搜索按钮'}])
+        callback([])
         return
       }
       // var results = fuzzyQueryWord(queryString);
@@ -285,16 +281,6 @@ export default {
         })
       }
     },
-    handleOpen(key, keyPath) {
-      // console.log(key, keyPath)
-    },
-    handleClose(key, keyPath) {
-      // console.log(key, keyPath)
-    },
-    brush() {
-      this.originalText = ''
-      this.$refs.auto.focus()
-    },
     closeLazy() {
       let queryTmp = {}
       if (this.originalText) {
@@ -305,10 +291,7 @@ export default {
         ...queryTmp
       }
       this.$router.push({path: '/index/vocabulary/detail', query: query})
-    },
-    noSuggestions(queryString, callback) {
-      callback([]) // Return an empty array to disable suggestions
-    },
+    }
   }
 }
 </script>
