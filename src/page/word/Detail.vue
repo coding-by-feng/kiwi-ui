@@ -176,7 +176,6 @@ export default {
             }
           } else {
             this.wordInfo = response.data.data.records[0]
-            this.isQueryNotResult = false
             this.defaultHint = null
           }
           this.pages = response.data.data.pages
@@ -188,8 +187,8 @@ export default {
             path: '/index/vocabulary/aiResponseDetail',
             query: {
               active: 'search',
-              selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
-              language: kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+              selectedMode: kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value,
+              language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
               originalText: encodeURI(originalText.toLowerCase()),
               now: new Date().getTime()
             }
@@ -202,7 +201,6 @@ export default {
     },
     agileShowDetail(wordInfo) {
       this.wordInfo = wordInfo
-      this.isQueryNotResult = false
       this.defaultHint = null
       this.showWordSelect = false
     },
@@ -469,7 +467,6 @@ export default {
     },
     countdownEndFun() {
       this.countdownTime++
-      this.isQueryNotResult = false
       this.isForceRequest = true
       this.init()
     },
