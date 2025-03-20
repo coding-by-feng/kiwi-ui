@@ -659,9 +659,7 @@ export default defineComponent({
         // Detect Safari browser
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-        // Always auto-scroll on mobile and Safari
-        const isMobile = this.isMobileDevice() || window.innerWidth < 768;
-        if (isMobile || isSafari || this.autoScrollEnabled) {
+        if (this.autoScrollEnabled) {
           // For Safari, we need a different timing approach
           if (isSafari) {
             // Immediate scroll for Safari (no delay seems to work better)
@@ -678,13 +676,7 @@ export default defineComponent({
 
     // --- Improved checkScreenSize method with better auto-scroll handling ---
     checkScreenSize() {
-      const wasSmallScreen = this.isSmallScreen;
       this.isSmallScreen = window.innerWidth < 768;
-
-      // If transitioning from large to small screen, force auto-scroll on
-      if (!wasSmallScreen && this.isSmallScreen) {
-        this.autoScrollEnabled = true;
-      }
     },
 
     cleanSubtitles() {
