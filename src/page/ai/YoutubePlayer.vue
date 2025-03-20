@@ -3,7 +3,7 @@
     <h1 id="playHeader" v-show="!isPlaying && !forceHideInput">YouTube Player</h1>
 
     <!-- Input and Button for YouTube URL -->
-    <div class="input-container" v-show="!isPlaying && !forceHideInput">
+    <div class="input-container" v-show="!forceHideInput">
       <div class="url-input-group">
         <!-- Language dropdown that shows only when translation is enabled -->
         <el-select v-show="ifTranslation" v-model="selectedLanguage" placeholder="Select Language"
@@ -28,7 +28,7 @@
         <el-button type="info" icon="el-icon-delete" size="mini" circle @click="cleanSubtitles"></el-button>
       </div>
     </div>
-    <div class="switches-container">
+    <div>
       <div class="switch-row" v-show="!isPlaying && !forceHideInput">
         <el-switch
             v-model="ifTranslation"
@@ -48,9 +48,9 @@
       <div class="switch-row">
         <el-switch
             v-model="autoScrollEnabled"
-            active-text="Auto-Scroll"
+            active-text="Scrolling"
             class="switch-element">
-        </el-switch>
+        </el-switch> &nbsp;
         <el-switch
             v-model="middleControlEnabled"
             active-text="Middle-Control"
@@ -486,7 +486,6 @@ export default defineComponent({
       this.subtitles = [];
       this.currentSubtitleIndex = -1;
       this.stopSubtitleSync();
-      this.forceHideInput = true;
       // Keep auto-scroll setting as is (don't reset it)
 
       try {
@@ -1096,12 +1095,6 @@ export default defineComponent({
   .vocabulary-popup {
     font-size: 12px;
     padding: 6px 10px;
-  }
-
-  .switches-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .switch-row {
