@@ -10,16 +10,133 @@ import NoSleep from 'nosleep.js'
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
-const skipWorkSpellingIndexEn2Ch = 10
-const skipWorkSpellingIndexEn2Ch_2nd = 17
-const skipWorkSpellingIndexWhenLastIsSameEn2Ch = 4
-const skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd = 11
+// AUDIO MANAGEMENT CONSTANTS
+// These constants control the audio skipping behavior and volumes for different modes
+// They determine which indices to skip to when users want to bypass certain parts of the audio
+const skipWorkSpellingIndexEn2Ch = 10            // Index to skip to in English-to-Chinese mode (first time)
+const skipWorkSpellingIndexEn2Ch_2nd = 17        // Index to skip to in English-to-Chinese mode (second time)
+const skipWorkSpellingIndexWhenLastIsSameEn2Ch = 4    // Skip index when consecutive words are the same
+const skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd = 11 // Second skip index for consecutive same words
+// Similar constants for Chinese-to-English mode
 const skipWorkSpellingIndexCh2En = 12
 const skipWorkSpellingIndexCh2En_2nd = 19
 const skipWorkSpellingIndexWhenLastIsSameCh2En = 7
 const skipWorkSpellingIndexWhenLastIsSameCh2En_2nd = 14
+// Volume presets for the volume value of different audio segments
 const audioVolumesEn2Ch = [0.3, 0.3, 1, 1, 1, 0.3, 0.3, 1, 1, 1, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
 const audioVolumesEn2ChWhenLastIsSame = [0.3, 0.3, 0.3, 0.3, 0.3, 1, 1, 1, 1, 1, 1, /*examples*/]
+
+// STATE VARIABLES
+// The component uses many state variables to track the review process:
+// - page: tracks pagination state
+// - detail: complex object containing the current paraphrase being reviewed
+// - audioPlayerMap: Maps URLs to Audio objects for efficient reuse
+// - isFirstIncome: Tracks if this is the first time entering review mode
+// - reviseAudioCandidates: Collection of audio elements for cleanup
+// - playWordIndex: Critical index that drives the review progression
+
+// KEY COMPUTED PROPERTIES
+// isStockReviewModel & isEnhanceReviewModel: Determine which review mode is active
+// enableOperationIcon, enableShowDetailIcon, etc.: Control which UI elements are displayed
+// These properties are essential for the UI state management
+
+// CORE METHODS
+// createReviseQueue: Builds the audio queue for a word/phrase review session
+// initNextReviseDetail: Prepares the next word's audio resources
+// skipCurrent: Handles the logic to move to the next word
+// refreshReviseDetail: Rebuilds the audio queue when needed
+// The audio handling is quite complex with multiple nested promises and state tracking
+
+// EVENT HANDLING
+// The component uses both Vue events and raw DOM events:
+// - Vue touch events for swipe gestures in mobile view
+// - DOM audio events (ended, play, pause) to drive the review flow
+// - Visibility change event to pause review when tab is inactive
+
+// CACHING
+// The component implements a sophisticated caching system:
+// - Uses IndexedDB (via util/db.js) to store audio data
+// - Creates object URLs for cached audio to improve performance
+// Rebuilds URL references for each review session
+
+// USER EXPERIENCE FEATURES
+// - NoSleep integration prevents device from sleeping during review
+// - Countdown timer feature for timed study sessions
+// - Sleep mode with minimal UI for distraction-free learning
+// - Support for both Chinese-to-English and English-to-Chinese review modes
+
+// REVIEW CORE FUNCTIONALITY
+// The reviewing system follows this general flow:
+// 1. Load words/phrases from a list (initList)
+// 2. For each word, prepare audio resources (initNextReviseDetail)
+// 3. Play audio sequences with precise timing (createReviseQueue)
+// 4. Track user progress and allow various interactions
+// 5. Move to the next word automatically or via user action (skipCurrent)
+
+// REVIEW MODES
+// stockReview: Regular review mode - presents words with standard interval
+// enhanceReview: For words marked for intensive review
+// stockRead/enhanceRead: Similar to review but optimized for reading practice
+// downloadReviewAudio: Mode to pre-download audio files for offline use
+// Each mode has slightly different behavior in terms of audio sequencing and UI
+
+// LANGUAGE DIRECTION HANDLING
+// isChToEn: Boolean that determines direction of study (Chinese → English or English → Chinese)
+// The component behaves differently based on this setting:
+// - In Ch→En mode, the word is initially hidden (detail.showWord = false)
+// - Different audio sequences are used (extractedCh2EnUrls vs extractedEn2ChUrls)
+// - Different pause timings are implemented to give time for recall
+
+// WORD TRACKING & LEARNING ALGORITHM
+// The component tracks which words the user knows:
+// - rememberOneFun: Marks a word as remembered (less frequent review)
+// - keepInMindFun: Marks a word as "well-known" (even less frequent)
+// - forgetOneFun: Marks a word as not known (more frequent review)
+// This implements a simple spaced repetition algorithm
+
+// AUDIO SEQUENCE GENERATION
+// extractReviewAudioUrls: Creates the sequence of audio files to play
+// Key sequence elements include:
+// 1. Pronunciation (UK/US)
+// 2. Spelling (for non-consecutive words)
+// 3. Character/part-of-speech information
+// 4. Definitions in target and source languages
+// 5. Example sentences (if enabled)
+// The sequence varies based on review mode and language direction
+
+// AUDIO PLAYBACK MANAGEMENT
+// setSoundListener: Sets up event listeners for audio playback
+// The 'ended' event is crucial - it triggers the next audio or word
+// Playback state is tracked in isReviewPlaying and detail.playIndex
+// Volume is dynamically adjusted for different parts of the sequence
+
+// PAGINATION & PROGRESS TRACKING
+// The component loads words in batches (controlled by playCountOnce)
+// page.current tracks the current page
+// playWordIndex tracks progress within the current page
+// When page is complete, automatically loads the next page
+
+// SLEEP MODE FEATURE
+// detail.isSleepMode: When enabled, displays a minimal UI
+// optimized for passive listening without visual distractions
+// Includes swipe gestures for control without looking at screen
+
+// CONTINUOUS STUDY SESSION SUPPORT
+// countdownMode: Implements a timer for study sessions
+// NoSleep integration prevents device sleep during long sessions
+// visibilitychange listener pauses when user switches tabs/apps
+
+// SKIP FUNCTIONALITY
+// skipSomeAudio: Critical feature that lets users skip spelling
+// and get to the definition faster
+// Uses predefined indices based on the audio sequence to jump ahead
+// Different skipping points depending on language direction and context
+
+// STATE PERSISTENCE
+// getReviewBreakpointPageNumber: Restores review progress
+// when returning to previously started review session
+// Allows users to continue from where they left off
+
 
 let that
 let noSleep
@@ -62,59 +179,75 @@ export default {
   },
   data() {
     return {
+      // Controls the loading overlay for the entire component
       loading: false,
-      innerHeightPx: window.innerHeight + 'px',
-      innerHeightSleepModePx: window.innerHeight * 9 / 10 + 'px',
-      innerWidthPx: window.innerWidth + 'px',
-      innerWidthHalfPx: window.innerWidth / 2 + 'px',
-      page: {
-        current: 1,
-        size: readCountOnce,
-        total: 0,
-        pages: 0
-      },
-      isShowPagination: true,
-      detail: {
-        reviewLoading: false,
-        paraphraseVO: {},
-        dialogVisible: false,
-        showTranslation: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
-        showWord: true,
-        hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
-        playIndex: 0,
-        showIndex: 0,
-        isSleepMode: false,
-        listId: null,
-        firstReviewWord: null,
-        secondReviewWord: null,
-        apiKey: null,
-        audioPlayerUrls: [],
-        audioPlayerMap: new Map(),
-        audioPlayer: null,
-        audioPlayerToken: null,
-        isUnfoldOperateIcon: false,
-        isEnableNoSleepMode: false,
-        skippedCount: 0,
-      },
-      isUKPronunciationPlaying: false,
-      isUSPronunciationPlaying: false,
-      source: getStore({name: 'pronunciation_source'}),
-      reviewType: getStore({name: 'review_type'}),
-      spellType: getStore({name: 'spell_type'}),
-      enParaType: getStore({name: 'enPara_type'}),
-      isPlayExample: getStore({name: 'is_play_example'}),
-      listItems: [],
-      autoPlayDialogVisible: 0,
-      isFirstIncome: true,
-      reviseAudioCandidates: [],
-      isReviewStop: false,
-      isReviewPlaying: false,
-      playWordIndex: -1,
 
-      countdownMode: false,
-      countdownTime: new Date().getTime(),
-      countdownMin: 60,
-      countdownText: '1小时'
+      // Screen dimension variables for layout calculations
+      innerHeightPx: window.innerHeight + 'px',         // Full screen height
+      innerHeightSleepModePx: window.innerHeight * 9 / 10 + 'px',  // Height for sleep mode (90% of screen)
+      innerWidthPx: window.innerWidth + 'px',           // Full screen width
+      innerWidthHalfPx: window.innerWidth / 2 + 'px',   // Half screen width (for split layouts)
+
+      // Pagination state for word list
+      page: {
+        current: 1,                  // Current page number
+        size: readCountOnce,         // Number of items per page
+        total: 0,                    // Total number of items across all pages
+        pages: 0                     // Total number of pages
+      },
+
+      // Controls pagination visibility during page transitions
+      isShowPagination: true,
+
+      // Core object containing all review state and UI state
+      detail: {
+        reviewLoading: false,        // Loading state specifically for review operations
+        paraphraseVO: {},            // Current word's paraphrase data from API
+        dialogVisible: false,        // Controls visibility of the word detail dialog
+        showTranslation: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),  // Whether to show translations
+        showWord: true,              // Whether to show the word (hidden in Chinese->English mode)
+        hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',  // Message when translations are hidden
+        playIndex: 0,                // Current index in the audio sequence
+        showIndex: 0,                // Current index in the word list display
+        isSleepMode: false,          // Whether sleep mode is active (minimal UI)
+        listId: null,                // ID of the current list being reviewed
+        firstReviewWord: null,       // Previous word (for detecting repeated words)
+        secondReviewWord: null,      // Current word (for detecting repeated words)
+        apiKey: null,                // API key for external services
+        audioPlayerUrls: [],         // Array of all audio URLs in the current sequence
+        audioPlayerMap: new Map(),   // Map of URL to Audio objects for reuse
+        audioPlayer: null,           // Current active audio player
+        audioPlayerToken: null,      // Token to track audio session validity
+        isUnfoldOperateIcon: false,  // Controls visibility of operation icons
+        isEnableNoSleepMode: false,  // Whether NoSleep is active (prevents device sleep)
+        skippedCount: 0,             // Tracks how many times skip has been used (affects skip behavior)
+      },
+
+      // Pronunciation playback state
+      isUKPronunciationPlaying: false,   // Whether UK pronunciation is currently playing
+      isUSPronunciationPlaying: false,   // Whether US pronunciation is currently playing
+
+      // User settings from local storage
+      source: getStore({name: 'pronunciation_source'}),  // Pronunciation source (Cambridge/Local)
+      reviewType: getStore({name: 'review_type'}),       // Review type (with/without Chinese)
+      spellType: getStore({name: 'spell_type'}),         // Whether to include spelling
+      enParaType: getStore({name: 'enPara_type'}),       // Whether to include English paraphrase
+      isPlayExample: getStore({name: 'is_play_example'}),  // Whether to play examples
+
+      // Word list and review state
+      listItems: [],                 // Array of words/phrases to review
+      autoPlayDialogVisible: 0,      // Counter for auto-play dialog (0=never shown, 1+=shown)
+      isFirstIncome: true,           // Whether this is first entry into review
+      reviseAudioCandidates: [],     // Collection of audio elements for cleanup
+      isReviewStop: false,           // Whether review is stopped
+      isReviewPlaying: false,        // Whether audio is currently playing
+      playWordIndex: -1,             // Index of current word in review sequence
+
+      // Countdown timer state
+      countdownMode: false,          // Whether countdown timer is active
+      countdownTime: new Date().getTime(),  // End time for countdown
+      countdownMin: 60,              // Duration in minutes
+      countdownText: '1小时'         // Display text for countdown
     }
   },
   beforeCreate: function () {
@@ -212,6 +345,41 @@ export default {
     },
   },
   methods: {
+    // These methods track consecutive identical words to optimize the audio sequence
+    // When the same word appears twice, spelling can be skipped to avoid repetition
+
+    // isNeedStopReview
+    // Controls when review should be stopped, checking various conditions
+    // Ensures audio playback doesn't continue in inappropriate states
+
+    // stockReviewStart
+    // Entry point for the standard review process
+    // Initializes playback state and UI for the review session
+
+    // recursiveReview
+    // Handles the progression through review items
+    // Ensures smooth transition between words with proper audio preparation
+
+    // rebuildUrls
+    // Critical for performance - processes all audio URLs in parallel
+    // Uses caching system to avoid redundant downloads and improve playback start time
+
+    // createUniqueThreadToRebuildSoundUrl
+    // Implements a promise-based approach to handle audio URL preparation
+    // Either retrieves cached audio from IndexedDB or downloads from server
+
+    // pauseAllPlayingAudio
+    // Safety method to ensure all audio is stopped when needed
+    // Prevents audio overlap issues when changing states
+
+    // getCurrentAudioPlayer
+    // Retrieves the appropriate audio player object for the current playback position
+    // Part of the audio resource management system
+
+    // cleanRevising & cleanInitRevising & cleanDetailRevising
+    // Memory management methods that prevent audio resource leaks
+    // Essential for long review sessions without performance degradation
+
     ...paraphraseStarList,
     ...msgUtil,
     listenerMinBrowser() {
@@ -367,6 +535,8 @@ export default {
       console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
       let loading = buildNotGlobalLoading()
       this.prepareReview()
+
+      // Optionally load word details
       if (isGetDetail) {
         this.handoffReviewWordSame()
         await this.getItemDetail(this.listItems[this.playWordIndex].paraphraseId)
@@ -380,6 +550,8 @@ export default {
               console.error(e)
             })
       }
+
+      // This is where the audio queue is created
       await this.createReviseQueue(this.detail.audioPlayerToken)
           .then(() => {
             // alert('createReviseQueue success')
@@ -392,17 +564,23 @@ export default {
     },
     async showDetail(paraphraseId, index) {
       let loading = buildNotGlobalLoading()
+
+      // Set current index if provided
       if (null !== index && undefined !== index) {
         this.detail.showIndex = index
       }
+
+      // Track consecutive words
       this.handoffReviewWordSame()
+
+      // Load word details from API
       await this.getItemDetail(paraphraseId)
           .then(response => {
             this.detail.paraphraseVO = response.data.data
             if (this.detail.paraphraseVO.wordName.indexOf(' ') > 0) {
               this.detail.paraphraseVO.wordCharacter = kiwiConst.WORD_CHARACTER.PHRASE
             }
-            // 如果是复习最近收藏
+            // Track list ID for each word
             this.detail.listId = this.listItems[this.detail.showIndex].listId
             loading.close()
           }).catch(e => {
@@ -411,12 +589,15 @@ export default {
             loading.close()
           })
 
+      // Show dialog with word details
       this.detail.dialogVisible = true
 
+      // Set review loading state if needed
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
       }
-      // noinspection ES6MissingAwait
+
+      // Track review count
       review.increaseCounter(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
     },
 
@@ -520,24 +701,29 @@ export default {
         noSleep.enable()
       }
     },
+// Initiates the review process for stock review mode
     stockReviewStart() {
       try {
-        // alert('stockReviewStart ')
+        // Reset to first word
         this.playWordIndex = 0
         this.autoPlayDialogVisible++
         this.isFirstIncome = false
+
+        // For Chinese to English mode, show translations
         if (this.isChToEn) {
           this.detail.showTranslation = true
         }
+
+        // Load details of first word and play audio
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
               that.detail.audioPlayer.play()
             })
       } catch (e) {
-        // alert('test' + e)
         console.error(e)
       }
     },
+
     async recursiveReview() {
       await this.showDetail(this.listItems[this.playWordIndex].paraphraseId, this.playWordIndex)
       await this.initNextReviseDetail(false)
@@ -841,6 +1027,8 @@ export default {
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
       let ukPronunciationUrl = this.assemblePronunciationUrl(false)
       let usPronunciationUrl = this.assemblePronunciationUrl(true)
+
+      // Choose appropriate audio sequence based on mode
       if (this.isDownloadReviewAudio) {
         let ch2EnUrls = audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
         let en2ChUrls = audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
@@ -871,6 +1059,8 @@ export default {
                 })
           }
         }
+
+        // Crucial part - check if we should continue playback
         if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
           return
         }

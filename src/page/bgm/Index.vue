@@ -19,7 +19,8 @@ export default {
       loading: false,
       allDataSize: 0,
       bgmData: [
-        {id: 4010190, name: 'Death'}
+        {id: 1, name: 'opus'},
+        {id: 4010190, name: 'Death'},
       ],
       currentPlayBgmIndex: null,
       currentPlayBgm: null,

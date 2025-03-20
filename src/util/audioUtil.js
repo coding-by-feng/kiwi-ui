@@ -16,6 +16,7 @@ export default {
         let paraphraseEnUrl = this.assembleReviseAudioUrl(paraphraseId, kiwiConst.REVIEW_AUDIO_TYPE.PARAPHRASE_EN)
         let characterUrl = this.assembleCharacterReviseAudioUrl(characterCode)
 
+        // Add pronunciation and spelling
         urls.push(ukPronunciationUrl)
         urls.push(usPronunciationUrl)
         let isPlaySpelling = SPELL_TYPE === kiwiConst.SPELL_TYPE.ENABLE;
@@ -31,6 +32,8 @@ export default {
             urls.push(wordSpellingUrl)
             urls.push(wordSpellingUrl)
         }
+
+        // Add character and paraphrase information
         urls.push(characterUrl)
         urls.push(paraphraseChUrl)
         urls.push(paraphraseChUrl)
@@ -39,6 +42,7 @@ export default {
         urls.push(paraphraseChUrl)
         urls.push(paraphraseEnUrl)
 
+        // Check if example playback is enabled and examples exist
         let isExampleInvalid = IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0
         console.log('extractedEn2ChUrls')
         console.log('exampleList: ', exampleList)
@@ -46,6 +50,8 @@ export default {
         if (isExampleInvalid) {
             return urls
         }
+
+        // Check if examples have translations
         for (let i = 0; i < 2 && i < exampleList.length; i++) {
             let example = exampleList[i]
             if (example.exampleTranslate === undefined || example.exampleTranslate === null || example.exampleTranslate === '') {
@@ -57,6 +63,7 @@ export default {
             return urls
         }
 
+        // Add example audio URLs
         let exampleChUrl0 = this.assembleReviseAudioUrl(exampleList[0].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_CH)
         let exampleEnUrl0 = this.assembleReviseAudioUrl(exampleList[0].exampleId, kiwiConst.REVIEW_AUDIO_TYPE.EXAMPLE_EN)
 
