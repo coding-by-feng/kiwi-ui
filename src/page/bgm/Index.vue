@@ -59,8 +59,10 @@ export default {
             that.loading = false
           })
           .catch($ => {
-            that.loading = false
             msgUtil.msgError(that, 'handling error, please refresh and try again')
+          })
+          .finally($ => {
+            that.loading = false
           })
     },
     playBgm(index) {
@@ -86,6 +88,54 @@ export default {
         this.currentPlayBgmIndex = 0
       }
       this.playBgm(this.currentPlayBgmIndex)
+    },
+    clearWebsiteData() {
+      this.loading = true;
+
+      // Clear localStorage
+      localStorage.clear();
+
+      // Clear sessionStorage
+      sessionStorage.clear();
+
+      // Clear cookies
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      }
+
+      // Clear indexedDB
+      const databases = indexedDB.databases ? indexedDB.databases() : [];
+      Promise.resolve(databases).then((dbs) => {
+        dbs.forEach((db) => {
+          indexedDB.deleteDatabase(db.name);
+        });
+      }).finally($ => {
+        that.loading = false
+      });
+
+      // Clear Cache API (requires service worker)
+      if ('caches' in window) {
+        caches.keys().then((keyList) => {
+          return Promise.all(keyList.map((key) => {
+            return caches.delete(key);
+          }));
+        });
+      }
+
+      // Request clearing browser cache and storage
+      // Note: This requires user permission and is not guaranteed to work in all browsers
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          action: 'clearCache'
+        });
+      }
+
+      this.loading = false;
+      console.log("Website data cleared!");
     }
   }
 }
@@ -100,8 +150,11 @@ export default {
 <template>
   <div>
     <el-card class="box-card" v-loading="loading">
-      <el-button type="info" @click="cleanDb">
-        Clean all data, totally {{ allDataSize }}
+      <el-button type="info" @click="cleanDb" style="margin-bottom: 5px;">
+        Clean audio data, totally {{ allDataSize }}
+      </el-button>
+      <el-button type="info" @click="clearWebsiteData">
+        Clean all cache
       </el-button>
       <el-divider></el-divider>
       <div v-for="(item, index) in bgmData" :key="index">
