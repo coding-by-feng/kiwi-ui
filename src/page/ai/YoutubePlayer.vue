@@ -1,6 +1,9 @@
 <template>
   <div class="youtube-player">
-    <h1 id="playHeader" v-show="!isPlaying && !forceHideInput">YouTube Player</h1>
+    <!-- Modified header with back button -->
+    <h1 id="playHeader" v-show="!isPlaying && !forceHideInput">
+      YouTube Player
+    </h1>
 
     <!-- Input and Button for YouTube URL -->
     <div class="input-container" v-show="!forceHideInput">
@@ -26,10 +29,12 @@
           {{ isLoading ? 'Loading...' : 'Load' }}
         </button>
         <el-button type="info" icon="el-icon-delete" size="mini" circle @click="cleanSubtitles"></el-button>
+        <el-button type="info" icon="el-icon-back" size="mini" circle @click="backToChannelList"
+        style="margin-left: 5px;"></el-button>
       </div>
     </div>
-    <div>
-      <div class="switch-row" v-show="!forceHideInput">
+    <div id="responsiveContainer" class="responsive-container">
+      <div class="switch-row" v-if="!forceHideInput">
         <el-switch
             v-model="ifTranslation"
             active-text="Include translation"
@@ -37,6 +42,7 @@
             class="switch-element">
         </el-switch>
       </div>
+      <el-divider direction="vertical" v-if="!isSmallScreen && !forceHideInput"></el-divider>
       <div class="switch-row">
         <el-switch
             v-model="forceHideInput"
@@ -45,12 +51,14 @@
             class="switch-element">
         </el-switch>
       </div>
+      <el-divider direction="vertical" v-if="!isSmallScreen"></el-divider>
       <div class="switch-row">
         <el-switch
             v-model="autoScrollEnabled"
             active-text="Scrolling"
             class="switch-element">
-        </el-switch> &nbsp;
+        </el-switch>
+        <el-divider direction="vertical" v-if="!isSmallScreen"></el-divider>
         <el-switch
             v-model="middleControlEnabled"
             active-text="Middle-Control"
@@ -140,6 +148,7 @@
 import {defineComponent, ref} from 'vue';
 import {downloadVideoSubtitles, deleteVideoSubtitles} from '@/api/ai';
 import msgUtil from '@/util/msg'
+import util from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
 import kiwiConst from "@/const/kiwiConsts";
@@ -212,6 +221,15 @@ export default defineComponent({
 
     // Apply touch callout/highlight prevention to subtitle elements
     this.applyTouchPreventions();
+
+    this.updateDisplayStyle();
+
+    // Check if a video URL was passed through the route
+    const videoUrl = this.$route.query.videoUrl;
+    if (videoUrl) {
+      this.videoUrl = decodeURIComponent(videoUrl);
+      this.loadContent(); // Automatically load the video
+    }
   },
   watch: {
     videoId: {
@@ -224,9 +242,26 @@ export default defineComponent({
           this.initializePlayer();
         }
       }
+    },
+    // Existing watches...
+    '$route.query.videoUrl': function(newVideoUrl) {
+      if (newVideoUrl && newVideoUrl !== encodeURIComponent(this.videoUrl)) {
+        this.videoUrl = decodeURIComponent(newVideoUrl);
+        this.loadContent();
+      }
     }
   },
   methods: {
+    backToChannelList() {
+      // Navigate back to the channel list view
+      this.$router.push({
+        path: '/index/vocabulary/detail',
+        query: {
+          active: 'youtube',
+          ytbMode: 'channel'
+        }
+      });
+    },
     isSafariOrIOS() {
       // Check for Safari browser
       const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -250,7 +285,10 @@ export default defineComponent({
         content: item,
         type: 'local'
       })
-      console.log('ifTranslationOnChange', this.ifTranslation)
+      if (item && !util.isEmptyStr(this.selectedLanguage) && !util.isEmptyStr(this.videoUrl) && util.isEmptyStr(this.translatedSubtitles)) {
+        this.loadContent()
+      }
+      console.log('ifTranslationOnChange', this.ifTranslation);
     },
 
     selectedLanguageChange(item) {
@@ -293,7 +331,7 @@ export default defineComponent({
     pauseOrResumeVideo() {
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
-      }else if (this.player && this.player.getPlayerState() === YT.PlayerState.PAUSED) {
+      } else if (this.player && this.player.getPlayerState() === YT.PlayerState.PAUSED) {
         this.player.playVideo();
       }
     },
@@ -540,17 +578,30 @@ export default defineComponent({
         const urlObj = new URL(url);
         let videoId;
 
-        if (urlObj.hostname === 'www.youtube.com' && urlObj.pathname === '/watch') {
-          videoId = urlObj.searchParams.get('v') || url.match(/[?&]v=([^&]+)/)?.[1];
-        } else if (urlObj.hostname === 'youtu.be') {
-          const pathSegments = urlObj.pathname.split('/').filter(Boolean);
-          videoId = pathSegments[0] || null;
-        } else {
-          const match = url.match(/[?&]v=([^&]+)/) || url.match(/youtu.be\/([^?&]+)/);
-          videoId = match ? match[1] : null;
+        // Handle standard youtube.com URLs
+        if (urlObj.hostname.includes('youtube.com')) {
+          if (urlObj.pathname === '/watch') {
+            // Regular video: youtube.com/watch?v=VIDEO_ID
+            videoId = urlObj.searchParams.get('v');
+          } else if (urlObj.pathname.includes('/shorts/')) {
+            // Shorts: youtube.com/shorts/VIDEO_ID
+            videoId = urlObj.pathname.split('/shorts/')[1]?.split('/')[0];
+          } else if (urlObj.pathname.includes('/embed/')) {
+            // Embedded videos: youtube.com/embed/VIDEO_ID
+            videoId = urlObj.pathname.split('/embed/')[1]?.split('/')[0];
+          }
+        }
+        // Handle youtu.be short links
+        else if (urlObj.hostname === 'youtu.be') {
+          videoId = urlObj.pathname.split('/')[1];
         }
 
-        return videoId;
+        // Sanitize the video ID by removing any trailing parameters
+        if (videoId) {
+          videoId = videoId.split('?')[0].split('&')[0];
+        }
+
+        return videoId || null;
       } catch (e) {
         console.error('Invalid URL:', e);
         return null;
@@ -684,6 +735,17 @@ export default defineComponent({
         msgUtil.msgSuccess(this, 'Subtitles cleaned successfully!', 2000);
       })
     },
+
+    updateDisplayStyle() {
+      const container = document.getElementById('responsiveContainer');
+      if (this.isMobileDevice() || this.isSmallScreen) {
+        container.style.display = 'inline';
+      } else {
+        container.style.display = 'flex';
+        container.style.justifyContent = 'center';
+        container.style.alignItems = 'center';
+      }
+    }
   },
   beforeUnmount() {
     // Clean up
@@ -695,6 +757,8 @@ export default defineComponent({
     }
 
     window.removeEventListener('resize', this.checkScreenSize);
+    window.addEventListener('resize', this.updateDisplayStyle);
+
 
     // Remove text selection related event listeners
     document.removeEventListener('click', this.handleClickOutside);
@@ -748,6 +812,7 @@ export default defineComponent({
 
 /* Main container for side-by-side layout */
 .content-container {
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -1091,17 +1156,26 @@ export default defineComponent({
     padding: 6px 10px;
   }
 
+  .responsive-container {
+    display: inline; /* Default for small screens */
+  }
+
+  @media screen and (min-width: 768px) {
+    .responsive-container {
+      display: flex; /* For larger screens */
+    }
+  }
+
   .switch-row {
     margin-top: 0;
     margin-left: 10px;
     margin-bottom: 5px;
     display: flex;
     justify-content: flex-start;
-    width: 100%;
   }
 
   .switch-element {
-    margin-right: 5px;
+    margin-right: 10px;
   }
 }
 </style>

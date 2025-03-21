@@ -11,7 +11,49 @@ export function callAiChatCompletion(urlPrefix, language, originalText) {
     })
 }
 
-// YouTube-related API calls (based on YouTuBeController)
+// YouTube Channel API calls
+export function getChannelList(current, size) {
+    return request({
+        url: `/ai-biz/ai/ytb/channel/page`,
+        method: 'get',
+        params: {
+            current: current,
+            size: size
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+export function submitChannel(channelLinkOrName) {
+    return request({
+        url: `/ai-biz/ai/ytb/channel`,
+        method: 'post',
+        params: {
+            channelLinkOrName: channelLinkOrName.trim()
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+export function getChannelVideos(channelId, current, size) {
+    return request({
+        url: `/ai-biz/ai/ytb/channel/${channelId}/videos`,
+        method: 'get',
+        params: {
+            current: current,
+            size: size
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+// YouTube Video-related API calls
 export function downloadVideoSubtitles(videoUrl, language) {
     let url;
     if (language) {
