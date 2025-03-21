@@ -9,7 +9,9 @@ import UserCenter from '@/page/user/UserCenter'
 import About from '@/page/about/Index'
 import Bgm from '@/page/bgm/Index'
 import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
-import YoutubePlayer from '@/page/ai/YoutubePlayer.vue'
+import Youtube from '@/page/ai/Youtube.vue'
+import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
+
 
 export default [{
     path: '/',
@@ -34,7 +36,8 @@ export default [{
             about: About,
             bgm: Bgm,
             aiResponseDetail: AiResponseDetail,
-            youtubePlayer: YoutubePlayer
+            youtube: Youtube,// Use the new component here
+            youtubePlayer: YoutubePlayer// Use the new component here
         },
         children: [{
             path: 'detail',

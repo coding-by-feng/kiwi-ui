@@ -133,9 +133,9 @@ export default {
         <span slot="label"><i class="el-icon-tickets"></i></span>
         <router-view name="starList" v-if="isAdmin"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="youtubePlayer">
+      <el-tab-pane name="youtube">
         <span slot="label"><i class="el-icon-video-camera"></i></span>
-        <router-view name="youtubePlayer" v-if="isAdmin"></router-view>
+        <router-view name="youtube"></router-view>
       </el-tab-pane>
       <el-tab-pane name="grammarListener" v-if="isLogin">
         <span slot="label"><i class=el-icon-school></i></span>
