@@ -36,15 +36,15 @@ export default {
   },
   watch: {
     // Watch for ytbMode query parameter changes
-    '$route.query.ytbMode': function(newMode) {
-      if (newMode === 'player') {
+    '$route.query': function(newQuery) {
+      if (newQuery.ytbMode === 'player') {
         this.showYoutubePlayer = true;
         this.showChannel = false;
         // If video URL is provided, use it
         if (this.$route.query.videoUrl) {
           this.selectedVideoUrl = decodeURIComponent(this.$route.query.videoUrl);
         }
-      } else if (newMode === 'channel') {
+      } else if (newQuery.ytbMode === 'channel') {
         this.showYoutubePlayer = false;
         this.showChannel = true;
         this.selectedVideoUrl = null;
