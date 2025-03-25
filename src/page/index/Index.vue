@@ -64,11 +64,15 @@ export default {
       let params
       let paramsTmp = {
         active: tab.name,
-        now: new Date().getTime()
+        now: new Date().getTime(),
+        selectedLanguage: this.$route.query.originalText,
+        selectedMode: this.$route.query.selectedMode,
+        ytbMode: this.$route.query.ytbMode,
+        videoUrl: this.$route.query.videoUrl
       }
-      if (this.$route.query.word) {
+      if (this.$route.query.originalText) {
         params = {
-          word: this.$route.query.word,
+          originalText: this.$route.query.originalText,
           ...paramsTmp
         }
       } else {

@@ -1,6 +1,6 @@
 <template>
   <div class="youtube-channel-manager">
-    <h2 id="youtubeChannelManagerHead">YouTube Channel Manager</h2>
+    <h2 id="youtubeChannelManagerHead">YouTube Channel</h2>
 
     <!-- Channel submission form -->
     <el-card class="submit-card">
@@ -18,7 +18,7 @@
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="3" animated />
+      <el-skeleton :rows="3" animated/>
     </div>
 
     <!-- Channels display section -->
@@ -62,9 +62,8 @@
                 @size-change="handleChannelSizeChange"
                 @current-change="handleChannelCurrentChange"
                 :current-page="channelQuery.current"
-                :page-sizes="[10, 20, 50, 100]"
                 :page-size="channelQuery.size"
-                layout="total, sizes, prev, pager, next, jumper"
+                layout="total, prev, next"
                 :total="channelTotal"
             >
             </el-pagination>
@@ -76,6 +75,7 @@
           <el-page-header
               @back="goBackToChannels"
               :content="selectedChannel.channelName"
+              title=""
           />
 
           <!-- Video list -->
@@ -105,7 +105,7 @@
                     size="small"
                     effect="dark"
                 >
-                  {{ scope.row.status }}
+                  {{ getStatusText(scope.row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -117,9 +117,8 @@
                 @size-change="handleVideoSizeChange"
                 @current-change="handleVideoCurrentChange"
                 :current-page="videoQuery.current"
-                :page-sizes="[10, 20, 50, 100]"
                 :page-size="videoQuery.size"
-                layout="total, sizes, prev, pager, next, jumper"
+                layout="total, prev, next"
                 :total="videoTotal"
             >
             </el-pagination>
@@ -171,7 +170,8 @@ export default {
         path: '/index/vocabulary/detail',
         query: {
           active: 'youtube',
-          ytbMode: 'player'
+          ytbMode: 'player',
+          now: new Date().getTime()
         }
       });
     },
@@ -320,7 +320,21 @@ export default {
       } else {
         return `${minutes}:${String(seconds).padStart(2, '0')}`
       }
-    }
+    },
+    // Add these methods to the methods section of your component
+    getStatusText(statusCode) {
+      // Map status codes to human-readable text based on ProcessStatusEnum
+      switch (parseInt(statusCode)) {
+        case 0:
+          return 'Ready';
+        case 1:
+          return 'Processing';
+        case 2:
+          return 'Finished';
+        default:
+          return 'Unknown';
+      }
+    },
   }
 }
 </script>

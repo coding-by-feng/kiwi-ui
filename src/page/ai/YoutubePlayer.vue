@@ -86,8 +86,7 @@
              v-if="isSafariOrIOS || currentSubtitleIndex !== -1 && subtitles.length && (ifTranslation || (!ifTranslation && !ifProfessionalSubtitles))"
              v-show="middleControlEnabled"
              @mouseup="handleTextSelection"
-             @touchend="handleTextSelection"
-             @touchstart="pauseOrResumeVideo">
+             @touchend="handleTextSelection">
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
@@ -338,6 +337,8 @@ export default defineComponent({
 
     // Text selection and vocabulary lookup methods with mobile optimization
     handleTextSelection(event) {
+      this.pauseOrResumeVideo();
+
       const selection = window.getSelection();
       const selectedText = selection.toString().trim();
 
@@ -404,6 +405,7 @@ export default defineComponent({
           selectedMode: kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value,
           language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
           originalText: encodedText,
+          ytbMode: 'player',
           now: new Date().getTime()
         }
       })
