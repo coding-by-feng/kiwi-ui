@@ -323,6 +323,9 @@ export default {
     },
     // Add these methods to the methods section of your component
     getStatusText(statusCode) {
+      if (typeof statusCode !== 'number') {
+        return statusCode;
+      }
       // Map status codes to human-readable text based on ProcessStatusEnum
       switch (parseInt(statusCode)) {
         case 0:
@@ -331,8 +334,6 @@ export default {
           return 'Processing';
         case 2:
           return 'Finished';
-        default:
-          return 'Unknown';
       }
     },
   }
