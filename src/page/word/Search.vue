@@ -161,7 +161,12 @@ export default {
       }
       this.$router.push({
         path: this.$route.path,
-        query: {active: 'search', originalText: encodeURIComponent(real.toLowerCase()), now: new Date().getTime()}
+        query: {
+          active: 'search',
+          originalText: encodeURIComponent(real.toLowerCase()),
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
+          now: new Date().getTime()
+        }
       })
     },
     selectedModeChange(item) {
@@ -172,6 +177,7 @@ export default {
           active: 'search',
           selectedMode: item,
           originalText: encodeURIComponent(this.originalText),
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
         }
       })
@@ -190,6 +196,7 @@ export default {
           selectedMode: this.selectedMode,
           language: item,
           originalText: encodeURIComponent(this.originalText),
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
         }
       })
@@ -202,6 +209,7 @@ export default {
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_DEFAULT_MODE,
           originalText: '',
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
         }
       })
@@ -221,6 +229,7 @@ export default {
           selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
           language: this.selectedLanguage,
           originalText: encodedOriginalText,
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
         }
       })
@@ -271,13 +280,19 @@ export default {
             selectedMode: this.selectedMode,
             language: this.selectedLanguage,
             originalText: encodedOriginalText,
+            ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
             now: new Date().getTime()
           }
         })
       } else {
         this.$router.push({
           path: '/index/vocabulary/detail',
-          query: {active: 'search', originalText: encodedOriginalText, now: new Date().getTime()}
+          query: {
+            active: 'search',
+            originalText: encodedOriginalText,
+            ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
+            now: new Date().getTime()
+          }
         })
       }
     },

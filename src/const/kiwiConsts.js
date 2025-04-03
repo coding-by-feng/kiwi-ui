@@ -253,4 +253,9 @@ export default {
         LARGE_PROFESSIONAL_SRT_RETURN_LIST: "large_professional_return_list"
     },
 
+    YTB_MODE: {
+        PLAYER: 'player',
+        CHANNEL: 'channel'
+    }
+
 }

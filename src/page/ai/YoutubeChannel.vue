@@ -284,7 +284,7 @@ export default {
           query: {
             active: 'youtube',
             videoUrl: encodeURIComponent(url),
-            mode: 'player'
+            ytbMode: 'player'
           }
         });
       } else {
