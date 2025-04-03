@@ -2,20 +2,6 @@
 import {getStore} from '@/util/store'
 import website from '@/const/website'
 
-const isIos = function () {
-  if ('iPhone' === navigator.platform || 'iPod' === navigator.platform || 'iPad' === navigator.platform) {
-    return true
-  }
-  return false
-}
-
-const isSafari = function () {
-  let ua = navigator.userAgent.toLowerCase()
-  return ua.indexOf('applewebkit') > -1 && ua.indexOf('safari') > -1 &&
-      ua.indexOf('linux') === -1 && ua.indexOf('android') === -1 && ua.indexOf('chrome') === -1 &&
-      ua.indexOf('ios') === -1 && ua.indexOf('browser') === -1
-}
-
 export default {
   data() {
     return {
@@ -137,7 +123,7 @@ export default {
         <span slot="label"><i class="el-icon-tickets"></i></span>
         <router-view name="starList" v-if="isAdmin"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="youtube">
+      <el-tab-pane name="youtube" v-if="isLogin">
         <span slot="label"><i class="el-icon-video-camera"></i></span>
         <router-view name="youtube"></router-view>
       </el-tab-pane>

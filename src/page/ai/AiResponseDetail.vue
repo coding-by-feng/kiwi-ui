@@ -19,8 +19,7 @@ export default {
     return {
       aiResponseVO: {},
       selectedMode: this.$route.query.selectedMode,
-      apiLoading: false,
-      defaultSelectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+      apiLoading: false
     }
   },
   async mounted() {
@@ -43,6 +42,12 @@ export default {
         return md.render(this.aiResponseVO.responseText);
       }
       return '';
+    },
+    defaultSelectedLanguage() {
+      if (this.$route.query.language) {
+        return this.$route.query.language
+      }
+      return getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     }
   },
   methods: {

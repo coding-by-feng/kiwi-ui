@@ -327,17 +327,15 @@ export default defineComponent({
     },
 
     // Add a dedicated method to pause the video
-    pauseOrResumeVideo() {
+    pauseVideo() {
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
-      } else if (this.player && this.player.getPlayerState() === YT.PlayerState.PAUSED) {
-        this.player.playVideo();
       }
     },
 
     // Text selection and vocabulary lookup methods with mobile optimization
     handleTextSelection(event) {
-      this.pauseOrResumeVideo();
+      this.pauseVideo();
 
       const selection = window.getSelection();
       const selectedText = selection.toString().trim();
