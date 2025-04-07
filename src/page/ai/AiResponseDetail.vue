@@ -1,7 +1,18 @@
 <template>
   <div>
     <h1>{{ getTitle }}</h1>
-    <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading"></div>
+    <div class="response-container">
+      <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading"></div>
+      <el-button
+          v-if="parsedResponseText"
+          class="copy-button"
+          type="info"
+          size="small"
+          icon="el-icon-document-copy"
+          @click="copyResponseText">
+        Copy
+      </el-button>
+    </div>
   </div>
 </template>
 
@@ -19,7 +30,8 @@ export default {
     return {
       aiResponseVO: {},
       selectedMode: this.$route.query.selectedMode,
-      apiLoading: false
+      apiLoading: false,
+      copySuccess: false
     }
   },
   async mounted() {
@@ -42,6 +54,9 @@ export default {
         return md.render(this.aiResponseVO.responseText);
       }
       return '';
+    },
+    rawResponseText() {
+      return this.aiResponseVO.responseText || '';
     },
     defaultSelectedLanguage() {
       if (this.$route.query.language) {
@@ -66,6 +81,38 @@ export default {
             })
       }
     },
+    copyResponseText() {
+      // We want to copy the raw text, not the HTML-rendered version
+      const textToCopy = this.rawResponseText;
+
+      navigator.clipboard.writeText(textToCopy)
+          .then(() => {
+            this.$message({
+              message: 'Text copied to clipboard!',
+              type: 'success',
+              duration: 2000
+            });
+          })
+          .catch(err => {
+            this.$message({
+              message: 'Failed to copy text: ' + err,
+              type: 'error',
+              duration: 2000
+            });
+          });
+    }
   }
 }
 </script>
+
+<style scoped>
+.response-container {
+  position: relative;
+}
+
+.copy-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+</style>
