@@ -4,7 +4,7 @@
     <div class="response-container">
       <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading"></div>
       <el-button
-          v-if="parsedResponseText"
+          v-if="!apiLoading && parsedResponseText"
           class="copy-button"
           type="info"
           size="small"
