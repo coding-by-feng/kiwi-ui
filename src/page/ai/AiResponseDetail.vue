@@ -108,6 +108,12 @@ export default {
 <style scoped>
 .response-container {
   position: relative;
+  padding-top: 40px; /* Add padding to the top to make space for the copy button */
+}
+
+.response-text {
+  text-align: justify;
+  margin-bottom: 40px;
 }
 
 .copy-button {
