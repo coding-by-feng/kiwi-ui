@@ -483,6 +483,7 @@ export default defineComponent({
         // Start syncing subtitles when video is playing
         this.startSubtitleSync();
         this.isPlaying = true;
+        this.forceHideInput = true;
       } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
         // Stop syncing when video is paused or ended
         this.stopSubtitleSync();
