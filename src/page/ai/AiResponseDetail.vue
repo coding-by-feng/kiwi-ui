@@ -73,7 +73,7 @@ export default {
       console.log('original text: ' + originalText + ' language: ' + language)
       if (!util.isEmptyStr(originalText) && !util.isEmptyStr(language)) {
         this.apiLoading = true;
-        callAiChatCompletion(urlPrefix, language, encodeURIComponent(originalText))
+        callAiChatCompletion(urlPrefix, language, originalText)
             .then(response => {
               console.log('ai response', response)
               this.aiResponseVO = response.data.data
