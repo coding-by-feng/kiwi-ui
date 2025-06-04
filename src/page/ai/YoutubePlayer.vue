@@ -85,8 +85,8 @@
         <div class="subtitles-context-display"
              v-if="isSafariOrIOS || currentSubtitleIndex !== -1 && subtitles.length && (ifTranslation || (!ifTranslation && !ifProfessionalSubtitles))"
              v-show="middleControlEnabled"
-             @mouseup="handleTextSelection"
-             @touchend="handleTextSelection">
+             @mouseup="handleTextSelectionWithPausing"
+             @touchend="handleTextSelectionWithPausing">
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
@@ -331,12 +331,7 @@ export default defineComponent({
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
       }
-    },
-
-    // Text selection and vocabulary lookup methods with mobile optimization
-    handleTextSelection(event) {
-      this.pauseVideo();
-
+    }, showQueryingWords(event) {
       const selection = window.getSelection();
       const selectedText = selection.toString().trim();
 
@@ -389,6 +384,15 @@ export default defineComponent({
       } else {
         this.closePopup();
       }
+    },
+
+    handleTextSelectionWithPausing(event) {
+      this.pauseVideo();
+      this.handleTextSelection(event)
+    },
+    // Text selection and vocabulary lookup methods with mobile optimization
+    handleTextSelection(event) {
+      this.showQueryingWords(event);
     },
 
     navigateToVocabulary() {
