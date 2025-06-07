@@ -179,7 +179,10 @@ export default {
     ROUTER_VIEW_AI_MODE: 'aiResponseDetail',
 
     SEARCH_MODES: {
-        DETAIL: {label: 'Dictionary', value: 'detail'},
+        DETAIL: {label: 'Dictionary', value: 'detail'}
+    },
+
+    SEARCH_AI_MODES: {
         DIRECTLY_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation'},
         TRANSLATION_AND_EXPLANATION: {label: 'Explanation', value: 'translation-and-explanation'},
         GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation'},
@@ -187,7 +190,8 @@ export default {
         VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'},
         SYNONYM: {label: 'Synonym', value: 'synonym'},
         ANTONYM: {label: 'Antonym', value: 'antonym'},
-        WORDS_ASSOCIATION: {label: 'Words Association', value: 'words-association'},
+        VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association'},
+        PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association'},
     },
 
     SEARCH_MODES_DATA: Object.freeze({
@@ -203,7 +207,8 @@ export default {
         VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'},
         SYNONYM: {label: 'Synonym', value: 'synonym', width: '100px'},
         ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
-        WORDS_ASSOCIATION: {label: 'Words Association', value: 'words-association', width: '155px'},
+        VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px'},
+        PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association', width: '145px'},
     }),
 
     TOGGLE: {
@@ -247,7 +252,8 @@ export default {
         GRAMMAR_CORRECTION: 'input anything',
         SYNONYM: 'input vocabulary',
         ANTONYM: 'input vocabulary',
-        WORDS_ASSOCIATION: 'input anything',
+        VOCABULARY_ASSOCIATION: 'input anything',
+        PHRASES_ASSOCIATION: 'input anything',
     },
 
     SUBTITLES_TYPE: {
