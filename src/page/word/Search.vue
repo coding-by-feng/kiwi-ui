@@ -69,7 +69,7 @@ import util from '@/util/util'
 import {getStore, setStore} from "@/util/store";
 import kiwiConst from "@/const/kiwiConsts";
 
-const AI_MODES = Object.values(kiwiConsts.SEARCH_MODES).map(mode => mode.value)
+const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
 export default {
   data() {
@@ -224,7 +224,7 @@ export default {
         path: '/index/vocabulary/aiResponseDetail',
         query: {
           active: 'search',
-          selectedMode: kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
+          selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
           language: this.selectedLanguage,
           originalText: encodedOriginalText,
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,

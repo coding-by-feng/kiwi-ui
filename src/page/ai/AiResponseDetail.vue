@@ -46,7 +46,7 @@ export default {
   },
   computed: {
     getTitle() {
-      const mode = Object.values(kiwiConsts.SEARCH_MODES).find(mode => mode.value === this.selectedMode);
+      const mode = Object.values(kiwiConsts.SEARCH_AI_MODES).find(mode => mode.value === this.selectedMode);
       return mode ? mode.label : this.selectedMode; // Fallback to the value if not found
     },
     parsedResponseText() {
