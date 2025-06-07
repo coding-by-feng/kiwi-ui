@@ -69,9 +69,7 @@ import util from '@/util/util'
 import {getStore, setStore} from "@/util/store";
 import kiwiConst from "@/const/kiwiConsts";
 
-const AI_MODES = [kiwiConsts.SEARCH_MODES.DIRECTLY_TRANSLATION.value, kiwiConsts.SEARCH_MODES.TRANSLATION_AND_EXPLANATION.value,
-  kiwiConsts.SEARCH_MODES.GRAMMAR_EXPLANATION.value, kiwiConsts.SEARCH_MODES.GRAMMAR_CORRECTION.value, kiwiConsts.SEARCH_MODES.VOCABULARY_EXPLANATION.value,
-  kiwiConsts.SEARCH_MODES.SYNONYM.value, kiwiConsts.SEARCH_MODES.ANTONYM.value]
+const AI_MODES = Object.values(kiwiConsts.SEARCH_MODES).map(mode => mode.value)
 
 export default {
   data() {

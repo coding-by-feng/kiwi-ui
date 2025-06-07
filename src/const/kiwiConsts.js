@@ -164,6 +164,7 @@ export default {
         SELECTED_LANGUAGE: 'selected_language',
         SUBTITLES_TRANSLATION_SELECTED_LANGUAGE: 'subtitles_translation_selected_language',
         IF_SUBTITLES_TRANSLATION: true,
+        NATIVE_LANG: 'native_lang', // Add this new key
     },
 
     DB_NAME: 'KIWI_VOCABULARY',
@@ -186,6 +187,7 @@ export default {
         VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'},
         SYNONYM: {label: 'Synonym', value: 'synonym'},
         ANTONYM: {label: 'Antonym', value: 'antonym'},
+        WORDS_ASSOCIATION: {label: 'Words Association', value: 'words-association'},
     },
 
     SEARCH_MODES_DATA: Object.freeze({
@@ -201,6 +203,7 @@ export default {
         VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'},
         SYNONYM: {label: 'Synonym', value: 'synonym', width: '100px'},
         ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
+        WORDS_ASSOCIATION: {label: 'Words Association', value: 'words-association', width: '155px'},
     }),
 
     TOGGLE: {
@@ -244,6 +247,7 @@ export default {
         GRAMMAR_CORRECTION: 'input anything',
         SYNONYM: 'input vocabulary',
         ANTONYM: 'input vocabulary',
+        WORDS_ASSOCIATION: 'input anything',
     },
 
     SUBTITLES_TYPE: {

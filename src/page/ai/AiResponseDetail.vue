@@ -35,19 +35,19 @@ export default {
     }
   },
   async mounted() {
-    console.log('DirectlyTranslation component mounted')
+    console.log('AiResponseDetail component mounted')
     this.init();
   },
   watch: {
     '$route'() {
-      console.log('DirectlyTranslation component watch')
+      console.log('AiResponseDetail component watch')
       this.init()
     }
   },
   computed: {
     getTitle() {
       const mode = Object.values(kiwiConsts.SEARCH_MODES).find(mode => mode.value === this.selectedMode);
-      return mode ? mode.label : value; // Fallback to the value if not found
+      return mode ? mode.label : this.selectedMode; // Fallback to the value if not found
     },
     parsedResponseText() {
       if (this.aiResponseVO.responseText) {
@@ -58,25 +58,35 @@ export default {
     rawResponseText() {
       return this.aiResponseVO.responseText || '';
     },
-    defaultSelectedLanguage() {
+    defaultTargetLanguage() {
       if (this.$route.query.language) {
         return this.$route.query.language
       }
       return getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+    },
+    defaultNativeLanguage() {
+      return getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) ? getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     }
   },
   methods: {
     async init() {
       let originalText = this.$route.query.originalText;
-      let language = this.$route.query.language ? this.$route.query.language : this.defaultSelectedLanguage;
-      let urlPrefix = this.$route.query.selectedMode
-      console.log('original text: ' + originalText + ' language: ' + language)
-      if (!util.isEmptyStr(originalText) && !util.isEmptyStr(language)) {
+      let targetLanguage = this.$route.query.language ? this.$route.query.language : this.defaultTargetLanguage;
+      let nativeLanguage = this.defaultNativeLanguage;
+      let selectedMode = this.$route.query.selectedMode
+
+      console.log('original text: ' + originalText + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' selectedMode: ' + selectedMode)
+
+      if (!util.isEmptyStr(originalText) && !util.isEmptyStr(targetLanguage) && !util.isEmptyStr(nativeLanguage) && !util.isEmptyStr(selectedMode)) {
         this.apiLoading = true;
-        callAiChatCompletion(urlPrefix, language, originalText)
+        callAiChatCompletion(selectedMode, targetLanguage, nativeLanguage, originalText)
             .then(response => {
               console.log('ai response', response)
               this.aiResponseVO = response.data.data
+              this.apiLoading = false;
+            })
+            .catch(error => {
+              console.error('Error calling AI API:', error)
               this.apiLoading = false;
             })
       }
