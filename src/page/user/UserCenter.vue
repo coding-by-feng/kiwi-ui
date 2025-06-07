@@ -37,10 +37,13 @@ export default {
         isPlayExample: getStore({name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE}),
         isEnToEn: getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
         bgm: getStore({name: kiwiConst.CONFIG_KEY.BGM}),
+        nativeLang: getStore({name: kiwiConst.CONFIG_KEY.NATIVE_LANG}), // Add native language
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
-      }
+      },
+      // Add language codes for native language selection
+      languageCodes: kiwiConst.TRANSLATION_LANGUAGE_CODE,
     }
   },
   mounted() {
@@ -85,6 +88,15 @@ export default {
         content: kiwiConst.IS_EN_TO_EN.ENABLE,
         type: 'local'
       })
+    }
+    // Initialize native language with default value
+    if (util.isEmptyStr(this.user.nativeLang)) {
+      setStore({
+        name: kiwiConst.CONFIG_KEY.NATIVE_LANG,
+        content: kiwiConst.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+        type: 'local'
+      })
+      this.user.nativeLang = kiwiConst.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     }
 
     this.refresh();
@@ -170,6 +182,15 @@ export default {
         type: 'local'
       })
       this.user.isEnToEn = command
+    },
+    // Add native language change handler
+    nativeLangChange(command) {
+      setStore({
+        name: kiwiConst.CONFIG_KEY.NATIVE_LANG,
+        content: command,
+        type: 'local'
+      })
+      this.user.nativeLang = command
     },
     tranReviewType(val) {
       if (undefined === val) {
@@ -275,6 +296,19 @@ export default {
         return '关闭'
       }
     },
+    // Add translation method for native language
+    tranNativeLang(val) {
+      if (util.isEmptyStr(val)) {
+        return '默认语言'
+      }
+      // Find the language name from the code
+      for (const [language, code] of Object.entries(this.languageCodes)) {
+        if (code === val) {
+          return language.replaceAll('_', ' ')
+        }
+      }
+      return '未知语言'
+    },
     refresh() {
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
@@ -333,6 +367,20 @@ export default {
       </el-dropdown-menu>
     </el-dropdown>
     <el-divider></el-divider>
+    <!-- Add Native Language Dropdown -->
+    <el-dropdown size="mini"
+                 split-button type="info" @command="nativeLangChange">
+      {{ `母语设置：${tranNativeLang(user.nativeLang)}` }}
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item
+            v-for="(code, language) in languageCodes"
+            :key="code"
+            :command="code">
+          {{ language.replaceAll('_', ' ') }}
+        </el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <el-divider></el-divider>
     <el-dropdown size="mini"
                  split-button type="info" @command="bgmChange">
       {{ `背景音乐：${tranBGM(user.bgm)}` }}
@@ -388,5 +436,3 @@ export default {
     </el-dropdown>
   </div>
 </template>
-
-
