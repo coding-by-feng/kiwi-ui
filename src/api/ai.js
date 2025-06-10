@@ -3,7 +3,7 @@ import request from '@/router/axios'
 export function callAiChatCompletion(selectedMode, targetLanguage, nativeLanguage, originalText) {
     console.log('callAiChatCompletion selectedMode: ' + selectedMode + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' originalText: ' + originalText)
     return request({
-        url: `/ai-biz/ai/v2/${selectedMode}/${targetLanguage}/${nativeLanguage}/${encodeURIComponent(originalText)}`,
+        url: `/ai-biz/ai/v2/${selectedMode}/${targetLanguage}/${nativeLanguage}/${encodeURIComponent(encodeURIComponent(originalText))}`,
         headers: {
             isToken: true
         },

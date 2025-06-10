@@ -636,7 +636,7 @@ export default {
       this.detail.dialogVisible = false
       this.$router.push({
         path: '/index/vocabulary/detail',
-        query: {active: 'search', word: this.detail.paraphraseVO.wordName}
+        query: {active: 'search', originalText: this.detail.paraphraseVO.wordName}
       })
     },
     async pageChange() {
