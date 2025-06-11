@@ -1,36 +1,63 @@
-import { serialize } from '@/util/util'
-import { getStore } from '@/util/store'
+import {serialize} from '@/util/util'
+import {getStore} from '@/util/store'
 import NProgress from 'nprogress'
 import responseCode from '@/const/responseCode'
-import website from '@/const/website'
 import router from '@/router/router'
-import { Message } from 'element-ui'
+import {Message} from 'element-ui'
 import 'nprogress/nprogress.css'
 import store from '@/store'
 import axios from 'axios'
-import el from 'element-ui/src/locale/lang/el'
+import {baseUrl, isElectron} from '@/config/env'
 
+// Configure axios defaults
 axios.defaults.timeout = 100000
 axios.defaults.validateStatus = function (status) {
   return status >= 200 && status <= 500
 }
-axios.defaults.withCredentials = true
+
+// Only set withCredentials if not in Electron (to avoid CORS issues)
+if (!isElectron) {
+  axios.defaults.withCredentials = true
+}
+
+// Set base URL for Electron to your local server
+if (isElectron && baseUrl) {
+  axios.defaults.baseURL = baseUrl
+  console.log('Axios configured for Electron with baseURL:', baseUrl)
+}
+
 NProgress.configure({
   showSpinner: false
 })
+
 axios.interceptors.request.use(config => {
   NProgress.start()
+
   let isToken = !!(config.headers || {}).isToken
   let token = getStore({ name: 'access_token' })
-  // let token = store.getters.access_token
+
   if (token && isToken) {
     config.headers['Authorization'] = 'Bearer ' + token
   }
+
+  // Add CORS headers for Electron
+  if (isElectron) {
+    config.headers['Content-Type'] = 'application/json'
+    config.headers['Access-Control-Allow-Origin'] = '*'
+    config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    config.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+
+    // Log the full URL being requested
+    const fullUrl = config.baseURL ? config.baseURL + config.url : config.url
+    console.log('Making request to:', fullUrl)
+  }
+
   // headers中配置serialize为true开启序列化
   if (config.methods === 'post' && config.headers.serialize) {
     config.data = serialize(config.data)
     delete config.data.serialize
   }
+
   return config
 })
 
@@ -39,6 +66,7 @@ axios.interceptors.response.use(res => {
   const status = String(res.status) || '200'
   const message = responseCode[status] || responseCode['default'] || res.data.msg
   let refreshToken = getStore({ name: 'refresh_token' })
+
   if (responseCode.UNAUTHORIZED == status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
@@ -51,7 +79,12 @@ axios.interceptors.response.use(res => {
       })
     } else {
       store.dispatch('LogOut').then(() => {
-        window.location.href = '/#/index/vocabulary/detail?active=login'
+        if (isElectron) {
+          // In Electron, just navigate to login page
+          router.push('/index/vocabulary/detail?active=login')
+        } else {
+          window.location.href = '/#/index/vocabulary/detail?active=login'
+        }
       })
     }
   }
@@ -69,12 +102,26 @@ axios.interceptors.response.use(res => {
   return res
 }, error => {
   NProgress.done()
-  Message({
-    message: responseCode['default'],
-    type: 'error',
-    center: true,
-    showClose: true
-  })
+
+  // Handle network errors in Electron
+  if (isElectron && (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND')) {
+    Message({
+      message: `Unable to connect to server at ${baseUrl}. Please check if your server is running and accessible.`,
+      type: 'error',
+      center: true,
+      showClose: true,
+      duration: 5000
+    })
+    console.error('Connection error:', error.message, 'Server URL:', baseUrl)
+  } else {
+    Message({
+      message: responseCode['default'],
+      type: 'error',
+      center: true,
+      showClose: true
+    })
+  }
+
   return Promise.reject(new Error(error))
 })
 

@@ -2,8 +2,15 @@ const path = require('path');
 const webpack = require('webpack')
 const CompressionWebpackPlugin = require('compression-webpack-plugin')
 const productionGzipExtensions = ['js', 'css']
-const url = 'http://kiwi-microservice-local:9991'
-let publicPath = './'
+
+// Determine if running in Electron
+const isElectron = process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-dev';
+
+// Backend URL - use localhost for Electron, or your production server
+const url = isElectron ? 'http://kason-server.local:9991' : 'http://kiwi-microservice-local:9991'
+
+// Set public path based on environment
+let publicPath = isElectron ? './' : './'
 
 module.exports = {
     publicPath: publicPath,
@@ -21,7 +28,7 @@ module.exports = {
             // Ignore all locale files of moment.js
             new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
 
-            // 配置compression-webpack-plugin压缩
+            // Configure compression-webpack-plugin
             new CompressionWebpackPlugin({
                 algorithm: 'gzip',
                 test: new RegExp('\\.(' + productionGzipExtensions.join('|') + ')$'),
@@ -33,7 +40,7 @@ module.exports = {
                 minChunkSize: 100
             })
         ],
-        // 开启分离 js
+        // Enable JS splitting
         optimization: {
             runtimeChunk: 'single',
             splitChunks: {
@@ -44,17 +51,9 @@ module.exports = {
                     vendor: {
                         test: /[\\/]node_modules[\\/]/,
                         name(module) {
-                            // get the name. E.g. node_modules/packageName/not/this/part.js
-                            // or node_modules/packageName
-                            console.log(module.context)
                             const packages = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
                             if (packages) {
-                                console.log('packages-->');
-                                console.log(packages)
                                 const packageName = packages[1]
-                                console.log('packageName-->')
-                                console.log(packageName)
-                                // npm package names are URL-safe, but some servers don't like @ symbols
                                 return `npm.${packageName.replace('@', '')}`
                             }
                         }
@@ -64,42 +63,45 @@ module.exports = {
         }
     },
     devServer: {
-        proxy: {
-            '/auth': {
-                target: url,
-                ws: true,
-                pathRewrite: {
-                    '^/auth': '/auth'
-                }
-            },
-            '/wordBiz': {
-                target: url,
-                ws: true,
-                pathRewrite: {
-                    '^/wordBiz': '/wordBiz'
-                }
-            },
-            '/ai-biz': {
-                target: url,
-                ws: true,
-                pathRewrite: {
-                    '^/ai-biz': '/ai-biz'
-                }
-            },
-            '/code': {
-                target: url,
-                ws: true,
-                pathRewrite: {
-                    '^/code': '/code'
-                }
-            },
-            '/admin': {
-                target: url,
-                ws: true,
-                pathRewrite: {
-                    '^/admin': '/admin'
+        // Only configure proxy if not running in Electron
+        ...(isElectron ? {} : {
+            proxy: {
+                '/auth': {
+                    target: url,
+                    ws: true,
+                    pathRewrite: {
+                        '^/auth': '/auth'
+                    }
+                },
+                '/wordBiz': {
+                    target: url,
+                    ws: true,
+                    pathRewrite: {
+                        '^/wordBiz': '/wordBiz'
+                    }
+                },
+                '/ai-biz': {
+                    target: url,
+                    ws: true,
+                    pathRewrite: {
+                        '^/ai-biz': '/ai-biz'
+                    }
+                },
+                '/code': {
+                    target: url,
+                    ws: true,
+                    pathRewrite: {
+                        '^/code': '/code'
+                    }
+                },
+                '/admin': {
+                    target: url,
+                    ws: true,
+                    pathRewrite: {
+                        '^/admin': '/admin'
+                    }
                 }
             }
-        }
+        })
     }
 }
