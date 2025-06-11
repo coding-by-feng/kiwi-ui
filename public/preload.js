@@ -1,111 +1,84 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const isDev = require('electron-is-dev');
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+    // Environment information
+    isDev: isDev,
+    environment: isDev ? 'development' : 'production',
+
+    // DevTools functionality
+    toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
+
     // App information
-    getVersion: () => ipcRenderer.invoke('app-version'),
-
-    // Dialog functions
-    showMessageBox: (options) => ipcRenderer.invoke('show-message-box', options),
-
-    // Window controls (for custom title bar)
-    minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
-    maximizeWindow: () => ipcRenderer.invoke('maximize-window'),
-    closeWindow: () => ipcRenderer.invoke('close-window'),
-
-    // File system access (for reading local files)
-    readFile: async (filePath) => {
-        try {
-            const fs = require('fs').promises;
-            const path = require('path');
-
-            // Ensure the file path is safe and within allowed directories
-            const safePath = path.resolve(__dirname, '..', filePath);
-            const data = await fs.readFile(safePath, 'utf8');
-            return data;
-        } catch (error) {
-            console.error('Error reading file:', error);
-            throw error;
-        }
-    },
+    getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+    getAppPath: () => ipcRenderer.invoke('get-app-path'),
 
     // Platform information
     platform: process.platform,
 
-    // Node.js path utilities
-    path: {
-        join: (...args) => require('path').join(...args),
-        resolve: (...args) => require('path').resolve(...args),
-        dirname: (path) => require('path').dirname(path),
-        basename: (path) => require('path').basename(path),
+    // File system access (if needed for your vocabulary app)
+    readFile: async (filePath, options) => {
+        // This would need to be implemented in the main process
+        return ipcRenderer.invoke('read-file', filePath, options);
     },
 
-    // Environment information
-    isDev: process.env.NODE_ENV === 'development',
+    // URL handling
+    openExternal: (url) => ipcRenderer.invoke('open-external', url),
+
+    // Window controls
+    minimize: () => ipcRenderer.invoke('minimize-window'),
+    maximize: () => ipcRenderer.invoke('maximize-window'),
+    close: () => ipcRenderer.invoke('close-window'),
+
+    // Development helpers
+    getEnvironmentInfo: () => {
+        return {
+            isDev: isDev,
+            environment: isDev ? 'development' : 'production',
+            url: window.location.href,
+            platform: process.platform
+        };
+    },
+
+    // Console logging for debugging
+    log: (message) => {
+        console.log('[Renderer]:', message);
+    }
 });
 
-// Create a mock window.fs for the Vue app file reading functionality
-window.fs = {
-    readFile: async (filePath, options = {}) => {
-        try {
-            const fs = require('fs').promises;
-            const path = require('path');
-
-            // Handle different file path formats
-            let resolvedPath;
-            if (filePath.startsWith('/')) {
-                // Absolute path from app root
-                resolvedPath = path.join(__dirname, '..', 'dist', filePath.substring(1));
-            } else {
-                // Relative path
-                resolvedPath = path.join(__dirname, '..', 'dist', filePath);
-            }
-
-            const data = await fs.readFile(resolvedPath, options.encoding || 'utf8');
-
-            if (options.encoding === undefined) {
-                // Return as Uint8Array for binary data
-                return new Uint8Array(Buffer.from(data, 'binary'));
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Error reading file:', error);
-            throw error;
+// Add keyboard shortcuts for DevTools (as backup)
+window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('keydown', (event) => {
+        // F12 key
+        if (event.key === 'F12') {
+            event.preventDefault();
+            ipcRenderer.invoke('toggle-devtools');
+            return;
         }
-    }
-};
 
-// Disable right-click context menu (optional)
-window.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    return false;
+        // Ctrl+Shift+I (Windows/Linux) or Cmd+Option+I (macOS)
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'I') {
+            event.preventDefault();
+            ipcRenderer.invoke('toggle-devtools');
+            return;
+        }
+
+        // Ctrl+R or Cmd+R for reload
+        if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+            event.preventDefault();
+            location.reload();
+
+        }
+    });
 });
 
-// Disable text selection (optional - for a more app-like feel)
-// Uncomment if you want to disable text selection
-/*
-document.addEventListener('selectstart', (e) => {
-  e.preventDefault();
-  return false;
+// Error handling
+window.addEventListener('error', (event) => {
+    console.error('[Renderer Error]:', event.error);
 });
-*/
 
-// Override console for better debugging in Electron
-const originalConsole = { ...console };
-window.console = {
-    ...originalConsole,
-    log: (...args) => {
-        originalConsole.log('[Renderer]', ...args);
-    },
-    error: (...args) => {
-        originalConsole.error('[Renderer]', ...args);
-    },
-    warn: (...args) => {
-        originalConsole.warn('[Renderer]', ...args);
-    },
-    info: (...args) => {
-        originalConsole.info('[Renderer]', ...args);
-    }
-};
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('[Renderer Unhandled Promise Rejection]:', event.reason);
+});
