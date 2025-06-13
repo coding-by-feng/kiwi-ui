@@ -2,6 +2,19 @@ const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
 const isDev = false;
 
+// Set app name
+app.setName('Kiwi Vocabulary');
+
+// Set user data path for persistent storage
+if (!isDev) {
+    // In production, set a specific user data directory
+    const userDataPath = path.join(require('os').homedir(), 'KiwiVocabulary');
+    app.setPath('userData', userDataPath);
+    console.log('User data will be stored at:', userDataPath);
+} else {
+    console.log('Development mode - using default user data path:', app.getPath('userData'));
+}
+
 // Keep a global reference of the window object
 let mainWindow;
 
@@ -24,16 +37,42 @@ function createWindow() {
         height: 800,
         minWidth: 800,
         minHeight: 600,
+        title: 'Kiwi Vocabulary', // Set window title
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,
             preload: path.join(__dirname, 'preload.js'),
             devTools: true, // Always enable DevTools
-            webSecurity: !isDev // Disable web security in development for CORS
+            webSecurity: !isDev, // Disable web security in development for CORS
+            // Enable persistent storage
+            partition: 'persist:kiwi-vocabulary', // This enables session persistence
+            // Additional security settings
+            allowRunningInsecureContent: false,
+            experimentalFeatures: false
         },
         icon: path.join(__dirname, 'icon.png'), // App icon
         show: false // Don't show until ready
+    });
+
+    // Configure session for persistence
+    const session = mainWindow.webContents.session;
+
+    // Set up session to persist cookies and local storage
+    session.setPermissionRequestHandler((webContents, permission, callback) => {
+        // Grant permissions for storage-related requests
+        if (permission === 'persistent-storage') {
+            callback(true);
+        } else {
+            callback(false);
+        }
+    });
+
+    // Configure cookie settings for persistence
+    session.cookies.on('changed', (event, cookie, cause, removed) => {
+        if (!removed) {
+            console.log('Cookie saved:', cookie.name);
+        }
     });
 
     // Get configuration based on environment
@@ -91,6 +130,20 @@ function createWindow() {
         mainWindow = null;
     });
 
+    // Prevent clearing session data on window close
+    mainWindow.on('close', (event) => {
+        console.log('Window closing - session data will be preserved');
+        // Don't prevent the close, just log that data should be preserved
+    });
+
+    // Save window state before closing
+    mainWindow.on('close', () => {
+        // Save window bounds for next startup
+        const bounds = mainWindow.getBounds();
+        // You could save these bounds to a config file if needed
+        console.log('Saving window bounds:', bounds);
+    });
+
     // Handle external links
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         shell.openExternal(url);
@@ -101,9 +154,22 @@ function createWindow() {
     mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
         const parsedUrl = new URL(navigationUrl);
 
-        if (parsedUrl.origin !== 'http://localhost:8080' && parsedUrl.origin !== 'file://') {
+        // Allow navigation within your app
+        const allowedOrigins = [
+            'http://localhost:8080',
+            'http://kason-server.local',
+            'file://'
+        ];
+
+        const isAllowed = allowedOrigins.some(origin =>
+            navigationUrl.startsWith(origin)
+        );
+
+        if (!isAllowed) {
+            console.log('Preventing external navigation to:', navigationUrl);
             event.preventDefault();
-            shell.openExternal(navigationUrl);
+            // Optionally open in external browser
+            // shell.openExternal(navigationUrl);
         }
     });
 }
@@ -307,6 +373,9 @@ app.whenReady().then(() => {
     createWindow();
     createMenu();
 
+    console.log('App user data path:', app.getPath('userData'));
+    console.log('App cache path:', app.getPath('sessionData'));
+
     // On macOS, re-create window when dock icon is clicked
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -315,9 +384,19 @@ app.whenReady().then(() => {
     });
 });
 
+// Configure app-level settings for data persistence
+app.on('ready', () => {
+    // Ensure session data is not cleared
+    app.on('before-quit', (event) => {
+        console.log('App is quitting - preserving session data');
+        // Don't clear any session data here
+    });
+});
+
 // Quit when all windows are closed, except on macOS
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        // Don't call session.clearStorageData() here
         app.quit();
     }
 });

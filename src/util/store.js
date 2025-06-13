@@ -1,4 +1,4 @@
-import { validateEmpty } from '@/util/validate'
+import {validateEmpty} from '@/util/validate'
 import website from '@/const/website'
 
 const keyName = website.key + '-'
@@ -17,14 +17,25 @@ export const setStore = (params = {}) => {
     type: type,
     datatime: new Date().getTime()
   }
-  if (type) {
-    /*保存的数据用于浏览器的一次会话（session），当会话结束（通常是窗口关闭），数据被清空*/
-    // window.sessionStorage.setItem(name, JSON.stringify(obj))
+
+  try {
+    // Always try to save to localStorage first (more persistent)
     window.localStorage.setItem(name, JSON.stringify(obj))
-  } else {
-    /*保存的数据用于浏览器的一次会话（session），当会话结束（通常是窗口关闭），数据被清空*/
-    // window.localStorage.setItem(name, JSON.stringify(obj))
-    window.sessionStorage.setItem(name, JSON.stringify(obj))
+
+    // Also save to sessionStorage as backup
+    if (!type) {
+      window.sessionStorage.setItem(name, JSON.stringify(obj))
+    }
+
+    console.log(`Stored ${name} successfully`)
+  } catch (error) {
+    console.error('Error storing data:', error)
+    // Fallback to sessionStorage if localStorage fails
+    try {
+      window.sessionStorage.setItem(name, JSON.stringify(obj))
+    } catch (sessionError) {
+      console.error('Error storing to sessionStorage:', sessionError)
+    }
   }
 }
 
@@ -36,21 +47,30 @@ export const getStore = (params = {}) => {
   } = params
   name = keyName + name
   let obj = {}, content
-  obj = window.sessionStorage.getItem(name)
+
+  // Try localStorage first (more persistent)
+  obj = window.localStorage.getItem(name)
+
+  // If not found in localStorage, try sessionStorage
   if (validateEmpty(obj)) {
-    obj = window.localStorage.getItem(name)
+    obj = window.sessionStorage.getItem(name)
   }
+
   if (validateEmpty(obj)) {
     return
   }
+
   try {
     obj = JSON.parse(obj)
-  } catch {
+  } catch (error) {
+    console.error('Error parsing stored data:', error)
     return obj
   }
+
   if (debug) {
     return obj
   }
+
   if (obj.dataType === 'string') {
     content = obj.content
   } else if (obj.dataType === 'number') {
@@ -60,6 +80,7 @@ export const getStore = (params = {}) => {
   } else if (obj.dataType === 'object') {
     content = obj.content
   }
+
   return content
 }
 
@@ -69,12 +90,8 @@ export const removeStore = (params = {}) => {
     type
   } = params
   name = keyName + name
+
+  // Remove from both storages to ensure cleanup
   window.sessionStorage.removeItem(name)
   window.localStorage.removeItem(name)
-  // if (type) {
-  //   window.sessionStorage.removeItem(name)
-  // } else {
-  //   window.localStorage.removeItem(name)
-  // }
 }
-
