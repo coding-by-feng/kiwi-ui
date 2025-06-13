@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const isDev = require('electron-is-dev');
+const isDev = false;
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -48,8 +48,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
 });
 
-// Add keyboard shortcuts for DevTools (as backup)
+// Add session debugging and persistence helpers
 window.addEventListener('DOMContentLoaded', () => {
+    // Debug session persistence
+    console.log('=== SESSION PERSISTENCE DEBUG ===');
+    console.log('LocalStorage items:', localStorage.length);
+    console.log('SessionStorage items:', sessionStorage.length);
+
+    // Log some sample data
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.includes('kiwi-vocabulary')) {
+            console.log('Persistent data found:', key);
+        }
+    }
+
+    // Test storage functionality
+    try {
+        localStorage.setItem('test-persistence', new Date().toISOString());
+        console.log('LocalStorage write test: SUCCESS');
+    } catch (error) {
+        console.error('LocalStorage write test: FAILED', error);
+    }
+
     document.addEventListener('keydown', (event) => {
         // F12 key
         if (event.key === 'F12') {
