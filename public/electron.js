@@ -25,7 +25,7 @@ const config = {
         fallback: 'http://localhost:3000' // Alternative dev port
     },
     production: {
-        primary: 'http://kason-server.local',
+        primary: 'https://kason.ngrok.app',
         fallback: `file://${path.join(__dirname, '../dist/index.html')}`
     }
 };
