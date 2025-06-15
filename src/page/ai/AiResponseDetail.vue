@@ -3,7 +3,6 @@
     <h1>{{ getTitle }}</h1>
     <div class="response-container">
       <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading">
-        <!-- Show streaming indicator when receiving chunks -->
         <div v-if="isStreaming" class="streaming-indicator">
           <i class="el-icon-loading"></i> Streaming response...
         </div>
@@ -302,12 +301,45 @@ export default {
 </script>
 
 <style scoped>
+/* ... your existing styles ... */
+
+.response-container > div {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Ensure no elements are overlaying invisibly when not loading */
+/* You might not need this, but it's a good check */
+.response-container {
+  position: relative;
+  /* Add pointer-events to ensure the container itself allows events */
+  pointer-events: auto;
+}
+
+.response-container > div[v-loading] {
+  /* When loading, allow events on the content beneath the overlay,
+     but the overlay itself captures them.
+     This specific rule is usually handled by Element-UI.
+     Only add if you suspect the overlay is misbehaving when *not* active. */
+  pointer-events: auto;
+}
+
+/* Ensure the streaming indicator doesn't block events on text when visible */
+.streaming-indicator {
+  /* if this indicator ever overlays the text, you might need to adjust z-index or pointer-events */
+  pointer-events: none; /* Allows clicks/selection to pass through the indicator */
+}
+
+
+/* Your existing styles */
 .response-container {
   position: relative;
   padding-top: 40px;
 }
 
-.response-text {
+.response-text { /* This class is not used in the template currently, but if it were, apply user-select here too */
   text-align: justify;
   margin-bottom: 40px;
 }

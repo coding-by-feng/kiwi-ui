@@ -20,7 +20,6 @@
                      v-if="lazy"
                      icon="el-icon-switch-button"
                      @click="closeLazy"></el-button>
-          <!-- Use predefined width for each label -->
           <el-select v-if="!lazy" v-model="selectedMode" slot="prepend"
                      size="mini"
                      :style="selectWidthStyle"
@@ -38,7 +37,6 @@
       </el-col>
     </el-row>
     <el-row>
-      <!-- Add el-select for language selection -->
       <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini" placeholder="Select Language"
                  :style="'margin-right: 10px;'" @change="selectedLanguageChange">
         <el-option
@@ -59,6 +57,33 @@
     <el-row justify="center">
       <router-view :name="getRouterView"></router-view>
     </el-row>
+
+    <el-dialog
+        title="Use Copied Text?"
+        :visible.sync="showModeSelectionDialog"
+        width="30%"
+        center>
+      <span>
+        Do you want to search for: <br>
+        <strong>"{{ copiedTextFromClipboard.substring(0, 100) }}{{ copiedTextFromClipboard.length > 100 ? '...' : '' }}"</strong>?
+      </span>
+      <el-form label-position="top" style="margin-top: 20px;">
+        <el-form-item label="Select Search Mode:">
+          <el-select v-model="tempSelectedModeForClipboard" placeholder="Select a mode" style="width: 100%;">
+            <el-option
+                v-for="item in searchModes"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancelCopiedTextSearch">Cancel</el-button>
+        <el-button type="info" @click="confirmCopiedTextSearch">Search</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -68,6 +93,7 @@ import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
 import {getStore, setStore} from "@/util/store";
 import kiwiConst from "@/const/kiwiConsts";
+import { Notification } from 'element-ui'; // Import Notification component
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
@@ -81,6 +107,10 @@ export default {
       searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA),
       selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
+      // New data properties for clipboard feature
+      showModeSelectionDialog: false,
+      copiedTextFromClipboard: '',
+      tempSelectedModeForClipboard: kiwiConsts.SEARCH_DEFAULT_MODE, // For selection in dialog
     }
   },
   computed: {
@@ -119,6 +149,14 @@ export default {
   },
   mounted() {
     console.log('Search component mounted')
+    // Add event listener for visibility change
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    // Initial check in case the tab is already visible when mounted
+    this.handleVisibilityChange();
+  },
+  beforeDestroy() {
+    // Remove event listener to prevent memory leaks
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
   watch: {
     $route: function () {
@@ -304,7 +342,94 @@ export default {
         ...queryTmp
       }
       this.$router.push({path: '/index/vocabulary/detail', query: query})
-    }
+    },
+
+    // New methods for clipboard functionality
+    async readClipboard() {
+      try {
+        // Ensure the window is focused first
+        if (!document.hasFocus()) {
+          console.log('Document not focused, attempting to focus...');
+          window.focus();
+
+          // Wait a bit for focus to take effect
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          // If still not focused, return null
+          if (!document.hasFocus()) {
+            console.warn('Document could not be focused for clipboard access');
+            return null;
+          }
+        }
+
+        const text = await navigator.clipboard.readText();
+        console.log('Clipboard content:', text);
+        return text;
+      } catch (err) {
+        console.warn('Failed to read clipboard contents: ', err);
+
+        // If it's a NotAllowedError, try one more time after ensuring focus
+        if (err.name === 'NotAllowedError') {
+          try {
+            // Force focus and try again
+            window.focus();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const text = await navigator.clipboard.readText();
+            console.log('Clipboard content (retry):', text);
+            return text;
+          } catch (retryErr) {
+            console.warn('Retry also failed:', retryErr);
+            return null;
+          }
+        }
+
+        return null;
+      }
+    },
+
+    async handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        console.log('Tab became visible. Checking clipboard...');
+        const clipboardContent = await this.readClipboard();
+
+        // Check if content exists, is not empty after trim, and is different from current originalText
+        if (clipboardContent && clipboardContent.trim() !== '' && clipboardContent.trim() !== this.originalText) {
+          this.copiedTextFromClipboard = clipboardContent.trim();
+          this.tempSelectedModeForClipboard = this.selectedMode; // Pre-select current mode in dialog
+
+          Notification({
+            title: 'Clipboard Content Detected',
+            message: `Do you want to search for "${this.copiedTextFromClipboard.substring(0, 50)}${this.copiedTextFromClipboard.length > 50 ? '...' : ''}"? Click to proceed.`,
+            position: 'bottom-right',
+            duration: 0, // Notification will not auto-close
+            showClose: true,
+            onClick: () => {
+              // When the notification is clicked, open the mode selection dialog
+              this.showModeSelectionDialog = true;
+              // Close the specific notification if you have its ID.
+              // For simplicity, we are relying on user interaction with the dialog to proceed.
+            },
+            onClose: () => {
+              // If user manually closes the notification without clicking it
+              this.copiedTextFromClipboard = ''; // Clear copied text
+            }
+          });
+        }
+      }
+    },
+
+    confirmCopiedTextSearch() {
+      this.originalText = this.copiedTextFromClipboard;
+      this.selectedMode = this.tempSelectedModeForClipboard;
+      this.showModeSelectionDialog = false; // Close the dialog
+      this.copiedTextFromClipboard = ''; // Clear the stored copied text after use
+      this.onSubmit(); // Trigger the search with the new text and selected mode
+    },
+
+    cancelCopiedTextSearch() {
+      this.showModeSelectionDialog = false; // Close the dialog
+      this.copiedTextFromClipboard = ''; // Clear the stored copied text
+    },
   }
 }
 </script>
