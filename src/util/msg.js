@@ -41,7 +41,7 @@ export default {
             message: msg ? msg : 'msg missing',
             type: 'success',
             duration: duration ? duration : 3000,
-            position: 'bottom-right'
+            position: 'top-right'
         });
     },
 
