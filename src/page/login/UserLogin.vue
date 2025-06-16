@@ -556,7 +556,7 @@ export default {
 
         console.log('📡 [LINK] Link response:', response.data)
 
-        if (response.data.code === 200) {
+        if (response.data.code === 1) {
           console.log('✅ [LINK] Account linking successful')
           this.$message.success('账号关联成功')
 

@@ -1,6 +1,7 @@
 <script>
 import {getStore} from '@/util/store'
 import website from '@/const/website'
+import {handleGoogleOAuthCallback} from '@/util/oauth' // Add this import
 
 export default {
   data() {
@@ -16,6 +17,8 @@ export default {
   watch: {
     $route: function () {
       this.activeName = this.$route.query.active
+      // Also check for OAuth callback when route changes
+      this.checkOAuthCallback()
     }
   },
   computed: {
@@ -29,23 +32,42 @@ export default {
     },
   },
   mounted() {
+    // Check for Google OAuth callback first
+    this.checkOAuthCallback()
+
+    // Your existing mounted logic...
     // window.onresize = () => {
     //   return (() => {
     //     this.tabsWidth = window.innerWidth - 20 + 'px'
     //   })()
     // }
-    // if (isSafari()) {
-    //   this.$message({
-    //     type: 'error',
-    //     showClose: true,
-    //     duration: 10000,
-    //     message: '温馨提示：浏览本网站请不要使用苹果自带的safari浏览器，需使用UC浏览器、谷歌浏览器等！'
-    //   })
-    // }
   },
   methods: {
+    // Add this new method to check for OAuth callback
+    checkOAuthCallback() {
+      const hasOAuthParams = window.location.search.includes('token=') ||
+          window.location.search.includes('error=') ||
+          (window.location.hash && window.location.hash.includes('token='))
+
+      if (hasOAuthParams) {
+        console.log('Detected OAuth callback parameters')
+        const success = handleGoogleOAuthCallback()
+
+        if (success) {
+          // Update the user data in component after successful OAuth
+          this.$nextTick(() => {
+            this.user.userName = getStore({name: 'user_name'})
+            // Force reactivity update
+            this.$forceUpdate()
+            window.location.reload();
+          })
+        }
+      }
+    },
+
     handleSelectMenu() {
     },
+
     tabClick(tab, event) {
       let params
       let paramsTmp = {
