@@ -37,23 +37,11 @@ export const refreshToken = () => {
 
 export const logout = $ => {
     return request({
-        url: '/auth/kiwiTokenEndpoint/logout',
+        url: '/auth/oauth/logout',
         headers: {
             isToken: true
         },
         method: 'delete'
-    })
-}
-
-export const oneClickRegister = (code, randomStr) => {
-    return request({
-        url: '/admin/sys/user/oneClickRegister',
-        method: 'get',
-        headers: {
-            'isToken': false,
-            'Authorization': 'Basic dm9jYWJ1bGFyeTplbmhhbmNlcg=='
-        },
-        params: {code: code, randomStr: randomStr}
     })
 }
 
