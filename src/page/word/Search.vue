@@ -40,8 +40,19 @@
 
 
     <el-row>
+      <el-select v-if="!ifVocabularyMode" v-model="selectedMode"
+                 size="mini"
+                 class="select-base mode-select"
+                 @change="selectedModeChange">
+        <el-option
+            v-for="item in searchModes"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value">
+        </el-option>
+      </el-select>
       <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini" placeholder="Select Language"
-                 :style="'margin-right: 10px;'" @change="selectedLanguageChange">
+                 class="select-base language-select" @change="selectedLanguageChange">
         <el-option
             v-for="(code, language) in languageCodes"
             :key="code"
@@ -116,9 +127,9 @@
 import wordSearch from '@/api/wordSearch'
 import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
-import {getStore, setStore} from "@/util/store";
-import kiwiConst from "@/const/kiwiConsts";
+import {setStore} from "@/util/store";
 import { Notification, Message } from 'element-ui';
+import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
@@ -130,7 +141,7 @@ export default {
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE,
       searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA),
-      selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+      selectedLanguage: getInitialSelectedLanguage(this.$route),
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
 
       // Clipboard functionality data
@@ -190,10 +201,26 @@ export default {
   watch: {
     $route: function () {
       this.updateFromRoute()
+    },
+    selectedMode: function(newMode, oldMode) {
+      // Update selected language when mode changes
+      if (newMode !== oldMode) {
+        this.selectedLanguage = getLanguageForMode(newMode);
+      }
     }
   },
   methods: {
     ...wordSearch,
+
+    // Save language setting for current mode
+    saveLanguageForMode(mode, language) {
+      const modeSpecificKey = mode + '-' + kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE;
+      setStore({
+        name: modeSpecificKey,
+        content: language,
+        type: 'local'
+      });
+    },
 
     // Device Detection and Setup
     detectMobile() {
@@ -312,12 +339,12 @@ export default {
       }
     },
 
-    // Mobile Manual Paste (now removed - functionality moved to onSubmit)
-
     // Dialog Actions
     confirmCopiedTextSearch() {
       this.originalText = this.copiedTextFromClipboard;
       this.selectedMode = this.tempSelectedModeForClipboard;
+      // Update selected language for the new mode
+      this.selectedLanguage = getLanguageForMode(this.tempSelectedModeForClipboard);
       this.showModeSelectionDialog = false;
       this.copiedTextFromClipboard = '';
 
@@ -344,8 +371,13 @@ export default {
       console.log('this.$route', this.$route);
       this.originalText = this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText) : this.originalText;
       this.lazy = this.$route.path.indexOf('lazy') > -1;
-      this.selectedMode = this.$route.query.selectedMode || this.selectedMode;
-      this.selectedLanguage = this.$route.query.language || this.selectedLanguage;
+      const newMode = this.$route.query.selectedMode || this.selectedMode;
+      if (newMode !== this.selectedMode) {
+        this.selectedMode = newMode;
+        // selectedLanguage will be updated by the watcher
+      }
+      // Update language from route if provided, otherwise use mode-specific stored language
+      this.selectedLanguage = this.$route.query.language || getLanguageForMode(this.selectedMode);
     },
 
     querySearch(queryString, callback) {
@@ -384,11 +416,15 @@ export default {
 
     selectedModeChange(item) {
       console.log('selectedModeChange', item)
+      // Update language for the new mode
+      const newLanguage = getLanguageForMode(item);
+      console.log('newLanguage', newLanguage)
       this.$router.push({
         path: this.$route.path,
         query: {
           active: 'search',
           selectedMode: item,
+          language: newLanguage,
           originalText: encodeURIComponent(this.originalText),
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
@@ -398,11 +434,9 @@ export default {
 
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
-      setStore({
-        name: kiwiConst.CONFIG_KEY.SELECTED_LANGUAGE,
-        content: item,
-        type: 'local'
-      })
+      // Save language setting for current mode
+      this.saveLanguageForMode(this.selectedMode, item);
+
       this.$router.push({
         path: this.$route.path,
         query: {
@@ -578,6 +612,12 @@ export default {
   text-align: center;
 }
 
+/* Base styles for select components */
+.select-base {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
   .el-row {
@@ -586,6 +626,15 @@ export default {
 
   .el-dialog {
     width: 95% !important;
+  }
+
+  /* Responsive select widths - only applied on mobile screens */
+  .mode-select {
+    width: 50% !important;
+  }
+
+  .language-select {
+    width: 40% !important;
   }
 }
 

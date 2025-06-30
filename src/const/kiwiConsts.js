@@ -266,6 +266,11 @@ export default {
     YTB_MODE: {
         PLAYER: 'player',
         CHANNEL: 'channel'
+    },
+
+    AI_MODE_TAG: {
+        SPLITTER: '#[SPLITTER]',
+        SELECTION_EXPLANATION: '#[SM]'
     }
 
 }
