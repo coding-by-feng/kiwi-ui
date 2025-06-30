@@ -306,6 +306,9 @@ export default {
     },
 
     connectSelectionWebSocket() {
+      // Auto-collapse original text on new selection request
+      that.originalTextCollapsed = true;
+
       that.selectionApiLoading = true;
       that.isSelectionStreaming = true;
       that.selectionResponseText = '';
@@ -456,6 +459,10 @@ export default {
 
     // Original methods...
     connectWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText) {
+      // Auto-collapse original text and close selection response on new request
+      that.originalTextCollapsed = true;
+      that.closeSelectionResponse();
+
       that.apiLoading = true;
       that.isStreaming = true;
       that.aiResponseVO.responseText = '';
