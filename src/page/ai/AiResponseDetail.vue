@@ -155,14 +155,14 @@ export default {
   watch: {
     '$route'() {
       console.log('AiResponseDetail component watch')
-      this.closeWebSocket();
-      this.closeSelectionWebSocket();
+      this.closeWebSocket('main');
+      this.closeWebSocket('selection');
       this.init()
     }
   },
   beforeDestroy() {
-    this.closeWebSocket();
-    this.closeSelectionWebSocket();
+    this.closeWebSocket('main');
+    this.closeWebSocket('selection');
   },
   computed: {
     getTitle() {
@@ -231,7 +231,7 @@ export default {
       console.log('original text: ' + originalText + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' selectedMode: ' + selectedMode)
 
       if (!util.isEmptyStr(originalText) && !util.isEmptyStr(targetLanguage) && !util.isEmptyStr(nativeLanguage) && !util.isEmptyStr(selectedMode)) {
-        this.connectWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText);
+        this.connectMainWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText);
       }
     },
 
@@ -267,7 +267,7 @@ export default {
       this.isSelectionStreaming = false;
 
       // Close any active WebSocket connection
-      this.closeSelectionWebSocket();
+      this.closeWebSocket('selection');
 
       // Clear text selection
       if (window.getSelection) {
@@ -284,7 +284,7 @@ export default {
       this.isSelectionStreaming = false;
 
       // Close any active WebSocket connection
-      this.closeSelectionWebSocket();
+      this.closeWebSocket('selection');
 
       // Clear text selection
       if (window.getSelection) {
@@ -305,21 +305,55 @@ export default {
       this.connectSelectionWebSocket();
     },
 
-    connectSelectionWebSocket() {
-      // Auto-collapse original text on new selection request
+    /**
+     * Generic WebSocket connection method
+     * @param {Object} config - Configuration object
+     * @param {string} config.type - 'main' or 'selection'
+     * @param {string} config.prompt - The prompt to send
+     * @param {string} config.promptMode - AI prompt mode
+     * @param {string} config.targetLanguage - Target language
+     * @param {string} config.nativeLanguage - Native language
+     * @param {string} config.requestId - Unique request ID
+     */
+    connectWebSocket(config) {
+      const { type, prompt, promptMode, targetLanguage, nativeLanguage, requestId } = config;
+
+      // Determine which WebSocket instance and loading states to use
+      const isSelection = type === 'selection';
+      const websocketKey = isSelection ? 'selectionWebSocket' : 'websocket';
+      const loadingKey = isSelection ? 'selectionApiLoading' : 'apiLoading';
+      const streamingKey = isSelection ? 'isSelectionStreaming' : 'isStreaming';
+
+      // Auto-collapse original text on new request
       that.originalTextCollapsed = true;
 
-      that.selectionApiLoading = true;
-      that.isSelectionStreaming = true;
-      that.selectionResponseText = '';
-      that.selectionResponseVisible = true;
-      that.selectionCurrentRequestId = that.generateRequestId();
+      // Close selection response if this is a main request
+      if (!isSelection) {
+        that.closeSelectionResponse();
+      }
+
+      // Set loading states
+      that[loadingKey] = true;
+      that[streamingKey] = true;
+
+      // Clear previous response
+      if (isSelection) {
+        that.selectionResponseText = '';
+        that.selectionResponseVisible = true;
+      } else {
+        that.aiResponseVO.responseText = '';
+      }
+
+      // Store request ID
+      const requestIdKey = isSelection ? 'selectionCurrentRequestId' : 'currentRequestId';
+      that[requestIdKey] = requestId;
 
       // Get the access token
       const token = getStore({name: 'access_token'});
 
       if (!token) {
-        that.handleSelectionError('Authentication token not found. Please login again.');
+        const errorHandler = isSelection ? that.handleSelectionError : that.handleError;
+        errorHandler('Authentication token not found. Please login again.');
         return;
       }
 
@@ -328,222 +362,116 @@ export default {
       const host = window.location.host;
       const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`;
 
-      console.log('Connecting to Selection WebSocket with token');
-      that.selectionWebSocket = new WebSocket(wsUrl);
+      console.log(`Connecting to ${type} WebSocket with token`);
+      that[websocketKey] = new WebSocket(wsUrl);
 
-      that.selectionWebSocket.onopen = () => {
-        console.log('Selection WebSocket connection established');
-
-        // Prepare the request payload for selection explanation
-        const prompt = kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION + that.selectedText + kiwiConsts.AI_MODE_TAG.SPLITTER + that.decodedOriginalText;
-
-        const request = {
-          prompt: prompt,
-          promptMode: 'selection-explanation',
-          targetLanguage: that.defaultTargetLanguage,
-          nativeLanguage: that.defaultNativeLanguage,
-          timestamp: Date.now(),
-          requestId: that.selectionCurrentRequestId
-        };
-
-        console.log('Sending selection request:', request);
-        that.selectionWebSocket.send(JSON.stringify(request));
-      };
-
-      that.selectionWebSocket.onmessage = (event) => {
-        try {
-          const response = JSON.parse(event.data);
-          that.handleSelectionWebSocketMessage(response);
-        } catch (error) {
-          console.error('Error parsing Selection WebSocket message:', error);
-          that.handleSelectionError('Failed to parse response');
-        }
-      };
-
-      that.selectionWebSocket.onerror = (error) => {
-        console.error('Selection WebSocket error:', error);
-        that.handleSelectionError('WebSocket connection error');
-      };
-
-      that.selectionWebSocket.onclose = (event) => {
-        console.log('Selection WebSocket connection closed:', event.code, event.reason);
-        that.selectionApiLoading = false;
-        that.isSelectionStreaming = false;
-      };
-    },
-
-    handleSelectionWebSocketMessage(response) {
-      console.log('Received Selection WebSocket message:', response);
-
-      switch (response.type) {
-        case 'connected':
-          console.log('Selection AI Streaming connection established');
-          break;
-
-        case 'started':
-          console.log('Selection AI streaming started');
-          that.isSelectionStreaming = true;
-          break;
-
-        case 'chunk':
-          if (response.chunk) {
-            that.selectionResponseText += response.chunk;
-            console.log('Added selection chunk, total length:', that.selectionResponseText.length);
-          } else {
-            console.warn('Received empty selection chunk:', response);
-          }
-          break;
-
-        case 'completed':
-          console.log('Selection AI streaming completed');
-          that.isSelectionStreaming = false;
-          that.selectionApiLoading = false;
-
-          if (response.fullResponse) {
-            console.log('Using fullResponse for selection instead of accumulated chunks');
-            that.selectionResponseText = response.fullResponse;
-          }
-
-          that.closeSelectionWebSocket();
-          break;
-
-        case 'error':
-          console.error('Selection AI streaming error:', response.message);
-          let errorMessage = response.message || 'Selection AI streaming failed';
-          if (response.errorCode) {
-            errorMessage += ` (Code: ${response.errorCode})`;
-          }
-          that.handleSelectionError(errorMessage);
-          break;
-
-        default:
-          console.warn('Unknown Selection WebSocket message type:', response.type);
-          break;
-      }
-    },
-
-    handleSelectionError(errorMessage) {
-      that.selectionApiLoading = false;
-      that.isSelectionStreaming = false;
-      that.closeSelectionWebSocket();
-      that.selectionResponseText = '';
-      that.msgError(that, errorMessage);
-    },
-
-    closeSelectionWebSocket() {
-      if (that.selectionWebSocket) {
-        that.selectionWebSocket.close();
-        that.selectionWebSocket = null;
-      }
-    },
-
-    copySelectionResponse() {
-      const textToCopy = this.rawSelectionResponse;
-
-      navigator.clipboard.writeText(textToCopy)
-          .then(() => {
-            this.$message({
-              message: 'Explanation copied to clipboard!',
-              type: 'success',
-              duration: 2000
-            });
-          })
-          .catch(err => {
-            this.$message({
-              message: 'Failed to copy explanation: ' + err,
-              type: 'error',
-              duration: 2000
-            });
-          });
-    },
-
-    // Original methods...
-    connectWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText) {
-      // Auto-collapse original text and close selection response on new request
-      that.originalTextCollapsed = true;
-      that.closeSelectionResponse();
-
-      that.apiLoading = true;
-      that.isStreaming = true;
-      that.aiResponseVO.responseText = '';
-      that.currentRequestId = that.generateRequestId();
-
-      // Get the access token (same way as your axios interceptor)
-      const token = getStore({name: 'access_token'});
-
-      if (!token) {
-        that.handleError('Authentication token not found. Please login again.');
-        return;
-      }
-
-      // Determine WebSocket URL (adjust based on your environment)
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-
-      // Add Bearer token to WebSocket URL as query parameter
-      // Since WebSocket doesn't support custom headers in browser, we pass token as query param
-      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`;
-
-      console.log('Connecting to WebSocket with token');
-      that.websocket = new WebSocket(wsUrl);
-
-      that.websocket.onopen = () => {
-        console.log('WebSocket connection established');
-
-        // Decode the original text (it comes URL-encoded from the route query)
-        let decodedText = originalText;
-        try {
-          // Handle potential double encoding by decoding until no more changes
-          while (decodedText !== decodeURIComponent(decodedText)) {
-            decodedText = decodeURIComponent(decodedText);
-          }
-        } catch (error) {
-          console.warn('Error decoding originalText:', error);
-          // Use original text if decoding fails
-          decodedText = originalText;
-        }
-
-        console.log('Sending decoded text:', decodedText);
+      that[websocketKey].onopen = () => {
+        console.log(`${type} WebSocket connection established`);
 
         // Prepare the request payload
         const request = {
-          prompt: decodedText,
-          promptMode: selectedMode,
+          prompt: prompt,
+          promptMode: promptMode,
           targetLanguage: targetLanguage,
           nativeLanguage: nativeLanguage,
+          aiUrl: wsUrl,
           timestamp: Date.now(),
-          requestId: that.currentRequestId
+          requestId: requestId
         };
 
-        // Send the request
-        that.websocket.send(JSON.stringify(request));
+        console.log(`Sending ${type} request:`, request);
+        that[websocketKey].send(JSON.stringify(request));
       };
 
-      that.websocket.onmessage = (event) => {
+      that[websocketKey].onmessage = (event) => {
         try {
           const response = JSON.parse(event.data);
-          that.handleWebSocketMessage(response);
+          if (isSelection) {
+            that.handleSelectionWebSocketMessage(response);
+          } else {
+            that.handleWebSocketMessage(response);
+          }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-          that.handleError('Failed to parse response');
+          console.error(`Error parsing ${type} WebSocket message:`, error);
+          const errorHandler = isSelection ? that.handleSelectionError : that.handleError;
+          errorHandler('Failed to parse response');
         }
       };
 
-      that.websocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        that.handleError('WebSocket connection error');
-        that.apiLoading = false;
-        that.isStreaming = false;
+      that[websocketKey].onerror = (error) => {
+        console.error(`${type} WebSocket error:`, error);
+        const errorHandler = isSelection ? that.handleSelectionError : that.handleError;
+        errorHandler('WebSocket connection error');
       };
 
-      that.websocket.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-        that.apiLoading = false;
-        that.isStreaming = false;
+      that[websocketKey].onclose = (event) => {
+        console.log(`${type} WebSocket connection closed:`, event.code, event.reason);
+        that[loadingKey] = false;
+        that[streamingKey] = false;
       };
     },
 
-    // Update your chunk handling to accumulate properly
+    // Simplified main AI request method
+    connectMainWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText) {
+      const requestId = that.generateRequestId();
+
+      // Decode the original text (it comes URL-encoded from the route query)
+      let decodedText = originalText;
+      try {
+        // Handle potential double encoding by decoding until no more changes
+        while (decodedText !== decodeURIComponent(decodedText)) {
+          decodedText = decodeURIComponent(decodedText);
+        }
+      } catch (error) {
+        console.warn('Error decoding originalText:', error);
+        // Use original text if decoding fails
+        decodedText = originalText;
+      }
+
+      console.log('Sending decoded text:', decodedText);
+
+      // Use the generic WebSocket connection method
+      this.connectWebSocket({
+        type: 'main',
+        prompt: decodedText,
+        promptMode: selectedMode,
+        targetLanguage: targetLanguage,
+        nativeLanguage: nativeLanguage,
+        requestId: requestId
+      });
+    },
+
+    // Simplified selection explanation method
+    connectSelectionWebSocket() {
+      const requestId = that.generateRequestId();
+
+      // Prepare the prompt for selection explanation
+      const prompt = kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION +
+          that.selectedText +
+          kiwiConsts.AI_MODE_TAG.SPLITTER +
+          that.decodedOriginalText;
+
+      // Use the generic WebSocket connection method
+      this.connectWebSocket({
+        type: 'selection',
+        prompt: prompt,
+        promptMode: 'selection-explanation',
+        targetLanguage: that.defaultTargetLanguage,
+        nativeLanguage: that.defaultNativeLanguage,
+        requestId: requestId
+      });
+    },
+
+    // Generic WebSocket close method
+    closeWebSocket(type = 'main') {
+      const websocketKey = type === 'selection' ? 'selectionWebSocket' : 'websocket';
+
+      if (that[websocketKey]) {
+        that[websocketKey].close();
+        that[websocketKey] = null;
+      }
+    },
+
     handleWebSocketMessage(response) {
       console.log('Received WebSocket message:', response);
 
@@ -578,7 +506,7 @@ export default {
             that.aiResponseVO.responseText = response.fullResponse;
           }
 
-          that.closeWebSocket();
+          that.closeWebSocket('main');
           break;
 
         case 'error':
@@ -596,13 +524,63 @@ export default {
       }
     },
 
+    handleSelectionWebSocketMessage(response) {
+      console.log('Received Selection WebSocket message:', response);
+
+      switch (response.type) {
+        case 'connected':
+          console.log('Selection AI Streaming connection established');
+          break;
+
+        case 'started':
+          console.log('Selection AI streaming started');
+          that.isSelectionStreaming = true;
+          break;
+
+        case 'chunk':
+          if (response.chunk) {
+            that.selectionResponseText += response.chunk;
+            console.log('Added selection chunk, total length:', that.selectionResponseText.length);
+          } else {
+            console.warn('Received empty selection chunk:', response);
+          }
+          break;
+
+        case 'completed':
+          console.log('Selection AI streaming completed');
+          that.isSelectionStreaming = false;
+          that.selectionApiLoading = false;
+
+          if (response.fullResponse) {
+            console.log('Using fullResponse for selection instead of accumulated chunks');
+            that.selectionResponseText = response.fullResponse;
+          }
+
+          that.closeWebSocket('selection');
+          break;
+
+        case 'error':
+          console.error('Selection AI streaming error:', response.message);
+          let errorMessage = response.message || 'Selection AI streaming failed';
+          if (response.errorCode) {
+            errorMessage += ` (Code: ${response.errorCode})`;
+          }
+          that.handleSelectionError(errorMessage);
+          break;
+
+        default:
+          console.warn('Unknown Selection WebSocket message type:', response.type);
+          break;
+      }
+    },
+
     handleError(errorMessage) {
       // Stop all loading states immediately
       that.apiLoading = false;
       that.isStreaming = false;
 
       // Close WebSocket connection
-      that.closeWebSocket();
+      that.closeWebSocket('main');
 
       // Clear any partial response
       that.aiResponseVO.responseText = '';
@@ -611,11 +589,12 @@ export default {
       that.msgError(that, errorMessage)
     },
 
-    closeWebSocket() {
-      if (that.websocket) {
-        that.websocket.close();
-        that.websocket = null;
-      }
+    handleSelectionError(errorMessage) {
+      that.selectionApiLoading = false;
+      that.isSelectionStreaming = false;
+      that.closeWebSocket('selection');
+      that.selectionResponseText = '';
+      that.msgError(that, errorMessage);
     },
 
     generateRequestId() {
@@ -648,6 +627,26 @@ export default {
           .catch(err => {
             this.$message({
               message: 'Failed to copy text: ' + err,
+              type: 'error',
+              duration: 2000
+            });
+          });
+    },
+
+    copySelectionResponse() {
+      const textToCopy = this.rawSelectionResponse;
+
+      navigator.clipboard.writeText(textToCopy)
+          .then(() => {
+            this.$message({
+              message: 'Explanation copied to clipboard!',
+              type: 'success',
+              duration: 2000
+            });
+          })
+          .catch(err => {
+            this.$message({
+              message: 'Failed to copy explanation: ' + err,
               type: 'error',
               duration: 2000
             });
