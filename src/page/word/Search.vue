@@ -37,8 +37,6 @@
       </el-col>
     </el-row>
 
-
-
     <el-row>
       <el-select v-if="!ifVocabularyMode" v-model="selectedMode"
                  size="mini"
@@ -66,6 +64,11 @@
                  size="mini" @click="onSubmit()"></el-button>
       <el-button v-if="!ifVocabularyMode" icon="el-icon-question" type="info" plain
                  size="mini" @click="explainMore()"></el-button>
+      <!-- New AI History Button -->
+      <el-button v-if="!ifVocabularyMode" icon="el-icon-time" type="warning" plain
+                 size="mini" @click="viewAiHistory()"
+                 title="View AI Call History">
+      </el-button>
     </el-row>
     <el-divider></el-divider>
     <el-row justify="center">
@@ -168,11 +171,27 @@ export default {
       return {width}
     },
     getRouterView() {
-      console.log('getRouterView', this.$route.query.selectedMode)
+      console.log('getRouterView - current route path:', this.$route.path)
+
+      // Check if we're on the AI call history route
+      if (this.$route.path === '/index/vocabulary/aiCallHistory') {
+        console.log('Returning aiCallHistory router view')
+        return 'aiCallHistory'
+      }
+
+      // Check if we're on the AI response detail route
+      if (this.$route.path === '/index/vocabulary/aiResponseDetail') {
+        console.log('Returning aiResponseDetail router view')
+        return 'aiResponseDetail'
+      }
+
+      // Original logic for other routes
       let previouslySelectedMode = this.$route?.query?.selectedMode;
       if (util.isEmptyStr(previouslySelectedMode) || previouslySelectedMode === kiwiConsts.SEARCH_DEFAULT_MODE) {
+        console.log('Returning default router view')
         return kiwiConsts.ROUTER_VIEW_DEFAULT_MODE
       } else {
+        console.log('Returning AI mode router view')
         return kiwiConsts.ROUTER_VIEW_AI_MODE
       }
     },
@@ -200,6 +219,7 @@ export default {
   },
   watch: {
     $route: function () {
+      console.log('Route changed in Search component:', this.$route.path)
       this.updateFromRoute()
     },
     selectedMode: function(newMode, oldMode) {
@@ -219,6 +239,19 @@ export default {
         name: modeSpecificKey,
         content: language,
         type: 'local'
+      });
+    },
+
+    // Updated method to navigate to AI History
+    viewAiHistory() {
+      console.log('Navigating to AI call history')
+      this.$router.push({
+        path: '/index/vocabulary/aiCallHistory',
+        query: {
+          active: 'search',
+          ytbMode: this.$route.query.ytbMode || kiwiConsts.YTB_MODE.CHANNEL,
+          now: new Date().getTime()
+        }
       });
     },
 
@@ -368,7 +401,7 @@ export default {
 
     // Existing Methods (keeping all original functionality)
     updateFromRoute() {
-      console.log('this.$route', this.$route);
+      console.log('updateFromRoute - this.$route:', this.$route);
       this.originalText = this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText) : this.originalText;
       this.lazy = this.$route.path.indexOf('lazy') > -1;
       const newMode = this.$route.query.selectedMode || this.selectedMode;
@@ -646,5 +679,16 @@ export default {
 .el-dialog ol li {
   margin-bottom: 8px;
   line-height: 1.5;
+}
+
+/* History button styling */
+.el-button[title="View AI Call History"] {
+  transition: all 0.3s ease;
+}
+
+.el-button[title="View AI Call History"]:hover {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
 }
 </style>

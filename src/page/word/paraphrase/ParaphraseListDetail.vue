@@ -5,7 +5,7 @@ import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
-import audioUtil from '../../util/audioUtil'
+import audioUtil from '../../../util/audioUtil'
 import NoSleep from 'nosleep.js'
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
@@ -175,7 +175,7 @@ export default {
     }
   },
   components: {
-    Countdown: () => import('./Countdown')
+    Countdown: () => import('../Countdown.vue')
   },
   data() {
     return {

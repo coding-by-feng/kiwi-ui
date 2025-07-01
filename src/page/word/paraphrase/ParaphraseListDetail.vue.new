@@ -1,0 +1,499 @@
+<!-- Main Component - ParaphraseStarListDetail.vue -->
+<template>
+  <div style="margin-top: 30px" v-loading="loading">
+    <!-- Study Timer Component -->
+    <StudyTimer
+        v-if="isReview"
+        :countdown-mode="countdownMode"
+        :countdown-time="countdownTime"
+        :countdown-text="countdownText"
+        @countdown-select="countdownSelectHandle"
+        @countdown-end="countdownEndFun"
+        @switch-stopwatch="switchStopWatchMode"
+    />
+
+    <!-- Word List Component -->
+    <WordList
+        :list-items="listItems"
+        :is-show-paraphrase="isShowParaphrase"
+        :page="page"
+        :is-show-pagination="isShowPagination"
+        @show-detail="showDetail"
+        @remove-paraphrase="removeParaphraseStarListFun"
+        @page-change="pageChange"
+    />
+
+    <!-- Word Detail Dialog Component -->
+    <WordDetailDialog
+        :visible="detail.dialogVisible"
+        :detail="detail"
+        :is-review="isReview"
+        :is-ch-to-en="isChToEn"
+        :inner-height-px="innerHeightPx"
+        :inner-height-sleep-mode-px="innerHeightSleepModePx"
+        :is-uk-pronunciation-playing="isUKPronunciationPlaying"
+        :is-us-pronunciation-playing="isUSPronunciationPlaying"
+        :source="source"
+        :show-word-spelling="showWordSpelling"
+        @close="handleDetailClose"
+        @show-detail="handleShowDetail"
+        @play-pronunciation="playPronunciation"
+        @switch-sleep-mode="switchSleepMode"
+        @refresh-revise="refreshReviseDetail"
+        @stop-playing="stopPlaying"
+        @show-next="showNext"
+        @remember-in-sleep="rememberInSleepMode"
+        @audio-play-trigger="autoPlayDialogVisible++"
+        @toggle-word-display="detail.showWord = !detail.showWord"
+        @toggle-translation="detail.showTranslation = !detail.showTranslation"
+    />
+
+    <!-- Review Mode Dialog Component -->
+    <ReviewModeDialog
+        v-if="!isDownloadReviewAudio"
+        :detail="detail"
+        :visible="enableFirstIncomeReviewMode"
+        :is-ch-to-en="isChToEn"
+        @start-review="stockReviewStart"
+    />
+
+    <!-- Floating Action Buttons Component -->
+    <FloatingActionButtons
+        v-if="enableOperationIcon"
+        :detail="detail"
+        :is-review="isReview"
+        :is-first-income="isFirstIncome"
+        :is-review-stop="isReviewStop"
+        :is-review-playing="isReviewPlaying"
+        :page="page"
+        :is-stock-review-model="isStockReviewModel"
+        :is-enhance-review-model="isEnhanceReviewModel"
+        :countdown-mode="countdownMode"
+        @show-detail="showDetail"
+        @switch-sleep-mode="switchSleepMode"
+        @previous-page="previousPageFun"
+        @next-page="nextPageFun"
+        @skip-audio="showNext"
+        @switch-stopwatch="switchStopWatchMode"
+        @show-previous="showPrevious"
+        @show-next="showNext"
+        @stop-playing="stopPlaying"
+        @refresh-revise="refreshReviseDetail"
+        @remember-one="rememberOneFun"
+        @keep-in-mind="keepInMindFun"
+        @handle-show-detail="handleShowDetail"
+        @forget-one="forgetOneFun"
+        @toggle-icons="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon"
+    />
+  </div>
+</template>
+
+<script>
+import StudyTimer from '@/page/word/paraphrase/StudyTimer.vue'
+import WordList from '@/page/word/paraphrase/WordList.vue'
+import WordDetailDialog from '@/page/word/paraphrase/WordDetailDialog.vue'
+import ReviewModeDialog from '@/page/word/paraphrase/ReviewModeDialog.vue'
+import FloatingActionButtons from '@/page/word/paraphrase/FloatingActionButtons.vue'
+import AudioManager from '@/page/word/paraphrase//AudioManager.js'
+import ReviewManager from '@/page/word/paraphrase//ReviewManager.js'
+import NavigationManager from '@/page/word/paraphrase/NavigationManager.js'
+
+export default {
+  name: 'paraphraseStarListDetail',
+  components: {
+    StudyTimer,
+    WordList,
+    WordDetailDialog,
+    ReviewModeDialog,
+    FloatingActionButtons
+  },
+  mixins: [AudioManager, ReviewManager, NavigationManager],
+  props: {
+    tableVisibleToggle: Function,
+    listId: Number,
+    listName: String,
+    isShowParaphrase: {
+      type: Boolean,
+      default: false
+    },
+    isReview: {
+      type: Boolean,
+      default: false
+    },
+    reviewMode: String,
+    isChToEn: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      loading: false,
+      innerHeightPx: window.innerHeight + 'px',
+      innerHeightSleepModePx: window.innerHeight * 9 / 10 + 'px',
+      innerWidthPx: window.innerWidth + 'px',
+      innerWidthHalfPx: window.innerWidth / 2 + 'px',
+
+      // Pagination state
+      page: {
+        current: 1,
+        size: 20,
+        total: 0,
+        pages: 0
+      },
+      isShowPagination: true,
+
+      // Core review state
+      detail: {
+        reviewLoading: false,
+        paraphraseVO: {
+          wordName: '',
+          paraphraseId: null,
+          wordCharacter: '',
+          wordLabel: '',
+          pronunciationVOList: [],
+          isOverlength: false,
+          meaningChinese: '',
+          codes: '',
+          paraphraseEnglish: '',
+          phraseList: [],
+          exampleVOList: []
+        },
+        dialogVisible: false,
+        showTranslation: true,
+        showWord: true,
+        hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
+        playIndex: 0,
+        showIndex: 0,
+        isSleepMode: false,
+        listId: null,
+        firstReviewWord: null,
+        secondReviewWord: null,
+        apiKey: null,
+        audioPlayerUrls: [],
+        audioPlayerMap: new Map(),
+        audioPlayer: null,
+        audioPlayerToken: null,
+        isUnfoldOperateIcon: false,
+        isEnableNoSleepMode: false,
+        skippedCount: 0,
+      },
+
+      // Audio state
+      isUKPronunciationPlaying: false,
+      isUSPronunciationPlaying: false,
+
+      // Settings
+      source: null,
+      reviewType: null,
+      spellType: null,
+      enParaType: null,
+      isPlayExample: null,
+
+      // List and review state
+      listItems: [],
+      autoPlayDialogVisible: 0,
+      isFirstIncome: true,
+      reviseAudioCandidates: [],
+      isReviewStop: false,
+      isReviewPlaying: false,
+      playWordIndex: -1,
+
+      // Countdown state
+      countdownMode: false,
+      countdownTime: new Date().getTime(),
+      countdownMin: 60,
+      countdownText: '1小时'
+    }
+  },
+  computed: {
+    showWordSpelling() {
+      // Ensure we always return a string, never undefined
+      if (!this.detail.paraphraseVO || !this.detail.paraphraseVO.wordName) {
+        return '点击切换是否显示单词'
+      }
+      return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
+    },
+    isDownloadReviewAudio() {
+      return this.reviewMode === 'downloadReviewAudio'
+    },
+    isStockReviewModel() {
+      return this.detail.paraphraseVO && this.detail.paraphraseVO.paraphraseId &&
+          (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead')
+    },
+    isEnhanceReviewModel() {
+      return this.detail.paraphraseVO && this.detail.paraphraseVO.paraphraseId &&
+          (this.reviewMode === 'enhanceReview' || this.reviewMode === 'enhanceRead')
+    },
+    enableOperationIcon() {
+      return (this.isReview && !this.detail.isSleepMode && !this.isFirstIncome) || !this.isReview
+    },
+    enableFirstIncomeReviewMode() {
+      return this.isFirstIncome && this.isReview && !this.isReviewStop
+    }
+  },
+  async mounted() {
+    await this.init()
+    this.listenerMinBrowser()
+  },
+  destroyed() {
+    this.cleanup()
+  },
+  methods: {
+    async init() {
+      try {
+        this.loading = true
+        this.loadSettings()
+
+        if (this.isReview) {
+          await this.initReview()
+        } else {
+          await this.initNormalMode()
+        }
+      } catch (e) {
+        console.error(e)
+        this.$message.error('初始化异常')
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async initReview() {
+      await this.cleanInitRevising()
+      this.enableNoSleepMode()
+
+      try {
+        await this.initList()
+        await this.initNextReviseDetail(true)
+      } catch (e) {
+        console.error(e)
+        this.$message.error('列表初始化异常，请刷新重试')
+        return
+      }
+
+      if (!this.isFirstIncome && !this.isDownloadReviewAudio) {
+        this.autoPlayDialogVisible++
+        this.$message.success('即将开始复习，请稍等！')
+      }
+
+      if (this.autoPlayDialogVisible > 1) {
+        if (this.listItems.length > 0) {
+          await this.showDetail(this.listItems[0].paraphraseId, 0)
+        }
+        if (this.isDownloadReviewAudio) {
+          ++this.playWordIndex
+        } else {
+          this.detail.audioPlayer.play()
+        }
+      } else {
+        if (this.isDownloadReviewAudio) {
+          this.playWordIndex = this.detail.audioPlayerUrls.length
+        } else {
+          this.stockReviewStart()
+        }
+      }
+    },
+
+    async initNormalMode() {
+      await this.initList()
+      if (this.listItems.length > 0) {
+        await this.showDetail(this.listItems[0].paraphraseId, 0)
+      }
+    },
+
+    loadSettings() {
+      // Load settings from store - implement based on your store structure
+      this.source = this.getStore({name: 'pronunciation_source'}) || 'cambridge'
+      this.reviewType = this.getStore({name: 'review_type'}) || 'default'
+      this.spellType = this.getStore({name: 'spell_type'}) || 'enabled'
+      this.enParaType = this.getStore({name: 'enPara_type'}) || 'enabled'
+      this.isPlayExample = this.getStore({name: 'is_play_example'}) || false
+    },
+
+    getStore(config) {
+      // Implement based on your store structure
+      // This is a placeholder - replace with actual store access
+      try {
+        return localStorage.getItem(config.name)
+      } catch (e) {
+        console.warn('Failed to get store value:', config.name)
+        return null
+      }
+    },
+
+    listenerMinBrowser() {
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.isReviewStop = true
+          this.isReviewPlaying = false
+          this.pauseAllPlayingAudio()
+        } else {
+          this.isReviewStop = false
+          this.isReviewPlaying = true
+        }
+      })
+    },
+
+    cleanup() {
+      if (this.detail.audioPlayer) {
+        this.pauseAllPlayingAudio()
+        this.detail.audioPlayer = null
+        // Add NoSleep cleanup if needed
+      }
+    },
+
+    // Event handlers
+    countdownSelectHandle(command) {
+      this.countdownText = command.text
+      this.countdownMin = command.m
+      this.countdownTime = new Date().getTime() + 1000 * 60 * this.countdownMin
+    },
+
+    countdownEndFun() {
+      this.countdownMode = false
+      // Add NoSleep cleanup
+      window.location.reload()
+    },
+
+    switchStopWatchMode() {
+      this.countdownMode = !this.countdownMode
+      const message = this.countdownMode ? '倒计时模式已经开启' : '倒计时模式已经关闭'
+      this.$message.success(message)
+    },
+
+    removeParaphraseStarListFun(paraphraseId, listId) {
+      this.$confirm('即将进行删除, 是否继续?', '删除操作', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // Implement removal logic
+        this.$message.success('删除成功')
+        this.initList()
+      })
+    },
+
+    async pageChange() {
+      this.isFirstIncome = false
+      await this.init()
+    },
+
+    handleDetailClose() {
+      this.detail.dialogVisible = false
+    },
+
+    handleShowDetail() {
+      this.detail.dialogVisible = false
+      this.$router.push({
+        path: '/index/vocabulary/detail',
+        query: { active: 'search', originalText: this.detail.paraphraseVO.wordName }
+      })
+    },
+
+    switchSleepMode() {
+      this.detail.isSleepMode = !this.detail.isSleepMode
+      const message = this.detail.isSleepMode ? '睡眠模式已开启' : '睡眠模式已关闭'
+      this.$message.success(message)
+    },
+
+    previousPageFun() {
+      this.page.current--
+      this.pageChange()
+    },
+
+    nextPageFun() {
+      this.page.current++
+      this.pageChange()
+    },
+
+    // Placeholder methods - implement based on your mixins
+    async initList() {
+      // Implement list initialization
+    },
+
+    async showDetail(paraphraseId, index) {
+      // Implement detail showing
+    },
+
+    async playPronunciation(id, sourceUrl, soundmarkType) {
+      // Implement pronunciation playing
+    },
+
+    enableNoSleepMode() {
+      // Implement NoSleep functionality
+    },
+
+    pauseAllPlayingAudio() {
+      // Implement audio pausing
+    },
+
+    stockReviewStart() {
+      // Implement review start
+    },
+
+    async initNextReviseDetail(isGetDetail) {
+      // Implement next detail initialization
+    },
+
+    async cleanInitRevising() {
+      // Implement cleanup
+    },
+
+    async stopPlaying() {
+      // Implement stop playing
+    },
+
+    async refreshReviseDetail() {
+      // Implement refresh
+    },
+
+    async showNext(skipAudio) {
+      // Implement show next
+    },
+
+    async rememberInSleepMode(ignoreDoubleClick) {
+      // Implement remember in sleep mode
+    },
+
+    async showPrevious() {
+      // Implement show previous
+    },
+
+    async rememberOneFun() {
+      // Implement remember one
+    },
+
+    async keepInMindFun() {
+      // Implement keep in mind
+    },
+
+    async forgetOneFun() {
+      // Implement forget one
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* Main container styles aligned with second component */
+.main-container {
+  margin-top: 30px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Loading overlay styles */
+.loading-overlay {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .main-container {
+    margin: 15px 0;
+    border-radius: 8px;
+  }
+}
+</style>
