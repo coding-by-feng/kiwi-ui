@@ -176,13 +176,13 @@ export default {
       // Check if we're on the AI call history route
       if (this.$route.path === '/index/vocabulary/aiCallHistory') {
         console.log('Returning aiCallHistory router view')
-        return 'aiCallHistory'
+        return kiwiConsts.ROUTER_VIEW_AI_HISTORY_MODE
       }
 
       // Check if we're on the AI response detail route
       if (this.$route.path === '/index/vocabulary/aiResponseDetail') {
         console.log('Returning aiResponseDetail router view')
-        return 'aiResponseDetail'
+        return kiwiConsts.ROUTER_VIEW_AI_MODE
       }
 
       // Original logic for other routes
@@ -249,7 +249,9 @@ export default {
         path: '/index/vocabulary/aiCallHistory',
         query: {
           active: 'search',
-          ytbMode: this.$route.query.ytbMode || kiwiConsts.YTB_MODE.CHANNEL,
+          selectedMode: this.selectedMode,
+          language: this.selectedLanguage,
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
         }
       });
