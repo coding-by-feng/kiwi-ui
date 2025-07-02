@@ -2,48 +2,8 @@
   <div class="ai-call-history">
     <div class="history-header">
       <h2 class="history-title">
-        <i class="el-icon-time"></i>
         AI Call History
       </h2>
-      <div class="header-actions">
-        <el-button
-            type="primary"
-            size="small"
-            icon="el-icon-refresh"
-            @click="refreshHistory"
-            :loading="loading">
-          Refresh
-        </el-button>
-        <el-button
-            type="info"
-            size="small"
-            icon="el-icon-back"
-            @click="goBack">
-          Back to Search
-        </el-button>
-      </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="stats-container" v-if="historyData && historyData.total > 0">
-      <el-card class="stats-card">
-        <div class="stat-item">
-          <i class="el-icon-document"></i>
-          <div class="stat-content">
-            <div class="stat-number">{{ historyData.total }}</div>
-            <div class="stat-label">Total Requests</div>
-          </div>
-        </div>
-      </el-card>
-      <el-card class="stats-card">
-        <div class="stat-item">
-          <i class="el-icon-chat-dot-square"></i>
-          <div class="stat-content">
-            <div class="stat-number">{{ getTodayCount() }}</div>
-            <div class="stat-label">Today</div>
-          </div>
-        </div>
-      </el-card>
     </div>
 
     <!-- Filters -->
@@ -98,7 +58,6 @@
         <i class="el-icon-document-remove"></i>
         <h3>No AI Call History Found</h3>
         <p>Your AI conversation history will appear here once you start using the AI features.</p>
-        <el-button type="primary" @click="goBack">Start Searching</el-button>
       </div>
 
       <div v-else class="history-list">
@@ -122,7 +81,6 @@
               </div>
             </div>
             <div class="timestamp">
-              <i class="el-icon-time"></i>
               {{ formatTimestamp(record.timestamp) }}
             </div>
           </div>
@@ -132,11 +90,6 @@
               <strong>Prompt:</strong>
               <p class="prompt-text">{{ truncateText(record.prompt, 200) }}</p>
             </div>
-
-            <div class="ai-url-info" v-if="record.aiUrl">
-              <span class="ai-url-label">AI URL:</span>
-              <code class="ai-url">{{ record.aiUrl }}</code>
-            </div>
           </div>
 
           <div class="history-item-actions">
@@ -145,21 +98,21 @@
                 size="small"
                 icon="el-icon-search"
                 @click="searchAgain(record)">
-              Search Again
+              Review
             </el-button>
             <el-button
                 type="text"
                 size="small"
                 icon="el-icon-document-copy"
                 @click="copyPrompt(record.prompt)">
-              Copy Prompt
+              Copy
             </el-button>
             <el-button
                 type="text"
                 size="small"
                 icon="el-icon-view"
                 @click="viewDetails(record)">
-              View Details
+              Details
             </el-button>
           </div>
         </el-card>
@@ -205,10 +158,6 @@
             {{ formatFullTimestamp(selectedRecord.timestamp) }}
           </el-form-item>
 
-          <el-form-item label="AI URL:" v-if="selectedRecord.aiUrl">
-            <code class="detail-ai-url">{{ selectedRecord.aiUrl }}</code>
-          </el-form-item>
-
           <el-form-item label="Prompt:">
             <div class="detail-prompt">{{ selectedRecord.prompt }}</div>
           </el-form-item>
@@ -227,7 +176,8 @@
 
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
-import {Message} from 'element-ui';
+import { Message } from 'element-ui';
+import { getAiCallHistory } from '@/api/ai'; // Import the API function
 
 export default {
   name: 'AiCallHistory',
@@ -297,28 +247,28 @@ export default {
     async loadHistory() {
       this.loading = true;
       try {
-        const response = await this.$http.get(`/ai-biz/ai/history?current=${this.currentPage}&size=${this.pageSize}`);
+        console.log(`Loading AI call history - page: ${this.currentPage}, size: ${this.pageSize}`);
 
-        if (response.data.code === 0) {
+        // Use the extracted API function
+        const response = await getAiCallHistory(this.currentPage, this.pageSize);
+
+        if (response.data.code === 1) {
           this.historyData = response.data.data;
-          console.log('Loaded AI call history:', this.historyData);
+          console.log('Loaded AI call history successfully:', this.historyData);
         } else {
+          console.error('API returned error:', response.data);
           Message.error(response.data.msg || 'Failed to load AI call history');
         }
       } catch (error) {
         console.error('Error loading AI call history:', error);
-        Message.error('Failed to load AI call history');
+        Message.error('Failed to load AI call history: ' + (error.message || 'Unknown error'));
       } finally {
         this.loading = false;
       }
     },
 
-    async refreshHistory() {
-      this.currentPage = 1;
-      await this.loadHistory();
-    },
-
     async handlePageChange(page) {
+      console.log(`Changing to page: ${page}`);
       this.currentPage = page;
       await this.loadHistory();
     },
@@ -329,6 +279,7 @@ export default {
     },
 
     clearFilters() {
+      console.log('Clearing filters');
       this.filterMode = '';
       this.filterLanguage = '';
     },
@@ -364,38 +315,46 @@ export default {
       return languageCode;
     },
 
+    // Convert array-based timestamp to Date object
+    arrayToDate(timestampArray) {
+      if (!Array.isArray(timestampArray) || timestampArray.length < 6) {
+        return null;
+      }
+
+      // Array format: [year, month, day, hour, minute, second]
+      // Note: JavaScript months are 0-based, so we need to subtract 1 from month
+      const [year, month, day, hour, minute, second] = timestampArray;
+      return new Date(year, month - 1, day, hour, minute, second);
+    },
+
     formatTimestamp(timestamp) {
       if (!timestamp) return 'Unknown';
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diffTime = Math.abs(now - date);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      if (diffDays === 1) {
-        return 'Today ' + date.toLocaleTimeString();
-      } else if (diffDays === 2) {
-        return 'Yesterday ' + date.toLocaleTimeString();
+      const date = this.arrayToDate(timestamp);
+      if (!date) return 'Invalid Date';
+
+      const now = new Date();
+      const diffTime = now - date;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        return 'Today ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else if (diffDays === 1) {
+        return 'Yesterday ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } else if (diffDays <= 7) {
         return diffDays + ' days ago';
       } else {
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       }
     },
 
     formatFullTimestamp(timestamp) {
       if (!timestamp) return 'Unknown';
-      const date = new Date(timestamp);
-      return date.toLocaleString();
-    },
 
-    getTodayCount() {
-      if (!this.historyData || !this.historyData.records) return 0;
-      const today = new Date().toDateString();
-      return this.historyData.records.filter(record => {
-        if (!record.timestamp) return false;
-        const recordDate = new Date(record.timestamp).toDateString();
-        return recordDate === today;
-      }).length;
+      const date = this.arrayToDate(timestamp);
+      if (!date) return 'Invalid Date';
+
+      return date.toLocaleString();
     },
 
     truncateText(text, maxLength) {
@@ -405,6 +364,8 @@ export default {
     },
 
     searchAgain(record) {
+      console.log('Searching again with record:', record);
+
       // Navigate back to search with the same parameters
       const query = {
         active: 'search',
@@ -432,11 +393,13 @@ export default {
     },
 
     viewDetails(record) {
+      console.log('Viewing details for record:', record);
       this.selectedRecord = record;
       this.detailDialogVisible = true;
     },
 
     goBack() {
+      console.log('Going back to search page');
       // Navigate back to search page
       this.$router.push({
         path: '/index/vocabulary/detail',
@@ -475,63 +438,16 @@ export default {
   font-weight: 600;
 }
 
-.history-title i {
-  margin-right: 10px;
-  color: #409eff;
-}
-
-.header-actions .el-button {
-  margin-left: 10px;
-}
-
-/* Statistics */
-.stats-container {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.stats-card {
-  flex: 1;
-  min-width: 200px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 0;
-}
-
-.stat-item i {
-  font-size: 32px;
-  color: #409eff;
-  margin-right: 15px;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: 600;
-  color: #2c3e50;
-  line-height: 1;
-}
-
-.stat-label {
-  color: #8492a6;
-  font-size: 14px;
-  margin-top: 4px;
-}
-
 /* Filters */
 .filters-container {
   margin-bottom: 20px;
 }
 
 .filter-card {
-  background: #fafbfc;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .filter-row {
@@ -539,6 +455,7 @@ export default {
   gap: 15px;
   align-items: center;
   flex-wrap: wrap;
+  padding: 16px;
 }
 
 .filter-row .el-select {
@@ -570,17 +487,24 @@ export default {
 
 /* History List */
 .history-list {
-  space-y: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .history-item {
-  margin-bottom: 15px;
+  margin-bottom: 0;
   transition: all 0.3s ease;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .history-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .history-item-header {
@@ -605,14 +529,16 @@ export default {
 }
 
 .language-tag {
-  background: #f0f2f5;
-  padding: 2px 8px;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e9ecef 100%);
+  padding: 4px 8px;
   border-radius: 12px;
   font-size: 12px;
+  border: 1px solid #d4d7dc;
 }
 
 .native-language {
   color: #909399;
+  font-weight: 500;
 }
 
 .timestamp {
@@ -623,49 +549,54 @@ export default {
   gap: 4px;
 }
 
+.timestamp i {
+  color: #409eff;
+}
+
 .history-item-content {
   margin-bottom: 15px;
 }
 
-.prompt-preview {
-  margin-bottom: 10px;
+.prompt-preview strong {
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .prompt-text {
   margin: 8px 0 0 0;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
   border-left: 3px solid #409eff;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #2c3e50;
   word-break: break-word;
-}
-
-.ai-url-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.ai-url-label {
-  color: #909399;
-  font-weight: 500;
-}
-
-.ai-url {
-  background: #f5f7fa;
-  padding: 2px 6px;
-  border-radius: 3px;
-  color: #606266;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  border: 1px solid #e4e7ed;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .history-item-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.history-item-actions .el-button {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  border: none !important;
+  color: white !important;
+  transition: all 0.3s ease;
+  border-radius: 6px !important;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.history-item-actions .el-button:hover {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 /* Pagination */
@@ -684,29 +615,63 @@ export default {
 }
 
 .detail-prompt {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 6px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px;
+  border-radius: 8px;
   border-left: 3px solid #409eff;
-  line-height: 1.6;
+  line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
-}
-
-.detail-ai-url {
-  background: #f5f7fa;
-  padding: 8px 12px;
-  border-radius: 4px;
-  color: #606266;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  word-break: break-all;
+  border: 1px solid #e4e7ed;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #2c3e50;
 }
 
 .language-display {
-  font-weight: 500;
+  font-weight: 600;
   color: #2c3e50;
+}
+
+.dialog-footer {
+  text-align: center;
+}
+
+.dialog-footer .el-button {
+  margin: 0 8px;
+}
+
+/* Element UI tag customization */
+.el-tag {
+  border-radius: 12px;
+  font-weight: 500;
+  border: none;
+}
+
+.el-tag--primary {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: white;
+}
+
+.el-tag--success {
+  background: linear-gradient(135deg, #67c23a 0%, #20c997 100%);
+  color: white;
+}
+
+.el-tag--warning {
+  background: linear-gradient(135deg, #e6a23c 0%, #f56c6c 100%);
+  color: white;
+}
+
+.el-tag--danger {
+  background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%);
+  color: white;
+}
+
+.el-tag--info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%);
+  color: white;
 }
 
 /* Responsive Design */
@@ -729,11 +694,6 @@ export default {
   .header-actions .el-button {
     margin-left: 0;
     flex: 1;
-  }
-
-  .stats-container {
-    flex-direction: column;
-    gap: 10px;
   }
 
   .filter-row {
