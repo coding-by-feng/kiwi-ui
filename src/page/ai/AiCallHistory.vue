@@ -577,7 +577,6 @@ export default {
 
 .history-item-actions {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
   padding-top: 10px;
   border-top: 1px solid #f0f2f5;
