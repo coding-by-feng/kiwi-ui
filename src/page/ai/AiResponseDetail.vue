@@ -5,7 +5,7 @@
     <!-- Beautiful Original Text Display -->
     <div class="original-text-container">
       <h3 class="original-text-title" @click="toggleOriginalText">
-        <span class="title-text">Original Text</span>
+        <span class="title-text">Original Text(Select text to explain based on the sentences context)</span>
         <i :class="originalTextCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'" class="collapse-icon"></i>
       </h3>
       <div
@@ -39,6 +39,13 @@
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="selectionDialogVisible = false">Cancel</el-button>
+        <el-button
+            type="info"
+            @click="searchOnDictionary"
+            icon="el-icon-search"
+        >
+          Search on Dictionary
+        </el-button>
         <el-button
             type="primary"
             @click="explainSelectedText"
@@ -290,6 +297,24 @@ export default {
       if (window.getSelection) {
         window.getSelection().removeAllRanges();
       }
+    },
+
+    // New method to search on dictionary
+    searchOnDictionary() {
+      if (!this.selectedText) {
+        this.msgError(this, 'No text selected');
+        return;
+      }
+
+      // URL encode the selected text to handle special characters
+      const encodedText = encodeURIComponent(this.selectedText);
+      const dictionaryUrl = `https://kason.ngrok.app/#/lazy/vocabulary/detail?originalText=${encodedText}`;
+
+      // Open in new tab
+      window.open(dictionaryUrl, '_blank');
+
+      // Close the dialog after opening dictionary
+      this.selectionDialogVisible = false;
     },
 
     explainSelectedText() {
@@ -860,6 +885,7 @@ export default {
 
 .copy-selection-button {
   position: absolute;
+  top: 12px;
   bottom: 12px;
   right: 12px;
   z-index: 10;
@@ -977,6 +1003,11 @@ export default {
   .close-selection-button {
     padding: 2px 6px !important;
     font-size: 14px !important;
+  }
+
+  .dialog-footer .el-button {
+    margin: 4px;
+    width: calc(50% - 8px);
   }
 }
 </style>
