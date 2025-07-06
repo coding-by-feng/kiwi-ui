@@ -1,145 +1,147 @@
-const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
-const { autoUpdater } = require('electron-updater');
+const isDev = false;
+
+// Set app name
+app.setName('Kiwi Vocabulary');
+
+// Set user data path for persistent storage
+if (!isDev) {
+    // In production, set a specific user data directory
+    const userDataPath = path.join(require('os').homedir(), 'KiwiVocabulary');
+    app.setPath('userData', userDataPath);
+    console.log('User data will be stored at:', userDataPath);
+} else {
+    console.log('Development mode - using default user data path:', app.getPath('userData'));
+}
 
 // Keep a global reference of the window object
 let mainWindow;
 
-// Configure auto-updater
-if (!isDev) {
-    autoUpdater.checkForUpdatesAndNotify();
-}
-
-// Function to detect available port for dev server
-async function getDevServerUrl() {
-    const ports = [8080, 8081, 8082, 3000, 3001];
-
-    for (const port of ports) {
-        try {
-            const url = `http://localhost:${port}`;
-            // Try to fetch from the port to see if Vue dev server is running
-            const response = await fetch(url).catch(() => null);
-            if (response && response.ok) {
-                console.log(`Found Vue dev server at: ${url}`);
-                return url;
-            }
-        } catch (error) {
-            // Continue to next port
-        }
+// Configuration for different environments
+const config = {
+    development: {
+        primary: 'http://localhost:8080',
+        fallback: 'http://localhost:3000' // Alternative dev port
+    },
+    production: {
+        primary: 'https://kason.ngrok.app',
+        fallback: `file://${path.join(__dirname, '../dist/index.html')}`
     }
+};
 
-    console.log('No Vue dev server found, using built files');
-    return null;
-}
-
-async function createWindow() {
+function createWindow() {
     // Create the browser window
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         minWidth: 800,
         minHeight: 600,
+        title: 'Kiwi Vocabulary', // Set window title
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,
             preload: path.join(__dirname, 'preload.js'),
-            webSecurity: false, // Needed for local file access and CORS
-            devTools: false, // Disable DevTools completely
+            devTools: true, // Always enable DevTools
+            webSecurity: !isDev, // Disable web security in development for CORS
+            // Enable persistent storage
+            partition: 'persist:kiwi-vocabulary', // This enables session persistence
+            // Additional security settings
+            allowRunningInsecureContent: false,
+            experimentalFeatures: false
         },
-        icon: path.join(__dirname, process.platform === 'darwin' ? 'icon.icns' : 'icon.png'),
-        // macOS window customization
-        titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-        titleBarOverlay: process.platform === 'darwin' ? false : undefined,
-        // Hide window controls on macOS
-        ...(process.platform === 'darwin' && {
-            titleBarStyle: 'hidden', // Hide the entire title bar
-            trafficLightPosition: { x: -100, y: -100 }, // Move buttons off-screen
-        }),
-        // Alternative: Custom title bar for all platforms
-        // frame: false, // Removes all window chrome (title bar, borders)
-        show: false, // Don't show until ready
-        resizable: true, // You can set to false if you don't want resizing
-        maximizable: true, // Set to false to disable maximize
-        minimizable: true, // Set to false to disable minimize
-        closable: true, // Set to false to disable close (not recommended)
+        icon: path.join(__dirname, 'icon.png'), // App icon
+        show: false // Don't show until ready
     });
 
-    // Determine the URL to load
-    let startUrl;
+    // Configure session for persistence
+    const session = mainWindow.webContents.session;
 
-    if (isDev) {
-        // Try to find the Vue dev server
-        const devServerUrl = await getDevServerUrl();
-        if (devServerUrl) {
-            startUrl = devServerUrl;
+    // Set up session to persist cookies and local storage
+    session.setPermissionRequestHandler((webContents, permission, callback) => {
+        // Grant permissions for storage-related requests
+        if (permission === 'persistent-storage') {
+            callback(true);
         } else {
-            // Fallback to built files if dev server is not available
-            startUrl = `file://${path.join(__dirname, '../dist/index.html')}`;
-            console.log('Dev server not found, falling back to built files');
-            console.log('Make sure to run "npm run build" first, or use "npm run electron-dev" for development');
+            callback(false);
         }
-    } else {
-        startUrl = `file://${path.join(__dirname, '../dist/index.html')}`;
-    }
+    });
 
-    console.log(`Loading URL: ${startUrl}`);
-    console.log(`isDev: ${isDev}`);
-    console.log(`__dirname: ${__dirname}`);
+    // Configure cookie settings for persistence
+    session.cookies.on('changed', (event, cookie, cause, removed) => {
+        if (!removed) {
+            console.log('Cookie saved:', cookie.name);
+        }
+    });
 
-    try {
-        await mainWindow.loadURL(startUrl);
-        console.log('Successfully loaded URL');
-    } catch (error) {
-        console.error('Failed to load URL:', error);
+    // Get configuration based on environment
+    const env = isDev ? 'development' : 'production';
+    const startUrl = config[env].primary;
+    const fallbackUrl = config[env].fallback;
 
-        // Show error dialog
-        dialog.showErrorBox(
-            'Failed to Load Application',
-            `Could not load the application from: ${startUrl}\n\n` +
-            `Error: ${error.message}\n\n` +
-            `If you're in development mode, make sure the Vue dev server is running.\n` +
-            `Run "npm run serve" in another terminal, or use "npm run electron-dev" instead.`
-        );
-    }
+    console.log('Environment:', env);
+    console.log('Primary URL:', startUrl);
+    console.log('Fallback URL:', fallbackUrl);
+
+    // Try to load primary URL first
+    mainWindow.loadURL(startUrl)
+        .then(() => {
+            console.log('Successfully loaded primary URL:', startUrl);
+        })
+        .catch((error) => {
+            console.error('Failed to load primary URL:', error);
+            console.log('Attempting fallback URL:', fallbackUrl);
+
+            return mainWindow.loadURL(fallbackUrl)
+                .then(() => {
+                    console.log('Successfully loaded fallback URL:', fallbackUrl);
+                })
+                .catch((fallbackError) => {
+                    console.error('Failed to load fallback URL:', fallbackError);
+                    // Show error page or dialog
+                    showConnectionError(env);
+                });
+        });
 
     // Show window when ready to prevent visual flash
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
 
-        // DO NOT open DevTools automatically - removed for production
-        // if (isDev) {
-        //   mainWindow.webContents.openDevTools();
-        // }
-    });
-
-    // Disable F12 and other DevTools shortcuts
-    mainWindow.webContents.on('before-input-event', (event, input) => {
-        // Disable F12
-        if (input.key === 'F12') {
-            event.preventDefault();
+        // Auto-open DevTools in development
+        if (isDev) {
+            mainWindow.webContents.openDevTools();
         }
 
-        // Disable Ctrl+Shift+I / Cmd+Opt+I (DevTools)
-        if ((input.control || input.meta) && input.shift && input.key === 'I') {
-            event.preventDefault();
-        }
+        // Debug information
+        console.log('Window ready to show');
+        console.log('Current URL:', mainWindow.webContents.getURL());
 
-        // Disable Ctrl+Shift+J / Cmd+Opt+J (Console)
-        if ((input.control || input.meta) && input.shift && input.key === 'J') {
-            event.preventDefault();
-        }
-
-        // Disable Ctrl+U / Cmd+U (View Source)
-        if ((input.control || input.meta) && input.key === 'U') {
-            event.preventDefault();
-        }
+        // Check if page loaded properly
+        mainWindow.webContents.executeJavaScript(`
+      console.log('Page title:', document.title);
+      console.log('Body content:', document.body.innerHTML.substring(0, 200));
+      console.log('Vue app element:', document.getElementById('app'));
+    `);
     });
 
     // Handle window closed
     mainWindow.on('closed', () => {
         mainWindow = null;
+    });
+
+    // Prevent clearing session data on window close
+    mainWindow.on('close', (event) => {
+        console.log('Window closing - session data will be preserved');
+        // Don't prevent the close, just log that data should be preserved
+    });
+
+    // Save window state before closing
+    mainWindow.on('close', () => {
+        // Save window bounds for next startup
+        const bounds = mainWindow.getBounds();
+        // You could save these bounds to a config file if needed
+        console.log('Saving window bounds:', bounds);
     });
 
     // Handle external links
@@ -148,30 +150,53 @@ async function createWindow() {
         return { action: 'deny' };
     });
 
-    // Prevent navigation to external URLs
+    // Prevent navigation to external websites
     mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
         const parsedUrl = new URL(navigationUrl);
 
-        if (parsedUrl.origin !== startUrl.split('/').slice(0, 3).join('/')) {
+        // Allow navigation within your app
+        const allowedOrigins = [
+            'http://localhost:8080',
+            'http://kason-server.local',
+            'file://'
+        ];
+
+        const isAllowed = allowedOrigins.some(origin =>
+            navigationUrl.startsWith(origin)
+        );
+
+        if (!isAllowed) {
+            console.log('Preventing external navigation to:', navigationUrl);
             event.preventDefault();
-            shell.openExternal(navigationUrl);
+            // Optionally open in external browser
+            // shell.openExternal(navigationUrl);
         }
     });
-
-    // Create application menu
-    createMenu();
 }
 
+// Create application menu with DevTools support
 function createMenu() {
-    // For production, create a minimal menu without DevTools options
     const template = [
         {
             label: 'File',
             submenu: [
                 {
-                    label: 'New Window',
-                    accelerator: 'CmdOrCtrl+N',
-                    click: () => createWindow()
+                    label: 'Reload',
+                    accelerator: 'CmdOrCtrl+R',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.reload();
+                        }
+                    }
+                },
+                {
+                    label: 'Force Reload',
+                    accelerator: 'CmdOrCtrl+Shift+R',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.webContents.reloadIgnoringCache();
+                        }
+                    }
                 },
                 { type: 'separator' },
                 {
@@ -184,47 +209,77 @@ function createMenu() {
             ]
         },
         {
-            label: 'Edit',
-            submenu: [
-                { role: 'undo' },
-                { role: 'redo' },
-                { type: 'separator' },
-                { role: 'cut' },
-                { role: 'copy' },
-                { role: 'paste' },
-                { role: 'selectall' }
-            ]
-        },
-        {
             label: 'View',
             submenu: [
-                { role: 'resetZoom' },
-                { role: 'zoomIn' },
-                { role: 'zoomOut' },
+                {
+                    label: 'Toggle Developer Tools',
+                    accelerator: process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.webContents.toggleDevTools();
+                        }
+                    }
+                },
+                {
+                    label: 'Toggle Fullscreen',
+                    accelerator: process.platform === 'darwin' ? 'Ctrl+Cmd+F' : 'F11',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.setFullScreen(!mainWindow.isFullScreen());
+                        }
+                    }
+                },
                 { type: 'separator' },
-                { role: 'togglefullscreen' }
+                {
+                    label: 'Actual Size',
+                    accelerator: 'CmdOrCtrl+0',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.webContents.setZoomLevel(0);
+                        }
+                    }
+                },
+                {
+                    label: 'Zoom In',
+                    accelerator: 'CmdOrCtrl+Plus',
+                    click: () => {
+                        if (mainWindow) {
+                            const currentZoom = mainWindow.webContents.getZoomLevel();
+                            mainWindow.webContents.setZoomLevel(currentZoom + 0.5);
+                        }
+                    }
+                },
+                {
+                    label: 'Zoom Out',
+                    accelerator: 'CmdOrCtrl+-',
+                    click: () => {
+                        if (mainWindow) {
+                            const currentZoom = mainWindow.webContents.getZoomLevel();
+                            mainWindow.webContents.setZoomLevel(currentZoom - 0.5);
+                        }
+                    }
+                }
             ]
         },
         {
             label: 'Window',
             submenu: [
-                { role: 'minimize' },
-                { role: 'close' }
-            ]
-        },
-        {
-            label: 'Help',
-            submenu: [
                 {
-                    label: 'About Kiwi Vocabulary',
+                    label: 'Minimize',
+                    accelerator: 'CmdOrCtrl+M',
                     click: () => {
-                        dialog.showMessageBox(mainWindow, {
-                            type: 'info',
-                            title: 'About Kiwi Vocabulary',
-                            message: 'Kiwi Vocabulary v0.1.0',
-                            detail: 'A vocabulary learning application built with Vue.js and Electron.',
-                            buttons: ['OK']
-                        });
+                        if (mainWindow) {
+                            mainWindow.minimize();
+                        }
+                    }
+                },
+                {
+                    label: 'Close',
+                    accelerator: 'CmdOrCtrl+W',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.close();
+                        }
                     }
                 }
             ]
@@ -236,25 +291,61 @@ function createMenu() {
         template.unshift({
             label: app.getName(),
             submenu: [
-                { role: 'about' },
+                {
+                    label: 'About ' + app.getName(),
+                    role: 'about'
+                },
                 { type: 'separator' },
-                { role: 'services' },
+                {
+                    label: 'Services',
+                    role: 'services',
+                    submenu: []
+                },
                 { type: 'separator' },
-                { role: 'hide' },
-                { role: 'hideOthers' },
-                { role: 'unhide' },
+                {
+                    label: 'Hide ' + app.getName(),
+                    accelerator: 'Command+H',
+                    role: 'hide'
+                },
+                {
+                    label: 'Hide Others',
+                    accelerator: 'Command+Shift+H',
+                    role: 'hideothers'
+                },
+                {
+                    label: 'Show All',
+                    role: 'unhide'
+                },
                 { type: 'separator' },
-                { role: 'quit' }
+                {
+                    label: 'Quit',
+                    accelerator: 'Command+Q',
+                    click: () => app.quit()
+                }
             ]
         });
 
-        // Window menu for macOS (without DevTools)
-        template[4].submenu = [
-            { role: 'close' },
-            { role: 'minimize' },
-            { role: 'zoom' },
+        // Window menu adjustments for macOS
+        template[3].submenu = [
+            {
+                label: 'Close',
+                accelerator: 'CmdOrCtrl+W',
+                role: 'close'
+            },
+            {
+                label: 'Minimize',
+                accelerator: 'CmdOrCtrl+M',
+                role: 'minimize'
+            },
+            {
+                label: 'Zoom',
+                role: 'zoom'
+            },
             { type: 'separator' },
-            { role: 'front' }
+            {
+                label: 'Bring All to Front',
+                role: 'front'
+            }
         ];
     }
 
@@ -262,20 +353,51 @@ function createMenu() {
     Menu.setApplicationMenu(menu);
 }
 
-// App event listeners
-app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-    // On macOS, keep app running even when all windows are closed
-    if (process.platform !== 'darwin') {
-        app.quit();
+// IPC handlers for DevTools and other functionality
+ipcMain.handle('toggle-devtools', () => {
+    if (mainWindow) {
+        mainWindow.webContents.toggleDevTools();
     }
 });
 
-app.on('activate', () => {
+ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+});
+
+ipcMain.handle('get-app-path', () => {
+    return app.getAppPath();
+});
+
+// App event handlers
+app.whenReady().then(() => {
+    createWindow();
+    createMenu();
+
+    console.log('App user data path:', app.getPath('userData'));
+    console.log('App cache path:', app.getPath('sessionData'));
+
     // On macOS, re-create window when dock icon is clicked
-    if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
+    });
+});
+
+// Configure app-level settings for data persistence
+app.on('ready', () => {
+    // Ensure session data is not cleared
+    app.on('before-quit', (event) => {
+        console.log('App is quitting - preserving session data');
+        // Don't clear any session data here
+    });
+});
+
+// Quit when all windows are closed, except on macOS
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        // Don't call session.clearStorageData() here
+        app.quit();
     }
 });
 
@@ -287,64 +409,47 @@ app.on('web-contents-created', (event, contents) => {
     });
 });
 
-// IPC handlers for renderer process communication
-ipcMain.handle('app-version', () => {
-    return app.getVersion();
+// Additional security configurations
+app.on('ready', () => {
+    // Prevent navigation to external protocols
+    app.on('open-url', (event, url) => {
+        event.preventDefault();
+        shell.openExternal(url);
+    });
 });
 
-ipcMain.handle('show-message-box', async (event, options) => {
-    const result = await dialog.showMessageBox(mainWindow, options);
-    return result;
-});
-
-// Window control handlers for custom title bar
-ipcMain.handle('minimize-window', () => {
-    if (mainWindow) {
-        mainWindow.minimize();
+// Handle certificate errors
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+    if (isDev) {
+        // In development, ignore certificate errors
+        event.preventDefault();
+        callback(true);
+    } else {
+        // In production, use default behavior
+        callback(false);
     }
 });
 
-ipcMain.handle('maximize-window', () => {
-    if (mainWindow) {
-        if (mainWindow.isMaximized()) {
-            mainWindow.unmaximize();
-        } else {
-            mainWindow.maximize();
-        }
+// Show connection error dialog
+function showConnectionError(env) {
+    const { dialog } = require('electron');
+
+    let message;
+    if (env === 'development') {
+        message = 'Unable to connect to the development server. Please check:\n\n' +
+            '1. Run "npm run serve" to start the Vue development server\n' +
+            '2. Ensure localhost:8080 is accessible\n' +
+            '3. Check if another process is using port 8080';
+    } else {
+        message = 'Unable to connect to the production server. Please check:\n\n' +
+            '1. Server is running at kason-server.local:9991\n' +
+            '2. Network connection is working\n' +
+            '3. Firewall settings allow the connection\n' +
+            '4. DNS resolution for kason-server.local is working';
     }
-});
 
-ipcMain.handle('close-window', () => {
-    if (mainWindow) {
-        mainWindow.close();
-    }
-});
+    dialog.showErrorBox('Connection Error', message);
+}
 
-// Auto-updater events
-autoUpdater.on('checking-for-update', () => {
-    console.log('Checking for update...');
-});
-
-autoUpdater.on('update-available', (info) => {
-    console.log('Update available.');
-});
-
-autoUpdater.on('update-not-available', (info) => {
-    console.log('Update not available.');
-});
-
-autoUpdater.on('error', (err) => {
-    console.log('Error in auto-updater. ' + err);
-});
-
-autoUpdater.on('download-progress', (progressObj) => {
-    let log_message = "Download speed: " + progressObj.bytesPerSecond;
-    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-    console.log(log_message);
-});
-
-autoUpdater.on('update-downloaded', (info) => {
-    console.log('Update downloaded');
-    autoUpdater.quitAndInstall();
-});
+// Export for testing
+module.exports = { createWindow };

@@ -11,6 +11,21 @@ export function callAiChatCompletion(selectedMode, targetLanguage, nativeLanguag
     })
 }
 
+// AI Call History API calls
+export function getAiCallHistory(current, size) {
+    return request({
+        url: `/ai-biz/ai/history`,
+        method: 'get',
+        params: {
+            current: current,
+            size: size
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
+
 // YouTube Channel API calls
 export function getChannelList(current, size) {
     return request({

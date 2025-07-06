@@ -177,6 +177,7 @@ export default {
     SEARCH_DEFAULT_MODE: 'detail',
     ROUTER_VIEW_DEFAULT_MODE: 'detail',
     ROUTER_VIEW_AI_MODE: 'aiResponseDetail',
+    ROUTER_VIEW_AI_HISTORY_MODE: 'aiCallHistory',
 
     SEARCH_MODES: {
         DETAIL: {label: 'Dictionary', value: 'detail'}
@@ -266,6 +267,11 @@ export default {
     YTB_MODE: {
         PLAYER: 'player',
         CHANNEL: 'channel'
+    },
+
+    AI_MODE_TAG: {
+        SPLITTER: '#[SPLITTER]',
+        SELECTION_EXPLANATION: '#[SM]'
     }
 
 }

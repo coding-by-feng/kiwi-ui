@@ -6,7 +6,6 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
-import {isMobile} from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 import kiwiConst from "@/const/kiwiConsts";
 

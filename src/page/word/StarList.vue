@@ -59,7 +59,7 @@ function cacheExampleList(list) {
 export default {
   components: {
     WordListDetail: () => import('@/page/word/WordListDetail'),
-    ParaphraseListDetail: () => import('@/page/word/ParaphraseListDetail'),
+    ParaphraseListDetail: () => import('@/page/word/paraphrase/ParaphraseListDetail.vue'),
     ExampleListDetail: () => import('@/page/word/ExampleListDetail')
   },
   data() {
