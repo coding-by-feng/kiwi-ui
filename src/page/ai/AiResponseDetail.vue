@@ -61,20 +61,31 @@
       <h3 class="selection-response-title">
         <i class="el-icon-chat-dot-square"></i>
         Explanation for Selected Text
-        <!-- Close button in the title bar -->
-        <el-button
-            class="close-selection-button"
-            type="text"
-            icon="el-icon-close"
-            @click="closeSelectionResponse"
-            :disabled="selectionApiLoading"
-            title="Close explanation"
-        ></el-button>
+        <!-- Control buttons in the title bar -->
+        <div class="selection-title-controls">
+          <el-button
+              class="fold-selection-button"
+              type="text"
+              :icon="selectionContentCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
+              @click="toggleSelectionContent"
+              :disabled="selectionApiLoading"
+              :title="selectionContentCollapsed ? 'Expand explanation' : 'Collapse explanation'"
+          ></el-button>
+          <el-button
+              class="close-selection-button"
+              type="text"
+              icon="el-icon-close"
+              @click="closeSelectionResponse"
+              :disabled="selectionApiLoading"
+              title="Close explanation"
+          ></el-button>
+        </div>
       </h3>
       <div class="selected-text-reference">
         <strong>Selected:</strong> "{{ lastSelectedText }}"
       </div>
       <div
+          v-show="!selectionContentCollapsed"
           class="selection-response-content"
           v-html="parsedSelectionResponse"
           v-loading="selectionApiLoading"
@@ -83,14 +94,6 @@
           <i class="el-icon-loading"></i> Generating explanation...
         </div>
       </div>
-      <el-button
-          v-if="!selectionApiLoading && parsedSelectionResponse"
-          class="copy-selection-button"
-          size="small"
-          icon="el-icon-document-copy"
-          @click="copySelectionResponse">
-        Copy Explanation
-      </el-button>
     </div>
 
     <!-- Original Response Container -->
@@ -147,6 +150,7 @@ export default {
       selectionResponseText: '',
       selectionResponseVisible: false,
       lastSelectedText: '',
+      selectionContentCollapsed: false,
 
       // Original text collapse state
       originalTextCollapsed: false
@@ -247,6 +251,11 @@ export default {
       this.originalTextCollapsed = !this.originalTextCollapsed;
     },
 
+    // Toggle selection explanation content visibility
+    toggleSelectionContent() {
+      this.selectionContentCollapsed = !this.selectionContentCollapsed;
+    },
+
     // Handle text selection
     handleTextSelection() {
       setTimeout(() => {
@@ -289,6 +298,7 @@ export default {
       this.lastSelectedText = '';
       this.selectionApiLoading = false;
       this.isSelectionStreaming = false;
+      this.selectionContentCollapsed = false;
 
       // Close any active WebSocket connection
       this.closeWebSocket('selection');
@@ -656,26 +666,6 @@ export default {
               duration: 2000
             });
           });
-    },
-
-    copySelectionResponse() {
-      const textToCopy = this.rawSelectionResponse;
-
-      navigator.clipboard.writeText(textToCopy)
-          .then(() => {
-            this.$message({
-              message: 'Explanation copied to clipboard!',
-              type: 'success',
-              duration: 2000
-            });
-          })
-          .catch(err => {
-            this.$message({
-              message: 'Failed to copy explanation: ' + err,
-              type: 'error',
-              duration: 2000
-            });
-          });
     }
   }
 }
@@ -840,7 +830,14 @@ export default {
   margin-right: 8px;
 }
 
-/* Close button styling */
+/* Selection title controls styling */
+.selection-title-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fold-selection-button,
 .close-selection-button {
   color: white !important;
   background: transparent !important;
@@ -849,18 +846,22 @@ export default {
   font-size: 16px !important;
   transition: all 0.3s ease;
   border-radius: 4px !important;
+  min-width: auto !important;
 }
 
+.fold-selection-button:hover:not(.is-disabled),
 .close-selection-button:hover:not(.is-disabled) {
   background: rgba(255, 255, 255, 0.2) !important;
   color: white !important;
 }
 
+.fold-selection-button:focus,
 .close-selection-button:focus {
   background: rgba(255, 255, 255, 0.1) !important;
   color: white !important;
 }
 
+.fold-selection-button.is-disabled,
 .close-selection-button.is-disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -881,34 +882,6 @@ export default {
   min-height: 60px;
   line-height: 1.7;
   color: #2c3e50;
-}
-
-.copy-selection-button {
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  right: 12px;
-  z-index: 10;
-  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
-  border: none !important;
-  color: white !important;
-  transition: all 0.3s ease;
-  border-radius: 6px !important;
-}
-
-.copy-selection-button:hover {
-  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
-}
-
-.copy-selection-button:focus {
-  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
-  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.3);
-}
-
-.copy-selection-button:active {
-  transform: translateY(0px);
 }
 
 /* Existing styles */
@@ -968,10 +941,74 @@ export default {
 /* Dialog footer styles */
 .dialog-footer {
   text-align: center;
+  padding: 20px 24px;
 }
 
 .dialog-footer .el-button {
   margin: 0 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  min-width: 140px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dialog-footer .el-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dialog-footer .el-button:active {
+  transform: translateY(0px);
+}
+
+/* Dictionary button specific styling */
+.dialog-footer .el-button--info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.dialog-footer .el-button--info:hover {
+  background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+  color: white !important;
+}
+
+.dialog-footer .el-button--info:focus {
+  background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+  color: white !important;
+}
+
+/* Primary button (Explain Selection) specific styling */
+.dialog-footer .el-button--primary {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.dialog-footer .el-button--primary:hover {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  color: white !important;
+}
+
+.dialog-footer .el-button--primary:focus {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  color: white !important;
+}
+
+/* Cancel button styling */
+.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  color: #6c757d !important;
+}
+
+.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info):hover {
+  background: #e9ecef !important;
+  border-color: #dee2e6 !important;
+  color: #495057 !important;
 }
 
 /* Responsive design */
@@ -994,20 +1031,20 @@ export default {
     font-size: 14px;
   }
 
-  .copy-selection-button {
-    position: static;
-    margin-top: 10px;
-    width: 100%;
-  }
-
-  .close-selection-button {
+  .close-selection-button,
+  .fold-selection-button {
     padding: 2px 6px !important;
     font-size: 14px !important;
   }
 
   .dialog-footer .el-button {
-    margin: 4px;
-    width: calc(50% - 8px);
+    margin: 8px 4px;
+    min-width: 120px;
+    padding: 10px 16px;
+  }
+
+  .dialog-footer {
+    padding: 16px;
   }
 }
 </style>
