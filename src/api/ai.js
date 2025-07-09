@@ -71,11 +71,10 @@ export function getChannelVideos(channelId, current, size) {
 // YouTube Video-related API calls
 export function downloadVideoSubtitles(videoUrl, language) {
     let url;
-    if (language) {
-        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
-    } else {
-        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}`;
+    if (!language) {
+        language = 'EN';
     }
+    url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
     return request({
         url: url,
         headers: {

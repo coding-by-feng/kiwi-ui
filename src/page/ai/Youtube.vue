@@ -20,8 +20,8 @@ export default {
   },
   data() {
     return {
-      showChannel: true,
-      showYoutubePlayer: false,
+      showChannel: false,
+      showYoutubePlayer: true,
       selectedVideoUrl: null
     }
   },
