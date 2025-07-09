@@ -30,7 +30,7 @@
         </button>
         <el-button type="info" icon="el-icon-delete" size="mini" circle @click="cleanSubtitles"></el-button>
         <el-button type="info" icon="el-icon-back" size="mini" circle @click="backToChannelList"
-        style="margin-left: 5px;"></el-button>
+                   style="margin-left: 5px;"></el-button>
       </div>
     </div>
     <div id="responsiveContainer" class="responsive-container">
