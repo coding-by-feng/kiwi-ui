@@ -1,16 +1,19 @@
 <template>
   <div class="youtube-player">
-    <!-- Modified header with back button -->
-    <h1 id="playHeader" v-show="!isPlaying && !forceHideInput">
-      YouTube Player
-    </h1>
+    <!-- Enhanced header with gradient styling -->
+    <div class="header-container" v-show="!isPlaying && !forceHideInput">
+      <h1 id="playHeader" class="main-title">
+        <i class="el-icon-video-play"></i>
+        YouTube Player
+      </h1>
+    </div>
 
-    <!-- Input and Button for YouTube URL -->
+    <!-- Enhanced Input Container with gradient styling -->
     <div class="input-container" v-show="!forceHideInput">
       <div class="url-input-group">
         <!-- Language dropdown that shows only when translation is enabled -->
         <el-select v-show="ifTranslation" v-model="selectedLanguage" placeholder="Select Language"
-                   @change="selectedLanguageChange">
+                   @change="selectedLanguageChange" class="language-select">
           <el-option
               v-for="(code, language) in languageCodes"
               :key="code"
@@ -18,58 +21,154 @@
               :value="code">
           </el-option>
         </el-select>
-        <el-input
-            v-model="videoUrl"
-            type="text"
-            placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
-            @keyup.enter="loadContent"
-            style="width: 100%; max-width: 500px;"
-        />
-        <button @click="loadContent" :disabled="!videoUrl || isLoading" class="ytb-player-button">
-          {{ isLoading ? 'Loading...' : 'Load' }}
-        </button>
-        <el-button type="info" icon="el-icon-delete" size="mini" circle @click="cleanSubtitles"></el-button>
-        <el-button type="info" icon="el-icon-back" size="mini" circle @click="backToChannelList"
-                   style="margin-left: 5px;"></el-button>
-      </div>
-    </div>
-    <div id="responsiveContainer" class="responsive-container">
-      <div class="switch-row" v-if="!forceHideInput">
-        <el-switch
-            v-model="ifTranslation"
-            active-text="Include translation"
-            @change="ifTranslationOnChange"
-            class="switch-element">
-        </el-switch>
-      </div>
-      <el-divider direction="vertical" v-if="!isSmallScreen && !forceHideInput"></el-divider>
-      <div class="switch-row">
-        <el-switch
-            v-model="forceHideInput"
-            active-text="Force to hide searching while playing"
-            @change="ifTranslationOnChange"
-            class="switch-element">
-        </el-switch>
-      </div>
-      <el-divider direction="vertical" v-if="!isSmallScreen"></el-divider>
-      <div class="switch-row">
-        <el-switch
-            v-model="autoScrollEnabled"
-            active-text="Scrolling"
-            class="switch-element">
-        </el-switch>
-        <el-divider direction="vertical" v-if="!isSmallScreen"></el-divider>
-        <el-switch
-            v-model="middleControlEnabled"
-            active-text="Middle-Control"
-            class="switch-element">
-        </el-switch>
-      </div>
-    </div>
-    <!-- Status Message -->
-    <p class="status-message" v-show="!isPlaying && !forceHideInput">{{ statusMessage }}</p>
 
-    <!-- Responsive Content Container -->
+        <div class="input-with-buttons">
+          <el-input
+              v-model="videoUrl"
+              type="text"
+              placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
+              @keyup.enter="loadContent"
+              class="url-input"
+              :disabled="isLoading"
+          />
+          <div class="action-buttons">
+            <button @click="loadContent" :disabled="!videoUrl || isLoading" class="load-button">
+              <i v-if="isLoading" class="el-icon-loading spinning"></i>
+              <i v-else class="el-icon-video-play"></i>
+              {{ isLoading ? 'Loading...' : 'Load' }}
+            </button>
+            <el-button type="info" icon="el-icon-delete" size="small" circle @click="cleanSubtitles" class="action-btn"></el-button>
+            <el-button type="info" icon="el-icon-back" size="small" circle @click="backToChannelList" class="action-btn"></el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Controls Container -->
+    <div id="responsiveContainer" class="responsive-container">
+      <div class="controls-wrapper">
+        <div class="switch-group" v-if="!forceHideInput">
+          <el-switch
+              v-model="ifTranslation"
+              :active-text="isSmallScreen ? '' : 'Include translation'"
+              @change="ifTranslationOnChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-chat-line-round"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-chat-dot-round"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-chat-dot-round"></i>
+          </span>
+        </div>
+        <div class="divider" v-if="!isSmallScreen && !forceHideInput"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="forceHideInput"
+              :active-text="isSmallScreen ? '' : 'Force to hide searching while playing'"
+              @change="ifTranslationOnChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-s-operation"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-view"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-view"></i>
+          </span>
+        </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="autoScrollEnabled"
+              :active-text="isSmallScreen ? '' : 'Scrolling'"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-position"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-sort"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-sort"></i>
+          </span>
+        </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="middleControlEnabled"
+              :active-text="isSmallScreen ? '' : 'Middle-Control'"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-minus"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-plus"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-plus"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Status Message with Loading Animation -->
+    <div class="status-container" v-show="!isPlaying && !forceHideInput && statusMessage !== ''">
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-animation">
+          <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+          </div>
+          <div class="loading-text">
+            <span class="loading-message">{{ statusMessage || 'Loading video...' }}</span>
+            <div class="loading-dots">
+              <span class="dot dot-1">.</span>
+              <span class="dot dot-2">.</span>
+              <span class="dot dot-3">.</span>
+            </div>
+          </div>
+        </div>
+        <div class="loading-progress">
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+          <div class="progress-text">Preparing video player...</div>
+        </div>
+      </div>
+      <p v-else class="status-message">{{ statusMessage }}</p>
+    </div>
+
+    <!-- Background Subtitles Loading Indicator -->
+    <div v-if="isSubtitlesLoading" class="subtitles-loading-overlay">
+      <div class="subtitles-loading-container">
+        <div class="subtitles-loading-icon">
+          <i class="el-icon-loading spinning"></i>
+        </div>
+        <div class="subtitles-loading-text">
+          <span>Loading subtitles...</span>
+          <div class="subtitles-progress">
+            <div class="subtitles-progress-bar">
+              <div class="subtitles-progress-fill" :style="{ width: subtitlesLoadingProgress + '%' }"></div>
+            </div>
+            <span class="subtitles-progress-text">{{ Math.round(subtitlesLoadingProgress) }}%</span>
+          </div>
+        </div>
+        <div class="subtitles-loading-close" @click="cancelSubtitlesLoading">
+          <i class="el-icon-close"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Content Container -->
     <div class="content-container" v-if="videoUrl && videoUrl !== ''">
       <!-- Left Panel (video and controls) -->
       <div class="left-panel">
@@ -87,6 +186,12 @@
              v-show="middleControlEnabled"
              @mouseup="handleTextSelectionWithPausing"
              @touchend="handleTextSelectionWithPausing">
+
+          <div class="subtitle-header">
+            <i class="el-icon-chat-dot-square"></i>
+            <span>Current Subtitle Context</span>
+          </div>
+
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
@@ -103,9 +208,12 @@
 
       <!-- Right Panel (subtitles) -->
       <div class="right-panel">
-
-        <!-- Subtitles List -->
+        <!-- Enhanced Subtitles List -->
         <div class="subtitles-container" v-if="subtitles.length">
+          <div class="subtitles-header">
+            <i class="el-icon-document"></i>
+            <span>Subtitles Timeline</span>
+          </div>
           <div class="subtitles-wrapper"
                @mouseup="handleTextSelection"
                @touchend="handleTextSelection">
@@ -122,22 +230,22 @@
             >
               {{ subtitle.text }}
             </p>
-            <p v-show="ifTranslation" v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;">
-            </p>
+            <div v-show="ifTranslation" class="translation-content" v-html="parsedResponseText"></div>
             <!-- Add a dummy element to ensure the last subtitle is fully visible -->
             <div class="scroll-filler" v-if="subtitles.length > 0"></div>
           </div>
         </div>
       </div>
 
-      <!-- Vocabulary Lookup Popup -->
+      <!-- Enhanced Vocabulary Lookup Popup -->
       <div
           v-if="showSelectionPopup"
           ref="vocabularyPopup"
           class="vocabulary-popup"
           @click="navigateToVocabulary"
       >
-        <i class="el-icon-search"></i> "{{ selectedText }}"
+        <i class="el-icon-search"></i>
+        <span>"{{ selectedText }}"</span>
       </div>
     </div>
   </div>
@@ -169,20 +277,21 @@ export default defineComponent({
       subtitlesType: null,
       statusMessage: '',
       isLoading: false,
+      isSubtitlesLoading: false, // New: separate loading state for subtitles
+      subtitlesLoadingProgress: 0, // New: progress tracking
       player: null,
       currentSubtitleIndex: -1,
       subtitleInterval: null,
       lastScrollTime: 0,
       visibilityCheckInterval: null,
-      autoScrollEnabled: true, // Add back auto-scroll flag with default true
-      middleControlEnabled: true, // Add back auto-scroll flag with default true
-      forceHideInput: false, // New toggle for hiding input area
-      isSmallScreen: false, // Track if we're on a small screen
-
-      // Text selection and popup properties
+      autoScrollEnabled: true,
+      middleControlEnabled: true,
+      forceHideInput: false,
+      isSmallScreen: false,
       selectedText: '',
       showSelectionPopup: false,
       isPlaying: false,
+      videoReady: false, // New: track video readiness
     };
   },
   computed: {
@@ -190,44 +299,29 @@ export default defineComponent({
       console.log('this.translatedSubtitles', this.translatedSubtitles)
       return md.render(this.translatedSubtitles);
     },
-    // Check if there is a previous subtitle available
     hasPreviousSubtitle() {
       return this.currentSubtitleIndex > 0;
     },
-
-    // Check if there is a next subtitle available
     hasNextSubtitle() {
       return this.currentSubtitleIndex < this.subtitles.length - 1;
     },
-
     ifProfessionalSubtitles() {
       return kiwiConsts.SUBTITLES_TYPE.LARGE_PROFESSIONAL_SRT_RETURN_LIST === this.subtitlesType
           || kiwiConsts.SUBTITLES_TYPE.SMALL_PROFESSIONAL_SRT_RETURN_STRING === this.subtitlesType;
     },
   },
   mounted() {
-    // Load YouTube API
     this.loadYouTubeAPI();
-
-    // Add click listener to document to close popup when clicking outside
     document.addEventListener('click', this.handleClickOutside);
-
-    // Check if on small screen and disable auto-scroll if needed
     this.checkScreenSize();
-
-    // Add resize listener to handle screen size changes
     window.addEventListener('resize', this.checkScreenSize);
-
-    // Apply touch callout/highlight prevention to subtitle elements
     this.applyTouchPreventions();
-
     this.updateDisplayStyle();
 
-    // Check if a video URL was passed through the route
     const videoUrl = this.$route.query.videoUrl;
     if (videoUrl) {
       this.videoUrl = decodeURIComponent(videoUrl);
-      this.loadContent(); // Automatically load the video
+      this.loadContent();
     }
   },
   watch: {
@@ -242,7 +336,6 @@ export default defineComponent({
         }
       }
     },
-    // Existing watches...
     '$route.query.videoUrl': function(newVideoUrl) {
       if (newVideoUrl && newVideoUrl !== encodeURIComponent(this.videoUrl)) {
         this.videoUrl = decodeURIComponent(newVideoUrl);
@@ -252,7 +345,6 @@ export default defineComponent({
   },
   methods: {
     backToChannelList() {
-      // Navigate back to the channel list view
       this.$router.push({
         path: '/index/vocabulary/detail',
         query: {
@@ -262,18 +354,11 @@ export default defineComponent({
       });
     },
     isSafariOrIOS() {
-      // Check for Safari browser
       const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-      // Check for iOS devices (including iPad)
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-      // If iOS, we're likely dealing with Safari, even if it's embedded in another app
       return isSafariBrowser || isIOS;
     },
-
-    // Utility method to detect mobile devices
     isMobileDevice() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
           || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
@@ -289,7 +374,6 @@ export default defineComponent({
       }
       console.log('ifTranslationOnChange', this.ifTranslation);
     },
-
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
       setStore({
@@ -303,15 +387,13 @@ export default defineComponent({
         type: 'local'
       })
     },
-
-    // Apply CSS to prevent native selection UI
     applyTouchPreventions() {
       this.$nextTick(() => {
         const subtitleElements = document.querySelectorAll('.current-subtitle-display, .previous-subtitle, .next-subtitle, .subtitles-wrapper p');
         subtitleElements.forEach(el => {
           if (el) {
             el.style.webkitTouchCallout = 'none';
-            el.style.webkitUserSelect = 'text'; // Keep text selectable
+            el.style.webkitUserSelect = 'text';
             el.style.khtmlUserSelect = 'text';
             el.style.mozUserSelect = 'text';
             el.style.msUserSelect = 'text';
@@ -325,76 +407,60 @@ export default defineComponent({
         });
       });
     },
-
-    // Add a dedicated method to pause the video
     pauseVideo() {
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
       }
-    }, showQueryingWords(event) {
+    },
+    showQueryingWords(event) {
       const selection = window.getSelection();
       const selectedText = selection.toString().trim();
 
       if (selectedText) {
         this.selectedText = selectedText;
-
-        // Calculate position for popup based on selection
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
 
-        // Clear the selection on mobile to prevent native popup
         if (this.isMobileDevice()) {
-          // Get position before clearing
           setTimeout(() => {
             selection.removeAllRanges();
           }, 10);
           event.preventDefault();
         }
 
-        // Show popup first so it's in the DOM
         this.showSelectionPopup = true;
 
-        // Use nextTick to ensure popup is rendered before positioning
         this.$nextTick(() => {
           const popup = document.querySelector('.vocabulary-popup');
           if (popup) {
-            // Calculate the position relative to the viewport
             const viewportWidth = window.innerWidth;
             const popupWidth = popup.offsetWidth;
-
-            // Keep popup within viewport bounds
             let left = rect.left + (rect.width / 2);
 
-            // Ensure popup doesn't go off-screen
             if (left - (popupWidth / 2) < 10) {
-              left = 10 + (popupWidth / 2); // Keep 10px from left edge
+              left = 10 + (popupWidth / 2);
             } else if (left + (popupWidth / 2) > viewportWidth - 10) {
-              left = viewportWidth - 10 - (popupWidth / 2); // Keep 10px from right edge
+              left = viewportWidth - 10 - (popupWidth / 2);
             }
 
-            // Apply the calculated position
             popup.style.left = `${left}px`;
             popup.style.top = `${rect.bottom + 10}px`;
             popup.style.transform = 'translateX(-50%)';
           }
         });
 
-        // Prevent default to maintain the selection temporarily
         event.preventDefault();
       } else {
         this.closePopup();
       }
     },
-
     handleTextSelectionWithPausing(event) {
       this.pauseVideo();
       this.handleTextSelection(event)
     },
-    // Text selection and vocabulary lookup methods with mobile optimization
     handleTextSelection(event) {
       this.showQueryingWords(event);
     },
-
     navigateToVocabulary() {
       const cleanedText = this.selectedText.replace(/\n/g, ' ').trim();
       const encodedText = encodeURIComponent(cleanedText);
@@ -412,14 +478,11 @@ export default defineComponent({
         }
       })
     },
-
     closePopup() {
       this.showSelectionPopup = false;
       this.selectedText = '';
     },
-
     handleClickOutside(event) {
-      // Close the popup if clicking outside of popup and subtitle display
       const popup = document.querySelector('.vocabulary-popup');
       const subtitleDisplay = document.querySelector('.subtitles-context-display');
       const subtitlesContainer = document.querySelector('.subtitles-container');
@@ -431,20 +494,14 @@ export default defineComponent({
         this.closePopup();
       }
     },
-
     jumpToSubtitle(index) {
       if (!this.player || !this.subtitles[index]) return;
-
-      // Jump video to the start time of the clicked subtitle
       this.player.seekTo(this.subtitles[index].start, true);
-
-      // If video is paused, play it
       if (this.player.getPlayerState() !== YT.PlayerState.PLAYING) {
         this.player.playVideo();
       }
     },
     loadYouTubeAPI() {
-      // Add YouTube API script if it doesn't exist
       if (!document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'youtube-api-script';
@@ -453,7 +510,6 @@ export default defineComponent({
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
       }
 
-      // Set up callback for when YouTube API is ready
       window.onYouTubeIframeAPIReady = () => {
         if (this.videoId) {
           this.initializePlayer();
@@ -461,35 +517,39 @@ export default defineComponent({
       };
     },
     initializePlayer() {
-      // Create YouTube player
-      this.player = new YT.Player('youtube-player-container', {
-        height: '100%',
-        width: '100%',
-        videoId: this.videoId,
-        playerVars: {
-          playsinline: 1,
-          rel: 0,
-          autoplay: 0
-        },
-        events: {
-          onReady: this.onPlayerReady,
-          onStateChange: this.onPlayerStateChange
-        }
+      return new Promise((resolve) => {
+        // Create YouTube player
+        this.player = new YT.Player('youtube-player-container', {
+          height: '100%',
+          width: '100%',
+          videoId: this.videoId,
+          playerVars: {
+            playsinline: 1,
+            rel: 0,
+            autoplay: 0
+          },
+          events: {
+            onReady: (event) => {
+              this.onPlayerReady(event);
+              resolve();
+            },
+            onStateChange: this.onPlayerStateChange
+          }
+        });
       });
     },
     onPlayerReady(event) {
       console.log('Player ready');
+      this.videoReady = true;
+      msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
     },
     onPlayerStateChange(event) {
       this.isPlaying = false;
-      // Handle player state changes
       if (event.data === YT.PlayerState.PLAYING) {
-        // Start syncing subtitles when video is playing
         this.startSubtitleSync();
         this.isPlaying = true;
         this.forceHideInput = true;
       } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-        // Stop syncing when video is paused or ended
         this.stopSubtitleSync();
         this.stopVisibilityCheck();
       }
@@ -500,12 +560,8 @@ export default defineComponent({
         this.visibilityCheckInterval = null;
       }
     },
-
     startSubtitleSync() {
-      // Clear any existing interval
       this.stopSubtitleSync();
-
-      // Create a new interval that runs every 100ms to update subtitle sync
       this.subtitleInterval = setInterval(() => {
         this.updateCurrentSubtitle();
       }, 100);
@@ -517,7 +573,7 @@ export default defineComponent({
       }
     },
     async loadContent() {
-      // Reset state for new video
+      // Reset player state for new video
       if (this.player) {
         this.stopSubtitleSync();
         this.stopVisibilityCheck();
@@ -525,13 +581,14 @@ export default defineComponent({
         this.player = null;
       }
 
-      this.statusMessage = 'Loading video and subtitles...';
+      // Reset states
       this.isLoading = true;
+      this.videoReady = false;
       this.videoId = null;
       this.subtitles = [];
       this.currentSubtitleIndex = -1;
       this.stopSubtitleSync();
-      // Keep auto-scroll setting as is (don't reset it)
+      this.statusMessage = 'Loading video...';
 
       try {
         const videoId = this.extractVideoId(this.videoUrl);
@@ -541,27 +598,63 @@ export default defineComponent({
           return;
         }
 
-        // Fetch subtitles
-        const subtitleResponse = await downloadVideoSubtitles(this.videoUrl, this.ifTranslation ? this.selectedLanguage : null).catch(error => {
+        // Set video ID and initialize player immediately
+        this.videoId = videoId;
+        this.statusMessage = 'Initializing player...';
+
+        // Initialize the player first (video loads faster)
+        await this.initializePlayer();
+
+        // Video is ready, stop main loading
+        this.isLoading = false;
+        this.videoReady = true;
+        this.statusMessage = '';
+
+        // Start loading subtitles in background
+        this.loadSubtitlesInBackground();
+
+      } catch (error) {
+        console.error('Error loading content:', error);
+        this.statusMessage = 'Failed to load content. Check the console for details.';
+        this.isLoading = false;
+      }
+    },
+
+    async loadSubtitlesInBackground() {
+      // Don't load subtitles if video is not ready or no translation needed
+      if (!this.videoReady) return;
+
+      this.isSubtitlesLoading = true;
+      this.subtitlesLoadingProgress = 0;
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        if (this.subtitlesLoadingProgress < 90) {
+          this.subtitlesLoadingProgress += Math.random() * 20;
+        }
+      }, 200);
+
+      try {
+        const subtitleResponse = await downloadVideoSubtitles(
+            this.videoUrl,
+            this.ifTranslation ? this.selectedLanguage : null
+        ).catch(error => {
           console.error('Error downloading subtitles:', error);
           return {status: 500, data: {data: null}};
         });
 
+        clearInterval(progressInterval);
+        this.subtitlesLoadingProgress = 100;
+
         let scrollingSubtitles = subtitleResponse?.data?.data?.scrollingSubtitles;
         let translatedOrRetouchedSubtitles = subtitleResponse?.data?.data?.translatedOrRetouchedSubtitles;
         this.subtitlesType = subtitleResponse?.data?.data?.type;
-        if (subtitleResponse.status !== 200 || !scrollingSubtitles) {
-          this.statusMessage = 'Video loaded, but no subtitles available';
-        } else {
+
+        if (subtitleResponse.status === 200 && scrollingSubtitles) {
           this.parseSubtitles(scrollingSubtitles);
           this.translatedSubtitles = translatedOrRetouchedSubtitles;
-          this.statusMessage = '';
-          this.videoId = videoId;
 
-          msgUtil.msgSuccess(this, 'Content loaded successfully!', 2000);
-
-          // Initialize the player now that we have the video ID
-          this.initializePlayer();
+          msgUtil.msgSuccess(this, 'Subtitles loaded successfully!', 2000);
 
           // Re-apply touch preventions for the new subtitles
           this.$nextTick(() => {
@@ -569,39 +662,48 @@ export default defineComponent({
           });
 
           this.middleControlEnabled = this.ifTranslation;
-          this.isLoading = false;
+        } else {
+          msgUtil.msgWarning(this, 'No subtitles available for this video', 3000);
         }
+
+        // Hide loading indicator after a short delay
+        setTimeout(() => {
+          this.isSubtitlesLoading = false;
+          this.subtitlesLoadingProgress = 0;
+        }, 1000);
+
       } catch (error) {
-        console.error('Error loading content:', error);
-        this.statusMessage = 'Failed to load content. Check the console for details.';
-      } finally {
-        this.isLoading = false;
+        clearInterval(progressInterval);
+        console.error('Error loading subtitles:', error);
+        this.isSubtitlesLoading = false;
+        this.subtitlesLoadingProgress = 0;
+        msgUtil.msgError(this, 'Failed to load subtitles', 3000);
       }
+    },
+
+    cancelSubtitlesLoading() {
+      this.isSubtitlesLoading = false;
+      this.subtitlesLoadingProgress = 0;
+      msgUtil.msgInfo(this, 'Subtitles loading cancelled', 2000);
     },
     extractVideoId(url) {
       try {
         const urlObj = new URL(url);
         let videoId;
 
-        // Handle standard youtube.com URLs
         if (urlObj.hostname.includes('youtube.com')) {
           if (urlObj.pathname === '/watch') {
-            // Regular video: youtube.com/watch?v=VIDEO_ID
             videoId = urlObj.searchParams.get('v');
           } else if (urlObj.pathname.includes('/shorts/')) {
-            // Shorts: youtube.com/shorts/VIDEO_ID
             videoId = urlObj.pathname.split('/shorts/')[1]?.split('/')[0];
           } else if (urlObj.pathname.includes('/embed/')) {
-            // Embedded videos: youtube.com/embed/VIDEO_ID
             videoId = urlObj.pathname.split('/embed/')[1]?.split('/')[0];
           }
         }
-        // Handle youtu.be short links
         else if (urlObj.hostname === 'youtu.be') {
           videoId = urlObj.pathname.split('/')[1];
         }
 
-        // Sanitize the video ID by removing any trailing parameters
         if (videoId) {
           videoId = videoId.split('?')[0].split('&')[0];
         }
@@ -647,10 +749,7 @@ export default defineComponent({
       const [secs, ms] = seconds.split('.');
       return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
     },
-
-    // --- Safari-compatible scrollToCurrentSubtitle method ---
     scrollToCurrentSubtitle() {
-      // If translation is enabled, no need for scrolling
       if (this.ifTranslation) {
         return;
       }
@@ -658,35 +757,23 @@ export default defineComponent({
       const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
       if (!subtitleElement) return;
 
-      // Get the container element
       const subtitlesContainer = document.querySelector('.subtitles-container');
       if (!subtitlesContainer) return;
 
-      // Detect Safari browser - needed for special handling
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-      // Different approach for Safari
       if (isSafari) {
-        // For Safari, we'll use a more direct approach to scrolling
-        // Calculate the element's position relative to the container
         const containerRect = subtitlesContainer.getBoundingClientRect();
         const elementRect = subtitleElement.getBoundingClientRect();
-
-        // Calculate the target scroll position (element's top position relative to container)
         const relativePosition = elementRect.top - containerRect.top;
         const targetScrollTop = subtitlesContainer.scrollTop + relativePosition - (containerRect.height / 2) + (elementRect.height / 2);
-
-        // Use manual scrollTop setting for Safari (most reliable method)
         subtitlesContainer.scrollTop = targetScrollTop;
       } else {
-        // For non-Safari browsers, use the previous method with requestAnimationFrame for smoother scrolling
         window.requestAnimationFrame(() => {
-          // Calculate the scroll position
           const containerRect = subtitlesContainer.getBoundingClientRect();
           const elementRect = subtitleElement.getBoundingClientRect();
           const scrollPosition = (elementRect.top - containerRect.top) + subtitlesContainer.scrollTop - (containerRect.height / 2) + (elementRect.height / 2);
 
-          // Use scrollTo with smooth behavior
           subtitlesContainer.scrollTo({
             top: scrollPosition,
             behavior: 'smooth'
@@ -694,34 +781,24 @@ export default defineComponent({
         });
       }
     },
-
-    // --- Safari-compatible updateCurrentSubtitle method ---
     updateCurrentSubtitle() {
       if (!this.player || !this.subtitles.length) return;
 
       const currentTime = this.player.getCurrentTime();
-
-      // Find the subtitle that matches the current playback time
       const index = this.subtitles.findIndex(
           (sub, i) =>
               currentTime >= sub.start &&
               (i === this.subtitles.length - 1 || currentTime < this.subtitles[i + 1].start)
       );
 
-      // If the subtitle has changed, update and scroll
       if (index !== -1 && index !== this.currentSubtitleIndex) {
         this.currentSubtitleIndex = index;
-
-        // Detect Safari browser
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
         if (this.autoScrollEnabled) {
-          // For Safari, we need a different timing approach
           if (isSafari) {
-            // Immediate scroll for Safari (no delay seems to work better)
             this.scrollToCurrentSubtitle();
           } else {
-            // Small delay for other browsers
             setTimeout(() => {
               this.scrollToCurrentSubtitle();
             }, 50);
@@ -729,18 +806,14 @@ export default defineComponent({
         }
       }
     },
-
-    // --- Improved checkScreenSize method with better auto-scroll handling ---
     checkScreenSize() {
       this.isSmallScreen = window.innerWidth < 768;
     },
-
     cleanSubtitles() {
       deleteVideoSubtitles(this.videoUrl, this.selectedLanguage).then(() => {
         msgUtil.msgSuccess(this, 'Subtitles cleaned successfully!', 2000);
       })
     },
-
     updateDisplayStyle() {
       const container = document.getElementById('responsiveContainer');
       if (this.isMobileDevice() || this.isSmallScreen) {
@@ -753,7 +826,6 @@ export default defineComponent({
     }
   },
   beforeUnmount() {
-    // Clean up
     this.stopSubtitleSync();
     this.stopVisibilityCheck();
     if (this.player) {
@@ -763,12 +835,8 @@ export default defineComponent({
 
     window.removeEventListener('resize', this.checkScreenSize);
     window.addEventListener('resize', this.updateDisplayStyle);
-
-
-    // Remove text selection related event listeners
     document.removeEventListener('click', this.handleClickOutside);
 
-    // Clean up contextmenu listeners
     const subtitleElements = document.querySelectorAll('.current-subtitle-display, .previous-subtitle, .next-subtitle, .subtitles-wrapper p');
     subtitleElements.forEach(el => {
       if (el) {
@@ -784,6 +852,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* Base styles aligned with AiResponseDetail */
 .youtube-player {
   padding: 0;
   margin: 0;
@@ -792,10 +861,42 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
+/* Enhanced Header Container */
+.header-container {
+  margin: 15px 0;
+  padding: 0 20px;
+}
+
+.main-title {
+  margin: 0;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.main-title:hover {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+}
+
+.main-title i {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+/* Enhanced Input Container */
 .input-container {
-  padding: 10px;
+  padding: 0 20px 15px;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -804,124 +905,611 @@ export default defineComponent({
 
 .url-input-group {
   display: flex;
+  flex-direction: column;
   width: 100%;
-  position: relative;
+  max-width: 800px;
+  gap: 15px;
+}
+
+.language-select {
+  width: 100%;
+  max-width: 300px;
+  align-self: center;
+}
+
+.input-with-buttons {
+  display: flex;
+  gap: 10px;
   align-items: center;
+  width: 100%;
+}
+
+.url-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.url-input .el-input__inner {
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+  padding: 12px 16px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.url-input .el-input__inner:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.url-input .el-input__inner:disabled {
+  background: #f5f7fa;
+  cursor: not-allowed;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.load-button {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  min-width: 100px;
   justify-content: center;
 }
 
-.input-container button {
-  padding: 8px;
-  font-size: 16px;
+.load-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
-/* Main container for side-by-side layout */
+.load-button:disabled {
+  background: linear-gradient(135deg, #c0c4cc 0%, #c0c4cc 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.load-button .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.action-btn {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced Controls Container */
+.responsive-container {
+  padding: 0 20px 15px;
+  margin: 0;
+}
+
+.controls-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+}
+
+.switch-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.mobile-switch-label {
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #409eff;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.enhanced-switch {
+  margin: 0;
+}
+
+.enhanced-switch .el-switch__label {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.enhanced-switch .el-switch__core {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.enhanced-switch.is-checked .el-switch__core {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: #e4e7ed;
+  margin: 0 8px;
+}
+
+/* Enhanced Status Container with Amazing Loading Animation */
+.status-container {
+  padding: 20px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+  max-width: 400px;
+  width: 100%;
+}
+
+.loading-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loading-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.spinner-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+.spinner-ring:nth-child(1) {
+  border-top-color: #409eff;
+  animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+  border-right-color: #67c23a;
+  animation-delay: 0.3s;
+  animation-duration: 1.5s;
+}
+
+.spinner-ring:nth-child(3) {
+  border-bottom-color: #e6a23c;
+  animation-delay: 0.6s;
+  animation-duration: 1.8s;
+}
+
+.loading-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-message {
+  font-size: 16px;
+  color: #409eff;
+  font-weight: 600;
+  text-align: center;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #409eff;
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.dot-1 { animation-delay: 0s; }
+.dot-2 { animation-delay: 0.2s; }
+.dot-3 { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.loading-progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #f0f2f5;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #409eff, #67c23a, #e6a23c, #409eff);
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: progress-flow 2s linear infinite;
+  width: 100%;
+}
+
+@keyframes progress-flow {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #909399;
+  text-align: center;
+  font-style: italic;
+}
+
+.status-message {
+  padding: 16px 20px;
+  margin: 0;
+  color: #f56c6c;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #fde2e2;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Enhanced Content Container */
 .content-container {
   margin-top: 5px;
   display: flex;
   flex-direction: column;
+  width: 95%;
+  height: calc(100vh - 220px);
+  overflow: hidden;
+  padding: 0 20px;
+  gap: 20px;
+}
+
+.left-panel {
   width: 100%;
-  height: calc(100vh - 120px); /* Adjust based on header height */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.right-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-/* Video section containing player and current subtitle */
 .video-section {
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto; /* Changed to auto for better responsiveness */
+  flex: 1 0 auto;
   position: relative;
-}
-
-/* Apply min-height only on larger screens */
-@media (min-width: 768px) {
-  .video-section {
-    min-height: 50vh;
-  }
 }
 
 .video-container {
   flex: 1;
   overflow: hidden;
   position: relative;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: #000;
 }
 
-/* Enhanced subtitle context display container */
+/* Enhanced Subtitle Context Display */
 .subtitles-context-display {
   display: flex;
   flex-direction: column;
   position: relative;
-  margin: 10px 0; /* Add space above and below */
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  background: white;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #ddd;
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: text; /* Safari - keep text selectable */
-  user-select: text;
-}
-
-/* Previous subtitle line styling */
-.previous-subtitle {
-  padding: 6px 10px;
-  font-size: 14px;
-  color: #777;
-  background-color: #e0e0e0;
-  border-bottom: 1px solid #ccc;
-  white-space: pre-wrap;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
 }
 
-/* Current subtitle display below video */
-.current-subtitle-display {
-  background-color: rgb(148, 154, 165);
-  color: #ffffff;
-  padding: 10px;
-  text-align: center;
-  font-size: 16px;
-  font-weight: bold;
+.subtitle-header {
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #909399 0%, #606266 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.subtitle-header i {
+  font-size: 14px;
+}
+
+.previous-subtitle {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #909399;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
   white-space: pre-wrap;
-  max-height: 80px;
-  overflow-y: auto;
-  user-select: text; /* Make text selectable */
+  line-height: 1.4;
+  -webkit-touch-callout: none;
   -webkit-user-select: text;
-  cursor: text; /* Show text cursor when hovering */
+  user-select: text;
+}
+
+.current-subtitle-display {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: pre-wrap;
+  max-height: 100px;
+  overflow-y: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
   position: relative;
   -webkit-touch-callout: none;
+  line-height: 1.4;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Next subtitle line styling */
 .next-subtitle {
-  padding: 6px 10px;
+  padding: 8px 12px;
   font-size: 14px;
-  color: #555;
-  background-color: #e8e8e8;
-  border-top: 1px solid #ccc;
+  color: #606266;
+  background: #f0f2f5;
+  border-top: 1px solid #e9ecef;
   white-space: pre-wrap;
+  line-height: 1.4;
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
 }
 
-/* New vocabulary popup styles */
-.vocabulary-popup {
-  position: fixed; /* Use fixed positioning */
-  background-color: rgb(148, 154, 165);
-  color: white;
-  padding: 8px 12px;
+/* Enhanced Subtitles Container */
+.subtitles-container {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  min-height: 200px;
+  position: relative;
+  scrollbar-width: thin;
+}
+
+.subtitles-container::-webkit-scrollbar {
+  width: 8px;
+  display: block;
+}
+
+.subtitles-container::-webkit-scrollbar-track {
+  background: #f1f3f4;
   border-radius: 4px;
+  display: block;
+}
+
+.subtitles-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #c0c4cc 0%, #909399 100%);
+  border-radius: 4px;
+  display: block;
+}
+
+.subtitles-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%);
+  display: block;
+}
+
+.subtitles-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #e4e7ed;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.subtitles-header i {
+  font-size: 18px;
+  color: #409eff;
+}
+
+.subtitles-wrapper {
+  padding: 16px;
+  min-height: calc(100% + 50px);
+}
+
+.subtitles-container p {
+  margin: 4px 0;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1.4;
   font-size: 14px;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.subtitles-container p:hover {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #bae7ff;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.subtitles-container p::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.active-subtitle {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: white;
+  border-radius: 8px;
+  transform: translateX(8px);
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+  font-weight: 600;
+}
+
+.active-subtitle::before {
+  background: white;
+}
+
+.past-subtitle {
+  color: #909399;
+  background: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+.past-subtitle::before {
+  background: #e9ecef;
+}
+
+.future-subtitle {
+  color: #606266;
+  background: white;
+}
+
+.future-subtitle::before {
+  background: #f0f2f5;
+}
+
+.translation-content {
+  padding: 20px;
+  line-height: 1.8;
+  font-size: 15px;
+  color: #2c3e50;
+  text-align: justify;
+}
+
+.scroll-filler {
+  margin-top: 20px;
+  height: 50px;
+}
+
+/* Enhanced Vocabulary Popup */
+.vocabulary-popup {
+  position: fixed;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
   white-space: nowrap;
-  max-width: 50%;
+  max-width: 60%;
   text-overflow: ellipsis;
   overflow: hidden;
   width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .vocabulary-popup::before {
@@ -932,255 +1520,666 @@ export default defineComponent({
   margin-left: -8px;
   border-width: 8px;
   border-style: solid;
-  border-color: transparent transparent rgb(148, 154, 165) transparent;
+  border-color: transparent transparent #409eff transparent;
 }
 
 .vocabulary-popup:hover {
-  background-color: #7b8291;
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+.vocabulary-popup i {
+  font-size: 16px;
 }
 
-.ytb-player-button {
-  background-color: #909399;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.3s;
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-.ytb-player-button:hover {
-  background-color: #7b8291;
-}
-
-.ytb-player-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.subtitles-container {
-  flex: 1 0 45%;
-  overflow-y: auto;
-  padding: 0;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  min-height: 100px;
-  position: relative;
-  scrollbar-width: thin; /* For Firefox */
-}
-
-/* Style scrollbar for webkit browsers (Chrome, Safari, Edge) */
-.subtitles-container::-webkit-scrollbar {
-  width: 8px;
-  display: block;
-}
-
-.subtitles-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  display: block;
-}
-
-.subtitles-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-  display: block;
-}
-
-.subtitles-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
-  display: block;
-}
-
-.subtitles-wrapper {
-  padding: 5px;
-  /* Add min-height to ensure content is taller than container, forcing scrollbar to appear */
-  min-height: calc(100% + 50px);
-}
-
-.subtitles-container p {
-  margin: 5px 0;
-  padding: 8px;
-  transition: all 0.3s ease;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.subtitles-container p:hover {
-  background-color: #f0f0f0;
-}
-
-.active-subtitle {
-  background-color: #43a047;
-  color: white;
-  border-radius: 4px;
-}
-
-.past-subtitle {
-  color: #777;
-}
-
-.future-subtitle {
-  color: #333;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(67, 160, 71, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(67, 160, 71, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(67, 160, 71, 0);
-  }
-}
-
-.scroll-filler {
-  margin-top: 10px;
-}
-
-.status-message {
-  padding: 10px;
-  margin: 0;
-  color: #d32f2f;
-  flex-shrink: 0;
-}
-
-/* Media queries for small screens (mobile) */
+/* Media Queries for Responsive Design */
 @media (max-width: 767px) {
-  .ytb-controls-container {
-    display: none !important;
+  .header-container {
+    margin: 5px 0;
+    padding: 0 10px;
   }
 
-  /* Show scrollbar explicitly on small screens */
-  .subtitles-container {
-    overflow-y: scroll !important;
-    max-height: 40vh;
-    -webkit-overflow-scrolling: touch; /* Better scrolling on iOS */
+  .main-title {
+    font-size: 16px;
+    padding: 8px 12px;
   }
 
-  /* Make scrollbars more visible on small screens */
-  .subtitles-container::-webkit-scrollbar {
-    width: 10px !important;
-    display: block !important;
+  .main-title i {
+    font-size: 16px;
+    margin-right: 6px;
   }
 
-  .subtitles-container::-webkit-scrollbar-thumb {
-    background: #666 !important;
-    border-radius: 5px !important;
-  }
-}
-
-/* Media query for larger screens (PC, laptop, tablet) */
-@media (min-width: 992px) {
-  /* Change to horizontal layout for larger screens */
-  .content-container {
-    flex-direction: row;
+  .input-container {
+    padding: 0 10px 8px;
   }
 
-  /* Left side - video area */
-  .left-panel {
-    width: 50%;
-    height: 100%;
-    display: flex;
+  .url-input-group {
     flex-direction: column;
-    overflow: hidden;
+    gap: 8px;
+    align-items: stretch;
   }
 
-  /* Right side - subtitles area */
-  .right-panel {
-    width: 50%;
-    height: 100%;
-    display: flex;
+  .language-select {
+    max-width: 100%;
+    align-self: stretch;
+  }
+
+  .language-select .el-input__inner {
+    height: 36px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .input-with-buttons {
     flex-direction: column;
-    overflow: hidden;
-    border-left: 1px solid #ddd;
+    gap: 8px;
+    align-items: stretch;
   }
 
-  /* Adjust video section */
-  .video-section {
-    flex: 1 0 auto;
+  .url-input {
+    width: 100%;
   }
 
-  /* Apply min-height only on larger screens */
-  @media (min-width: 768px) {
-    .video-section {
-      min-height: 50vh;
-    }
+  .url-input .el-input__inner {
+    height: 36px;
+    padding: 8px 12px;
+    font-size: 14px;
   }
 
-  /* Make subtitle display remain in left panel */
-  .subtitles-context-display {
-    margin-bottom: 10px;
-    max-height: 150px;
+  .action-buttons {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
-  /* Adjust subtitles list container */
-  .subtitles-container {
+  .load-button {
     flex: 1;
-    height: calc(100% - 160px); /* Account for context display */
-    margin-bottom: 0;
+    max-width: none;
+    min-width: 100px;
+    padding: 10px 16px;
+    font-size: 14px;
+    height: 36px;
   }
-}
 
-/* Responsive adjustments for mobile */
-@media (max-width: 768px) {
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .action-btn .el-icon-delete,
+  .action-btn .el-icon-back {
+    font-size: 14px;
+  }
+
+  /* Mobile-specific controls styling */
+  .responsive-container {
+    padding: 0 10px 8px;
+  }
+
+  .controls-wrapper {
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .switch-group {
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    position: relative;
+  }
+
+  .mobile-switch-label {
+    position: static;
+    transform: none;
+    font-size: 14px;
+    color: #606266;
+    margin-top: 2px;
+    order: 2;
+  }
+
+  .enhanced-switch {
+    order: 1;
+    transform: scale(0.8);
+  }
+
+  .enhanced-switch .el-switch__core {
+    width: 32px;
+    height: 18px;
+  }
+
+  .enhanced-switch .el-switch__button {
+    width: 14px;
+    height: 14px;
+  }
+
+  .enhanced-switch .el-switch__label {
+    display: none;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  /* Optimized content layout for mobile */
+  .content-container {
+    padding: 0 10px;
+    height: calc(100vh - 140px);
+    gap: 10px;
+  }
+
+  .left-panel {
+    gap: 8px;
+  }
+
   .video-section {
-    flex: 1 0 30%;
+    flex: 1 1 55%;
+    min-height: 200px;
   }
 
-  .subtitles-container {
-    flex: 1 0 55%;
+  .video-container {
+    border-radius: 8px;
+  }
+
+  .subtitles-context-display {
+    font-size: 13px;
+  }
+
+  .subtitle-header {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .subtitle-header i {
+    font-size: 12px;
   }
 
   .current-subtitle-display {
-    font-size: 14px;
     padding: 8px;
+    font-size: 13px;
+    line-height: 1.3;
     max-height: 60px;
   }
 
   .previous-subtitle,
   .next-subtitle {
-    font-size: 12px;
     padding: 4px 8px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .subtitles-container {
+    flex: 1 1 40%;
+    max-height: none;
+    min-height: 150px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .subtitles-header {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .subtitles-header i {
+    font-size: 14px;
+  }
+
+  .subtitles-wrapper {
+    padding: 8px;
+  }
+
+  .subtitles-container p {
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 4px 0;
+  }
+
+  .subtitles-container::-webkit-scrollbar {
+    width: 8px !important;
+  }
+
+  .subtitles-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+    border-radius: 4px !important;
   }
 
   .vocabulary-popup {
     font-size: 12px;
     padding: 6px 10px;
+    max-width: 80%;
   }
 
-  .responsive-container {
-    display: inline; /* Default for small screens */
+  .loading-container {
+    padding: 15px;
+    margin: 0 5px;
   }
 
-  @media screen and (min-width: 768px) {
-    .responsive-container {
-      display: flex; /* For larger screens */
-    }
+  .loading-message {
+    font-size: 13px;
   }
 
-  .switch-row {
-    margin-top: 0;
-    margin-left: 10px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: flex-start;
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
   }
 
-  .switch-element {
-    margin-right: 10px;
+  .loading-text {
+    gap: 8px;
+  }
+
+  .loading-dots {
+    gap: 2px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .status-container {
+    padding: 8px;
+    min-height: 60px;
+  }
+
+  .status-message {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .subtitles-loading-overlay {
+    top: 5px;
+    right: 5px;
+    left: 5px;
+  }
+
+  .subtitles-loading-container {
+    min-width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 12px 16px;
+  }
+
+  .subtitles-loading-icon i {
+    font-size: 20px;
+  }
+
+  .subtitles-loading-text > span {
+    font-size: 13px;
+  }
+
+  .subtitles-progress-text {
+    font-size: 11px;
+    min-width: 30px;
+  }
+
+  .translation-content {
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+/* iPad Mini and small tablets optimization */
+@media (max-width: 768px) and (min-width: 481px) {
+  .content-container {
+    height: calc(100vh - 160px);
+  }
+
+  .video-section {
+    flex: 1 1 60%;
+    min-height: 250px;
+  }
+
+  .subtitles-container {
+    flex: 1 1 35%;
+    min-height: 200px;
+  }
+
+  .main-title {
+    font-size: 18px;
+    padding: 10px 16px;
+  }
+
+  .current-subtitle-display {
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  .subtitles-container p {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  /* Medium screen controls */
+  .controls-wrapper {
+    gap: 16px;
+    padding: 14px;
+  }
+
+  .switch-group {
+    min-width: 60px;
+  }
+
+  .mobile-switch-label {
+    font-size: 15px;
+  }
+
+  .enhanced-switch {
+    transform: scale(0.9);
+  }
+}
+
+/* Ensure video doesn't touch bottom on very small screens */
+@media (max-width: 480px) {
+  .content-container {
+    height: calc(100vh - 120px);
+    padding-bottom: 15px;
+  }
+
+  .video-section {
+    flex: 1 1 50%;
+    min-height: 180px;
+  }
+
+  .subtitles-container {
+    flex: 1 1 45%;
+    min-height: 120px;
+  }
+
+  .main-title {
+    font-size: 15px;
+    padding: 6px 10px;
+  }
+
+  .current-subtitle-display {
+    font-size: 13px;
+    padding: 8px;
+    max-height: 50px;
+  }
+
+  .subtitles-container p {
+    font-size: 11px;
+    padding: 4px 6px;
+    margin: 1px 0;
+  }
+
+  /* Very small screen controls */
+  .controls-wrapper {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .switch-group {
+    min-width: 45px;
+  }
+
+  .mobile-switch-label {
+    font-size: 12px;
+  }
+
+  .enhanced-switch {
+    transform: scale(0.7);
+  }
+}
+
+/* Media query for larger screens (PC, laptop, tablet) */
+@media (min-width: 992px) {
+  .content-container {
+    flex-direction: row;
+    gap: 30px;
+  }
+
+  .left-panel {
+    width: 50%;
+    height: 100%;
+  }
+
+  .right-panel {
+    width: 50%;
+    height: 100%;
+    border-left: 1px solid #e4e7ed;
+    padding-left: 20px;
+  }
+
+  .video-section {
+    flex: 1 0 auto;
+    min-height: 50vh;
+  }
+
+  .subtitles-context-display {
+    max-height: 200px;
+  }
+
+  .subtitles-container {
+    flex: 1;
+    height: calc(100% - 60px);
+  }
+
+  .url-input-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .language-select {
+    max-width: 200px;
+    flex-shrink: 0;
+  }
+
+  .input-with-buttons {
+    flex: 1;
+  }
+
+  /* Desktop controls retain text labels */
+  .mobile-switch-label {
+    display: none;
+  }
+
+  .enhanced-switch .el-switch__label {
+    display: block;
+  }
+}
+
+/* Background Subtitles Loading Overlay */
+.subtitles-loading-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.subtitles-loading-container {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e4e7ed;
+  min-width: 280px;
+  max-width: 320px;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+.subtitles-loading-icon {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.subtitles-loading-icon i {
+  font-size: 24px;
+  color: #409eff;
+}
+
+.subtitles-loading-text {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.subtitles-loading-text > span {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 500;
+  text-align: center;
+}
+
+.subtitles-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.subtitles-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #f0f2f5;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.subtitles-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.subtitles-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.subtitles-progress-text {
+  font-size: 12px;
+  color: #909399;
+  font-weight: 500;
+  min-width: 35px;
+  text-align: right;
+}
+
+.subtitles-loading-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #909399;
+}
+
+.subtitles-loading-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  color: #606266;
+  transform: scale(1.1);
+}
+
+.subtitles-loading-close i {
+  font-size: 12px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-container {
+  animation: slideIn 0.5s ease-out;
+}
+
+/* Focus styles for accessibility */
+.load-button:focus,
+.action-btn:focus,
+.enhanced-switch:focus {
+  outline: 2px solid #409eff;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .main-title,
+  .current-subtitle-display,
+  .active-subtitle,
+  .load-button,
+  .vocabulary-popup {
+    background: #000 !important;
+    color: #fff !important;
+  }
+
+  .subtitles-container,
+  .subtitles-context-display,
+  .controls-wrapper {
+    border: 2px solid #000 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .progress-fill {
+    animation: none;
+    background: #409eff;
+  }
+
+  .loading-spinner .spinner-ring {
+    animation: none;
+    border: 3px solid #409eff;
   }
 }
 </style>

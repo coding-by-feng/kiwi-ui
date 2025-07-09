@@ -37,17 +37,17 @@ export default {
   watch: {
     // Watch for ytbMode query parameter changes
     '$route.query': function(newQuery) {
-      if (newQuery.ytbMode === 'player') {
+      if (newQuery.ytbMode === 'channel') {
+        this.showYoutubePlayer = false;
+        this.showChannel = true;
+        this.selectedVideoUrl = null;
+      } else {
         this.showYoutubePlayer = true;
         this.showChannel = false;
         // If video URL is provided, use it
         if (this.$route.query.videoUrl) {
           this.selectedVideoUrl = decodeURIComponent(this.$route.query.videoUrl);
         }
-      } else if (newQuery.ytbMode === 'channel') {
-        this.showYoutubePlayer = false;
-        this.showChannel = true;
-        this.selectedVideoUrl = null;
       }
     }
   },
@@ -64,8 +64,6 @@ export default {
       const videoUrl = this.$route.query.videoUrl || this.$route.query.video;
       if (videoUrl) {
         this.showVideo(videoUrl);
-      } else {
-        this.showChannelList();
       }
     },
 
@@ -76,12 +74,6 @@ export default {
       this.showChannel = false;
     },
 
-    // Method to switch back to the channel manager
-    showChannelList() {
-      this.showYoutubePlayer = false;
-      this.showChannel = true;
-      this.selectedVideoUrl = null;
-    }
   }
 }
 </script>
