@@ -186,12 +186,6 @@
              v-show="middleControlEnabled"
              @mouseup="handleTextSelectionWithPausing"
              @touchend="handleTextSelectionWithPausing">
-
-          <div class="subtitle-header">
-            <i class="el-icon-chat-dot-square"></i>
-            <span>Current Subtitle Context</span>
-          </div>
-
           <div v-if="hasPreviousSubtitle" class="previous-subtitle">
             {{ subtitles[currentSubtitleIndex - 1]?.text }}
           </div>
