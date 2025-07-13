@@ -343,7 +343,7 @@ export default defineComponent({
         path: '/index/vocabulary/detail',
         query: {
           active: 'youtube',
-          ytbMode: 'channel'
+          ytbMode: kiwiConsts.YTB_MODE.PLAYER,
         }
       });
     },
