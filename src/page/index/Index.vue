@@ -149,13 +149,15 @@ export default {
         <span slot="label"><i class="el-icon-video-camera"></i></span>
         <router-view name="youtube"></router-view>
       </el-tab-pane>
+<!--
       <el-tab-pane name="grammarListener" v-if="isLogin">
         <span slot="label"><i class=el-icon-school></i></span>
         <span>该功能暂时关闭</span>
-        <!--
+        &lt;!&ndash;
                 <router-view name="grammarListener"></router-view>
-        -->
+        &ndash;&gt;
       </el-tab-pane>
+-->
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label"><i class="el-icon-user"></i></span>
         <router-view name="userCenter"></router-view>
