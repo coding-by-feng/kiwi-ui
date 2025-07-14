@@ -57,9 +57,10 @@ export default {
           .then(() => {
             that.countDbAudio()
             that.loading = false
+            msgUtil.msgSuccess(that, this.$t('audio.audioCleanedSuccess'))
           })
           .catch($ => {
-            msgUtil.msgError(that, 'handling error, please refresh and try again')
+            msgUtil.msgError(that, this.$t('messages.systemError'))
           })
           .finally($ => {
             that.loading = false
@@ -115,6 +116,7 @@ export default {
         });
       }).finally($ => {
         that.loading = false
+        msgUtil.msgSuccess(that, this.$t('audio.cacheCleanedSuccess'))
       });
 
       // Clear Cache API (requires service worker)
@@ -151,10 +153,10 @@ export default {
   <div>
     <el-card class="box-card" v-loading="loading">
       <el-button type="info" @click="cleanDb" style="margin-bottom: 5px;">
-        Clean audio data, totally {{ allDataSize }}
+        {{ $t('audio.cleanAudioData', { count: allDataSize }) }}
       </el-button>
       <el-button type="info" @click="clearWebsiteData">
-        Clean all cache
+        {{ $t('audio.cleanAllCache') }}
       </el-button>
       <el-divider></el-divider>
       <div v-for="(item, index) in bgmData" :key="index">
@@ -165,4 +167,3 @@ export default {
     </el-card>
   </div>
 </template>
-
