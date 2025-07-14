@@ -8,7 +8,7 @@
             v-model="originalText"
             :style="{width: searchInputWidth}"
             :fetch-suggestions="querySearch"
-            placeholder="input anything"
+            :placeholder="$t('searchPlaceholders.dictionary')"
             size="mini"
             :trigger-on-focus="false"
             @keydown.native="handleKeyDown"
@@ -27,7 +27,7 @@
             <el-option
                 v-for="item in searchModes"
                 :key="item.value"
-                :label="item.label"
+                :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
                 :value="item.value">
             </el-option>
           </el-select>
@@ -38,6 +38,16 @@
     </el-row>
 
     <el-row>
+      <!-- Language Switcher -->
+      <LanguageSwitcher
+          v-if="!ifVocabularyMode"
+          :size="'mini'"
+          :show-text="!isSmallScreen"
+          :show-arrow="false"
+          :circle="isSmallScreen"
+          class="language-switcher"
+          @language-changed="onLanguageChanged" />
+
       <el-select v-if="!ifVocabularyMode" v-model="selectedMode"
                  size="mini"
                  class="select-base mode-select"
@@ -45,29 +55,30 @@
         <el-option
             v-for="item in searchModes"
             :key="item.value"
-            :label="item.label"
+            :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
             :value="item.value">
         </el-option>
       </el-select>
-      <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini" placeholder="Select Language"
+      <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini"
+                 :placeholder="$t('common.language')"
                  class="select-base language-select" @change="selectedLanguageChange">
         <el-option
             v-for="(code, language) in languageCodes"
             :key="code"
-            :label="language.replaceAll('_', ' ')"
+            :label="$t(`languages.${language.replaceAll('_', ' ')}`)"
             :value="code">
         </el-option>
       </el-select>
       <el-button v-if="!ifVocabularyMode" icon="el-icon-back" type="info" plain
-                 size="mini" @click="onBack()"></el-button>
+                 size="mini" @click="onBack()" :title="$t('common.back')"></el-button>
       <el-button v-if="!ifVocabularyMode" icon="el-icon-search" type="info" plain
-                 size="mini" @click="onSubmit()"></el-button>
+                 size="mini" @click="onSubmit()" :title="$t('common.search')"></el-button>
       <el-button v-if="!ifVocabularyMode" icon="el-icon-question" type="info" plain
-                 size="mini" @click="explainMore()"></el-button>
-      <!-- New AI History Button -->
+                 size="mini" @click="explainMore()" :title="$t('searchModes.explanation')"></el-button>
+      <!-- AI History Button -->
       <el-button v-if="!ifVocabularyMode" icon="el-icon-time" type="warning" plain
                  size="mini" @click="viewAiHistory()"
-                 title="View AI Call History">
+                 :title="$t('ai.aiCallHistory')">
       </el-button>
     </el-row>
     <el-divider></el-divider>
@@ -77,50 +88,49 @@
 
     <!-- Mode Selection Dialog for Clipboard Content -->
     <el-dialog
-        title="Use Copied Text?"
+        :title="$t('login.clipboardAccess')"
         :visible.sync="showModeSelectionDialog"
         width="30%"
         center>
       <span>
-        Do you want to search for: <br>
-        <strong>"{{ copiedTextFromClipboard.substring(0, 100) }}{{ copiedTextFromClipboard.length > 100 ? '...' : '' }}"</strong>?
+        {{ $t('ai.useClipboardContent', { text: copiedTextFromClipboard.substring(0, 100) + (copiedTextFromClipboard.length > 100 ? '...' : '') }) }}
       </span>
       <el-form label-position="top" style="margin-top: 20px;">
-        <el-form-item label="Select Search Mode:">
-          <el-select v-model="tempSelectedModeForClipboard" placeholder="Select a mode" style="width: 100%;">
+        <el-form-item :label="$t('searchModes.selectMode')">
+          <el-select v-model="tempSelectedModeForClipboard" :placeholder="$t('searchModes.selectMode')" style="width: 100%;">
             <el-option
                 v-for="item in searchModes"
                 :key="item.value"
-                :label="item.label"
+                :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
                 :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="cancelCopiedTextSearch">Cancel</el-button>
-        <el-button type="info" @click="confirmCopiedTextSearch">Search</el-button>
+        <el-button @click="cancelCopiedTextSearch">{{ $t('common.cancel') }}</el-button>
+        <el-button type="info" @click="confirmCopiedTextSearch">{{ $t('common.search') }}</el-button>
       </span>
     </el-dialog>
 
     <!-- Mobile Clipboard Access Info Dialog -->
     <el-dialog
-        title="Clipboard Access"
+        :title="$t('login.clipboardAccess')"
         :visible.sync="showClipboardInfoDialog"
         width="90%"
         center>
       <div style="text-align: center;">
         <i class="el-icon-info" style="font-size: 48px; color: #409EFF; margin-bottom: 16px;"></i>
-        <p style="margin-bottom: 16px;">To use clipboard content on mobile devices:</p>
+        <p style="margin-bottom: 16px;">{{ $t('login.clipboardInstructions.title') }}</p>
         <ol style="text-align: left; display: inline-block;">
-          <li>Copy the text you want to search</li>
-          <li>Return to this app</li>
-          <li>Tap the "Paste from Clipboard" button</li>
-          <li>Or manually paste into the search box</li>
+          <li>{{ $t('login.clipboardInstructions.step1') }}</li>
+          <li>{{ $t('login.clipboardInstructions.step2') }}</li>
+          <li>{{ $t('login.clipboardInstructions.step3') }}</li>
+          <li>{{ $t('login.clipboardInstructions.step4') }}</li>
         </ol>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="showClipboardInfoDialog = false">Got it</el-button>
+        <el-button type="primary" @click="showClipboardInfoDialog = false">{{ $t('login.gotIt') }}</el-button>
       </span>
     </el-dialog>
   </div>
@@ -133,17 +143,24 @@ import util from '@/util/util'
 import {setStore} from "@/util/store";
 import { Notification, Message } from 'element-ui';
 import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
 export default {
+  components: {
+    LanguageSwitcher
+  },
   data() {
     return {
       originalText: this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText.trim()) : '',
       searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE,
-      searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA),
+      searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map(mode => ({
+        ...mode,
+        labelKey: this.getModeTranslationKey(mode.value)
+      })),
       selectedLanguage: getInitialSelectedLanguage(this.$route),
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
 
@@ -161,9 +178,13 @@ export default {
       clipboardNotification: null,
     }
   },
+
   computed: {
     getWindowWidth() {
       return window.innerWidth
+    },
+    isSmallScreen() {
+      return window.innerWidth < 768
     },
     selectWidthStyle() {
       const selectedOption = this.searchModes.find(mode => mode.value === this.selectedMode)
@@ -173,13 +194,11 @@ export default {
     getRouterView() {
       console.log('getRouterView - current route path:', this.$route.path)
 
-      // Check if we're on the AI call history route
       if (this.$route.path === '/index/vocabulary/aiCallHistory') {
         console.log('Returning aiCallHistory router view')
         return kiwiConsts.ROUTER_VIEW_AI_HISTORY_MODE
       }
 
-      // Check if we're on the AI response detail route
       if (this.$route.path === '/index/vocabulary/aiResponseDetail') {
         console.log('Returning aiResponseDetail router view')
         return kiwiConsts.ROUTER_VIEW_AI_MODE
@@ -231,6 +250,27 @@ export default {
   },
   methods: {
     ...wordSearch,
+
+    getModeTranslationKey(value) {
+      const modeKeys = {
+        'detail': 'dictionary',
+        'directly-translation': 'directTranslation',
+        'translation-and-explanation': 'explanation',
+        'grammar-explanation': 'grammarExplanation',
+        'grammar-correction': 'grammarCorrection',
+        'vocabulary-explanation': 'vocabularyExplanation',
+        'synonym': 'synonym',
+        'antonym': 'antonym',
+        'vocabulary-association': 'vocabularyAssociation',
+        'phrases-association': 'phrasesAssociation'
+      };
+      return modeKeys[value] || value;
+    },
+
+    onLanguageChanged(langCode) {
+      console.log('Language changed to:', langCode);
+      // You can add additional logic here if needed
+    },
 
     // Save language setting for current mode
     saveLanguageForMode(mode, language) {
@@ -355,8 +395,10 @@ export default {
           }
 
           this.clipboardNotification = Notification({
-            title: 'Clipboard Content Detected',
-            message: `Do you want to search for "${this.copiedTextFromClipboard.substring(0, 50)}${this.copiedTextFromClipboard.length > 50 ? '...' : ''}"? Click to proceed.`,
+            title: this.$t('messages.clipboardContentDetected'),
+            message: this.$t('messages.useClipboardContent', {
+              text: this.copiedTextFromClipboard.substring(0, 50) + (this.copiedTextFromClipboard.length > 50 ? '...' : '')
+            }),
             position: 'top-right',
             duration: 8000,
             showClose: true,
@@ -555,7 +597,7 @@ export default {
 
             // Show user feedback
             Message({
-              message: `Using clipboard content: "${real.substring(0, 50)}${real.length > 50 ? '...' : ''}"`,
+              message: this.$t('messages.usingClipboardContent', { text: real.substring(0, 50) + (real.length > 50 ? '...' : '') }),
               type: 'success',
               duration: 2000
             });
@@ -563,7 +605,7 @@ export default {
             // No clipboard content available
             console.log('No clipboard content found');
             Message({
-              message: 'Please enter some text to search or copy text to clipboard first.',
+              message: this.$t('messages.enterTextToSearch'),
               type: 'warning',
               duration: 3000
             });
@@ -572,15 +614,15 @@ export default {
         } catch (err) {
           console.error('Failed to read clipboard:', err);
 
-          let errorMessage = 'Please enter some text to search. ';
+          let errorMessage = this.$t('messages.enterTextToSearch') + ' ';
 
           if (err.name === 'NotAllowedError') {
-            errorMessage += 'Clipboard access requires permission - please manually enter or paste your text.';
+            errorMessage += this.$t('messages.clipboardAccessDenied');
             if (this.isMobile) {
               this.showClipboardInfoDialog = true;
             }
           } else {
-            errorMessage += 'Unable to access clipboard content.';
+            errorMessage += this.$t('messages.unableToAccessClipboard');
           }
 
           Message({
@@ -647,6 +689,12 @@ export default {
   text-align: center;
 }
 
+/* Language switcher positioning */
+.language-switcher {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
 /* Base styles for select components */
 .select-base {
   margin-right: 10px;
@@ -671,6 +719,10 @@ export default {
   .language-select {
     width: 40% !important;
   }
+
+  .language-switcher {
+    margin-right: 5px;
+  }
 }
 
 /* Clipboard info dialog styles */
@@ -684,11 +736,11 @@ export default {
 }
 
 /* History button styling */
-.el-button[title="View AI Call History"] {
+.el-button[title*="History"] {
   transition: all 0.3s ease;
 }
 
-.el-button[title="View AI Call History"]:hover {
+.el-button[title*="History"]:hover {
   background-color: #f56c6c;
   border-color: #f56c6c;
   color: white;

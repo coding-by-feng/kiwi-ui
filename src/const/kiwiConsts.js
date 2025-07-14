@@ -164,7 +164,8 @@ export default {
         SELECTED_LANGUAGE: 'selected_language',
         SUBTITLES_TRANSLATION_SELECTED_LANGUAGE: 'subtitles_translation_selected_language',
         IF_SUBTITLES_TRANSLATION: true,
-        NATIVE_LANG: 'native_lang', // Add this new key
+        NATIVE_LANG: 'native_lang',
+        UI_LANGUAGE: 'ui_language', // Add UI language key
     },
 
     DB_NAME: 'KIWI_VOCABULARY',
@@ -243,6 +244,19 @@ export default {
         Dutch: 'NL',
         Norwegian: 'NO',
         Greek: 'EL'
+    },
+
+    // UI Language mapping to locale codes
+    UI_LANGUAGE_MAPPING: {
+        'EN': 'en',
+        'ZH_CN': 'zh-CN',
+        'ZH_TW': 'zh-TW',
+        'ZH_HK': 'zh-TW',
+        'JA': 'ja',
+        'KO': 'ko',
+        'FR': 'fr',
+        'DE': 'de',
+        'ES': 'es'
     },
 
     SEARCH_PLACEHOLDER_SUGGESTIONS: {
