@@ -58,7 +58,8 @@ export default {
         hide: 'Hide',
         open: 'Open',
         download: 'Download',
-        upload: 'Upload'
+        upload: 'Upload',
+        default: 'Default'
     },
 
     // Navigation
@@ -71,6 +72,31 @@ export default {
         login: 'Login',
         about: 'About',
         bgm: 'Audio'
+    },
+
+    // Authentication - ADDED MISSING KEYS
+    auth: {
+        welcome: 'Welcome Back',
+        loginWith: 'Login with',
+        google: 'Use Google Account to Login',
+        connecting: 'Connecting to Google...',
+        processing: 'Processing...',
+        loginFailed: 'Google login failed, please try again',
+        accountNotFound: 'Account not found, please contact administrator',
+        loginSuccess: 'Login successful',
+        logout: 'Logout',
+        autoLoginSuccess: 'Automatic login successful!',
+        guestLogin: 'Guest user please login!',
+        features: {
+            intelligentMemory: 'Smart Vocabulary Memory',
+            pronunciation: 'Authentic Pronunciation Practice',
+            personalizedPlan: 'Personalized Learning Plan'
+        },
+        brand: {
+            title: 'Kason English Learning Platform',
+            subtitle: 'Smart English Learning Platform'
+        },
+        copyright: '©2025 Kason English Learning Platform v2.0'
     },
 
     // Search modes
@@ -250,7 +276,7 @@ export default {
         }
     },
 
-    // Login
+    // Login - UPDATED WITH COMPLETE KEYS
     login: {
         welcomeBack: 'Welcome Back',
         smartEnglishLearning: 'Smart English Learning Platform',
@@ -259,7 +285,7 @@ export default {
             pronunciation: 'Authentic Pronunciation Practice',
             personalizedPlan: 'Personalized Learning Plan'
         },
-        copyright: '©2025 Kiwi English Learning Platform v2.0',
+        copyright: '©2025 Kason English Learning Platform v2.0',
         useGoogleLogin: 'Use Google Account to Login',
         loginProcessing: 'Processing...',
         connectingGoogle: 'Connecting to Google...',
@@ -322,19 +348,42 @@ export default {
 
     // Audio and BGM
     audio: {
+        title: 'Audio Settings',
+        management: 'Audio Management',
         cleanAudioData: 'Clean audio data, totally {count}',
         cleanAllCache: 'Clean all cache',
         backgroundMusic: 'Background Music',
         audioCleanedSuccess: 'Audio data cleaned successfully',
-        cacheCleanedSuccess: 'All cache cleaned successfully'
+        cacheCleanedSuccess: 'All cache cleaned successfully',
+        playing: 'Playing...',
+        clickToPlay: 'Click to play',
+        nowPlaying: 'Now Playing'
     },
 
     // About
     about: {
+        title: 'About Kiwi Vocabulary',
         kiwiDictionary: 'Kiwi Dictionary',
-        qqGroup: 'Kiwi Dictionary QQ Group',
+        description: 'Kiwi Vocabulary is an intelligent English learning platform that helps you master vocabulary through spaced repetition and AI assistance.',
+        version: 'Version 2.0',
+        contact: 'Contact Us',
+        instagram: 'Instagram',
+        followOnInstagram: 'Follow on Instagram',
+        facebook: 'Facebook',
+        followOnFacebook: 'Follow on Facebook',
+        twitter: 'X (Twitter)',
+        followOnTwitter: 'Follow on X',
+        linkedin: 'LinkedIn',
+        followOnLinkedIn: 'Follow on LinkedIn',
+        discord: 'Discord',
+        joinDiscord: 'Join Discord Server',
         wechatQR: 'WeChat Personal QR Code',
-        voiceRSSAttribution: 'Voice RSS - Online text-to-speech service'
+        scanToAdd: 'Scan to add WeChat',
+        acknowledgments: 'Special Thanks',
+        voiceRSSAttribution: 'Voice RSS - Online text-to-speech service',
+        voiceRSSDescription: 'Providing high-quality text-to-speech services for our pronunciation features.',
+        visitWebsite: 'Visit Official Website',
+        copyright: '©2025 Kason English Learning Platform. All rights reserved.'
     },
 
     // Messages and notifications
@@ -375,7 +424,8 @@ export default {
         unableToAccessClipboard: 'Please enter some text to search. Unable to access clipboard content.',
         confirmDelete: 'About to delete, continue?',
         confirmClear: 'About to clear current word data and re-fetch, continue?',
-        clearOperation: 'Clear Operation'
+        clearOperation: 'Clear Operation',
+        operationSuccess: 'Operation successful'
     },
 
     // Time units

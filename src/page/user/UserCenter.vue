@@ -11,62 +11,66 @@
         </div>
       </div>
       <div class="user-actions">
-        <el-button type="info" size="small" @click="handleLoginOut">
-          <i class="el-icon-switch-button"></i> 退出登录
+        <el-button type="info" size="small" @click="handleLoginOut" class="logout-button">
+          <i class="el-icon-switch-button"></i> {{ $t('user.loginOut') }}
         </el-button>
       </div>
     </div>
 
-    <el-divider></el-divider>
+    <el-divider class="custom-divider"></el-divider>
 
     <!-- Statistics Section -->
     <div class="statistics-section">
-      <h4><i class="el-icon-data-analysis"></i> 学习统计</h4>
+      <h4 class="section-title">
+        <i class="el-icon-data-analysis"></i> {{ $t('user.learningStats') }}
+      </h4>
       <div class="stats-cards">
-        <div class="stat-card">
+        <div class="stat-card remember-card">
           <div class="stat-icon remember">
             <i class="el-icon-success"></i>
           </div>
           <div class="stat-content">
             <h5>{{ user.rememberCount }}</h5>
-            <p>今日已记住</p>
+            <p>{{ $t('user.todayRemembered') }}</p>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card review-card">
           <div class="stat-icon review">
             <i class="el-icon-refresh"></i>
           </div>
           <div class="stat-content">
             <h5>{{ user.reviewCount }}</h5>
-            <p>今日已复习</p>
+            <p>{{ $t('user.todayReviewed') }}</p>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card master-card">
           <div class="stat-icon master">
             <i class="el-icon-star-on"></i>
           </div>
           <div class="stat-content">
             <h5>{{ user.keepInMindCount }}</h5>
-            <p>今日已牢记</p>
+            <p>{{ $t('user.todayMastered') }}</p>
           </div>
         </div>
       </div>
     </div>
 
-    <el-divider></el-divider>
+    <el-divider class="custom-divider"></el-divider>
 
     <!-- Settings Section -->
     <div class="settings-section">
-      <h4><i class="el-icon-setting"></i> 学习设置</h4>
+      <h4 class="section-title">
+        <i class="el-icon-setting"></i> {{ $t('user.learningSettings') }}
+      </h4>
       <div class="settings-grid">
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-video-camera"></i>
-            <span>发音来源</span>
+            <span>{{ $t('user.pronunciationSource') }}</span>
           </div>
-          <el-dropdown @command="pronunciationSourceChange" trigger="click">
-            <el-button size="small" type="text">
-              {{ user.pronunciationSource || '默认' }} <i class="el-icon-arrow-down el-icon--right"></i>
+          <el-dropdown @command="pronunciationSourceChange" trigger="click" class="custom-dropdown">
+            <el-button size="small" type="text" class="dropdown-button">
+              {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
@@ -78,10 +82,10 @@
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-s-flag"></i>
-            <span>母语设置</span>
+            <span>{{ $t('user.nativeLanguage') }}</span>
           </div>
-          <el-dropdown @command="nativeLangChange" trigger="click">
-            <el-button size="small" type="text">
+          <el-dropdown @command="nativeLangChange" trigger="click" class="custom-dropdown">
+            <el-button size="small" type="text" class="dropdown-button">
               {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
             <el-dropdown-menu slot="dropdown">
@@ -98,66 +102,72 @@
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-headset"></i>
-            <span>背景音乐</span>
+            <span>{{ $t('user.backgroundMusic') }}</span>
           </div>
           <el-switch
               v-model="bgmEnabled"
-              @change="bgmChange">
+              @change="bgmChange"
+              class="custom-switch">
           </el-switch>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-edit-outline"></i>
-            <span>字母拼写</span>
+            <span>{{ $t('user.letterSpelling') }}</span>
           </div>
           <el-switch
               v-model="spellEnabled"
-              @change="spellTypeChange">
+              @change="spellTypeChange"
+              class="custom-switch">
           </el-switch>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-chat-line-square"></i>
-            <span>英文释义</span>
+            <span>{{ $t('user.englishDefinition') }}</span>
           </div>
           <el-switch
               v-model="enParaEnabled"
-              @change="enParaTypeChange">
+              @change="enParaTypeChange"
+              class="custom-switch">
           </el-switch>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-bell"></i>
-            <span>消息提醒</span>
+            <span>{{ $t('user.messageHints') }}</span>
           </div>
           <el-switch
               v-model="msgHintEnabled"
-              @change="enableMsgHintChange">
+              @change="enableMsgHintChange"
+              class="custom-switch">
           </el-switch>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-reading"></i>
-            <span>播放例句</span>
+            <span>{{ $t('user.playExamples') }}</span>
           </div>
           <el-switch
               v-model="playExampleEnabled"
-              @change="isPlayExampleChange">
+              @change="isPlayExampleChange"
+              class="custom-switch">
           </el-switch>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-document"></i>
-            <span>英英模式</span>
+            <span>{{ $t('user.englishToEnglish') }}</span>
           </div>
           <el-switch
               v-model="enToEnEnabled"
-              @change="isEnToEnChange">
+              @change="isEnToEnChange"
+              class="custom-switch">
           </el-switch>
         </div>
       </div>
@@ -310,13 +320,12 @@ export default {
     },
 
     getSourceText(source) {
-      const texts = {
-        'local': '本地注册',
-        'google': 'Google注册',
-        'wechat': '微信注册',
-        'qq': 'QQ注册'
+      // Use translation keys for register source
+      const sourceKey = `user.registerSource.${source}`
+      if (this.$te(sourceKey)) {
+        return this.$t(sourceKey)
       }
-      return texts[source] || '未知来源'
+      return this.$t('user.registerSource.unknown')
     },
 
     // Settings methods
@@ -336,6 +345,7 @@ export default {
         type: 'local'
       })
       this.user.pronunciationSource = command
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     nativeLangChange(command) {
@@ -345,6 +355,7 @@ export default {
         type: 'local'
       })
       this.user.nativeLang = command
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     bgmChange(enabled) {
@@ -355,6 +366,7 @@ export default {
         type: 'local'
       })
       this.user.bgm = value
+      this.$message.success(this.$t('messages.operationSuccess'))
       window.location.reload()
     },
 
@@ -366,6 +378,7 @@ export default {
         type: 'local'
       })
       this.user.spellType = value
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     enParaTypeChange(enabled) {
@@ -376,6 +389,7 @@ export default {
         type: 'local'
       })
       this.user.enParaType = value
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     enableMsgHintChange(enabled) {
@@ -386,6 +400,7 @@ export default {
         type: 'local'
       })
       this.user.enableMsgHint = value
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     isPlayExampleChange(enabled) {
@@ -396,6 +411,7 @@ export default {
         type: 'local'
       })
       this.user.isPlayExample = value
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     isEnToEnChange(enabled) {
@@ -406,38 +422,51 @@ export default {
         type: 'local'
       })
       this.user.isEnToEn = value
+      this.$message.success(this.$t('messages.operationSuccess'))
     },
 
     tranNativeLang(val) {
       if (util.isEmptyStr(val)) {
-        return '默认语言'
+        return this.$t('user.defaultLanguage')
       }
       for (const [language, code] of Object.entries(this.languageCodes)) {
         if (code === val) {
           return language.replaceAll('_', ' ')
         }
       }
-      return '未知语言'
+      return this.$t('user.unknownLanguage')
     },
 
     refresh() {
+      // Get today's review statistics with error handling
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
           .then(response => {
             if (response.data.data) {
               this.user.keepInMindCount = response.data.data.reviewCount
             }
           })
+          .catch(error => {
+            console.error('Error loading keep in mind count:', error)
+          })
+
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
           .then(response => {
             if (response.data.data) {
               this.user.rememberCount = response.data.data.reviewCount
             }
           })
+          .catch(error => {
+            console.error('Error loading remember count:', error)
+          })
+
       review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
           .then(response => {
             if (response.data.data) {
               this.user.reviewCount = response.data.data.reviewCount
             }
+          })
+          .catch(error => {
+            console.error('Error loading review count:', error)
           })
     }
   }
@@ -449,9 +478,11 @@ export default {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  overflow: hidden;
 }
 
 .user-profile-header {
@@ -459,6 +490,11 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(64, 158, 255, 0.1);
 
   .avatar-section {
     display: flex;
@@ -466,7 +502,7 @@ export default {
     gap: 16px;
 
     .user-avatar {
-      border: 3px solid #f0f0f0;
+      border: 3px solid #409eff;
     }
 
     .user-basic-info {
@@ -474,7 +510,11 @@ export default {
         margin: 0 0 8px 0;
         font-size: 20px;
         font-weight: 600;
-        color: #333;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .user-email {
@@ -491,22 +531,70 @@ export default {
   }
 }
 
+/* Logout Button Styling */
+.logout-button {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  border: none !important;
+  color: white !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  &:focus {
+    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+    color: white !important;
+    box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.3) !important;
+  }
+
+  &:active {
+    transform: translateY(0px) !important;
+  }
+}
+
+/* Custom Divider */
+.custom-divider {
+  border-top: 1px solid rgba(64, 158, 255, 0.2);
+  margin: 24px 0;
+}
+
 .statistics-section,
 .settings-section {
   margin-bottom: 32px;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(64, 158, 255, 0.1);
+}
 
-  h4 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin: 0 0 16px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 
-    i {
-      color: #4f46e5;
-    }
+  i {
+    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 18px;
   }
 }
 
@@ -516,13 +604,31 @@ export default {
   gap: 16px;
 
   .stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 20px;
     border-radius: 12px;
     text-align: center;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    &.remember-card {
+      background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+    }
+
+    &.review-card {
+      background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+    }
+
+    &.master-card {
+      background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%);
+    }
 
     &::before {
       content: '';
@@ -546,18 +652,7 @@ export default {
       margin: 0 auto 12px;
       position: relative;
       z-index: 1;
-
-      &.remember {
-        background: rgba(16, 185, 129, 0.2);
-      }
-
-      &.review {
-        background: rgba(59, 130, 246, 0.2);
-      }
-
-      &.master {
-        background: rgba(245, 158, 11, 0.2);
-      }
+      background: rgba(255, 255, 255, 0.2);
 
       i {
         font-size: 20px;
@@ -593,12 +688,15 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    transition: border-color 0.3s ease;
+    border: 1px solid rgba(64, 158, 255, 0.2);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 
     &:hover {
-      border-color: #d1d5db;
+      border-color: rgba(64, 158, 255, 0.4);
+      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+      transform: translateY(-1px);
     }
 
     .setting-label {
@@ -606,29 +704,126 @@ export default {
       align-items: center;
       gap: 8px;
       font-weight: 500;
-      color: #374151;
+      color: #2c3e50;
 
       i {
-        color: #6b7280;
+        color: #409eff;
         width: 16px;
-      }
-    }
-
-    .el-dropdown {
-      .el-button {
-        border: none;
-        padding: 0;
-        color: #4f46e5;
-        font-weight: 500;
-
-        &:hover {
-          color: #3730a3;
-        }
+        font-size: 16px;
       }
     }
   }
 }
 
+/* Custom Dropdown Styling */
+.custom-dropdown {
+  .dropdown-button {
+    border: none !important;
+    padding: 8px 12px !important;
+    color: #409eff !important;
+    font-weight: 500 !important;
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+
+    &:hover {
+      color: #3a8ee6 !important;
+      background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    &:focus {
+      color: #3a8ee6 !important;
+      background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
+    }
+  }
+}
+
+/* Custom Switch Styling */
+.custom-switch {
+  ::v-deep .el-switch__core {
+    background: #dcdfe6 !important;
+    border-color: #dcdfe6 !important;
+    transition: all 0.3s ease !important;
+  }
+
+  ::v-deep .el-switch.is-checked .el-switch__core {
+    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+    border-color: #409eff !important;
+  }
+
+  ::v-deep .el-switch__action {
+    background: white !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  &:hover ::v-deep .el-switch__core {
+    background: #c0c4cc !important;
+  }
+
+  &:hover ::v-deep .el-switch.is-checked .el-switch__core {
+    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  }
+}
+
+/* Custom Tag Styling */
+::v-deep .el-tag {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+  border: 1px solid rgba(64, 158, 255, 0.3) !important;
+  color: #409eff !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+
+  &.el-tag--success {
+    background: linear-gradient(135deg, rgba(103, 194, 58, 0.1) 0%, rgba(133, 206, 97, 0.1) 100%) !important;
+    border-color: rgba(103, 194, 58, 0.3) !important;
+    color: #67c23a !important;
+  }
+
+  &.el-tag--warning {
+    background: linear-gradient(135deg, rgba(230, 162, 60, 0.1) 0%, rgba(247, 186, 42, 0.1) 100%) !important;
+    border-color: rgba(230, 162, 60, 0.3) !important;
+    color: #e6a23c !important;
+  }
+
+  &.el-tag--info {
+    background: linear-gradient(135deg, rgba(144, 147, 153, 0.1) 0%, rgba(96, 98, 102, 0.1) 100%) !important;
+    border-color: rgba(144, 147, 153, 0.3) !important;
+    color: #909399 !important;
+  }
+}
+
+/* Dropdown Menu Styling */
+::v-deep .el-dropdown-menu {
+  border: 1px solid rgba(64, 158, 255, 0.2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  padding: 8px 0 !important;
+  background: white !important;
+
+  .el-dropdown-menu__item {
+    padding: 10px 16px !important;
+    color: #2c3e50 !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+      color: #409eff !important;
+    }
+
+    &:focus {
+      background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+      color: #409eff !important;
+    }
+  }
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
   .user-center-container {
     padding: 16px;
@@ -639,11 +834,144 @@ export default {
     flex-direction: column;
     gap: 16px;
     text-align: center;
+    padding: 16px;
+  }
+
+  .statistics-section,
+  .settings-section {
+    padding: 16px;
+    margin-bottom: 20px;
   }
 
   .stats-cards,
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stats-cards {
+    gap: 12px;
+
+    .stat-card {
+      padding: 16px;
+
+      .stat-icon {
+        width: 35px;
+        height: 35px;
+        margin-bottom: 10px;
+
+        i {
+          font-size: 18px;
+        }
+      }
+
+      .stat-content h5 {
+        font-size: 20px;
+      }
+
+      .stat-content p {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .setting-item {
+    padding: 12px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+
+    .setting-label {
+      justify-content: center;
+    }
+  }
+
+  .logout-button {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
+
+  .section-title {
+    font-size: 14px;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* Animation for better user experience */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-center-container {
+  animation: fadeInUp 0.6s ease;
+}
+
+.statistics-section {
+  animation: fadeInUp 0.6s ease 0.1s both;
+}
+
+.settings-section {
+  animation: fadeInUp 0.6s ease 0.2s both;
+}
+
+/* Loading states for better UX */
+.setting-item {
+  position: relative;
+
+  &.loading {
+    opacity: 0.7;
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #409eff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Custom scrollbar for dropdown menus */
+::v-deep .el-dropdown-menu {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(64, 158, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
   }
 }
 </style>

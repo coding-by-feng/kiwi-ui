@@ -1,13 +1,13 @@
 export default {
-    title: 'kiwi-vocabulary',
-    logo: 'kiwi-vocabulary',
-    key: 'kiwi-vocabulary',   //配置主键,目前用于存储
-    indexTitle: 'kiwi-vocabulary',
+    title: 'kason English Tools',
+    logo: 'kason English Tools',
+    key: 'kason-tools',   //配置主键,目前用于存储
+    indexTitle: 'kason-tools',
     whiteList: ['/login', '/404', '/401', '/lock'], // 配置无权限可以访问的页面
     whiteTagList: ['/login', '/404', '/401', '/lock'], // 配置不添加tags页面 （'/advanced-router/mutative-detail/*'——*为通配符）
     lockPage: '/lock',
     tokenTime: 6000,
-    infoTitle: 'kiwi-vocabulary',
+    infoTitle: 'Kason English Tools',
     statusWhiteList: [428],
     // 配置首页不可关闭
     isFirstPage: false,

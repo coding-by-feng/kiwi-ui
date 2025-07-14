@@ -1,5 +1,5 @@
 {
-  "name": "kiwi-vocabulary-desktop",
+  "name": "kason-tools-desktop",
   "version": "0.1.0",
   "description": "Kiwi Vocabulary Learning Desktop Application",
   "main": "public/electron.js",
@@ -121,7 +121,7 @@
     "publish": {
       "provider": "github",
       "owner": "your-username",
-      "repo": "kiwi-vocabulary",
+      "repo": "kason-tools",
       "private": false
     }
   },

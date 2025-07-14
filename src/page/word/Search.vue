@@ -38,16 +38,6 @@
     </el-row>
 
     <el-row>
-      <!-- Language Switcher -->
-      <LanguageSwitcher
-          v-if="!ifVocabularyMode"
-          :size="'mini'"
-          :show-text="!isSmallScreen"
-          :show-arrow="false"
-          :circle="isSmallScreen"
-          class="language-switcher"
-          @language-changed="onLanguageChanged" />
-
       <el-select v-if="!ifVocabularyMode" v-model="selectedMode"
                  size="mini"
                  class="select-base mode-select"
@@ -143,14 +133,10 @@ import util from '@/util/util'
 import {setStore} from "@/util/store";
 import { Notification, Message } from 'element-ui';
 import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
 export default {
-  components: {
-    LanguageSwitcher
-  },
   data() {
     return {
       originalText: this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText.trim()) : '',

@@ -1,26 +1,26 @@
 <template>
-    <div>
-        <el-dialog
-                title="选择想要保存的单词本"
-                :visible.sync="listSelectDialogVisible"
-                width="30%"
-                center
-                :before-close="listSelectDialogHandleClose">
-            <el-table
-                    :data="starListData"
-                    style="width: 100%">
-                <el-table-column
-                        width="180">
-                    <template slot-scope="scope">
-                        <div slot="reference" class="name-wrapper">
-                            <el-button type="info" @click="selectOneWordList(scope.row.id)">{{scope.row.listName}}
-                            </el-button>
-                        </div>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-dialog>
-    </div>
+  <div>
+    <el-dialog
+        :title="$t('collections.selectList')"
+        :visible.sync="listSelectDialogVisible"
+        width="30%"
+        center
+        :before-close="listSelectDialogHandleClose">
+      <el-table
+          :data="starListData"
+          style="width: 100%">
+        <el-table-column
+            width="180">
+          <template slot-scope="scope">
+            <div slot="reference" class="name-wrapper">
+              <el-button type="info" @click="selectOneWordList(scope.row.id)">{{scope.row.listName}}
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
