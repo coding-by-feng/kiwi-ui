@@ -58,7 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Log some sample data
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.includes('kiwi-vocabulary')) {
+        if (key && key.includes('kason-tools')) {
             console.log('Persistent data found:', key);
         }
     }

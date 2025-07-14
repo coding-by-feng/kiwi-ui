@@ -46,7 +46,7 @@ function createWindow() {
             devTools: true, // Always enable DevTools
             webSecurity: !isDev, // Disable web security in development for CORS
             // Enable persistent storage
-            partition: 'persist:kiwi-vocabulary', // This enables session persistence
+            partition: 'persist:kason-tools', // This enables session persistence
             // Additional security settings
             allowRunningInsecureContent: false,
             experimentalFeatures: false

@@ -2,12 +2,8 @@
 import {getStore} from '@/util/store'
 import website from '@/const/website'
 import {handleGoogleOAuthCallback} from '@/util/oauth'
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 export default {
-  components: {
-    LanguageSwitcher
-  },
   data() {
     return {
       tabsWidth: window.innerWidth - 20 + 'px',
@@ -178,63 +174,46 @@ export default {
 
 <template>
   <div class="tab_nav" :style="{width: tabsWidth}">
-    <!-- Language Switcher positioned in top right -->
-    <div class="language-switcher-container">
-      <LanguageSwitcher
-          :size="isMobile ? 'mini' : 'small'"
-          :show-text="!isMobile"
-          :circle="isMobile"
-          :show-arrow="!isMobile"
-          @language-changed="onLanguageChanged" />
-    </div>
-
     <el-tabs type="border-card" :active-name="activeName" @tab-click="tabClick">
       <el-tab-pane name="search">
         <span slot="label">
           <i class="el-icon-search"></i>
-          <span v-if="!isMobile">{{ $t('nav.search') }}</span>
         </span>
         <router-view name="search"></router-view>
       </el-tab-pane>
       <el-tab-pane name="starList" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-tickets"></i>
-          <span v-if="!isMobile">{{ $t('nav.starList') }}</span>
         </span>
         <router-view name="starList" v-if="isAdmin"></router-view>
       </el-tab-pane>
       <el-tab-pane name="youtube" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-video-camera"></i>
-          <span v-if="!isMobile">{{ $t('nav.youtube') }}</span>
         </span>
         <router-view name="youtube"></router-view>
       </el-tab-pane>
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-user"></i>
-          <span v-if="!isMobile">{{ $t('nav.userCenter') }}</span>
         </span>
         <router-view name="userCenter"></router-view>
       </el-tab-pane>
       <el-tab-pane name="login" v-if="!isLogin">
         <span slot="label">
           <i class="el-icon-user"></i>
-          <span v-if="!isMobile">{{ $t('nav.login') }}</span>
         </span>
         <router-view name="userLogin"></router-view>
       </el-tab-pane>
       <el-tab-pane name="about">
         <span slot="label">
           <i class="el-icon-postcard"></i>
-          <span v-if="!isMobile">{{ $t('nav.about') }}</span>
         </span>
         <router-view name="about"></router-view>
       </el-tab-pane>
       <el-tab-pane name="bgm">
         <span slot="label">
           <i class="el-icon-headset"></i>
-          <span v-if="!isMobile">{{ $t('nav.bgm') }}</span>
         </span>
         <router-view name="bgm"></router-view>
       </el-tab-pane>
