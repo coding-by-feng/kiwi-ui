@@ -33,7 +33,7 @@ export default {
   methods: {
     init() {
       if (!this.endTime) {
-        this.time = '0天0小时0分0秒'
+        this.time = `0${this.$t('time.days')}0${this.$t('time.hours')}0${this.$t('time.minutes')}0${this.$t('time.seconds')}`
         return
       }
       this.countdownFun = setInterval(() => {
@@ -49,7 +49,7 @@ export default {
       let leftTime = parseInt((end.getTime() - now.getTime()) / 1000)
       if (leftTime <= 0) {
         this.flag = true
-        this.time = '倒计时已关闭'
+        this.time = this.$t('review.countdownClosed')
         this.isTimeout = true
         this.$emit('endFun')
         this.$destroy()
@@ -59,13 +59,10 @@ export default {
           let h = parseInt(leftTime / (60 * 60) % 24)
           let m = parseInt(leftTime / 60 % 60)
           let s = parseInt(leftTime % 60)
-          // let h = this.format(parseInt(leftTime / (60 * 60) % 24))
-          // let m = this.format(parseInt(leftTime / 60 % 60))
-          // let s = this.format(parseInt(leftTime % 60))
-          this.time = `${d}天${h}小时${m}分${s}秒`
+          this.time = `${d}${this.$t('time.days')}${h}${this.$t('time.hours')}${m}${this.$t('time.minutes')}${s}${this.$t('time.seconds')}`
         } else {
           let s = parseInt(leftTime % 60)
-          this.time = `${s}秒`
+          this.time = `${s}${this.$t('time.seconds')}`
         }
       }
     },
@@ -78,4 +75,3 @@ export default {
   }
 }
 </script>
-
