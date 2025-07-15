@@ -20,7 +20,6 @@
               @click="cleanDb"
               class="management-button clean-audio-btn"
               :loading="loading">
-            <i class="el-icon-delete"></i>
             {{ $t('audio.cleanAudioData', { count: allDataSize }) }}
           </el-button>
           <el-button
@@ -28,7 +27,6 @@
               @click="clearWebsiteData"
               class="management-button clean-cache-btn"
               :loading="loading">
-            <i class="el-icon-brush"></i>
             {{ $t('audio.cleanAllCache') }}
           </el-button>
         </div>
@@ -555,8 +553,8 @@ export default {
 /* Responsive Design */
 @media (max-width: 768px) {
   .bgm-container {
-    padding: 16px;
-    margin: 16px;
+    padding: 2px;
+    margin: 2px;
   }
 
   .card-header {
