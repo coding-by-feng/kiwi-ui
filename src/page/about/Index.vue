@@ -191,7 +191,7 @@ export default {
 
 <style lang="scss" scoped>
 .about-container {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px;
 }
@@ -544,8 +544,8 @@ export default {
 /* Responsive Design */
 @media (max-width: 768px) {
   .about-container {
-    padding: 16px;
-    margin: 16px;
+    padding: 2px;
+    margin: 2px;
   }
 
   .card-header {

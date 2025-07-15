@@ -8,6 +8,20 @@ import {getStore} from "@/util/store";
  * @param {string} mode - The search mode
  * @returns {string} - The language code
  */
+export function getInitialSelectedLanguage(route, fallbackMode = kiwiConsts.SEARCH_DEFAULT_MODE) {
+    // Check for language parameter in URL first
+    const languageFromUrl = route?.query?.language;
+    if (languageFromUrl) {
+        return decodeURIComponent(languageFromUrl);
+    }
+
+    const currentMode = route?.query?.selectedMode
+        ? decodeURIComponent(route.query.selectedMode)
+        : fallbackMode;
+
+    return getLanguageForMode(currentMode);
+}
+
 export function getLanguageForMode(mode) {
     const modeSpecificKey = mode + '-' + kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE;
     const storedLanguage = getStore({ name: modeSpecificKey });
@@ -19,18 +33,4 @@ export function getLanguageForMode(mode) {
 
     // Fallback to default language
     return kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese;
-}
-
-/**
- * Get initial selected language based on route query or current mode
- * @param {Object} route - Vue router route object
- * @param {string} fallbackMode - Fallback mode if route doesn't have selectedMode
- * @returns {string} - The language code
- */
-export function getInitialSelectedLanguage(route, fallbackMode = kiwiConsts.SEARCH_DEFAULT_MODE) {
-    const currentMode = route?.query?.selectedMode
-        ? decodeURIComponent(route.query.selectedMode)
-        : fallbackMode;
-
-    return getLanguageForMode(currentMode);
 }

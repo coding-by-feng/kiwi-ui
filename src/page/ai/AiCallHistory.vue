@@ -376,10 +376,14 @@ export default {
         now: new Date().getTime()
       };
 
-      this.$router.push({
+      // Use router.resolve to generate the URL and open in new tab
+      const routeData = this.$router.resolve({
         path: '/index/vocabulary/aiResponseDetail',
         query: query
       });
+
+      // Open in new tab
+      window.open(routeData.href, '_blank');
     },
 
     copyPrompt(prompt) {

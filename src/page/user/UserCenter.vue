@@ -826,8 +826,8 @@ export default {
 /* Responsive design */
 @media (max-width: 768px) {
   .user-center-container {
-    padding: 16px;
-    margin: 16px;
+    padding: 2px;
+    margin: 2px;
   }
 
   .user-profile-header {
