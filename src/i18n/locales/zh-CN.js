@@ -356,7 +356,7 @@ export default {
 
     // 关于
     about: {
-        kiwiDictionary: 'Kiwi词典',
+        kasonTools: 'Kiwi词典',
         qqGroup: 'Kiwi词典QQ群',
         wechatQR: '微信个人二维码',
         voiceRSSAttribution: 'Voice RSS - 在线文本转语音服务'

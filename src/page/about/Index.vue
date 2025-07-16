@@ -12,7 +12,7 @@
       <div class="about-section">
         <h4 class="section-title">
           <i class="el-icon-reading"></i>
-          {{ $t('about.kiwiDictionary') }}
+          {{ $t('about.kasonTools') }}
         </h4>
         <div class="description-card">
           <p class="description-text">{{ $t('about.description') }}</p>

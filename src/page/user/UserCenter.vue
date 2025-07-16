@@ -508,7 +508,7 @@ export default {
 
 <style lang="scss" scoped>
 .user-center-container {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -516,6 +516,7 @@ export default {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
   overflow: hidden;
+  animation: fadeInUp 0.6s ease;
 }
 
 .user-profile-header {
@@ -1016,10 +1017,6 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.user-center-container {
-  animation: fadeInUp 0.6s ease;
 }
 
 .statistics-section {
