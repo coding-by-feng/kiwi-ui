@@ -130,7 +130,7 @@
 import wordSearch from '@/api/wordSearch'
 import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
-import {setStore} from "@/util/store";
+import {setStore, getStore} from "@/util/store";
 import { Notification, Message } from 'element-ui';
 import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
 
@@ -213,6 +213,11 @@ export default {
     },
     disableSuggestions() {
       return !this.ifVocabularyMode;
+    },
+    // Check if clipboard detection is enabled from user settings
+    isClipboardDetectionEnabled() {
+      const clipboardDetectionSetting = getStore({ name: kiwiConsts.CONFIG_KEY.CLIPBOARD_DETECTION });
+      return clipboardDetectionSetting === kiwiConsts.CLIPBOARD_DETECTION.ENABLE;
     }
   },
   mounted() {
@@ -290,6 +295,12 @@ export default {
     },
 
     async setupClipboardHandling() {
+      // Check if clipboard detection is enabled by user setting
+      if (!this.isClipboardDetectionEnabled) {
+        console.log('Clipboard detection is disabled by user setting');
+        return;
+      }
+
       this.isMobile = this.detectMobile();
       console.log('Device type:', this.isMobile ? 'Mobile' : 'Desktop');
 
@@ -359,6 +370,12 @@ export default {
     },
 
     async handleVisibilityChange() {
+      // Check if clipboard detection is enabled before proceeding
+      if (!this.isClipboardDetectionEnabled) {
+        console.log('Clipboard detection disabled, skipping visibility change handling');
+        return;
+      }
+
       if (document.visibilityState === 'visible' && !this.isMobile) {
         console.log('Tab became visible. Checking clipboard...');
 
@@ -569,8 +586,9 @@ export default {
     async onSubmit() {
       let real = this.originalText.trim()
 
+      // Check if clipboard detection is enabled before trying to read clipboard
       // If originalText is empty, try to get content from clipboard (especially for mobile)
-      if (util.isEmptyStr(real)) {
+      if (util.isEmptyStr(real) && this.isClipboardDetectionEnabled) {
         console.log('Original text is empty, attempting to read clipboard...');
 
         try {

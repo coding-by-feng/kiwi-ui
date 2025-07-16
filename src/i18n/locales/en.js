@@ -273,7 +273,9 @@ export default {
             wechat: 'WeChat Registration',
             qq: 'QQ Registration',
             unknown: 'Unknown Source'
-        }
+        },
+        clipboardDetection: "Clipboard Detection",
+        clipboardDetectionTooltip: "Automatically detect and suggest using clipboard content when switching tabs or when search input is empty"
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
@@ -425,7 +427,9 @@ export default {
         confirmDelete: 'About to delete, continue?',
         confirmClear: 'About to clear current word data and re-fetch, continue?',
         clearOperation: 'Clear Operation',
-        operationSuccess: 'Operation successful'
+        operationSuccess: 'Operation successful',
+        clipboardDetectionEnabled: 'Clipboard detection is now enabled',
+        clipboardDetectionDisabled: 'Clipboard detection is now disabled'
     },
 
     // Time units

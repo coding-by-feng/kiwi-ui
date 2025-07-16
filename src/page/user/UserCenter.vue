@@ -99,6 +99,25 @@
           </el-dropdown>
         </div>
 
+        <!-- NEW: Clipboard Detection Setting -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <i class="el-icon-document-copy"></i>
+            <span>{{ $t('user.clipboardDetection') }}</span>
+            <el-tooltip
+                :content="$t('user.clipboardDetectionTooltip')"
+                placement="top"
+                effect="dark">
+              <i class="el-icon-question help-icon"></i>
+            </el-tooltip>
+          </div>
+          <el-switch
+              v-model="clipboardDetectionEnabled"
+              @change="clipboardDetectionChange"
+              class="custom-switch">
+          </el-switch>
+        </div>
+
         <div class="setting-item">
           <div class="setting-label">
             <i class="el-icon-headset"></i>
@@ -204,6 +223,7 @@ export default {
         isEnToEn: getStore({ name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN }),
         bgm: getStore({ name: kiwiConst.CONFIG_KEY.BGM }),
         nativeLang: getStore({ name: kiwiConst.CONFIG_KEY.NATIVE_LANG }),
+        clipboardDetection: getStore({ name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION }),
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0
@@ -237,6 +257,10 @@ export default {
     enToEnEnabled: {
       get() { return this.user.isEnToEn === kiwiConst.IS_EN_TO_EN.ENABLE },
       set(val) { this.user.isEnToEn = val ? kiwiConst.IS_EN_TO_EN.ENABLE : kiwiConst.IS_EN_TO_EN.DISABLE }
+    },
+    clipboardDetectionEnabled: {
+      get() { return this.user.clipboardDetection === kiwiConst.CLIPBOARD_DETECTION.ENABLE },
+      set(val) { this.user.clipboardDetection = val ? kiwiConst.CLIPBOARD_DETECTION.ENABLE : kiwiConst.CLIPBOARD_DETECTION.DISABLE }
     }
   },
 
@@ -306,6 +330,14 @@ export default {
         })
         this.user.nativeLang = kiwiConst.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
       }
+      if (util.isEmptyStr(this.user.clipboardDetection)) {
+        setStore({
+          name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION,
+          content: kiwiConst.CLIPBOARD_DETECTION.ENABLE,
+          type: 'local'
+        })
+        this.user.clipboardDetection = kiwiConst.CLIPBOARD_DETECTION.ENABLE
+      }
     },
 
     // Utility methods
@@ -356,6 +388,27 @@ export default {
       })
       this.user.nativeLang = command
       this.$message.success(this.$t('messages.operationSuccess'))
+    },
+
+    clipboardDetectionChange(enabled) {
+      const value = enabled ? kiwiConst.CLIPBOARD_DETECTION.ENABLE : kiwiConst.CLIPBOARD_DETECTION.DISABLE
+      setStore({
+        name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION,
+        content: value,
+        type: 'local'
+      })
+      this.user.clipboardDetection = value
+      this.$message.success(this.$t('messages.operationSuccess'))
+
+      // Emit event to notify other components about the change
+      this.$emit('clipboard-detection-changed', enabled)
+
+      // You might want to inform the user that the change will take effect immediately
+      if (enabled) {
+        this.$message.info(this.$t('messages.clipboardDetectionEnabled'))
+      } else {
+        this.$message.info(this.$t('messages.clipboardDetectionDisabled'))
+      }
     },
 
     bgmChange(enabled) {
@@ -443,26 +496,6 @@ export default {
           .then(response => {
             if (response.data.data) {
               this.user.keepInMindCount = response.data.data.reviewCount
-            }
-          })
-          .catch(error => {
-            console.error('Error loading keep in mind count:', error)
-          })
-
-      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REMEMBER)
-          .then(response => {
-            if (response.data.data) {
-              this.user.rememberCount = response.data.data.reviewCount
-            }
-          })
-          .catch(error => {
-            console.error('Error loading remember count:', error)
-          })
-
-      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.REVIEW)
-          .then(response => {
-            if (response.data.data) {
-              this.user.reviewCount = response.data.data.reviewCount
             }
           })
           .catch(error => {
@@ -711,6 +744,17 @@ export default {
         width: 16px;
         font-size: 16px;
       }
+
+      .help-icon {
+        color: #909399;
+        font-size: 14px;
+        margin-left: 4px;
+        cursor: help;
+
+        &:hover {
+          color: #409eff;
+        }
+      }
     }
   }
 }
@@ -740,33 +784,98 @@ export default {
   }
 }
 
-/* Custom Switch Styling */
+/* Custom Switch Styling - Applied to ALL switches */
 .custom-switch {
   ::v-deep .el-switch__core {
-    background: #dcdfe6 !important;
-    border-color: #dcdfe6 !important;
-    transition: all 0.3s ease !important;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8eaed 100%) !important;
+    border: 2px solid #dcdfe6 !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   }
 
   ::v-deep .el-switch.is-checked .el-switch__core {
-    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-    border-color: #409eff !important;
+    background: linear-gradient(135deg, #1890ff 0%, #40a9ff 50%, #69c0ff 100%) !important;
+    border-color: #1890ff !important;
+    box-shadow:
+        0 0 0 2px rgba(24, 144, 255, 0.2),
+        0 2px 8px rgba(24, 144, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   }
 
   ::v-deep .el-switch__action {
-    background: white !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
-    transition: all 0.3s ease !important;
+    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  ::v-deep .el-switch.is-checked .el-switch__action {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%) !important;
+    border-color: rgba(24, 144, 255, 0.3) !important;
+    box-shadow:
+        0 3px 6px rgba(24, 144, 255, 0.25),
+        0 1px 3px rgba(24, 144, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
   }
 
   &:hover ::v-deep .el-switch__core {
-    background: #c0c4cc !important;
+    background: linear-gradient(135deg, #e8eaed 0%, #d3d4d6 100%) !important;
+    border-color: #c0c4cc !important;
+    transform: scale(1.02) !important;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15) !important;
   }
 
   &:hover ::v-deep .el-switch.is-checked .el-switch__core {
-    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+    background: linear-gradient(135deg, #0050b3 0%, #1890ff 50%, #40a9ff 100%) !important;
+    border-color: #0050b3 !important;
+    box-shadow:
+        0 0 0 3px rgba(24, 144, 255, 0.25),
+        0 4px 12px rgba(24, 144, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.02) !important;
+  }
+
+  &:hover ::v-deep .el-switch__action {
+    transform: scale(1.05) !important;
+    box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  &:hover ::v-deep .el-switch.is-checked .el-switch__action {
+    box-shadow:
+        0 4px 8px rgba(24, 144, 255, 0.3),
+        0 2px 4px rgba(24, 144, 255, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   }
 }
+
+/* Add a subtle glow effect for ALL enabled switches */
+.custom-switch ::v-deep .el-switch.is-checked {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, rgba(24, 144, 255, 0.2) 0%, rgba(64, 169, 255, 0.1) 100%);
+    border-radius: 14px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Remove the special clipboard detection styling since we're applying to all */
 
 /* Custom Tag Styling */
 ::v-deep .el-tag {
