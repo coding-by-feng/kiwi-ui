@@ -364,9 +364,9 @@ export default {
 
     // About
     about: {
-        title: 'About Kiwi Vocabulary',
-        kiwiDictionary: 'Kiwi Dictionary',
-        description: 'Kiwi Vocabulary is an intelligent English learning platform that helps you master vocabulary through spaced repetition and AI assistance.',
+        title: 'About Kason Tools',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Tools is an intelligent English learning platform that helps you master vocabulary through spaced repetition and AI assistance.',
         version: 'Version 2.0',
         contact: 'Contact Us',
         instagram: 'Instagram',
@@ -399,7 +399,7 @@ export default {
         verificationCodeError: 'Verification code error, please re-enter',
         requestTooFrequent: 'Request too frequent',
         demoNoPermission: 'Demo environment, no permission to operate',
-        systemError: 'Kiwi Dictionary is having issues, please contact the author!',
+        systemError: 'Kason Tools is having issues, please contact the author!',
         guestUserLogin: 'Guest user please login!',
         autoLoginSuccess: 'Auto login successful!',
         loginRequired: 'Please login first to perform collection operations',

@@ -1,7 +1,7 @@
 {
   "name": "kason-tools-desktop",
   "version": "0.1.0",
-  "description": "Kiwi Vocabulary Learning Desktop Application",
+  "description": "Kason Tools Learning Desktop Application",
   "main": "public/electron.js",
   "homepage": "./",
   "private": true,
@@ -30,7 +30,7 @@
   },
   "build": {
     "appId": "com.kiwivocabulary.desktop",
-    "productName": "Kiwi Vocabulary",
+    "productName": "Kason Tools",
     "directories": {
       "output": "dist_electron",
       "buildResources": "build"
@@ -92,7 +92,7 @@
         }
       ],
       "icon": "public/icon.ico",
-      "publisherName": "Kiwi Vocabulary"
+      "publisherName": "Kason Tools"
     },
     "linux": {
       "target": [

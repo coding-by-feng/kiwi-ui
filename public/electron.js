@@ -3,7 +3,7 @@ const path = require('path');
 const isDev = false;
 
 // Set app name
-app.setName('Kiwi Vocabulary');
+app.setName('Kason Tools');
 
 // Set user data path for persistent storage
 if (!isDev) {
@@ -37,7 +37,7 @@ function createWindow() {
         height: 800,
         minWidth: 800,
         minHeight: 600,
-        title: 'Kiwi Vocabulary', // Set window title
+        title: 'Kason Tools', // Set window title
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,

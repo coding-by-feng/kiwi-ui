@@ -158,7 +158,7 @@ async function showResults() {
 
 async function main() {
     try {
-        log('🚀 Building Kiwi Vocabulary Desktop App\n', 'magenta');
+        log('🚀 Building Kason Tools Desktop App\n', 'magenta');
 
         if (platform) {
             log(`Building for platform: ${platform}\n`, 'blue');

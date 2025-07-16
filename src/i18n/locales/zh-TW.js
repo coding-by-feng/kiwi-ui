@@ -331,7 +331,7 @@ export default {
 
     // 關於
     about: {
-        kiwiDictionary: 'Kiwi詞典',
+        kasonTools: 'Kiwi詞典',
         qqGroup: 'Kiwi詞典QQ群',
         wechatQR: '微信個人二維碼',
         voiceRSSAttribution: 'Voice RSS - 線上文字轉語音服務'

@@ -234,9 +234,10 @@ export default {
 
 <style lang="scss" scoped>
 .bgm-container {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px;
+  animation: fadeInUp 0.6s ease;
 }
 
 .bgm-card {
@@ -544,10 +545,6 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.bgm-container {
-  animation: fadeInUp 0.6s ease;
 }
 
 /* Responsive Design */

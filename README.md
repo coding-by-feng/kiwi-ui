@@ -1,5 +1,5 @@
-# Kiwi Dictionary Tutorial
-> Before using [Kiwi Dictionary](http://www.kiwidict.com ""), you must first download either the UC Browser or Google Chrome for mobile.
+# Kason Tools Tutorial
+> Before using [Kason Tools](http://www.kiwidict.com ""), you must first download either the UC Browser or Google Chrome for mobile.
 
 ## Quick Word Lookup
 ### Using Shortcut on iOS
