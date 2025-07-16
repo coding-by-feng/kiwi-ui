@@ -38,7 +38,6 @@
               {{ isLoading ? 'Loading...' : 'Load' }}
             </button>
             <el-button type="info" icon="el-icon-delete" size="small" circle @click="cleanSubtitles" class="action-btn"></el-button>
-            <el-button type="info" icon="el-icon-back" size="small" circle @click="backToChannelList" class="action-btn"></el-button>
           </div>
         </div>
       </div>
@@ -1241,18 +1240,6 @@ export default defineComponent({
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
       };
-    },
-
-    // Navigation
-    backToChannelList() {
-      this.disconnectWebSocket();
-      this.$router.push({
-        path: '/index/vocabulary/detail',
-        query: {
-          active: 'youtube',
-          ytbMode: kiwiConsts.YTB_MODE.PLAYER,
-        }
-      });
     },
 
     async cleanSubtitles() {
