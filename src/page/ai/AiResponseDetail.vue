@@ -124,7 +124,12 @@ import msgUtil from "@/util/msg";
 // Import the language utility function
 import { getInitialSelectedLanguage } from '@/util/langUtil';
 
-const md = new MarkdownIt();
+const md = new MarkdownIt({
+  html: true,
+  breaks: false,
+  linkify: true,
+  typographer: true
+});
 let that;
 
 export default {

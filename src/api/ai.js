@@ -68,7 +68,33 @@ export function getChannelVideos(channelId, current, size) {
     })
 }
 
-// YouTube Video-related API calls
+// YouTube Video-related API calls - UPDATED FOR SEPARATED ENDPOINTS
+export function downloadVideoScrollingSubtitles(videoUrl) {
+    const url = `/ai-biz/ai/ytb/video/subtitles/scrolling?url=${encodeURIComponent(videoUrl)}`;
+    return request({
+        url: url,
+        headers: {
+            isToken: true
+        },
+        method: 'get'
+    });
+}
+
+export function downloadVideoTranslatedSubtitles(videoUrl, language) {
+    let url = `/ai-biz/ai/ytb/video/subtitles/translated?url=${encodeURIComponent(videoUrl)}`;
+    if (language) {
+        url += `&language=${language}`;
+    }
+    return request({
+        url: url,
+        headers: {
+            isToken: true
+        },
+        method: 'get'
+    });
+}
+
+// Keep the original function for backward compatibility (deprecated)
 export function downloadVideoSubtitles(videoUrl, language) {
     let url;
     if (!language) {
@@ -78,7 +104,7 @@ export function downloadVideoSubtitles(videoUrl, language) {
     return request({
         url: url,
         headers: {
-            isToken: true // Adjust based on your authentication requirements
+            isToken: true
         },
         method: 'get'
     });
@@ -94,7 +120,7 @@ export function deleteVideoSubtitles(videoUrl, language) {
     return request({
         url: url,
         headers: {
-            isToken: true // Adjust based on your authentication requirements
+            isToken: true
         },
         method: 'delete'
     });
@@ -104,10 +130,10 @@ export function downloadVideo(videoUrl) {
     return request({
         url: `/ai-biz/ai/ytb/video/download?url=${encodeURIComponent(videoUrl)}`,
         headers: {
-            isToken: true // Adjust based on your authentication requirements
+            isToken: true
         },
         method: 'get',
-        responseType: 'blob' // For streaming binary data (e.g., video file)
+        responseType: 'blob'
     })
 }
 
@@ -115,7 +141,7 @@ export function getVideoTitle(videoUrl) {
     return request({
         url: `/ai-biz/ai/ytb/video/title?url=${encodeURIComponent(videoUrl)}`,
         headers: {
-            isToken: true // Adjust based on your authentication requirements
+            isToken: true
         },
         method: 'get'
     })

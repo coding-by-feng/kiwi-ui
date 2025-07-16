@@ -65,7 +65,6 @@
       <div class="settings-grid">
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-video-camera"></i>
             <span>{{ $t('user.pronunciationSource') }}</span>
           </div>
           <el-dropdown @command="pronunciationSourceChange" trigger="click" class="custom-dropdown">
@@ -81,7 +80,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-s-flag"></i>
             <span>{{ $t('user.nativeLanguage') }}</span>
           </div>
           <el-dropdown @command="nativeLangChange" trigger="click" class="custom-dropdown">
@@ -102,7 +100,6 @@
         <!-- NEW: Clipboard Detection Setting -->
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-document-copy"></i>
             <span>{{ $t('user.clipboardDetection') }}</span>
             <el-tooltip
                 :content="$t('user.clipboardDetectionTooltip')"
@@ -120,7 +117,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-headset"></i>
             <span>{{ $t('user.backgroundMusic') }}</span>
           </div>
           <el-switch
@@ -132,7 +128,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-edit-outline"></i>
             <span>{{ $t('user.letterSpelling') }}</span>
           </div>
           <el-switch
@@ -144,7 +139,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-chat-line-square"></i>
             <span>{{ $t('user.englishDefinition') }}</span>
           </div>
           <el-switch
@@ -156,7 +150,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-bell"></i>
             <span>{{ $t('user.messageHints') }}</span>
           </div>
           <el-switch
@@ -168,7 +161,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-reading"></i>
             <span>{{ $t('user.playExamples') }}</span>
           </div>
           <el-switch
@@ -180,7 +172,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <i class="el-icon-document"></i>
             <span>{{ $t('user.englishToEnglish') }}</span>
           </div>
           <el-switch
@@ -740,12 +731,6 @@ export default {
       font-weight: 500;
       color: #2c3e50;
 
-      i {
-        color: #409eff;
-        width: 16px;
-        font-size: 16px;
-      }
-
       .help-icon {
         color: #909399;
         font-size: 14px;
@@ -875,8 +860,6 @@ export default {
     opacity: 1;
   }
 }
-
-/* Remove the special clipboard detection styling since we're applying to all */
 
 /* Custom Tag Styling */
 ::v-deep .el-tag {
