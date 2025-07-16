@@ -166,6 +166,7 @@ export default {
         IF_SUBTITLES_TRANSLATION: true,
         NATIVE_LANG: 'native_lang',
         UI_LANGUAGE: 'ui_language', // Add UI language key
+        CLIPBOARD_DETECTION: 'clipboard_detection'
     },
 
     DB_NAME: 'KIWI_VOCABULARY',
@@ -286,6 +287,13 @@ export default {
     AI_MODE_TAG: {
         SPLITTER: '#[SPLITTER]',
         SELECTION_EXPLANATION: '#[SM]'
+    },
+
+    // Add these constants to your kiwiConsts.js file
+
+    CLIPBOARD_DETECTION: {
+        ENABLE: 'enable',
+        DISABLE: 'disable'
     }
 
 }
