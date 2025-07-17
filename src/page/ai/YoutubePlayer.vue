@@ -84,23 +84,6 @@
         <div class="divider" v-if="!isSmallScreen"></div>
         <div class="switch-group">
           <el-switch
-              v-model="autoScrollEnabled"
-              :active-text="isSmallScreen ? '' : 'Auto Scroll'"
-              class="enhanced-switch">
-            <template v-if="isSmallScreen" #inactive-icon>
-              <i class="el-icon-position"></i>
-            </template>
-            <template v-if="isSmallScreen" #active-icon>
-              <i class="el-icon-sort"></i>
-            </template>
-          </el-switch>
-          <span v-if="isSmallScreen" class="mobile-switch-label">
-            <i class="el-icon-sort"></i>
-          </span>
-        </div>
-        <div class="divider" v-if="!isSmallScreen"></div>
-        <div class="switch-group">
-          <el-switch
               v-model="middleControlEnabled"
               :active-text="isSmallScreen ? '' : 'Middle Control'"
               class="enhanced-switch">
@@ -342,7 +325,6 @@ export default defineComponent({
       player: null,
       currentSubtitleIndex: -1,
       subtitleInterval: null,
-      autoScrollEnabled: true,
       middleControlEnabled: true,
       forceHideInput: false,
       isSmallScreen: false,
@@ -410,13 +392,6 @@ export default defineComponent({
         if (newVideoUrl && newVideoUrl !== encodeURIComponent(this.videoUrl)) {
           this.videoUrl = decodeURIComponent(newVideoUrl);
           this.loadContent();
-        }
-      }
-    },
-    autoScrollEnabled: {
-      handler(newValue) {
-        if (newValue && this.currentSubtitleIndex !== -1) {
-          this.debouncedScrollToSubtitle();
         }
       }
     }
@@ -934,45 +909,10 @@ export default defineComponent({
 
       if (newIndex !== this.currentSubtitleIndex) {
         this.currentSubtitleIndex = newIndex;
-
-        if (this.autoScrollEnabled && newIndex !== -1) {
-          this.debouncedScrollToSubtitle();
-        }
       }
     },
 
     // Optimized scrolling
-    debouncedScrollToSubtitle() {
-      if (this.scrollTimeout) {
-        clearTimeout(this.scrollTimeout);
-      }
-
-      this.scrollTimeout = setTimeout(() => {
-        this.scrollToCurrentSubtitle();
-      }, 50);
-    },
-
-    scrollToCurrentSubtitle() {
-      if (!this.autoScrollEnabled || this.currentSubtitleIndex === -1) return;
-
-      const subtitleElement = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-      const subtitlesWrapper = document.querySelector('.subtitles-wrapper');
-
-      if (!subtitleElement || !subtitlesWrapper) return;
-
-      requestAnimationFrame(() => {
-        const wrapperRect = subtitlesWrapper.getBoundingClientRect();
-        const elementRect = subtitleElement.getBoundingClientRect();
-        const relativeTop = elementRect.top - wrapperRect.top;
-        const targetScrollTop = subtitlesWrapper.scrollTop + relativeTop - (wrapperRect.height / 2);
-
-        subtitlesWrapper.scrollTo({
-          top: Math.max(0, targetScrollTop),
-          behavior: 'smooth'
-        });
-      });
-    },
-
     debouncedScrollToBottom() {
       if (this.scrollTimeout) {
         clearTimeout(this.scrollTimeout);

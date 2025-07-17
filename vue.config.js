@@ -16,6 +16,9 @@ module.exports = {
     publicPath: publicPath,
     lintOnSave: true,
     productionSourceMap: true,
+    transpileDependencies: [
+        'pdfjs-dist' // Make sure this line is present
+    ],
     configureWebpack: {
         devtool: 'source-map',
         resolve: {
