@@ -53,17 +53,35 @@ export default {
           (window.location.hash && window.location.hash.includes('token='))
 
       if (hasOAuthParams) {
-        console.log('Detected OAuth callback parameters')
+        console.log('🔍 [INDEX] Detected OAuth callback parameters')
         const success = handleGoogleOAuthCallback()
 
         if (success) {
+          console.log('✅ [INDEX] OAuth callback processed successfully')
+          
           // Update the user data in component after successful OAuth
           this.$nextTick(() => {
             this.user.userName = getStore({name: 'user_name'})
-            // Force reactivity update
+            
+            // Force reactivity update without full page reload
             this.$forceUpdate()
-            window.location.reload();
+            
+            // Instead of window.location.reload(), just update the component state
+            // This is much safer for mobile Safari
+            console.log('🔄 [INDEX] Component state updated')
+            
+            // Optionally navigate to ensure clean state
+            setTimeout(() => {
+              if (this.$route.query.token || this.$route.query.user) {
+                this.$router.replace({
+                  path: '/index/tools/detail',
+                  query: { active: 'search' }
+                })
+              }
+            }, 500)
           })
+        } else {
+          console.log('❌ [INDEX] OAuth callback processing failed')
         }
       }
     },
