@@ -226,15 +226,18 @@ export default {
           this.isForceRequest = false
         } else {
           let originalText = this.$route?.query?.originalText ? decodeURIComponent(this.$route.query.originalText) : ''
+          // Preserve all existing URL parameters when navigating to AI response detail
+          const preservedQuery = {
+            ...this.$route.query, // Preserve all existing parameters
+            active: 'search',
+            selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
+            language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+            originalText: encodeURI(originalText.toLowerCase()),
+            now: new Date().getTime()
+          }
           this.$router.push({
             path: '/index/tools/aiResponseDetail',
-            query: {
-              active: 'search',
-              selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
-              language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
-              originalText: encodeURI(originalText.toLowerCase()),
-              now: new Date().getTime()
-            }
+            query: preservedQuery
           })
         }
         this.keyword = word
