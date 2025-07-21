@@ -378,7 +378,7 @@ export default {
 
       // Use router.resolve to generate the URL and open in new tab
       const routeData = this.$router.resolve({
-        path: '/index/vocabulary/aiResponseDetail',
+        path: '/index/tools/aiResponseDetail',
         query: query
       });
 
@@ -406,7 +406,7 @@ export default {
       console.log('Going back to search page');
       // Navigate back to search page
       this.$router.push({
-        path: '/index/vocabulary/detail',
+        path: '/index/tools/detail',
         query: {
           active: 'search',
           ytbMode: this.$route.query.ytbMode || kiwiConsts.YTB_MODE.CHANNEL,

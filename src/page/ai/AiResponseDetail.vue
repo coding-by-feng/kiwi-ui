@@ -336,7 +336,7 @@ export default {
         now: new Date().getTime().toString()
       });
       
-      const dictionaryUrl = `/#/lazy/vocabulary/detail?${queryParams.toString()}`;
+      const dictionaryUrl = `/#/lazy/tools/detail?${queryParams.toString()}`;
 
       // Open in new tab
       window.open(dictionaryUrl, '_blank');

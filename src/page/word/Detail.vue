@@ -227,7 +227,7 @@ export default {
         } else {
           let originalText = this.$route?.query?.originalText ? decodeURIComponent(this.$route.query.originalText) : ''
           this.$router.push({
-            path: '/index/vocabulary/aiResponseDetail',
+            path: '/index/tools/aiResponseDetail',
             query: {
               active: 'search',
               selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
@@ -997,5 +997,3 @@ export default {
 
   </el-container>
 </template>
-
-

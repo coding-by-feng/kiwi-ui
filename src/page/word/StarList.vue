@@ -332,7 +332,7 @@ export default {
         } else {
           query = {...queryTmp}
         }
-        this.$router.push({path: '/index/vocabulary/detail', query: query})
+        this.$router.push({path: '/index/tools/detail', query: query})
       }
       this.list.status = 'list'
     },
@@ -425,7 +425,7 @@ export default {
           now: new Date().getTime()
         }
       }
-      this.$router.push({path: '/index/vocabulary/detail', query: query})
+      this.$router.push({path: '/index/tools/detail', query: query})
     },
     totalReview(listId, currentMode) {
       let query
@@ -448,7 +448,7 @@ export default {
           now: new Date().getTime()
         }
       }
-      this.$router.push({path: '/index/vocabulary/detail', query: query})
+      this.$router.push({path: '/index/tools/detail', query: query})
     },
     multiModeRead(listId, mode) {
       let query
@@ -459,14 +459,14 @@ export default {
         this.selectOneList(listId, false)
         query = {active: 'starList', mode: mode, listId: listId, listType: this.list.listType}
       }
-      this.$router.push({path: '/index/vocabulary/detail', query: query})
+      this.$router.push({path: '/index/tools/detail', query: query})
     },
     closeAutoReview() {
       this.detail.paraphraseIsReview = false
       this.detail.paraphraseIsRead = false
       this.detail.paraphraseDetailVisible = false
       let query = {active: 'starList'}
-      this.$router.push({path: '/index/vocabulary/detail', query: query})
+      this.$router.push({path: '/index/tools/detail', query: query})
       window.location.reload()
     }
   }

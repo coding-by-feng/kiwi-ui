@@ -107,7 +107,7 @@ export default {
         word: wordName,
         now: new Date().getTime()
       };
-      this.$router.push({path: '/index/vocabulary/detail', query: preservedQuery})
+      this.$router.push({path: '/index/tools/detail', query: preservedQuery})
     },
     async removeWordStarListFun(wordId) {
       this.removeWordStarList({wordId: wordId, listId: this.listId})
@@ -129,4 +129,3 @@ export default {
 
 <style scoped>
 </style>
-
