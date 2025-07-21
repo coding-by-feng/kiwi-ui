@@ -100,7 +100,14 @@ export default {
       this.$emit('tableVisibleToggle')
     },
     showDetail(wordName) {
-      this.$router.push({path: '/index/vocabulary/detail', query: {active: 'search', word: wordName}})
+      // Preserve all existing URL parameters when navigating to detail page
+      const preservedQuery = {
+        ...this.$route.query, // Preserve all existing parameters
+        active: 'search',
+        word: wordName,
+        now: new Date().getTime()
+      };
+      this.$router.push({path: '/index/vocabulary/detail', query: preservedQuery})
     },
     async removeWordStarListFun(wordId) {
       this.removeWordStarList({wordId: wordId, listId: this.listId})
