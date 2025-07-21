@@ -72,26 +72,35 @@ export default {
     },
 
     tabClick(tab, event) {
-      let params
-      let paramsTmp = {
+      // Preserve ALL existing query parameters when switching tabs
+      const preservedParams = {
+        ...this.$route.query, // Start with all existing parameters
         active: tab.name,
-        now: new Date().getTime(),
-        selectedLanguage: this.$route.query.originalText,
-        selectedMode: this.$route.query.selectedMode,
-        ytbMode: this.$route.query.ytbMode,
-        videoUrl: this.$route.query.videoUrl
+        now: new Date().getTime()
       }
-      if (this.$route.query.originalText) {
-        params = {
-          originalText: this.$route.query.originalText,
-          ...paramsTmp
-        }
-      } else {
-        params = {...paramsTmp}
+
+      // Ensure essential parameters are present with defaults if missing
+      if (!preservedParams.selectedMode && this.$route.query.selectedMode) {
+        preservedParams.selectedMode = this.$route.query.selectedMode
       }
-      let isActiveChange = JSON.stringify(this.query) === JSON.stringify(params)
+      if (!preservedParams.language && this.$route.query.language) {
+        preservedParams.language = this.$route.query.language
+      }
+      if (!preservedParams.ytbMode && this.$route.query.ytbMode) {
+        preservedParams.ytbMode = this.$route.query.ytbMode
+      }
+      if (!preservedParams.videoUrl && this.$route.query.videoUrl) {
+        preservedParams.videoUrl = this.$route.query.videoUrl
+      }
+
+      let isActiveChange = JSON.stringify(this.query) === JSON.stringify(preservedParams)
       if (!isActiveChange) {
-        this.$router.push({path: website.noAuthPath.detail, query: params})
+        // Always use replace to avoid creating history entries for tab switches
+        // and preserve all parameters regardless of which tab we're switching to
+        this.$router.replace({
+          path: website.noAuthPath.detail,
+          query: preservedParams
+        })
       }
     },
 
@@ -179,7 +188,7 @@ export default {
         <span slot="label">
           <i class="el-icon-search"></i>
         </span>
-        <router-view name="search"></router-view>
+        <router-view name="search" :key="$route.fullPath"></router-view>
       </el-tab-pane>
       <el-tab-pane name="starList" v-if="isLogin">
         <span slot="label">
@@ -193,12 +202,14 @@ export default {
         </span>
         <router-view name="youtube"></router-view>
       </el-tab-pane>
+<!--
       <el-tab-pane name="documentReader" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-document"></i>
         </span>
         <router-view name="documentReader"></router-view>
       </el-tab-pane>
+-->
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-user"></i>

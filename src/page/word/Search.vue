@@ -648,27 +648,26 @@ export default {
       const encodedOriginalText = encodeURIComponent(real.toLowerCase())
       console.log('encodedOriginalText', encodedOriginalText)
 
+      // Preserve all existing URL parameters and supplement with search-specific ones
+      const baseQuery = {
+        ...this.$route.query, // Preserve all existing parameters
+        active: 'search',
+        originalText: encodedOriginalText,
+        selectedMode: this.selectedMode,
+        language: this.selectedLanguage,
+        ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
+        now: new Date().getTime()
+      }
+
       if (AI_MODES.includes(this.selectedMode)) {
         this.$router.push({
           path: '/index/vocabulary/aiResponseDetail',
-          query: {
-            active: 'search',
-            selectedMode: this.selectedMode,
-            language: this.selectedLanguage,
-            originalText: encodedOriginalText,
-            ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-            now: new Date().getTime()
-          }
+          query: baseQuery
         })
       } else {
         this.$router.push({
           path: '/index/vocabulary/detail',
-          query: {
-            active: 'search',
-            originalText: encodedOriginalText,
-            ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-            now: new Date().getTime()
-          }
+          query: baseQuery
         })
       }
     },

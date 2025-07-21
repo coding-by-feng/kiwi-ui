@@ -139,6 +139,8 @@ export default {
         responseText: ''
       },
       selectedMode: this.$route.query.selectedMode,
+      // Store all route query parameters to preserve them during navigation
+      preservedQueryParams: { ...this.$route.query },
       apiLoading: false,
       isStreaming: false,
       copySuccess: false,
@@ -173,6 +175,8 @@ export default {
       console.log('AiResponseDetail component watch')
       this.closeWebSocket('main');
       this.closeWebSocket('selection');
+      // Update preserved query parameters when route changes
+      this.preservedQueryParams = { ...this.$route.query };
       this.init()
     }
   },
@@ -323,7 +327,16 @@ export default {
 
       // URL encode the selected text to handle special characters
       const encodedText = encodeURIComponent(this.selectedText);
-      const dictionaryUrl = `https://kason.ngrok.app/#/lazy/vocabulary/detail?originalText=${encodedText}`;
+      
+      // Build query parameters preserving all existing ones
+      const queryParams = new URLSearchParams({
+        ...this.preservedQueryParams, // Preserve all existing parameters
+        originalText: encodedText,
+        active: 'search',
+        now: new Date().getTime().toString()
+      });
+      
+      const dictionaryUrl = `/#/lazy/vocabulary/detail?${queryParams.toString()}`;
 
       // Open in new tab
       window.open(dictionaryUrl, '_blank');
