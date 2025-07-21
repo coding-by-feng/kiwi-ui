@@ -67,6 +67,9 @@ export default {
     that = this
   },
   computed: {
+    isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    },
     isLogin() {
       let accessToken = getStore({name: 'access_token'})
       return !!accessToken
@@ -90,9 +93,31 @@ export default {
       return window.innerWidth >= 800
     }
   },
-  async mounted() {
-    await this.init()
-    // await this.initPronunciation()
+  mounted() {
+    // Fix for iPhone Safari: Don't use async in mounted hook
+    // Use nextTick and proper error handling instead
+    this.$nextTick(async () => {
+      try {
+        await this.init()
+        // await this.initPronunciation()
+      } catch (e) {
+        console.warn('Initialization failed:', e)
+        // Fallback initialization for iOS
+        if (this.isIOS) {
+          this.$message({
+            message: 'Loading content...',
+            type: 'info',
+            duration: 2000
+          })
+          // Try again with a delay
+          setTimeout(() => {
+            this.init().catch(err => {
+              console.warn('Delayed initialization also failed:', err)
+            })
+          }, 1000)
+        }
+      }
+    })
   },
   watch: {
     '$route'() {
@@ -115,33 +140,52 @@ export default {
       this.showWordSelect = false
     },
     async init() {
-      // clean data
-      this.showCharacterId = 0
+      try {
+        // clean data
+        this.showCharacterId = 0
 
-      let mode = this.$route.query.mode
-      let listType = this.$route.query.listType
-      if ('stockReview' === mode && 'word' === listType) {
-        let listId = this.$route.query.listId
-        if (listId) {
-          const loading = this.$loading({
-            lock: true,
-            text: '自动复习播报单词本资源加载中，请稍等！',
-            spinner: 'el-icon-loading',
-            background: 'rgba(0, 0, 0, 0.7)'
-          })
-          await wordStarList.findAllWordId(listId).then(response => {
-            loading.close()
-            let wordIdList = response.data.data
-            if (wordIdList && wordIdList.length) {
-              this.stockReview(wordIdList)
-            }
-          }).catch(e => {
-            loading.close()
-            console.error(e)
-          })
+        let mode = this.$route.query.mode
+        let listType = this.$route.query.listType
+        if ('stockReview' === mode && 'word' === listType) {
+          let listId = this.$route.query.listId
+          if (listId) {
+            await wordStarList.findAllWordId(listId).then(response => {
+              if (response.data.code) {
+                let wordIdList = response.data.data
+                this.stockReview(wordIdList)
+              }
+            }).catch(e => {
+              console.warn('Stock review initialization failed:', e)
+              // Continue with fallback instead of crashing
+              this.initDetail('').catch(fallbackError => {
+                console.warn('Fallback initialization also failed:', fallbackError)
+              })
+            })
+          }
+        } else {
+          await this.initDetail('')
         }
-      } else {
-        await this.initDetail('')
+      } catch (e) {
+        console.warn('Init method failed:', e)
+        // iOS-specific error handling
+        if (this.isIOS) {
+          this.$message({
+            message: 'Content loading encountered an issue. Retrying...',
+            type: 'warning',
+            duration: 3000
+          })
+          // Try a simplified initialization
+          setTimeout(() => {
+            this.initDetail('').catch(retryError => {
+              console.warn('Retry initialization failed:', retryError)
+              this.$message({
+                message: 'Some features may not be available on this device',
+                type: 'info',
+                duration: 5000
+              })
+            })
+          }, 2000)
+        }
       }
     },
     async initDetail(w) {
@@ -203,16 +247,79 @@ export default {
       this.defaultHint = null
       this.showWordSelect = false
     },
-    async initPronunciation() {
-      if (this.wordInfo.characterVOList) {
-        let characterVOList = this.wordInfo.characterVOList
-        for (let i = 0; i < characterVOList.length; i++) {
-          let pronunciationVOList = characterVOList[i].pronunciationVOList
-          for (let j = 0; j < pronunciationVOList.length; j++) {
-            let audio = new Audio()
-            audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
-            this.pronunciationAudioMap.set(pronunciationVOList[j].pronunciationId, audio)
+    async playDetail2Audio() {
+      try {
+        let audioList = []
+        let autoWordList = []
+        if (this.wordInfo.characterVOList) {
+          let characterVOList = this.wordInfo.characterVOList
+          for (let i = 0; i < characterVOList.length; i++) {
+            let pronunciationVOList = characterVOList[i].pronunciationVOList
+            for (let j = 0; j < pronunciationVOList.length; j++) {
+              try {
+                let audio = new Audio()
+                audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
+                
+                // Add error handling for audio creation
+                audio.addEventListener('error', (e) => {
+                  console.warn('Audio creation failed:', e)
+                })
+                
+                audioList.push(audio)
+                autoWordList.push(this.wordInfo)
+              } catch (audioError) {
+                console.warn('Failed to create audio for playback:', audioError)
+                // Continue with other audio files instead of crashing
+              }
+            }
           }
+        }
+        this.audioList = audioList
+        this.autoWordList = autoWordList
+        
+        // iOS warning for auto-play limitations
+        if (this.isIOS && audioList.length > 0) {
+          console.info('iOS detected: Audio auto-play may require user interaction')
+        }
+      } catch (e) {
+        console.warn('Audio preparation failed:', e)
+        // Don't crash the app, just continue without audio
+        this.audioList = []
+        this.autoWordList = []
+      }
+    },
+    async initPronunciation() {
+      try {
+        if (this.wordInfo.characterVOList) {
+          let characterVOList = this.wordInfo.characterVOList
+          for (let i = 0; i < characterVOList.length; i++) {
+            let pronunciationVOList = characterVOList[i].pronunciationVOList
+            for (let j = 0; j < pronunciationVOList.length; j++) {
+              try {
+                let audio = new Audio()
+                audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
+                
+                // Add error handling for audio loading
+                audio.addEventListener('error', (e) => {
+                  console.warn('Audio loading failed:', e)
+                })
+                
+                this.pronunciationAudioMap.set(pronunciationVOList[j].pronunciationId, audio)
+              } catch (audioError) {
+                console.warn('Failed to create audio for pronunciation:', pronunciationVOList[j].pronunciationId, audioError)
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Audio initialization failed on this device:', e)
+        // Continue without audio instead of crashing
+        if (this.isIOS) {
+          this.$message({
+            message: 'Audio features may be limited on this device',
+            type: 'info',
+            duration: 3000
+          })
         }
       }
     },
@@ -246,7 +353,33 @@ export default {
       if (index === 0 && this.audioList.length) {
         // console.log(this.audioList[0])
         this.wordInfo = this.autoWordList[0]
-        this.audioList[0].play()
+        
+        // iOS-specific handling for auto-play
+        if (this.isIOS) {
+          this.$message({
+            message: 'Tap to start audio playback',
+            type: 'info',
+            duration: 3000,
+            onClick: () => {
+              try {
+                this.audioList[0].play().catch(e => {
+                  console.warn('iOS audio auto-play failed:', e)
+                })
+              } catch (e) {
+                console.warn('iOS audio playback error:', e)
+              }
+            }
+          })
+        } else {
+          // Non-iOS devices - original behavior
+          try {
+            this.audioList[0].play().catch(e => {
+              console.warn('Audio auto-play failed:', e)
+            })
+          } catch (e) {
+            console.warn('Audio playback error:', e)
+          }
+        }
       }
     },
     async playPronunciation(id, sourceUrl, soundmarkType) {
@@ -261,6 +394,45 @@ export default {
             this.isUSPronunciationPlaying = true
           }
         }
+        
+        // iOS-specific handling
+        if (this.isIOS) {
+          // Check if we have a pre-loaded audio
+          let preloadedAudio = this.pronunciationAudioMap.get(id)
+          if (preloadedAudio) {
+            try {
+              await preloadedAudio.play()
+              return
+            } catch (iosError) {
+              console.warn('Pre-loaded audio failed on iOS:', iosError)
+              // Fall through to create new audio with user interaction
+            }
+          }
+          
+          // For iOS, show a message instead of auto-playing
+          this.$message({
+            message: 'Tap here to play pronunciation',
+            type: 'info',
+            duration: 2000,
+            onClick: async () => {
+              try {
+                let audio = new Audio()
+                let source = getStore({name: 'pronunciation_source'})
+                if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
+                  audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+                } else {
+                  audio.src = sourceUrl
+                }
+                await audio.play()
+              } catch (playError) {
+                console.warn('iOS audio playback failed:', playError)
+              }
+            }
+          })
+          return
+        }
+        
+        // Non-iOS devices - original behavior
         let audio = new Audio()
         let source = getStore({name: 'pronunciation_source'})
         if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
@@ -268,10 +440,24 @@ export default {
         } else {
           audio.src = sourceUrl
         }
+        
+        // Add error handling for audio loading
+        audio.addEventListener('error', (e) => {
+          console.warn('Audio playback failed:', e)
+        })
+        
         audio.pause()
         await audio.play()
       } catch (e) {
-        console.error(e)
+        console.warn('Audio playback error:', e)
+        // Don't crash the app, just log the error
+        if (this.isIOS) {
+          this.$message({
+            message: 'Audio playback not available on this device',
+            type: 'warning',
+            duration: 2000
+          })
+        }
       } finally {
         setTimeout(() => {
           if (soundmarkType) {
