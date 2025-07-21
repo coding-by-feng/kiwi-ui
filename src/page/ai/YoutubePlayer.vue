@@ -106,9 +106,9 @@
       <div v-if="isLoading" class="loading-container">
         <div class="loading-animation">
           <div class="loading-spinner">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
+            <div class="loading-spinner-ring"></div>
+            <div class="loading-spinner-ring"></div>
+            <div class="loading-spinner-ring"></div>
           </div>
           <div class="loading-text">
             <span class="loading-message">{{ statusMessage || 'Loading video...' }}</span>
@@ -276,7 +276,7 @@
           v-if="showSelectionPopup"
           ref="vocabularyPopup"
           class="vocabulary-popup"
-          @click="navigateToVocabulary"
+          @click="navigateToTools"
       >
         <i class="el-icon-search"></i>
         <span>"{{ selectedText }}"</span>
@@ -993,13 +993,13 @@ export default defineComponent({
       event.preventDefault();
     },
 
-    navigateToVocabulary() {
+    navigateToTools() {
       const cleanedText = this.selectedText.replace(/\n/g, ' ').trim();
       const encodedText = encodeURIComponent(cleanedText);
 
       this.player.pauseVideo();
       this.$router.push({
-        path: '/index/vocabulary/aiResponseDetail',
+        path: '/index/tools/aiResponseDetail',
         query: {
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
@@ -1068,7 +1068,7 @@ export default defineComponent({
     // Configuration handlers
     ifTranslationOnChange(enabled) {
       setStore({
-        name: kiwiConst.CONFIG_KEY.IF_SUBTITLES_TRANSLATION,
+        name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION,
         content: enabled,
         type: 'local'
       });
@@ -1084,13 +1084,13 @@ export default defineComponent({
 
     selectedLanguageChange(language) {
       setStore({
-        name: kiwiConst.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE,
+        name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE,
         content: language,
         type: 'local'
       });
 
       setStore({
-        name: kiwiConst.CONFIG_KEY.IF_SUBTITLES_TRANSLATION,
+        name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION,
         content: true,
         type: 'local'
       });

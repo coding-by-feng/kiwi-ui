@@ -180,12 +180,12 @@ export default {
     getRouterView() {
       console.log('getRouterView - current route path:', this.$route.path)
 
-      if (this.$route.path === '/index/vocabulary/aiCallHistory') {
+      if (this.$route.path === '/index/tools/aiCallHistory') {
         console.log('Returning aiCallHistory router view')
         return kiwiConsts.ROUTER_VIEW_AI_HISTORY_MODE
       }
 
-      if (this.$route.path === '/index/vocabulary/aiResponseDetail') {
+      if (this.$route.path === '/index/tools/aiResponseDetail') {
         console.log('Returning aiResponseDetail router view')
         return kiwiConsts.ROUTER_VIEW_AI_MODE
       }
@@ -277,7 +277,7 @@ export default {
     viewAiHistory() {
       console.log('Navigating to AI call history')
       this.$router.push({
-        path: '/index/vocabulary/aiCallHistory',
+        path: '/index/tools/aiCallHistory',
         query: {
           active: 'search',
           selectedMode: this.selectedMode,
@@ -533,7 +533,7 @@ export default {
     onBack() {
       this.selectedMode = kiwiConsts.SEARCH_DEFAULT_MODE
       this.$router.push({
-        path: '/index/vocabulary/detail',
+        path: '/index/tools/detail',
         query: {
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_DEFAULT_MODE,
@@ -553,7 +553,7 @@ export default {
 
       const encodedOriginalText = encodeURIComponent(real.toLowerCase())
       this.$router.push({
-        path: '/index/vocabulary/aiResponseDetail',
+        path: '/index/tools/aiResponseDetail',
         query: {
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
@@ -661,12 +661,12 @@ export default {
 
       if (AI_MODES.includes(this.selectedMode)) {
         this.$router.push({
-          path: '/index/vocabulary/aiResponseDetail',
+          path: '/index/tools/aiResponseDetail',
           query: baseQuery
         })
       } else {
         this.$router.push({
-          path: '/index/vocabulary/detail',
+          path: '/index/tools/detail',
           query: baseQuery
         })
       }
@@ -681,7 +681,7 @@ export default {
         active: 'search',
         ...queryTmp
       }
-      this.$router.push({path: '/index/vocabulary/detail', query: query})
+      this.$router.push({path: '/index/tools/detail', query: query})
     }
   }
 }

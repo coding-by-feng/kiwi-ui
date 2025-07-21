@@ -167,7 +167,7 @@ export default {
     backToPlayer() {
       // Navigate back to the channel list view
       this.$router.push({
-        path: '/index/vocabulary/detail',
+        path: '/index/tools/detail',
         query: {
           active: 'youtube',
           ytbMode: 'player',
@@ -280,7 +280,7 @@ export default {
       if (url) {
         // Navigate to YoutubePlayer component with the video URL
         this.$router.push({
-          path: '/index/vocabulary/detail',
+          path: '/index/tools/detail',
           query: {
             active: 'youtube',
             videoUrl: encodeURIComponent(url),

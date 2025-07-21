@@ -81,9 +81,9 @@ axios.interceptors.response.use(res => {
       store.dispatch('LogOut').then(() => {
         if (isElectron) {
           // In Electron, just navigate to login page
-          router.push('/index/vocabulary/detail?active=login')
+          router.push('/index/tools/detail?active=login')
         } else {
-          window.location.href = '/#/index/vocabulary/detail?active=login'
+          window.location.href = '/#/index/tools/detail?active=login'
         }
       })
     }

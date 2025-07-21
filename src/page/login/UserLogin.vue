@@ -211,10 +211,10 @@ export default {
       let redirectPath, redirectQuery
 
       if (word) {
-        redirectPath = '/index/vocabulary/detail'
+        redirectPath = '/index/tools/detail'
         redirectQuery = {active: 'search', word: word}
       } else {
-        redirectPath = '/index/vocabulary/detail'
+        redirectPath = '/index/tools/detail'
         redirectQuery = {active: 'search'}
       }
 

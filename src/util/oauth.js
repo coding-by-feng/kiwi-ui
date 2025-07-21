@@ -56,7 +56,7 @@ export const handleGoogleOAuthCallback = () => {
         })
 
         // Clean the URL
-        const cleanUrl = window.location.origin + window.location.pathname + '#/index/vocabulary/detail?active=search'
+        const cleanUrl = window.location.origin + window.location.pathname + '#/index/tools/detail?active=search'
         window.history.replaceState({}, document.title, cleanUrl)
 
         Message({

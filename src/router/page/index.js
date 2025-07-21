@@ -16,17 +16,17 @@ import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new compo
 export default [{
     path: '/',
     name: '主页',
-    redirect: '/index/vocabulary/detail'
+    redirect: '/index/tools/detail'
 }, {
     path: '/lazy',
     name: '懒加载',
-    redirect: '/lazy/vocabulary/detail'
+    redirect: '/lazy/tools/detail'
 }, {
     path: '/index',
     component: Index,
     query: {active: 'search'},
     children: [{
-        path: 'vocabulary',
+        path: 'tools',
         components: {
             search: Search,
             starList: StarList,
@@ -56,7 +56,7 @@ export default [{
     component: IndexLazy,
     query: {active: 'search'},
     children: [{
-        path: 'vocabulary',
+        path: 'tools',
         components: {
             search: Search
         },

@@ -30,13 +30,13 @@ export default {
     },
 
     noAuthPath: {
-        detail: '/index/vocabulary/detail'
+        detail: '/index/tools/detail'
     },
 
     auth: {
-        login: '/index/vocabulary/detail?active=login',
+        login: '/index/tools/detail?active=login',
         path: [
-            '/index/vocabulary/detail?active=starList'
+            '/index/tools/detail?active=starList'
         ]
     },
 
