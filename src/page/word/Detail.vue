@@ -227,10 +227,11 @@ export default {
         } else {
           let originalText = this.$route?.query?.originalText ? decodeURIComponent(this.$route.query.originalText) : ''
           // Preserve all existing URL parameters when navigating to AI response detail
+          // but ensure we use a valid AI mode instead of 'detail' mode
           const preservedQuery = {
             ...this.$route.query, // Preserve all existing parameters
             active: 'search',
-            selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
+            selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value, // Always use valid AI mode
             language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
             originalText: encodeURI(originalText.toLowerCase()),
             now: new Date().getTime()
