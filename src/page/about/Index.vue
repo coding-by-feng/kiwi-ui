@@ -161,7 +161,6 @@
       <!-- Copyright Section -->
       <div class="copyright-section">
         <div class="copyright-content">
-          <i class="el-icon-postcard"></i>
           <span class="copyright-text">{{ $t('about.copyright') }}</span>
         </div>
       </div>

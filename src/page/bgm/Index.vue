@@ -18,14 +18,12 @@
           <el-button
               type="primary"
               @click="cleanDb"
-              class="management-button clean-audio-btn"
               :loading="loading">
             {{ $t('audio.cleanAudioData', { count: allDataSize }) }}
           </el-button>
           <el-button
               type="warning"
               @click="clearWebsiteData"
-              class="management-button clean-cache-btn"
               :loading="loading">
             {{ $t('audio.cleanAllCache') }}
           </el-button>
@@ -127,9 +125,10 @@ export default {
     this.currentPlayBgm.addEventListener('ended', async function () {
       that.nextBgm()
     })
-    if (this.bgm) {
-      this.playBgm(0)
-    }
+    // Removed automatic BGM playback - users must manually click to play
+    // if (this.bgm) {
+    //   this.playBgm(0)
+    // }
     this.countDbAudio()
   },
   methods: {
@@ -313,14 +312,20 @@ export default {
   transition: all 0.3s ease !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   border: none !important;
+  font-size: 14px !important;
+  min-width: 120px !important;
 
   &:hover {
-    transform: translateY(-2px) !important;
+    transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   }
 
   &:active {
     transform: translateY(0) !important;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
   }
 
   i {
@@ -329,17 +334,20 @@ export default {
 }
 
 .clean-audio-btn {
-  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%) !important;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
   color: white !important;
 
   &:hover {
-    background: linear-gradient(135deg, #3a8ee6 0%, #5ca3f7 100%) !important;
+    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
     color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3) !important;
   }
 
   &:focus {
-    background: linear-gradient(135deg, #3a8ee6 0%, #5ca3f7 100%) !important;
+    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
     color: white !important;
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
   }
 }
 
@@ -348,13 +356,16 @@ export default {
   color: white !important;
 
   &:hover {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
+    background: linear-gradient(135deg, #d9963b 0%, #f0b027 100%) !important;
     color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(230, 162, 60, 0.3) !important;
   }
 
   &:focus {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
+    background: linear-gradient(135deg, #d9963b 0%, #f0b027 100%) !important;
     color: white !important;
+    box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.3) !important;
   }
 }
 

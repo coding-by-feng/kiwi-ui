@@ -704,6 +704,162 @@ export default {
   margin-bottom: 10px;
 }
 
+/* Consistent Button Styling - Match AiResponseDetail.vue patterns */
+.el-button {
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  min-width: 80px !important;
+}
+
+/* Primary button styling */
+.el-button--primary {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  color: white !important;
+}
+
+.el-button--primary:hover:not(.is-loading) {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3) !important;
+  color: white !important;
+}
+
+.el-button--primary:focus {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
+  color: white !important;
+}
+
+/* Info button styling */
+.el-button--info {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
+  color: white !important;
+}
+
+.el-button--info:hover:not(.is-loading) {
+  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
+  color: white !important;
+}
+
+.el-button--info:focus {
+  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
+  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.3) !important;
+  color: white !important;
+}
+
+/* Danger button styling */
+.el-button--danger {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+  color: white !important;
+}
+
+.el-button--danger:hover:not(.is-loading) {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4) !important;
+  color: white !important;
+}
+
+.el-button--danger:focus {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+  box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.3) !important;
+  color: white !important;
+}
+
+/* Warning button styling */
+.el-button--warning {
+  background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%) !important;
+  color: white !important;
+}
+
+.el-button--warning:hover:not(.is-loading) {
+  background: linear-gradient(135deg, #d9963b 0%, #f0b027 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(230, 162, 60, 0.3) !important;
+  color: white !important;
+}
+
+.el-button--warning:focus {
+  background: linear-gradient(135deg, #d9963b 0%, #f0b027 100%) !important;
+  box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.3) !important;
+  color: white !important;
+}
+
+/* Default button styling */
+.el-button:not(.el-button--primary):not(.el-button--info):not(.el-button--danger):not(.el-button--warning) {
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  color: #6c757d !important;
+}
+
+.el-button:not(.el-button--primary):not(.el-button--info):not(.el-button--danger):not(.el-button--warning):hover:not(.is-loading) {
+  background: #e9ecef !important;
+  border-color: #dee2e6 !important;
+  color: #495057 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Loading state styling */
+.el-button.is-loading {
+  transform: none !important;
+  opacity: 0.8;
+}
+
+/* Active state */
+.el-button:active {
+  transform: translateY(0px) !important;
+}
+
+/* History button specific styling - override with danger gradient */
+.el-button[title*="History"] {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.el-button[title*="History"]:hover {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4) !important;
+  color: white !important;
+}
+
+.el-button[title*="History"]:focus {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+  box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.3) !important;
+  color: white !important;
+}
+
+/* Dialog footer button styling */
+.dialog-footer .el-button {
+  margin: 0 8px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  min-width: 140px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dialog-footer .el-button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dialog-footer .el-button:active {
+  transform: translateY(0px) !important;
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
   .el-row {
@@ -726,6 +882,40 @@ export default {
   .language-switcher {
     margin-right: 5px;
   }
+  
+  /* Button responsive layout for small screens */
+  .el-row:nth-child(2) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .el-row:nth-child(2) .el-select {
+    flex: 1 1 auto;
+    min-width: 120px;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  .el-row:nth-child(2) .el-button {
+    flex: 0 0 auto;
+    margin-right: 0;
+    margin-bottom: 8px;
+    min-width: 80px;
+  }
+
+  /* Mobile button adjustments */
+  .el-button {
+    padding: 10px 16px !important;
+    min-width: 120px !important;
+  }
+
+  .dialog-footer .el-button {
+    margin: 8px 4px !important;
+    min-width: 120px !important;
+    padding: 10px 16px !important;
+  }
 }
 
 /* Clipboard info dialog styles */
@@ -736,16 +926,5 @@ export default {
 .el-dialog ol li {
   margin-bottom: 8px;
   line-height: 1.5;
-}
-
-/* History button styling */
-.el-button[title*="History"] {
-  transition: all 0.3s ease;
-}
-
-.el-button[title*="History"]:hover {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
-  color: white;
 }
 </style>

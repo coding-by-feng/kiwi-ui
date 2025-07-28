@@ -617,3 +617,110 @@ export default {
   </div>
 
 </template>
+
+<style scoped>
+/* Button Styling - Consistent with AiResponseDetail.vue */
+::v-deep .el-button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Info Button Styling */
+::v-deep .el-button--info {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+::v-deep .el-button--info:hover:not(.is-loading) {
+  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
+}
+
+::v-deep .el-button--info:focus {
+  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
+  color: white !important;
+  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.3) !important;
+}
+
+/* Text Button Styling */
+::v-deep .el-button--text {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+  color: #409eff !important;
+  border: 1px solid rgba(64, 158, 255, 0.2) !important;
+  padding: 8px 12px !important;
+}
+
+::v-deep .el-button--text:hover:not(.is-loading) {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+  color: #3a8ee6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3) !important;
+  border-color: rgba(64, 158, 255, 0.4) !important;
+}
+
+::v-deep .el-button--text:focus {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+  color: #3a8ee6 !important;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
+  border-color: rgba(64, 158, 255, 0.4) !important;
+}
+
+/* Common button states */
+::v-deep .el-button:active {
+  transform: translateY(0px) !important;
+}
+
+::v-deep .el-button.is-loading {
+  opacity: 0.7 !important;
+  transform: none !important;
+}
+
+/* Mini button size adjustments */
+::v-deep .el-button--mini {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+
+/* Dropdown split button styling */
+::v-deep .el-dropdown-split-button .el-button {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
+}
+
+::v-deep .el-dropdown-split-button .el-button:hover {
+  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
+}
+
+/* Icon styling within buttons */
+::v-deep .el-button i {
+  margin-right: 4px;
+}
+
+/* Dialog footer button styling */
+.dialog-footer .el-button--info {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
+  padding: 10px 20px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  ::v-deep .el-button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+  
+  ::v-deep .el-button--mini {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+  }
+  
+  .dialog-footer .el-button {
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+}
+</style>
