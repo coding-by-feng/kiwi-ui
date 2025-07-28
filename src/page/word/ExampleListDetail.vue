@@ -116,5 +116,67 @@ export default {
 </script>
 
 <style scoped>
-</style>
+/* Button Styling - Consistent with AiResponseDetail.vue */
+::v-deep .el-button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
 
+/* Text Button Styling */
+::v-deep .el-button--text {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+  color: #409eff !important;
+  border: 1px solid rgba(64, 158, 255, 0.2) !important;
+  padding: 8px 12px !important;
+}
+
+::v-deep .el-button--text:hover:not(.is-loading) {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+  color: #3a8ee6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3) !important;
+  border-color: rgba(64, 158, 255, 0.4) !important;
+}
+
+::v-deep .el-button--text:focus {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+  color: #3a8ee6 !important;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
+  border-color: rgba(64, 158, 255, 0.4) !important;
+}
+
+::v-deep .el-button--text:active {
+  transform: translateY(0px) !important;
+}
+
+::v-deep .el-button--text.is-loading {
+  opacity: 0.7 !important;
+  transform: none !important;
+}
+
+/* Mini button size adjustments */
+::v-deep .el-button--mini {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+
+/* Icon styling within buttons */
+::v-deep .el-button i {
+  margin-right: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  ::v-deep .el-button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+  
+  ::v-deep .el-button--mini {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+  }
+}
+</style>
