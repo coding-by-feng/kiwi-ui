@@ -7,7 +7,7 @@ export default {
     return request({
       url: '/wordBiz/word/main/fuzzyQueryList',
       headers: {
-        isToken: true
+        isToken: false
       },
       method: 'post',
       params: {

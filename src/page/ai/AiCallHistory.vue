@@ -7,7 +7,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="filters-container" v-if="!loading">
+    <div class="filters-container" v-if="historyData && historyData.total > 0">
       <el-card class="filter-card">
         <div class="filter-row">
           <el-select
@@ -15,8 +15,7 @@
               placeholder="Filter by Mode"
               size="small"
               clearable
-              @change="applyFilters"
-              v-if="historyData && historyData.total > 0">
+              @change="applyFilters">
             <el-option label="All Modes" value=""></el-option>
             <el-option
                 v-for="mode in uniqueModes"
@@ -31,8 +30,7 @@
               placeholder="Filter by Language"
               size="small"
               clearable
-              @change="applyFilters"
-              v-if="historyData && historyData.total > 0">
+              @change="applyFilters">
             <el-option label="All Languages" value=""></el-option>
             <el-option
                 v-for="lang in uniqueLanguages"
@@ -42,23 +40,12 @@
             </el-option>
           </el-select>
 
-          <el-select
-              v-model="filterClassification"
-              placeholder="Filter by Status"
-              size="small"
-              clearable
-              @change="applyFilters">
-            <el-option label="Normal Items" value="normal"></el-option>
-            <el-option label="Archived Items" value="archived"></el-option>
-            <el-option label="All Items" value="all"></el-option>
-          </el-select>
-
           <el-button
               type="text"
               size="small"
               icon="el-icon-delete"
               @click="clearFilters"
-              v-if="filterMode || filterLanguage || filterClassification">
+              v-if="filterMode || filterLanguage">
             Clear Filters
           </el-button>
         </div>
@@ -107,41 +94,25 @@
 
           <div class="history-item-actions">
             <el-button
-                type="primary"
+                type="text"
                 size="small"
                 icon="el-icon-search"
                 @click="searchAgain(record)">
               Review
             </el-button>
             <el-button
-                type="primary"
+                type="text"
                 size="small"
                 icon="el-icon-document-copy"
                 @click="copyPrompt(record.prompt)">
               Copy
             </el-button>
             <el-button
-                type="primary"
+                type="text"
                 size="small"
                 icon="el-icon-view"
                 @click="viewDetails(record)">
               Details
-            </el-button>
-            <el-button
-                type="primary"
-                size="small"
-                icon="el-icon-box"
-                @click="archiveItem(record.id)"
-                :loading="archivingIds.includes(record.id)">
-              Archive
-            </el-button>
-            <el-button
-                type="primary"
-                size="small"
-                icon="el-icon-delete"
-                @click="confirmDelete(record.id)"
-                :loading="deletingIds.includes(record.id)">
-              Delete
             </el-button>
           </div>
         </el-card>
@@ -206,7 +177,7 @@
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
 import { Message } from 'element-ui';
-import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai'; // Import the API functions
+import { getAiCallHistory } from '@/api/ai'; // Import the API function
 
 export default {
   name: 'AiCallHistory',
@@ -220,7 +191,6 @@ export default {
       // Filters
       filterMode: '',
       filterLanguage: '',
-      filterClassification: 'normal',
 
       // Detail dialog
       detailDialogVisible: false,
@@ -228,11 +198,7 @@ export default {
 
       // Language and mode mappings
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
-      searchModes: Object.values(kiwiConsts.SEARCH_AI_MODES),
-
-      archivingIds: [],
-      deletingIds: [],
-      lastClassificationFilter: 'normal'
+      searchModes: Object.values(kiwiConsts.SEARCH_AI_MODES)
     }
   },
 
@@ -254,26 +220,20 @@ export default {
     },
 
     filteredRecords() {
-      if (!this.historyData || !this.historyData.records) {
-        return [];
-      }
+      if (!this.historyData || !this.historyData.records) return [];
 
       let records = this.historyData.records;
 
-      // Apply mode filter
       if (this.filterMode) {
         records = records.filter(record => record.promptMode === this.filterMode);
       }
 
-      // Apply language filter
       if (this.filterLanguage) {
         records = records.filter(record =>
             record.targetLanguage === this.filterLanguage ||
             record.nativeLanguage === this.filterLanguage
         );
       }
-
-      // Classification filtering is now handled server-side, so we don't filter here
 
       return records;
     }
@@ -287,10 +247,10 @@ export default {
     async loadHistory() {
       this.loading = true;
       try {
-        console.log(`Loading AI call history - page: ${this.currentPage}, size: ${this.pageSize}, filter: ${this.filterClassification}`);
+        console.log(`Loading AI call history - page: ${this.currentPage}, size: ${this.pageSize}`);
 
-        // Use the extracted API function with filter parameter
-        const response = await getAiCallHistory(this.currentPage, this.pageSize, this.filterClassification);
+        // Use the extracted API function
+        const response = await getAiCallHistory(this.currentPage, this.pageSize);
 
         if (response.data.code === 1) {
           this.historyData = response.data.data;
@@ -314,28 +274,14 @@ export default {
     },
 
     applyFilters() {
-      // For classification filter, we need to reload data from API
-      // For mode and language filters, we use client-side filtering
-      if (this.filterClassification !== this.lastClassificationFilter) {
-        this.currentPage = 1; // Reset to first page when filter changes
-        this.loadHistory();
-        this.lastClassificationFilter = this.filterClassification;
-      }
-      console.log('Applying filters:', this.filterMode, this.filterLanguage, this.filterClassification);
+      // Filters are applied through computed property
+      console.log('Applying filters:', this.filterMode, this.filterLanguage);
     },
 
     clearFilters() {
-      const hadClassificationFilter = this.filterClassification !== '';
+      console.log('Clearing filters');
       this.filterMode = '';
       this.filterLanguage = '';
-      this.filterClassification = '';
-      this.lastClassificationFilter = '';
-      
-      // If we had a classification filter, reload data to get all items
-      if (hadClassificationFilter) {
-        this.currentPage = 1;
-        this.loadHistory();
-      }
     },
 
     getModeLabel(modeValue) {
@@ -467,58 +413,6 @@ export default {
           now: new Date().getTime()
         }
       });
-    },
-
-    async archiveItem(id) {
-      this.archivingIds.push(id);
-      try {
-        const response = await archiveAiCallHistory(id);
-        if (response.data.code === 1) {
-          Message.success(response.data.data || 'Item archived successfully');
-          // Reload the history to reflect changes
-          this.loadHistory();
-        } else {
-          Message.error(response.data.msg || 'Failed to archive item');
-        }
-      } catch (error) {
-        console.error('Archive failed:', error);
-        const errorMessage = error.response?.data?.msg || 'Failed to archive item';
-        Message.error(errorMessage);
-      } finally {
-        this.archivingIds = this.archivingIds.filter(i => i !== id);
-      }
-    },
-
-    confirmDelete(id) {
-      this.$confirm('Are you sure you want to delete this item? This action cannot be undone.', 'Delete Item', {
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
-        this.deleteItem(id);
-      }).catch(() => {
-        console.log('Delete cancelled');
-      });
-    },
-
-    async deleteItem(id) {
-      this.deletingIds.push(id);
-      try {
-        const response = await deleteAiCallHistory(id);
-        if (response.data.code === 1) {
-          Message.success(response.data.data || 'Item deleted successfully');
-          // Reload the history to reflect changes
-          this.loadHistory();
-        } else {
-          Message.error(response.data.msg || 'Failed to delete item');
-        }
-      } catch (error) {
-        console.error('Delete failed:', error);
-        const errorMessage = error.response?.data?.msg || 'Failed to delete item';
-        Message.error(errorMessage);
-      } finally {
-        this.deletingIds = this.deletingIds.filter(i => i !== id);
-      }
     }
   }
 }
@@ -681,6 +575,7 @@ export default {
   line-height: 1.8;
   color: #2c3e50;
   word-break: break-word;
+  border: 1px solid #e4e7ed;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -689,195 +584,22 @@ export default {
   flex-wrap: wrap;
   padding-top: 10px;
   border-top: 1px solid #f0f2f5;
-  gap: 6px;
-  overflow: hidden;
-  box-sizing: border-box;
-  align-items: center;
 }
 
 .history-item-actions .el-button {
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  border: none !important;
-  padding: 8px 16px !important;
-  min-width: 80px !important;
-}
-
-.history-item-actions .el-button--primary {
   background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--primary:hover:not(.is-loading) {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--primary:focus {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--info {
-  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--info:hover:not(.is-loading) {
-  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--info:focus {
-  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
-  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--danger {
-  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--danger:hover:not(.is-loading) {
-  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--danger:focus {
-  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
-  box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button:not(.el-button--primary):not(.el-button--info):not(.el-button--danger) {
-  background: #f8f9fa !important;
-  border: 1px solid #e9ecef !important;
-  color: #6c757d !important;
-}
-
-.history-item-actions .el-button:not(.el-button--primary):not(.el-button--info):not(.el-button--danger):hover:not(.is-loading) {
-  background: #e9ecef !important;
-  border-color: #dee2e6 !important;
-  color: #495057 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-.history-item-actions .el-button.is-loading {
-  transform: none !important;
-  opacity: 0.8;
-}
-
-.history-item-actions .el-button:active {
-  transform: translateY(0px) !important;
-}
-
-.filter-row .el-button {
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   border: none !important;
-  padding: 8px 16px !important;
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
   color: white !important;
+  transition: all 0.3s ease;
+  border-radius: 6px !important;
+  font-size: 12px;
+  padding: 6px 12px;
 }
 
-.filter-row .el-button:hover {
-  background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(144, 147, 153, 0.3) !important;
-  color: white !important;
-}
-
-.filter-row .el-button:focus {
-  background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-  box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.3) !important;
-  color: white !important;
-}
-
-.filter-row .el-button:active {
-  transform: translateY(0px) !important;
-}
-
-/* Responsive design for small screens */
-@media (max-width: 768px) {
-  .ai-call-history {
-    padding: 15px;
-  }
-  
-  .history-title {
-    font-size: 20px;
-  }
-  
-  .filter-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
-  }
-  
-  .filter-row .el-select {
-    min-width: unset;
-    width: 100%;
-  }
-  
-  .history-item-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding-top: 15px;
-  }
-  
-}
-
-@media (max-width: 480px) {
-  .ai-call-history {
-    padding: 10px;
-  }
-  
-  .history-title {
-    font-size: 18px;
-  }
-  
-  .filter-row {
-    padding: 10px;
-  }
-  
-  .history-item-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding-top: 15px;
-  }
-  
-  .history-item-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .timestamp {
-    align-self: flex-end;
-    font-size: 12px;
-  }
-  
-  .prompt-text {
-    padding: 12px;
-    font-size: 14px;
-  }
+.history-item-actions .el-button:hover {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 /* Pagination */
