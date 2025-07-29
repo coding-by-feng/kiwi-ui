@@ -12,7 +12,6 @@ import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
 import AiCallHistory from '@/page/ai/AiCallHistory.vue' // Import the new AI call history component
 import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
-import DocumentReader from "@/page/ai/DocumentReader.vue" // Import the new document reader component
 
 export default [{
     path: '/',
@@ -40,7 +39,6 @@ export default [{
             aiCallHistory: AiCallHistory, // Add the AI call history component
             youtube: Youtube,// Use the new component here
             youtubePlayer: YoutubePlayer, // Use the new component here
-            documentReader: DocumentReader // Add the document reader component
         },
         children: [{
             path: 'detail',

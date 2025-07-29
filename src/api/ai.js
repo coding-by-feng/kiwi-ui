@@ -12,43 +12,14 @@ export function callAiChatCompletion(selectedMode, targetLanguage, nativeLanguag
 }
 
 // AI Call History API calls
-export function getAiCallHistory(current, size, filter = null) {
-    const params = {
-        current: current,
-        size: size
-    };
-    
-    // Add filter parameter if provided
-    if (filter && filter !== '') {
-        params.filter = filter;
-    }
-    
+export function getAiCallHistory(current, size) {
     return request({
         url: `/ai-biz/ai/history`,
         method: 'get',
-        params: params,
-        headers: {
-            isToken: true
-        }
-    })
-}
-
-// Archive AI call history item
-export function archiveAiCallHistory(id) {
-    return request({
-        url: `/ai-biz/ai/history/${id}/archive`,
-        method: 'put',
-        headers: {
-            isToken: true
-        }
-    })
-}
-
-// Delete AI call history item
-export function deleteAiCallHistory(id) {
-    return request({
-        url: `/ai-biz/ai/history/${id}`,
-        method: 'delete',
+        params: {
+            current: current,
+            size: size
+        },
         headers: {
             isToken: true
         }

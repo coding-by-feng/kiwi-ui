@@ -328,8 +328,15 @@ export default {
       // URL encode the selected text to handle special characters
       const encodedText = encodeURIComponent(this.selectedText);
       
-      // Build simple dictionary URL with only originalText parameter
-      const dictionaryUrl = `/#/lazy/tools/detail?originalText=${encodedText}`;
+      // Build query parameters preserving all existing ones
+      const queryParams = new URLSearchParams({
+        ...this.preservedQueryParams, // Preserve all existing parameters
+        originalText: encodedText,
+        active: 'search',
+        now: new Date().getTime().toString()
+      });
+      
+      const dictionaryUrl = `/#/lazy/tools/detail?${queryParams.toString()}`;
 
       // Open in new tab
       window.open(dictionaryUrl, '_blank');
