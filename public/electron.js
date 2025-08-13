@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
-const isDev = false;
+const isDev = require('electron-is-dev'); // Use dynamic detection instead of hardcoded false
 
 // Set app name
 app.setName('Kason Tools');
@@ -25,7 +25,8 @@ const config = {
         fallback: 'http://localhost:3000' // Alternative dev port
     },
     production: {
-        primary: 'https://kason.ngrok.app',
+        // For local Electron app, use local server or fallback to bundled files
+        primary: process.env.KIWI_SERVER_URL || 'http://localhost:9991', // Allow override via environment variable
         fallback: `file://${path.join(__dirname, '../dist/index.html')}`
     }
 };
@@ -366,6 +367,32 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-app-path', () => {
     return app.getAppPath();
+});
+
+ipcMain.handle('minimize-window', () => {
+    if (mainWindow) {
+        mainWindow.minimize();
+    }
+});
+
+ipcMain.handle('maximize-window', () => {
+    if (mainWindow) {
+        if (mainWindow.isMaximized()) {
+            mainWindow.unmaximize();
+        } else {
+            mainWindow.maximize();
+        }
+    }
+});
+
+ipcMain.handle('close-window', () => {
+    if (mainWindow) {
+        mainWindow.close();
+    }
+});
+
+ipcMain.handle('open-external', (event, url) => {
+    shell.openExternal(url);
 });
 
 // App event handlers

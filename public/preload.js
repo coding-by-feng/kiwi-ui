@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const isDev = false;
+const isDev = require('electron-is-dev');
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -7,6 +7,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Environment information
     isDev: isDev,
     environment: isDev ? 'development' : 'production',
+
+    // Environment variables (safe ones only)
+    getEnvVar: (key) => {
+        // Only allow specific environment variables for security
+        const allowedVars = ['KIWI_SERVER_URL', 'VUE_APP_API_URL', 'NODE_ENV'];
+        if (allowedVars.includes(key)) {
+            return process.env[key];
+        }
+        return null;
+    },
 
     // DevTools functionality
     toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
