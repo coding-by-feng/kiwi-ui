@@ -6,8 +6,8 @@ const productionGzipExtensions = ['js', 'css']
 // Determine if running in Electron
 const isElectron = process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-dev';
 
-// Backend URL - use localhost for Electron, or your production server
-const url = isElectron ? 'http://kason-server.local:9991' : 'http://kiwi-microservice-local:9991'
+// Backend URL - use environment variable or default
+const url = process.env.VUE_APP_API_URL || (isElectron ? 'http://localhost:9991' : 'http://localhost:9991')
 
 // Set public path based on environment
 let publicPath = isElectron ? './' : './'

@@ -399,59 +399,46 @@ export default {
           }
         }
         
-        // iOS-specific handling
-        if (this.isIOS) {
-          // Check if we have a pre-loaded audio
-          let preloadedAudio = this.pronunciationAudioMap.get(id)
-          if (preloadedAudio) {
-            try {
-              await preloadedAudio.play()
-              return
-            } catch (iosError) {
-              console.warn('Pre-loaded audio failed on iOS:', iosError)
-              // Fall through to create new audio with user interaction
-            }
+        // Attempt to play immediately on all devices (including iOS)
+        // Prefer preloaded audio if available
+        let audio = this.pronunciationAudioMap.get(id) || new Audio()
+        if (!(audio instanceof HTMLAudioElement)) {
+          // Safety: ensure we have an Audio instance
+          audio = new Audio()
+        }
+        let source = getStore({name: 'pronunciation_source'})
+        if (!audio.src || audio.src === window.location.href) {
+          if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
+            audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+          } else {
+            audio.src = sourceUrl
           }
-          
-          // For iOS, show a message instead of auto-playing
+        }
+
+        // Add error handling for audio loading
+        audio.addEventListener('error', (e) => {
+          console.warn('Audio playback failed:', e)
+        })
+
+        try {
+          audio.pause()
+          await audio.play()
+        } catch (playErr) {
+          console.warn('Audio play() was blocked or failed:', playErr)
+          // Only show a tap prompt if playback was blocked (common on iOS without gesture)
           this.$message({
             message: 'Tap here to play pronunciation',
             type: 'info',
             duration: 2000,
             onClick: async () => {
               try {
-                let audio = new Audio()
-                let source = getStore({name: 'pronunciation_source'})
-                if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-                  audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
-                } else {
-                  audio.src = sourceUrl
-                }
                 await audio.play()
-              } catch (playError) {
-                console.warn('iOS audio playback failed:', playError)
+              } catch (retryErr) {
+                console.warn('Retry audio playback failed:', retryErr)
               }
             }
           })
-          return
         }
-        
-        // Non-iOS devices - original behavior
-        let audio = new Audio()
-        let source = getStore({name: 'pronunciation_source'})
-        if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-          audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
-        } else {
-          audio.src = sourceUrl
-        }
-        
-        // Add error handling for audio loading
-        audio.addEventListener('error', (e) => {
-          console.warn('Audio playback failed:', e)
-        })
-        
-        audio.pause()
-        await audio.play()
       } catch (e) {
         console.warn('Audio playback error:', e)
         // Don't crash the app, just log the error

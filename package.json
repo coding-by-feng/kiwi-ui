@@ -19,6 +19,9 @@
     "dist-win": "npm run build && electron-builder --win",
     "dist-linux": "npm run build && electron-builder --linux",
     "dist-all": "npm run build && electron-builder --mac --win --linux",
+    "pack-mac": "npm run build && npx electron-packager . \"Kason Tools\" --platform=darwin --arch=x64,arm64 --out=dist_electron --overwrite --ignore=\"node_modules/canvas\" --ignore=\"node_modules/sharp\"",
+    "pack-win": "npm run build && npx electron-packager . \"Kason Tools\" --platform=win32 --arch=x64 --out=dist_electron --overwrite --ignore=\"node_modules/canvas\" --ignore=\"node_modules/sharp\"",
+    "pack-linux": "npm run build && npx electron-packager . \"Kason Tools\" --platform=linux --arch=x64 --out=dist_electron --overwrite --ignore=\"node_modules/canvas\" --ignore=\"node_modules/sharp\"",
     "generate-icons": "node scripts/generate-icons.js",
     "build-electron": "node scripts/build-electron.js",
     "build-electron-mac": "node scripts/build-electron.js mac",
@@ -39,8 +42,13 @@
       "dist/**/*",
       "node_modules/**/*",
       "public/electron.js",
-      "public/preload.js"
+      "public/preload.js",
+      "!node_modules/canvas/**/*",
+      "!node_modules/sharp/**/*"
     ],
+    "buildDependenciesFromSource": false,
+    "nodeGypRebuild": false,
+    "afterPack": "scripts/afterPack.js",
     "extraResources": [
       {
         "from": "public/assets",
@@ -53,13 +61,6 @@
     "mac": {
       "target": [
         {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
           "target": "zip",
           "arch": [
             "x64",
@@ -67,12 +68,8 @@
           ]
         }
       ],
-      "icon": "public/icon.icns",
-      "category": "public.app-category.education",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "icon": "public/icon.png",
+      "category": "public.app-category.education"
     },
     "win": {
       "target": [
@@ -159,9 +156,11 @@
     "compression-webpack-plugin": "^3.1.0",
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.3",
+    "dmg-license": "^1.0.11",
     "electron": "^22.0.0",
     "electron-builder": "^24.6.4",
     "electron-is-dev": "^2.0.0",
+    "electron-packager": "^17.1.2",
     "rimraf": "^3.0.2",
     "sass": "^1.81.0",
     "sass-loader": "^8.0.2",
