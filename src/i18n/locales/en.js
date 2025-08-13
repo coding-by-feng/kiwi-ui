@@ -461,6 +461,7 @@ export default {
         'Traditional TW Chinese': 'Traditional Chinese (Taiwan)',
         'Traditional HK Chinese': 'Traditional Chinese (Hong Kong)',
         Japanese: 'Japanese',
+        Thai: 'Thai',
         Korean: 'Korean',
         French: 'French',
         German: 'German',
