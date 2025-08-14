@@ -328,15 +328,17 @@ export default {
       // URL encode the selected text to handle special characters
       const encodedText = encodeURIComponent(this.selectedText);
       
-      // Build query parameters preserving all existing ones
+      // Build query parameters with correct values
       const queryParams = new URLSearchParams({
-        ...this.preservedQueryParams, // Preserve all existing parameters
-        originalText: encodedText,
         active: 'search',
+        selectedMode: 'detail',
+        language: this.defaultNativeLanguage, // Use native language instead of target language
+        originalText: encodedText,
         now: new Date().getTime().toString()
+        // Remove ytbMode parameter
       });
       
-      const dictionaryUrl = `/#/lazy/tools/detail?${queryParams.toString()}`;
+      const dictionaryUrl = `https://kason.app/#/lazy/tools/detail?${queryParams.toString()}`;
 
       // Open in new tab
       window.open(dictionaryUrl, '_blank');
