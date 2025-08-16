@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --verbose",
-    "build": "vue-cli-service build --verbose",
+    "build": "node scripts/pre-build.js && vue-cli-service build --verbose",
+    "build:quick": "vue-cli-service build --verbose",
     "lint": "vue-cli-service lint",
     "electron": "electron .",
     "electron-dev": "concurrently \"npm run serve\" \"wait-on http://localhost:8080 && electron .\"",
@@ -29,7 +30,11 @@
     "build-electron-all": "node scripts/build-electron.js all",
     "postinstall": "electron-builder install-app-deps",
     "clean": "rimraf dist dist_electron node_modules/.cache",
-    "rebuild": "npm run clean && npm install"
+    "rebuild": "npm run clean && npm install",
+    "find:unused-api": "node scripts/remove-unused-api.js",
+    "fix:unused-api": "node scripts/remove-unused-api.js --write",
+    "optimize:resources": "node scripts/pre-build.js",
+    "optimize:images": "node scripts/image-optimizer.js"
   },
   "build": {
     "appId": "com.kiwivocabulary.desktop",
@@ -137,11 +142,9 @@
     "marked": "^15.0.12",
     "nosleep.js": "^0.12.0",
     "nprogress": "^0.2.0",
-    "pdfjs-dist": "^3.11.174",
     "vue": "^2.7.16",
     "vue-axios": "^2.1.5",
     "vue-i18n": "^8.28.2",
-    "vue-pdf-embed": "^1.2.1",
     "vue-router": "^3.6.5",
     "vue-touch": "^2.0.0-beta.4",
     "vuex": "^3.6.2"

@@ -245,6 +245,17 @@
               <span class="streaming-text">Streaming...</span>
             </span>
           <div class="header-toggle-hint">
+            <!-- New: Download subtitles as TXT in header -->
+            <el-button
+              type="success"
+              :loading="isDownloading"
+              icon="el-icon-download"
+              size="mini"
+              circle
+              :disabled="!videoUrl"
+              @click.stop="downloadSubtitlesTxt"
+              class="header-action-btn"
+            />
             <i :class="translatedSubtitlesCollapsed ? 'el-icon-arrow-right' : 'el-icon-arrow-down'" class="toggle-arrow"></i>
           </div>
         </div>
@@ -347,6 +358,8 @@ export default defineComponent({
       // Optimized debouncing
       scrollTimeout: null,
       progressUpdateInterval: null,
+      // New: downloading state
+      isDownloading: false,
     };
   },
   computed: {
@@ -671,7 +684,7 @@ export default defineComponent({
       if (!document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'youtube-api-script';
-        tag.src = 'https://www.youtube.com/iframe_api';
+        tag.src = '/assets/external/youtube-iframe-api.js';
         document.head.appendChild(tag);
       }
 
@@ -1094,6 +1107,70 @@ export default defineComponent({
         content: true,
         type: 'local'
       });
+    },
+
+    // New: Download subtitles as TXT using BE endpoint
+    async downloadSubtitlesTxt() {
+      if (!this.videoUrl) {
+        msgUtil.msgError(this, 'No video URL to download');
+        return;
+      }
+
+      try {
+        this.isDownloading = true;
+
+        const token = getStore({ name: 'access_token' });
+        const params = new URLSearchParams({ url: this.videoUrl });
+        if (this.selectedLanguage) params.append('language', this.selectedLanguage);
+
+        // Same-origin API path; adjust if your gateway prefix differs
+        const endpoint = `/ai-biz/ai/ytb/subtitles/translated/download?${params.toString()}`;
+
+        const res = await fetch(endpoint, {
+          method: 'GET',
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+
+        // Try to extract filename from Content-Disposition
+        let filename = 'subtitles.txt';
+        const disposition = res.headers.get('Content-Disposition');
+        if (disposition) {
+          // filename*=UTF-8''... OR filename="..."
+          const utf8Name = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+          const quotedName = disposition.match(/filename\s*=\s*"([^"]+)"/i);
+          const bareName = disposition.match(/filename\s*=\s*([^;]+)/i);
+
+          const raw =
+            (utf8Name && decodeURIComponent(utf8Name[1])) ||
+            (quotedName && quotedName[1]) ||
+            (bareName && bareName[1]);
+
+          if (raw) filename = raw.trim();
+        }
+
+        // Trigger download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        msgUtil.msgSuccess(this, 'Downloading subtitles...', 1500);
+      } catch (e) {
+        console.error('Failed to download subtitles:', e);
+        msgUtil.msgError(this, 'Failed to download subtitles', 2500);
+      } finally {
+        this.isDownloading = false;
+      }
     },
 
     // Utilities
@@ -1936,6 +2013,11 @@ export default defineComponent({
   align-items: center;
 }
 
+/* New: add a bit of spacing between the download button and the arrow icon */
+.header-action-btn {
+  margin-right: 10px;
+}
+
 .toggle-arrow {
   font-size: 14px;
   transition: transform 0.3s ease;
@@ -2223,11 +2305,6 @@ export default defineComponent({
   align-items: center;
 }
 
-.toggle-arrow {
-  font-size: 14px;
-  transition: transform 0.3s ease;
-}
-
 /* Responsive Design */
 @media (max-width: 767px) {
   .header-container {
@@ -2463,3 +2540,4 @@ export default defineComponent({
   }
 }
 </style>
+

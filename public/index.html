@@ -4,7 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- iOS Safari optimizations -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-touch-fullscreen" content="yes">
+
     <link rel="icon" href="<%= BASE_URL %>kiwi.png">
+    <!-- Use more reliable CDNs for global access -->
+    <link rel="dns-prefetch" href="https://kason.app">
+    <link rel="preconnect" href="https://kason.app" crossorigin>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
     <title>Kason Tools</title>
 </head>
 <body>
@@ -13,16 +25,42 @@
         continue.</strong>
 </noscript>
 <div id="app">
-    <p>Loading; Please wait; your first visit might take at least several seconds.</p>
+    <div style="text-align: center; padding: 50px 20px; font-family: Arial, sans-serif;">
+        <div style="font-size: 18px; margin-bottom: 20px;">⏳ Loading Kason Tools...</div>
+        <div style="font-size: 14px; color: #666;">Please wait while we prepare your learning tools</div>
+        <div style="margin-top: 20px;">
+            <div style="width: 100%; height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden;">
+                <div style="width: 0%; height: 100%; background: linear-gradient(90deg, #409eff, #67c23a); animation: loading 3s infinite;"></div>
+            </div>
+        </div>
+        <div style="font-size: 12px; color: #999; margin-top: 20px;">
+            Initializing components, loading resources...
+        </div>
+    </div>
 </div>
-<!-- built files will be auto injected -->
-</body>
 
-<script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js" charset="utf-8"></script>
-<script type="text/javascript">
-    document.body.addEventListener('dblclick', function(event) {
-        event.preventDefault();
-    });
+<style>
+@keyframes loading {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 0%; }
+}
+</style>
+
+<!-- Additional loading monitoring -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.loadingDiagnostics) {
+        window.loadingDiagnostics.logStep('📄 DOM Content Loaded', 'HTML document loaded and parsed');
+        window.loadingDiagnostics.checkLoadingStage();
+    }
+});
+
+window.addEventListener('load', function() {
+    if (window.loadingDiagnostics) {
+        window.loadingDiagnostics.logStep('🌟 Window Load Complete', 'All resources including images and stylesheets loaded');
+    }
+});
 </script>
-
+</body>
 </html>

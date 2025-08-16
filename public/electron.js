@@ -21,8 +21,9 @@ let mainWindow;
 // Configuration for different environments
 const config = {
     development: {
-        primary: 'http://localhost:8080',
-        fallback: 'http://localhost:3000' // Alternative dev port
+        // Allow override via environment variable to handle port conflicts
+        primary: process.env.DEV_SERVER_URL || 'http://localhost:8080',
+        fallback: process.env.DEV_SERVER_FALLBACK_URL || 'http://localhost:3000' // Alternative dev port
     },
     production: {
         // For local Electron app, use local server or fallback to bundled files
