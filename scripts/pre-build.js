@@ -1,126 +1,251 @@
 #!/usr/bin/env node
 
+/**
+ * Pre-build script to download latest external resources and optimize images
+ * This script runs before the Vue build process
+ */
+
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { execSync } = require('child_process');
 
-console.log('🚀 Starting pre-build optimization...');
+// Configuration
+const EXTERNAL_ASSETS_DIR = path.join(__dirname, '../public/assets/external');
+const PUBLIC_DIR = path.join(__dirname, '../public');
 
-// Ensure external assets directory exists
-const externalDir = path.join(__dirname, '..', 'public', 'assets', 'external');
-if (!fs.existsSync(externalDir)) {
-    fs.mkdirSync(externalDir, { recursive: true });
-    console.log('✅ Created external assets directory');
-}
+const RESOURCES = {
+  youtubeApi: {
+    url: 'https://www.youtube.com/iframe_api',
+    filename: 'youtube-iframe-api.js',
+    description: 'YouTube iframe API'
+  }
+};
 
-// Download latest YouTube iframe API
-function downloadYouTubeAPI() {
-    return new Promise((resolve, reject) => {
-        console.log('📥 Downloading latest YouTube iframe API...');
-        const apiUrl = 'https://www.youtube.com/iframe_api';
-        const apiPath = path.join(externalDir, 'youtube-iframe-api.js');
+// Utility functions
+const ensureDir = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
 
-        const file = fs.createWriteStream(apiPath);
+const downloadFile = (url, filepath) => {
+  return new Promise((resolve, reject) => {
+    console.log(`📥 Downloading: ${url}`);
 
-        https.get(apiUrl, (response) => {
-            if (response.statusCode === 200) {
-                response.pipe(file);
-                file.on('finish', () => {
-                    file.close();
-                    console.log('✅ YouTube iframe API downloaded successfully');
-                    resolve();
-                });
-            } else {
-                console.log('⚠️ Using cached YouTube API (download failed)');
-                resolve();
-            }
-        }).on('error', (err) => {
-            fs.unlink(apiPath, () => {}); // Delete incomplete file
-            console.log('⚠️ Using cached YouTube API (network error)');
-            resolve(); // Don't fail build for API download
-        });
+    const file = fs.createWriteStream(filepath);
+    const request = https.get(url, (response) => {
+      // Handle redirects
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        file.close();
+        fs.unlinkSync(filepath);
+        return downloadFile(response.headers.location, filepath).then(resolve).catch(reject);
+      }
+
+      if (response.statusCode !== 200) {
+        file.close();
+        fs.unlinkSync(filepath);
+        return reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+      }
+
+      response.pipe(file);
+
+      file.on('finish', () => {
+        file.close();
+        const stats = fs.statSync(filepath);
+        console.log(`✅ Downloaded: ${path.basename(filepath)} (${(stats.size / 1024).toFixed(2)}KB)`);
+        resolve(filepath);
+      });
+
+      file.on('error', (err) => {
+        file.close();
+        fs.unlinkSync(filepath);
+        reject(err);
+      });
     });
-}
 
-// Optimize webchat.png using basic Node.js (no sharp dependency)
-function optimizeWebchatImage() {
-    return new Promise((resolve) => {
-        console.log('🖼️ Checking webchat.png...');
-        const imagePath = path.join(__dirname, '..', 'public', 'wechat.png');
-
-        if (!fs.existsSync(imagePath)) {
-            console.log('⚠️ wechat.png not found, skipping optimization');
-            resolve();
-            return;
-        }
-
-        const stats = fs.statSync(imagePath);
-        console.log(`📊 Current wechat.png size: ${Math.round(stats.size / 1024)}KB`);
-
-        // If file is larger than 100KB, warn user
-        if (stats.size > 100 * 1024) {
-            console.log('⚠️ wechat.png is large (>100KB). Consider optimizing manually.');
-        } else {
-            console.log('✅ wechat.png size is acceptable');
-        }
-
-        resolve();
+    request.on('error', (err) => {
+      file.close();
+      if (fs.existsSync(filepath)) {
+        fs.unlinkSync(filepath);
+      }
+      reject(err);
     });
-}
 
-// Fix fonts directory structure (run after build)
-function fixFontsDirectoryStructure() {
-    const distPath = path.join(__dirname, '..', 'dist');
-    if (!fs.existsSync(distPath)) return;
+    request.setTimeout(30000, () => {
+      request.abort();
+      reject(new Error('Request timeout'));
+    });
+  });
+};
 
-    const fontsPath = path.join(distPath, 'fonts');
-    const nestedFontsPath = path.join(fontsPath, 'fonts');
+const optimizeImage = (inputPath, outputPath = null) => {
+  if (!outputPath) outputPath = inputPath;
 
-    if (fs.existsSync(nestedFontsPath)) {
-        console.log('🔧 Fixing nested fonts directory...');
+  const originalSize = fs.existsSync(inputPath) ? fs.statSync(inputPath).size : 0;
+  if (originalSize === 0) {
+    console.log(`⚠️  Image not found: ${inputPath}`);
+    return false;
+  }
 
-        try {
-            const files = fs.readdirSync(nestedFontsPath);
+  console.log(`🖼️  Optimizing image: ${path.basename(inputPath)} (${(originalSize / 1024).toFixed(2)}KB)`);
 
-            // Move files from nested directory
-            files.forEach(file => {
-                const srcPath = path.join(nestedFontsPath, file);
-                const destPath = path.join(fontsPath, file);
+  try {
+    // Check if imagemin is available, if not use built-in optimization
+    let optimized = false;
 
-                if (!fs.existsSync(destPath)) {
-                    fs.renameSync(srcPath, destPath);
-                }
-            });
+    // Try sharp first (best quality)
+    try {
+      execSync('npm list sharp --depth=0', { stdio: 'ignore' });
+      const sharp = require('sharp');
 
-            // Remove empty nested directory
-            fs.rmdirSync(nestedFontsPath);
-            console.log('✅ Fixed fonts directory structure');
-        } catch (error) {
-            console.warn('⚠️ Could not fix fonts directory:', error.message);
+      if (inputPath.endsWith('.png')) {
+        sharp(inputPath)
+          .png({ quality: 80, compressionLevel: 8 })
+          .toFile(outputPath + '.tmp')
+          .then(() => {
+            fs.renameSync(outputPath + '.tmp', outputPath);
+            optimized = true;
+          });
+      } else if (inputPath.endsWith('.jpg') || inputPath.endsWith('.jpeg')) {
+        sharp(inputPath)
+          .jpeg({ quality: 85, progressive: true })
+          .toFile(outputPath + '.tmp')
+          .then(() => {
+            fs.renameSync(outputPath + '.tmp', outputPath);
+            optimized = true;
+          });
+      }
+    } catch (e) {
+      // Sharp not available, try imagemin
+      try {
+        execSync('npm list imagemin --depth=0', { stdio: 'ignore' });
+        // Use imagemin if available
+        const command = `npx imagemin ${inputPath} --out-dir=${path.dirname(outputPath)} --plugin.pngquant --plugin.mozjpeg`;
+        execSync(command, { stdio: 'ignore' });
+        optimized = true;
+      } catch (e2) {
+        // Fallback: just copy the file
+        if (inputPath !== outputPath) {
+          fs.copyFileSync(inputPath, outputPath);
         }
+        console.log(`ℹ️  No optimization tools available, using original image`);
+      }
     }
-}
+
+    const newSize = fs.statSync(outputPath).size;
+    const savings = ((originalSize - newSize) / originalSize * 100);
+
+    if (savings > 0) {
+      console.log(`✅ Optimized: ${path.basename(outputPath)} - saved ${savings.toFixed(1)}% (${((originalSize - newSize) / 1024).toFixed(2)}KB)`);
+    } else {
+      console.log(`✅ Processed: ${path.basename(outputPath)} (${(newSize / 1024).toFixed(2)}KB)`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to optimize ${inputPath}:`, error.message);
+    return false;
+  }
+};
+
+const checkResourceFreshness = (filepath, maxAge = 24 * 60 * 60 * 1000) => {
+  if (!fs.existsSync(filepath)) return false;
+
+  const stats = fs.statSync(filepath);
+  const now = new Date();
+  const age = now - stats.mtime;
+
+  return age < maxAge;
+};
 
 // Main execution
 async function main() {
-    try {
-        await Promise.all([
-            downloadYouTubeAPI(),
-            optimizeWebchatImage()
-        ]);
+  console.log('🚀 Starting pre-build resource optimization...\n');
 
-        // Set up post-build font fix
-        if (process.env.NODE_ENV === 'production') {
-            // Schedule font directory fix for after build
-            process.on('exit', fixFontsDirectoryStructure);
-        }
+  // Ensure directories exist
+  ensureDir(EXTERNAL_ASSETS_DIR);
 
-        console.log('🎉 Pre-build optimization completed successfully!');
-    } catch (error) {
-        console.error('❌ Pre-build optimization failed:', error.message);
-        // Don't fail the build for optimization issues
-        process.exit(0);
+  // Download external resources
+  console.log('📦 Downloading external resources...');
+
+  for (const [key, resource] of Object.entries(RESOURCES)) {
+    const filepath = path.join(EXTERNAL_ASSETS_DIR, resource.filename);
+
+    // Check if resource is fresh (less than 24 hours old)
+    if (checkResourceFreshness(filepath)) {
+      console.log(`✅ Using cached: ${resource.description} (fresh)`);
+      continue;
     }
+
+    try {
+      await downloadFile(resource.url, filepath);
+
+      // Add timestamp comment to JS files
+      if (resource.filename.endsWith('.js')) {
+        const content = fs.readFileSync(filepath, 'utf8');
+        const timestampComment = `/* Downloaded on ${new Date().toISOString()} from ${resource.url} */\n`;
+        fs.writeFileSync(filepath, timestampComment + content);
+      }
+    } catch (error) {
+      console.error(`❌ Failed to download ${resource.description}:`, error.message);
+
+      // Check if old version exists
+      if (fs.existsSync(filepath)) {
+        console.log(`ℹ️  Using existing cached version: ${resource.filename}`);
+      } else {
+        console.error(`💥 No fallback available for: ${resource.filename}`);
+        process.exit(1);
+      }
+    }
+  }
+
+  // Optimize images
+  console.log('\n🖼️  Optimizing images...');
+
+  const imagesToOptimize = [
+    { input: path.join(PUBLIC_DIR, 'wechat.png'), output: path.join(PUBLIC_DIR, 'wechat.png') },
+    { input: path.join(PUBLIC_DIR, 'icon.png'), output: path.join(PUBLIC_DIR, 'icon.png') },
+    { input: path.join(PUBLIC_DIR, 'favicon.ico'), output: path.join(PUBLIC_DIR, 'favicon.ico') }
+  ];
+
+  for (const image of imagesToOptimize) {
+    optimizeImage(image.input, image.output);
+  }
+
+  // Optimize external images
+  const externalImages = fs.readdirSync(EXTERNAL_ASSETS_DIR)
+    .filter(file => /\.(png|jpg|jpeg|gif)$/i.test(file))
+    .map(file => path.join(EXTERNAL_ASSETS_DIR, file));
+
+  for (const imagePath of externalImages) {
+    optimizeImage(imagePath);
+  }
+
+  console.log('\n✨ Pre-build optimization completed!');
+  console.log('📊 Summary:');
+  console.log(`   - External resources: ${Object.keys(RESOURCES).length}`);
+  console.log(`   - Images optimized: ${imagesToOptimize.length + externalImages.length}`);
+  console.log('');
 }
 
-main();
+// Error handling
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error.message);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error('💥 Unhandled Rejection:', error.message);
+  process.exit(1);
+});
+
+// Run the script
+if (require.main === module) {
+  main().catch(error => {
+    console.error('💥 Script failed:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { downloadFile, optimizeImage, checkResourceFreshness };

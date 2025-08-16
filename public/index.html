@@ -1,245 +1,66 @@
 <!DOCTYPE html>
-<!-- HTML5 DOCUMENT TYPE - Modern web standards -->
 <html lang="en">
-<!-- LANGUAGE ATTRIBUTE - Helps screen readers and SEO -->
 <head>
-    <!-- CHARACTER ENCODING - UTF-8 supports all international characters -->
     <meta charset="utf-8">
-
-    <!-- IE COMPATIBILITY - Forces latest rendering engine in Internet Explorer -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <!-- VIEWPORT CONFIGURATION - Critical for mobile responsiveness -->
-    <!-- width=device-width: Use device's actual width, not desktop width -->
-    <!-- initial-scale=1.0: No initial zoom -->
-    <!-- maximum-scale=1.0: Prevent user zooming (app-like behavior) -->
-    <!-- user-scalable=no: Disable pinch-to-zoom (prevents accidental zooming) -->
     <meta name="viewport" content="width=device-width,initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-    <!-- iOS SAFARI OPTIMIZATIONS - Make web app behave like native iOS app -->
-    <!-- apple-mobile-web-app-capable: Enables full-screen mode when added to home screen -->
+    <!-- iOS Safari optimizations -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-
-    <!-- apple-mobile-web-app-status-bar-style: Controls iOS status bar appearance -->
-    <!-- Options: default (black text), black (white text), black-translucent (overlay) -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-    <!-- MOBILE SAFARI SPECIFIC BEHAVIORS -->
-    <!-- format-detection: Prevents auto-linking of phone numbers (avoids accidental calls) -->
     <meta name="format-detection" content="telephone=no">
-
-    <!-- apple-touch-fullscreen: Enables fullscreen mode on iOS when launched from home screen -->
     <meta name="apple-touch-fullscreen" content="yes">
 
-    <!-- FAVICON - Icon shown in browser tab and bookmarks -->
-    <!-- <%= BASE_URL %> is replaced by Vue CLI with the correct path during build -->
     <link rel="icon" href="<%= BASE_URL %>kiwi.png">
-
-    <!-- DNS OPTIMIZATION - Pre-resolve domain names for faster loading -->
-    <!-- dns-prefetch: Browser resolves DNS early, before actual requests -->
+    <!-- Use more reliable CDNs for global access -->
     <link rel="dns-prefetch" href="https://kason.app">
-
-    <!-- CONNECTION OPTIMIZATION - Establish early connection to external domains -->
-    <!-- preconnect: Opens TCP/SSL connection early, includes crossorigin for CORS -->
     <link rel="preconnect" href="https://kason.app" crossorigin>
-
-    <!-- CDN OPTIMIZATION - Popular CDN for external libraries -->
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
 
-    <!-- PAGE TITLE - Shown in browser tab, bookmarks, and search results -->
     <title>Kason Tools</title>
 </head>
 <body>
-<!-- NO-JAVASCRIPT FALLBACK - Message shown if JavaScript is disabled -->
-<!-- This is critical because Vue.js requires JavaScript to function -->
 <noscript>
     <strong>We're sorry but kiwi-ui doesn't work properly without JavaScript enabled. Please enable it to
         continue.</strong>
 </noscript>
-
-<!-- VUE APPLICATION MOUNT POINT - Where the Vue app will be attached -->
-<!-- id="app" matches the element selector in main.js: vueInstance.$mount('#app') -->
 <div id="app">
-    <!-- LOADING SCREEN - Shown while JavaScript loads and Vue initializes -->
-    <!-- This provides immediate visual feedback to users -->
-    <!-- Styled with inline CSS to avoid dependency on external stylesheets -->
     <div style="text-align: center; padding: 50px 20px; font-family: Arial, sans-serif;">
-
-        <!-- MAIN LOADING MESSAGE - Primary user feedback -->
-        <!-- Font size and emoji provide visual hierarchy and friendliness -->
         <div style="font-size: 18px; margin-bottom: 20px;">⏳ Loading Kason Tools...</div>
-
-        <!-- SECONDARY MESSAGE - Additional context for users -->
-        <!-- Smaller font and muted color for supporting information -->
         <div style="font-size: 14px; color: #666;">Please wait while we prepare your learning tools</div>
-
-        <!-- PROGRESS INDICATOR - Visual loading animation -->
         <div style="margin-top: 20px;">
-            <!-- PROGRESS BAR CONTAINER - Styled background bar -->
             <div style="width: 100%; height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden;">
-                <!-- ANIMATED PROGRESS BAR - Uses CSS animation defined below -->
-                <!-- Gradient colors: blue (#409eff) to green (#67c23a) for visual appeal -->
                 <div style="width: 0%; height: 100%; background: linear-gradient(90deg, #409eff, #67c23a); animation: loading 3s infinite;"></div>
             </div>
         </div>
-
-        <!-- STATUS MESSAGE - Shows current loading stage -->
-        <!-- Very small font for technical users who want details -->
         <div style="font-size: 12px; color: #999; margin-top: 20px;">
             Initializing components, loading resources...
         </div>
     </div>
 </div>
 
-<!-- EXTERNAL LIBRARY LOADING - Critical dependencies loaded in specific order -->
-<!-- ORDER MATTERS: Vue core → Element UI → Vendor libraries → Your app -->
-
-<!-- VUE CORE LIBRARY - Must load first as everything depends on it -->
-<!-- Hash in filename (0ec21f17) is for cache busting - changes when file changes -->
-<script src="/js/vue-core.0ec21f17.js"></script>
-
-<!-- ELEMENT UI LIBRARY - UI component library, depends on Vue -->
-<!-- Large file but essential for all UI components (buttons, forms, tables, etc.) -->
-<script src="/js/element-ui-all.6e915fc8.js"></script>
-
-<!-- VENDOR LIBRARIES - Third-party dependencies (Axios, Vuex, etc.) -->
-<!-- Separated from app code for better caching (changes less frequently) -->
-<script src="/js/vendor.c54261fb.js"></script>
-
-<!-- APPLICATION CODE - Your actual Vue application -->
-<!-- Loads last because it depends on all the above libraries -->
-<!-- This is where main.js gets compiled and bundled -->
-<script src="/js/app.6046c426.js"></script>
-
-<!-- CSS ANIMATION DEFINITIONS - Inline styles for loading animation -->
 <style>
-/* LOADING PROGRESS ANIMATION - Smooth progress bar effect */
 @keyframes loading {
-    0% { width: 0%; }      /* Start: No progress */
-    50% { width: 70%; }    /* Middle: Partial progress (creates anticipation) */
-    100% { width: 0%; }    /* End: Reset (creates continuous loop) */
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 0%; }
 }
-/* ANIMATION EXPLANATION:
-   - 3s duration (smooth, not too fast/slow)
-   - infinite loop (continues until Vue takes over)
-   - Only goes to 70% to avoid "false completion" feeling
-   - Resets to 0% for seamless loop
-*/
 </style>
 
-<!-- LOADING DIAGNOSTICS - Advanced loading monitoring for debugging -->
-<!-- This section provides detailed feedback about loading stages -->
+<!-- Additional loading monitoring -->
 <script>
-// DOM CONTENT LOADED HANDLER - Fires when HTML is fully parsed
-// This happens BEFORE images, stylesheets, and scripts finish loading
 document.addEventListener('DOMContentLoaded', function() {
-    // DIAGNOSTIC LOGGING - Only if diagnostic system is available
-    // window.loadingDiagnostics would be defined in main.js if debugging is enabled
     if (window.loadingDiagnostics) {
         window.loadingDiagnostics.logStep('📄 DOM Content Loaded', 'HTML document loaded and parsed');
         window.loadingDiagnostics.checkLoadingStage();
     }
-
-    // FALLBACK LOGGING - Basic console logging for debugging
-    console.log('📄 HTML DOM ready, waiting for scripts...');
 });
 
-// WINDOW LOAD HANDLER - Fires when ALL resources are loaded
-// This includes images, stylesheets, scripts, and other media
 window.addEventListener('load', function() {
-    // DIAGNOSTIC LOGGING - Log complete resource loading
     if (window.loadingDiagnostics) {
         window.loadingDiagnostics.logStep('🌟 Window Load Complete', 'All resources including images and stylesheets loaded');
-    }
-
-    // PERFORMANCE MONITORING - Basic timing information
-    console.log('🌟 All resources loaded, Vue app should initialize soon...');
-
-    // LOADING TIMEOUT SAFETY - If Vue doesn't initialize within 10 seconds, show error
-    setTimeout(() => {
-        // CHECK IF VUE INITIALIZED - Look for Vue app mount
-        const appDiv = document.getElementById('app');
-        const loadingDiv = appDiv ? appDiv.querySelector('div[style*="Loading Kason Tools"]') : null;
-
-        if (loadingDiv && loadingDiv.style.display !== 'none') {
-            console.error('⚠️ Vue app failed to initialize within 10 seconds');
-
-            // USER NOTIFICATION - Show error message
-            loadingDiv.innerHTML = `
-                <div style="color: #ff4444; font-size: 16px; margin-bottom: 15px;">
-                    ⚠️ Loading Problem Detected
-                </div>
-                <div style="font-size: 14px; margin-bottom: 15px;">
-                    The application is taking longer than expected to load.
-                </div>
-                <button onclick="location.reload()" style="
-                    background: #409eff; color: white; padding: 10px 20px;
-                    border: none; border-radius: 4px; cursor: pointer;
-                ">
-                    Reload Page
-                </button>
-            `;
-        }
-    }, 10000); // 10 second timeout
-});
-
-// SCRIPT ERROR DETECTION - Catch script loading failures
-// This helps debug issues where external scripts fail to load
-window.addEventListener('error', function(e) {
-    // SCRIPT LOADING ERRORS - Check if error is related to script loading
-    if (e.filename && e.filename.includes('.js')) {
-        console.error('❌ Script loading error:', e.filename, e.message);
-
-        // USER NOTIFICATION - Show script error to user
-        const appDiv = document.getElementById('app');
-        if (appDiv) {
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = `
-                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-                background: #ff4444; color: white; padding: 15px; border-radius: 8px;
-                z-index: 10000; max-width: 400px; text-align: center;
-            `;
-            errorDiv.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 10px;">Loading Error</div>
-                <div style="font-size: 14px; margin-bottom: 10px;">
-                    Failed to load: ${e.filename.split('/').pop()}
-                </div>
-                <button onclick="location.reload()" style="
-                    background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5);
-                    color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer;
-                ">
-                    Reload
-                </button>
-            `;
-            document.body.appendChild(errorDiv);
-        }
     }
 });
 </script>
 </body>
 </html>
-
-<!--
-LOADING SEQUENCE EXPLANATION:
-1. Browser loads HTML → Shows loading screen immediately
-2. Browser parses HTML → DOMContentLoaded event fires
-3. Browser loads external scripts → vue-core.js, element-ui.js, etc.
-4. All resources loaded → window.load event fires
-5. Vue application initializes → main.js executes
-6. Vue mounts to #app → Loading screen gets replaced by app content
-
-DEBUGGING LOADING ISSUES:
-1. Check browser console for script loading errors
-2. Verify all script files exist and are accessible
-3. Check Network tab in developer tools for failed requests
-4. Look for Vue initialization logs in console
-5. Use Vue DevTools to inspect component mounting
-
-MOBILE SAFARI CONSIDERATIONS:
-- Strict memory limits require careful resource management
-- Different error handling compared to desktop browsers
-- Aggressive caching can cause stale script issues
-- Touch events need special handling
-- Loading timeouts may need adjustment for slower connections
--->
