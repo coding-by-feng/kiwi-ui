@@ -119,7 +119,7 @@
             </div>
             <div class="contact-content">
               <div class="wechat-qr-container">
-                <img src="wechat.png"
+                <img src="/wechat.png"
                      :alt="$t('about.wechatQR')"
                      class="wechat-qr-image">
                 <p class="wechat-instruction">{{ $t('about.scanToAdd') }}</p>
@@ -145,7 +145,7 @@
             </div>
             <p class="provider-description">{{ $t('about.voiceRSSDescription') }}</p>
             <a href="http://www.voicerss.org" target="_blank" class="provider-link">
-              <img src="http://www.voicerss.org/images/info_dark_brown.gif"
+              <img src="/assets/external/info_dark_brown.gif"
                    width="88px" height="31"
                    style="border: 0"
                    :alt="$t('about.voiceRSSAttribution')"
