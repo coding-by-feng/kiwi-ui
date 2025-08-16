@@ -1,207 +1,310 @@
-// Vue CLI Configuration File - Central hub for all build and development settings
-// This file controls how your Vue.js application is compiled, bundled, and served
-
-const CompressionPlugin = require('compression-webpack-plugin');
 const path = require('path');
+const webpack = require('webpack')
+const CompressionWebpackPlugin = require('compression-webpack-plugin')
 
-// Environment Detection - Critical for different build behaviors
-// isElectron: Detects if we're building for Electron desktop app vs web browser
-// This affects CORS settings, proxy configuration, and API endpoints
-const isElectron = process.env.IS_ELECTRON || process.env.npm_lifecycle_event?.includes('electron');
-// isProduction: Determines if we're building for production (optimized) vs development (debug-friendly)
-// Production builds are minified, have no source maps, use chunk splitting for caching
-const isProduction = process.env.NODE_ENV === 'production';
+// Determine if running in Electron
+const isElectron = process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-dev';
+const isProduction = process.env.NODE_ENV === 'production'
+
+// Backend URL
+const url = process.env.VUE_APP_API_URL || 'http://localhost:9991'
+
+// CRITICAL: Use absolute path for web deployment
+let publicPath = isElectron ? './' : '/'
 
 module.exports = {
-  // PUBLIC PATH CONFIGURATION
-  // publicPath: Controls how assets are referenced in the final build
-  // './' = relative paths (good for Electron and CDN deployment)
-  // '/' = absolute paths from domain root (good for standard web hosting)
-  publicPath: isProduction ? './' : '/',
+    publicPath: publicPath,
+    lintOnSave: false, // Disable linting in production builds for speed
+    productionSourceMap: false, // MUST be false for production
 
-  // BUILD OUTPUT CONFIGURATION
-  outputDir: 'dist',        // Where the final build files go
-  assetsDir: 'static',      // Subdirectory for JS/CSS/images (creates /static folder)
-  productionSourceMap: false, // Disable source maps in production (smaller bundle, less debug info)
+    transpileDependencies: [
+        '@smallwei/avue'
+    ],
 
-  // CSS PROCESSING CONFIGURATION
-  css: {
-    // CSS Extraction Strategy:
-    // extract: true = CSS in separate .css files (better caching, parallel loading)
-    // extract: false = CSS injected via JavaScript (faster development builds)
-    extract: isProduction,
+    configureWebpack: {
+        devtool: false, // No source maps in production
 
-    // Source Maps for CSS debugging (disabled for smaller builds)
-    sourceMap: false,
+        resolve: {
+            alias: {
+                '@': path.resolve(__dirname, './src'),
+                '@i': path.resolve(__dirname, './src/assets'),
+            },
+            extensions: ['.js', '.vue', '.json']
+        },
 
-    // SASS/SCSS CONFIGURATION - Critical for fixing deprecation warnings
-    loaderOptions: {
-      // SASS Configuration (indented syntax)
-      sass: {
-        implementation: require('sass'), // Use Dart Sass (modern, faster than Node Sass)
-        sassOptions: {
-          // CRITICAL FIX: Use modern API to prevent "legacy-js-api" deprecation warnings
-          api: 'modern-compiler',
-          // Silence specific deprecation warnings that don't affect functionality
-          silenceDeprecations: ['legacy-js-api']
+        // Externalize heavy libraries if they're loaded from CDN
+        externals: isProduction ? {
+            // Only if you're loading these from CDN
+            // 'axios': 'axios',
+        } : {},
+
+        plugins: [
+            // Ignore all locale files of moment.js
+            new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+
+            // Define plugin for environment variables
+            new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+                    VUE_APP_API_URL: JSON.stringify(process.env.VUE_APP_API_URL || url)
+                }
+            }),
+
+            // Only compress in production
+            ...(isProduction ? [
+                new CompressionWebpackPlugin({
+                    filename: '[path][base].gz',
+                    algorithm: 'gzip',
+                    test: /\.(js|css|html|svg)$/,
+                    threshold: 10240,
+                    minRatio: 0.8,
+                    deleteOriginalAssets: false
+                })
+            ] : [])
+        ],
+
+        optimization: {
+            runtimeChunk: false,
+            moduleIds: 'hashed',
+
+            splitChunks: {
+                chunks: 'all',
+                maxAsyncRequests: 8, // Increased for better chunk distribution
+                maxInitialRequests: 6, // Increased for better initial loading
+                minSize: 15000, // Reduced for more granular chunks
+                maxSize: 120000, // Reduced max size for better iOS compatibility
+
+                cacheGroups: {
+                    // Split Element UI into more granular chunks
+                    elementUICore: {
+                        test: /[\\/]node_modules[\\/]element-ui[\\/]lib[\\/](utils|mixins|transitions|locale)[\\/]/,
+                        name: 'element-ui-core',
+                        priority: 30,
+                        enforce: true,
+                        chunks: 'all'
+                    },
+                    elementUIForms: {
+                        test: /[\\/]node_modules[\\/]element-ui[\\/]lib[\\/](input|select|form|button|checkbox|radio)[\\/]/,
+                        name: 'element-ui-forms',
+                        priority: 28,
+                        chunks: 'all',
+                        maxSize: 80000
+                    },
+                    elementUILayouts: {
+                        test: /[\\/]node_modules[\\/]element-ui[\\/]lib[\\/](row|col|container|header|aside|main|footer)[\\/]/,
+                        name: 'element-ui-layouts',
+                        priority: 26,
+                        chunks: 'all'
+                    },
+                    elementUIComponents: {
+                        test: /[\\/]node_modules[\\/]element-ui[\\/]lib[\\/](?!utils|mixins|transitions|locale|input|select|form|button|checkbox|radio|row|col|container|header|aside|main|footer)/,
+                        name: 'element-ui-components',
+                        priority: 24,
+                        chunks: 'all',
+                        maxSize: 100000 // Keep individual component chunks smaller
+                    },
+                    elementUIStyles: {
+                        test: /[\\/]node_modules[\\/]element-ui[\\/].*\.css$/,
+                        name: 'element-ui-styles',
+                        priority: 22,
+                        enforce: true
+                    },
+                    vue: {
+                        test: /[\\/]node_modules[\\/](vue|vue-router|vuex|vue-i18n)[\\/]/,
+                        name: 'vue-core',
+                        priority: 20,
+                        maxSize: 80000 // Keep Vue core small
+                    },
+                    avue: {
+                        test: /[\\/]node_modules[\\/]@smallwei[\\/]avue[\\/]/,
+                        name: 'avue',
+                        priority: 18,
+                        maxSize: 120000
+                    },
+                    // Split large vendors more granularly
+                    vendorLarge: {
+                        test: /[\\/]node_modules[\\/](axios|moment|lodash|pdf)[\\/]/,
+                        name: 'vendor-large',
+                        priority: 16,
+                        maxSize: 80000
+                    },
+                    vendor: {
+                        test: /[\\/]node_modules[\\/]/,
+                        name: 'vendor',
+                        priority: 10,
+                        minSize: 15000,
+                        maxSize: 100000 // Smaller vendor chunks for iOS Safari
+                    },
+                    common: {
+                        name: 'common',
+                        minChunks: 2,
+                        priority: 5,
+                        reuseExistingChunk: true,
+                        maxSize: 60000
+                    },
+                    default: {
+                        minChunks: 2,
+                        priority: -20,
+                        reuseExistingChunk: true,
+                        maxSize: 40000
+                    }
+                }
+            },
+
+            minimize: isProduction
+        },
+
+        performance: {
+            maxEntrypointSize: 250000, // Reduced for better performance
+            maxAssetSize: 200000, // Reduced for better performance
+            hints: isProduction ? 'warning' : false,
+            assetFilter: function(assetFilename) {
+                return assetFilename.endsWith('.js') || assetFilename.endsWith('.css');
+            }
         }
-      },
-      // SCSS Configuration (CSS-like syntax with braces)
-      scss: {
-        implementation: require('sass'),
-        sassOptions: {
-          api: 'modern-compiler',
-          silenceDeprecations: ['legacy-js-api']
-        }
-      }
-    }
-  },
-
-  // DEVELOPMENT SERVER CONFIGURATION
-  devServer: {
-    port: 8080,           // Local development server port
-    hot: true,            // Hot Module Replacement - updates code without full page reload
-    compress: true,       // Enable gzip compression for faster loading
-
-    // PROXY CONFIGURATION - Critical for development API calls
-    // Conditional proxy setup: only enable for web browser (not Electron)
-    // Electron has direct access to APIs, browsers need CORS proxy
-    ...((!isElectron) ? {
-      proxy: {
-        // Each API endpoint is proxied to your backend server
-        // This solves CORS (Cross-Origin Resource Sharing) issues in development
-        '/auth': {
-          target: 'http://localhost:9991',  // Your backend server
-          changeOrigin: true,               // Changes the host header to match target
-          ws: true                          // Enable WebSocket proxying for real-time features
-        },
-        '/wordBiz': {
-          target: 'http://localhost:9991',
-          changeOrigin: true,
-          ws: true
-        },
-        '/ai-biz': {
-          target: 'http://localhost:9991',
-          changeOrigin: true,
-          ws: true
-        },
-        '/code': {
-          target: 'http://localhost:9991',
-          changeOrigin: true,
-          ws: true
-        },
-        '/admin': {
-          target: 'http://localhost:9991',
-          changeOrigin: true,
-          ws: true
-        }
-      }
-    } : {}) // Empty object for Electron (no proxy needed)
-  },
-
-  // WEBPACK CORE CONFIGURATION
-  configureWebpack: {
-    // MODULE RESOLUTION - How imports are resolved
-    resolve: {
-      alias: {
-        // '@' alias allows clean imports: import Component from '@/components/MyComponent'
-        // Instead of: import Component from '../../components/MyComponent'
-        '@': path.resolve(__dirname, 'src')
-      }
     },
 
-    // WEBPACK PLUGINS - Additional build processing
-    // Only add compression in production (reduces build time in development)
-    plugins: isProduction ? [
-      // GZIP Compression Plugin - Creates .gz files for faster serving
-      new CompressionPlugin({
-        test: /\.(js|css|html|svg)$/,    // Which files to compress
-        threshold: 1024,                  // Only compress files > 1KB (smaller files not worth it)
-        deleteOriginalAssets: false       // Keep original files (server can choose which to serve)
-      })
-    ] : [] // No extra plugins in development
-  },
+    chainWebpack: config => {
+        // Remove prefetch plugin to reduce initial load
+        config.plugins.delete('prefetch')
 
-  // ADVANCED WEBPACK CONFIGURATION - Chain webpack config for fine-grained control
-  chainWebpack: config => {
-    // FONT HANDLING CONFIGURATION - Critical for Element UI icons
-    // This rule processes font files (.woff, .woff2, .ttf, .eot, .otf)
-    config.module
-      .rule('fonts')                                           // Create a new rule named 'fonts'
-      .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/)                 // Match font file extensions
-      .use('url-loader')                                       // Use url-loader to process fonts
-      .loader('url-loader')                                    // Specify the loader
-      .options({
-        limit: 10000,                                          // Files < 10KB become inline base64 (faster loading)
-        name: 'fonts/[name].[hash:8].[ext]'                   // Larger files saved as: fonts/fontname.12345678.woff
-        // [name] = original filename, [hash:8] = 8-char hash for cache busting, [ext] = file extension
-      });
+        // Optimize preload for critical resources
+        config.plugin('preload').tap(args => {
+            args[0] = {
+                rel: 'preload',
+                as(entry) {
+                    if (/\.css$/.test(entry)) return 'style';
+                    if (/\.woff2?$/.test(entry)) return 'font';
+                    if (/\.png$/.test(entry)) return 'image';
+                    if (/\.gif$/.test(entry)) return 'image';
+                    if (/youtube-iframe-api\.js$/.test(entry)) return 'script';
+                    return 'script';
+                },
+                include: 'initial',
+                fileBlacklist: [/\.map$/, /hot-update\./, /runtime\./],
+                crossorigin: 'anonymous' // Add crossorigin for external resources
+            }
+            return args
+        })
 
-    // SPECIAL ELEMENT UI FONT HANDLING - Prevents the "fonts/fonts/" double directory issue
-    config.module
-      .rule('element-fonts')                                   // Separate rule for Element UI icons
-      .test(/element-icons\.(woff2?|eot|ttf|otf)(\?.*)?$/)    // Match only Element UI icon fonts
-      .use('url-loader')
-      .loader('url-loader')
-      .options({
-        limit: 10000,
-        name: 'fonts/[name].[hash:8].[ext]',
-        publicPath: '../'                                      // CRITICAL: Adjust CSS path references
-        // publicPath '../' makes CSS reference fonts as ../fonts/icon.woff instead of fonts/icon.woff
-      });
+        // Add resource hints for local external assets
+        config.plugin('resource-hints')
+            .use(require('webpack').DefinePlugin, [{
+                __EXTERNAL_ASSETS__: JSON.stringify({
+                    youtubeApi: '/assets/external/youtube-iframe-api.js',
+                    voiceRssImage: '/assets/external/info_dark_brown.gif'
+                })
+            }])
 
-    // PRODUCTION OPTIMIZATIONS - Only run expensive optimizations in production builds
-    if (isProduction) {
-      // CODE SPLITTING STRATEGY - Breaks your app into optimal chunks for caching
-      config.optimization.splitChunks({
-        chunks: 'all',        // Split both sync and async chunks
-        cacheGroups: {        // Define how to group modules into chunks
+        // Optimize images with better compression and caching
+        config.module
+            .rule('images')
+            .use('url-loader')
+            .loader('url-loader')
+            .tap(options => Object.assign(options || {}, {
+                limit: 8192, // Reduced limit to avoid large inline images
+                fallback: {
+                    loader: 'file-loader',
+                    options: {
+                        name: 'img/[name].[contenthash:8].[ext]',
+                        publicPath: '/',
+                        outputPath: 'img/'
+                    }
+                }
+            }))
 
-          // VENDOR LIBRARIES CHUNK - All third-party dependencies
-          libs: {
-            name: 'chunk-libs',                    // Output filename: chunk-libs.js
-            test: /[\\/]node_modules[\\/]/,        // Match any file from node_modules
-            priority: 10,                          // Higher priority = processed first
-            chunks: 'initial'                      // Only initial chunks (not lazy-loaded)
-            // This chunk contains: Vue, Axios, etc. - changes rarely, caches well
-          },
+        // Enhanced font handling - revert to standard Element UI font handling
+        config.module
+            .rule('fonts')
+            .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
+            .use('url-loader')
+            .loader('url-loader')
+            .options({
+                limit: 10000,
+                name: 'fonts/[name].[hash:7].[ext]'
+            })
 
-          // ELEMENT UI CHUNK - Separate chunk for UI library
-          elementUI: {
-            name: 'chunk-elementui',               // Output: chunk-elementui.js
-            priority: 20,                          // Higher priority than libs
-            test: /[\\/]node_modules[\\/]_?element-ui(.*)/ // Match Element UI files
-            // Why separate: Element UI is large but stable, benefits from separate caching
-          },
+        // Add rule for external assets to ensure proper caching
+        config.module
+            .rule('external-assets')
+            .test(/[\\/]assets[\\/]external[\\/].*\.(js|gif|png|jpg|jpeg)$/i)
+            .use('file-loader')
+            .loader('file-loader')
+            .options({
+                name: 'assets/external/[name].[contenthash:8].[ext]',
+                publicPath: '/',
+                outputPath: 'assets/external/',
+                // Add cache control headers
+                postTransformPublicPath: (p) => `${p}?cache=1y`
+            })
 
-          // COMMON CODE CHUNK - Shared application code
-          commons: {
-            name: 'chunk-commons',                 // Output: chunk-commons.js
-            test: /[\\/]src[\\/]/,                // Match files from your src directory
-            minChunks: 2,                          // Must be imported by at least 2 modules
-            priority: 5,                           // Lower priority than vendor chunks
-            reuseExistingChunk: true              // Reuse existing chunks instead of duplicating
-            // Contains: Shared components, utilities used across multiple pages
-          }
+        // Production optimizations
+        if (isProduction) {
+            // Enable tree shaking for Element UI
+            config.resolve.alias.set('element-ui$', 'element-ui/lib/index.js')
+
+            // Minimize and optimize
+            config.optimization.minimize(true)
+
+            // Add long-term caching for chunks
+            config.optimization.splitChunks({
+                ...config.optimization.get('splitChunks'),
+                cacheGroups: {
+                    ...config.optimization.get('splitChunks').cacheGroups,
+                    // Ensure Element UI fonts get proper caching
+                    elementFonts: {
+                        test: /[\\/]node_modules[\\/]element-ui[\\/].*\.(woff2?|eot|ttf|otf)$/,
+                        name: 'element-fonts',
+                        priority: 35,
+                        chunks: 'all',
+                        enforce: true
+                    }
+                }
+            })
+
+            // Bundle analyzer for debugging
+            if (process.env.ANALYZE) {
+                config.plugin('webpack-bundle-analyzer')
+                    .use(require('webpack-bundle-analyzer').BundleAnalyzerPlugin, [{
+                        analyzerMode: 'static',
+                        openAnalyzer: false,
+                        reportFilename: 'bundle-report.html'
+                    }])
+            }
         }
-      });
+    },
 
-      // CSS EXTRACTION FIX - Prevents CSS ordering warnings
-      // Element UI and custom CSS sometimes conflict in order, this ignores those warnings
-      config.plugin('extract-css').tap(args => {
-        args[0].ignoreOrder = true;    // Ignore CSS chunk order warnings
-        return args;                   // Return modified configuration
-      });
-    }
-  },
+    css: {
+        extract: false, // Temporarily disable CSS extraction to fix build issue
+        sourceMap: false,
+        loaderOptions: {
+            sass: {
+                sassOptions: {
+                    precision: 5
+                }
+            },
+            scss: {
+                sassOptions: {
+                    precision: 5
+                }
+            }
+        }
+    },
 
-  // ELECTRON-SPECIFIC CONFIGURATION
-  pluginOptions: {
-    electronBuilder: {
-      nodeIntegration: true,        // Allow Node.js APIs in renderer (your Vue app)
-      contextIsolation: false,      // Disable context isolation for easier communication
-      enableRemoteModule: true      // Enable Electron remote module (deprecated but still used)
-      // Note: These settings are less secure but necessary for older Electron apps
-    }
-  }
-};
+    devServer: {
+        port: 8080,
+        hot: true,
+        compress: true,
+        ...((!isElectron) ? {
+            proxy: {
+                '/auth': { target: url, ws: true },
+                '/wordBiz': { target: url, ws: true },
+                '/ai-biz': { target: url, ws: true },
+                '/code': { target: url, ws: true },
+                '/admin': { target: url, ws: true }
+            }
+        } : {})
+    },
+
+    parallel: require('os').cpus().length > 1
+}
