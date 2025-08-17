@@ -23,11 +23,11 @@ const config = {
     development: {
         // Allow override via environment variable to handle port conflicts
         primary: process.env.DEV_SERVER_URL || 'http://localhost:8080',
-        fallback: process.env.DEV_SERVER_FALLBACK_URL || 'http://localhost:3000' // Alternative dev port
+        fallback: `file://${path.join(__dirname, '../dist/index.html')}`
     },
     production: {
-        // For local Electron app, use local server or fallback to bundled files
-        primary: process.env.KIWI_SERVER_URL || 'http://localhost:9991', // Allow override via environment variable
+        // For production Electron app, use bundled files directly
+        primary: `file://${path.join(__dirname, '../dist/index.html')}`,
         fallback: `file://${path.join(__dirname, '../dist/index.html')}`
     }
 };
@@ -110,10 +110,8 @@ function createWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
 
-        // Auto-open DevTools in development
-        if (isDev) {
-            mainWindow.webContents.openDevTools();
-        }
+        // Don't auto-open DevTools - user can open manually if needed
+        // DevTools can still be opened via menu: View -> Toggle Developer Tools
 
         // Debug information
         console.log('Window ready to show');
