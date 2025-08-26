@@ -257,7 +257,6 @@ export default {
 
   mounted() {
     this.initializeSettings()
-    this.refresh()
   },
 
   watch: {

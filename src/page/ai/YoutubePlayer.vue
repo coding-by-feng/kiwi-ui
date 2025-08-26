@@ -245,16 +245,17 @@
               <span class="streaming-text">Streaming...</span>
             </span>
           <div class="header-toggle-hint">
-            <!-- New: Download subtitles as TXT in header -->
+            <!-- Modified: Download subtitles as TXT in header - only show after translation completes -->
             <el-button
+              v-if="!isTranslationLoading && translatedSubtitles && !translatedSubtitlesCollapsed"
               type="success"
               :loading="isDownloading"
               icon="el-icon-download"
               size="mini"
               circle
-              :disabled="!videoUrl"
-              @click.stop="downloadSubtitlesTxt"
+              @click.stop="downloadTranslatedSubtitlesFromUI"
               class="header-action-btn"
+              title="Download translated subtitles"
             />
             <i :class="translatedSubtitlesCollapsed ? 'el-icon-arrow-right' : 'el-icon-arrow-down'" class="toggle-arrow"></i>
           </div>
@@ -1109,69 +1110,68 @@ export default defineComponent({
       });
     },
 
-    // New: Download subtitles as TXT using BE endpoint
-    async downloadSubtitlesTxt() {
-      if (!this.videoUrl) {
-        msgUtil.msgError(this, 'No video URL to download');
+    // Modified: Download translated subtitles directly from UI content
+    async downloadTranslatedSubtitlesFromUI() {
+      if (!this.translatedSubtitles) {
+        msgUtil.msgError(this, 'No translated subtitles to download');
         return;
       }
 
       try {
         this.isDownloading = true;
 
-        const token = getStore({ name: 'access_token' });
-        const params = new URLSearchParams({ url: this.videoUrl });
-        if (this.selectedLanguage) params.append('language', this.selectedLanguage);
+        // Extract text content from the translated subtitles
+        // Remove HTML tags and convert HTML entities back to text
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = this.translatedSubtitles;
 
-        // Same-origin API path; adjust if your gateway prefix differs
-        const endpoint = `/ai-biz/ai/ytb/subtitles/translated/download?${params.toString()}`;
+        // Get plain text content
+        let textContent = tempDiv.textContent || tempDiv.innerText || '';
 
-        const res = await fetch(endpoint, {
-          method: 'GET',
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
+        // Clean up the content: replace multiple spaces/newlines with proper formatting
+        textContent = textContent
+          .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+          .replace(/\n\s*\n/g, '\n\n')  // Normalize paragraph breaks
+          .trim();
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        // Create blob with the text content
+        const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
 
-        const blob = await res.blob();
+        // Generate filename based on video info
+        const videoId = this.extractVideoId(this.videoUrl);
+        const languageCode = this.selectedLanguage || 'translated';
+        const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
+        const filename = `youtube_${videoId}_${languageCode}_subtitles_${timestamp}.txt`;
 
-        // Try to extract filename from Content-Disposition
-        let filename = 'subtitles.txt';
-        const disposition = res.headers.get('Content-Disposition');
-        if (disposition) {
-          // filename*=UTF-8''... OR filename="..."
-          const utf8Name = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
-          const quotedName = disposition.match(/filename\s*=\s*"([^"]+)"/i);
-          const bareName = disposition.match(/filename\s*=\s*([^;]+)/i);
-
-          const raw =
-            (utf8Name && decodeURIComponent(utf8Name[1])) ||
-            (quotedName && quotedName[1]) ||
-            (bareName && bareName[1]);
-
-          if (raw) filename = raw.trim();
-        }
-
-        // Trigger download
+        // Create download link and trigger download
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
+        a.style.display = 'none';
+
         document.body.appendChild(a);
         a.click();
-        a.remove();
+        document.body.removeChild(a);
+
+        // Clean up the URL object
         URL.revokeObjectURL(url);
 
-        msgUtil.msgSuccess(this, 'Downloading subtitles...', 1500);
-      } catch (e) {
-        console.error('Failed to download subtitles:', e);
-        msgUtil.msgError(this, 'Failed to download subtitles', 2500);
+        msgUtil.msgSuccess(this, `Downloaded: ${filename}`, 2000);
+      } catch (error) {
+        console.error('Failed to download translated subtitles:', error);
+        msgUtil.msgError(this, 'Failed to download translated subtitles', 2500);
       } finally {
         this.isDownloading = false;
       }
     },
+
+    // Remove or comment out the old downloadSubtitlesTxt method since it's no longer needed
+    /*
+    async downloadSubtitlesTxt() {
+      // This method is replaced by downloadTranslatedSubtitlesFromUI
+    },
+    */
 
     // Utilities
     extractVideoId(url) {
