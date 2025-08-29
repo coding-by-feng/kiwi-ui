@@ -214,20 +214,21 @@ export default {
         </span>
         <router-view name="starList" v-if="isAdmin"></router-view>
       </el-tab-pane>
+
+      <!-- New Todo Component -->
+      <el-tab-pane name="todo" v-if="isLogin">
+        <span slot="label">
+          <i class="el-icon-check"></i>
+        </span>
+        <router-view name="todo"></router-view>
+      </el-tab-pane>
+
       <el-tab-pane name="youtube" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-video-camera"></i>
         </span>
         <router-view name="youtube"></router-view>
       </el-tab-pane>
-<!--
-      <el-tab-pane name="documentReader" v-if="isLogin">
-        <span slot="label">
-          <i class="el-icon-document"></i>
-        </span>
-        <router-view name="documentReader"></router-view>
-      </el-tab-pane>
--->
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-user"></i>

@@ -12,6 +12,7 @@ import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
 import AiCallHistory from '@/page/ai/AiCallHistory.vue' // Import the new AI call history component
 import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
+import TodoView from '@/views/TodoView.vue' // Import the TodoView component
 
 export default [{
     path: '/',
@@ -39,6 +40,7 @@ export default [{
             aiCallHistory: AiCallHistory, // Add the AI call history component
             youtube: Youtube,// Use the new component here
             youtubePlayer: YoutubePlayer, // Use the new component here
+            todo: TodoView, // Add the todo component
         },
         children: [{
             path: 'detail',
