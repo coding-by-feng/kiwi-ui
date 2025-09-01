@@ -3,8 +3,31 @@
     <el-card class="main-card">
       <div slot="header" class="header">
         <h2>{{ $t('todo.title') }}</h2>
-        <div class="total-points">
-          {{ $t('todo.totalPoints') }}: <span class="points-badge">{{ totalPoints }}</span>
+        <div class="header-controls">
+          <div class="import-export-controls">
+            <el-button
+                type="primary"
+                size="small"
+                icon="el-icon-download"
+                @click="exportTodoData"
+            ></el-button>
+            <el-upload
+                ref="importUpload"
+                :show-file-list="false"
+                :before-upload="importTodoData"
+                accept=".json"
+                action=""
+            >
+              <el-button
+                  type="success"
+                  size="small"
+                  icon="el-icon-upload2"
+              ></el-button>
+            </el-upload>
+          </div>
+          <div class="total-points">
+            {{ $t('todo.totalPoints') }}: <span class="points-badge">{{ totalPoints }}</span>
+          </div>
         </div>
       </div>
 
@@ -15,28 +38,28 @@
             <el-form :model="newTask" inline>
               <el-form-item :label="$t('todo.task')">
                 <el-input
-                  v-model="newTask.title"
-                  :placeholder="$t('todo.enterTaskDescription')"
-                  style="width: 300px"
-                  @keyup.enter.native="addTask"
+                    v-model="newTask.title"
+                    :placeholder="$t('todo.enterTaskDescription')"
+                    style="width: 300px"
+                    @keyup.enter.native="addTask"
                 />
               </el-form-item>
               <el-form-item :label="$t('todo.successPoints')">
                 <el-input-number
-                  v-model="newTask.successPoints"
-                  :min="1"
-                  :max="100"
-                  size="small"
-                  style="width: 120px"
+                    v-model="newTask.successPoints"
+                    :min="1"
+                    :max="100"
+                    size="small"
+                    style="width: 120px"
                 />
               </el-form-item>
               <el-form-item :label="$t('todo.failPoints')">
                 <el-input-number
-                  v-model="newTask.failPoints"
-                  :min="-100"
-                  :max="0"
-                  size="small"
-                  style="width: 120px"
+                    v-model="newTask.failPoints"
+                    :min="-100"
+                    :max="0"
+                    size="small"
+                    style="width: 120px"
                 />
               </el-form-item>
               <el-form-item>
@@ -47,10 +70,10 @@
 
           <div class="tasks-list">
             <el-card
-              v-for="task in todayTasks"
-              :key="task.id"
-              class="task-card"
-              :class="getTaskStatusClass(task.status)"
+                v-for="task in todayTasks"
+                :key="task.id"
+                class="task-card"
+                :class="getTaskStatusClass(task.status)"
             >
               <div class="task-content">
                 <div class="task-info" v-if="editingTaskId !== task.id">
@@ -67,9 +90,9 @@
                     <div class="edit-form-row">
                       <label class="edit-label">{{ $t('todo.task') }}:</label>
                       <el-input
-                        v-model="editingTask.title"
-                        :placeholder="$t('todo.enterTaskDescription')"
-                        class="edit-title-input"
+                          v-model="editingTask.title"
+                          :placeholder="$t('todo.enterTaskDescription')"
+                          class="edit-title-input"
                       />
                     </div>
                     <div class="edit-form-row">
@@ -77,21 +100,21 @@
                         <div class="points-item">
                           <label class="edit-label">{{ $t('todo.successPoints') }}:</label>
                           <el-input-number
-                            v-model="editingTask.successPoints"
-                            :min="1"
-                            :max="100"
-                            size="small"
-                            class="edit-points-input"
+                              v-model="editingTask.successPoints"
+                              :min="1"
+                              :max="100"
+                              size="small"
+                              class="edit-points-input"
                           />
                         </div>
                         <div class="points-item">
                           <label class="edit-label">{{ $t('todo.failPoints') }}:</label>
                           <el-input-number
-                            v-model="editingTask.failPoints"
-                            :min="-100"
-                            :max="0"
-                            size="small"
-                            class="edit-points-input"
+                              v-model="editingTask.failPoints"
+                              :min="-100"
+                              :max="0"
+                              size="small"
+                              class="edit-points-input"
                           />
                         </div>
                       </div>
@@ -103,17 +126,17 @@
                   <!-- Editing Actions -->
                   <div v-if="editingTaskId === task.id" class="edit-actions">
                     <el-button
-                      type="primary"
-                      size="mini"
-                      icon="el-icon-check"
-                      @click="saveTaskEdit(task.id)"
+                        type="primary"
+                        size="mini"
+                        icon="el-icon-check"
+                        @click="saveTaskEdit(task.id)"
                     >
                       {{ $t('common.save') }}
                     </el-button>
                     <el-button
-                      size="mini"
-                      icon="el-icon-close"
-                      @click="cancelTaskEdit"
+                        size="mini"
+                        icon="el-icon-close"
+                        @click="cancelTaskEdit"
                     >
                       {{ $t('common.cancel') }}
                     </el-button>
@@ -124,19 +147,19 @@
                     <!-- Task Status Actions -->
                     <div v-if="task.status === 'pending'" class="status-actions">
                       <el-button
-                        type="success"
-                        size="small"
-                        icon="el-icon-check"
-                        circle
-                        @click="completeTask(task.id, 'success')"
+                          type="success"
+                          size="small"
+                          icon="el-icon-check"
+                          circle
+                          @click="completeTask(task.id, 'success')"
                       >
                       </el-button>
                       <el-button
-                        type="danger"
-                        size="small"
-                        icon="el-icon-close"
-                        circle
-                        @click="completeTask(task.id, 'fail')"
+                          type="danger"
+                          size="small"
+                          icon="el-icon-close"
+                          circle
+                          @click="completeTask(task.id, 'fail')"
                       >
                       </el-button>
                     </div>
@@ -147,24 +170,24 @@
                     <!-- Edit/Delete Actions -->
                     <div class="manage-actions">
                       <el-button
-                        v-if="task.status === 'pending'"
-                        type="primary"
-                        size="mini"
-                        icon="el-icon-edit"
-                        circle
-                        @click="startTaskEdit(task)"
+                          v-if="task.status === 'pending'"
+                          type="primary"
+                          size="mini"
+                          icon="el-icon-edit"
+                          circle
+                          @click="startTaskEdit(task)"
                       >
                       </el-button>
                       <el-popconfirm
-                        :title="$t('todo.confirmDeleteTask')"
-                        @confirm="deleteTask(task.id)"
+                          :title="$t('todo.confirmDeleteTask')"
+                          @confirm="deleteTask(task.id)"
                       >
                         <el-button
-                          slot="reference"
-                          type="danger"
-                          size="mini"
-                          icon="el-icon-delete"
-                          circle
+                            slot="reference"
+                            type="danger"
+                            size="mini"
+                            icon="el-icon-delete"
+                            circle
                         >
                         </el-button>
                       </el-popconfirm>
@@ -175,7 +198,7 @@
             </el-card>
 
             <div v-if="todayTasks.length === 0" class="no-tasks">
-              <el-empty :description="$t('todo.noTasksToday')" />
+              <el-empty :description="$t('todo.noTasksToday')"/>
             </div>
           </div>
         </el-tab-pane>
@@ -184,20 +207,20 @@
         <el-tab-pane :label="$t('todo.history')" name="history">
           <div class="history-controls">
             <el-date-picker
-              v-model="selectedDate"
-              type="date"
-              :placeholder="$t('todo.selectDate')"
-              @change="loadHistoryForDate"
+                v-model="selectedDate"
+                type="date"
+                :placeholder="$t('todo.selectDate')"
+                @change="loadHistoryForDate"
             />
           </div>
 
           <div v-if="historyTasks.length > 0" class="history-tasks">
             <h3>{{ formatDate(selectedDate) }}</h3>
             <el-card
-              v-for="task in historyTasks"
-              :key="task.id"
-              class="task-card"
-              :class="getTaskStatusClass(task.status)"
+                v-for="task in historyTasks"
+                :key="task.id"
+                class="task-card"
+                :class="getTaskStatusClass(task.status)"
             >
               <div class="task-content">
                 <div class="task-info">
@@ -214,16 +237,16 @@
 
                   <!-- Delete button for history -->
                   <el-popconfirm
-                    :title="$t('todo.confirmDeleteTask')"
-                    @confirm="deleteHistoryTask(task.id, selectedDate)"
+                      :title="$t('todo.confirmDeleteTask')"
+                      @confirm="deleteHistoryTask(task.id, selectedDate)"
                   >
                     <el-button
-                      slot="reference"
-                      type="danger"
-                      size="mini"
-                      icon="el-icon-delete"
-                      circle
-                      style="margin-left: 10px"
+                        slot="reference"
+                        type="danger"
+                        size="mini"
+                        icon="el-icon-delete"
+                        circle
+                        style="margin-left: 10px"
                     >
                     </el-button>
                   </el-popconfirm>
@@ -232,7 +255,7 @@
             </el-card>
           </div>
           <div v-else class="no-data">
-            <el-empty :description="$t('todo.noTasksForDate')" />
+            <el-empty :description="$t('todo.noTasksForDate')"/>
           </div>
         </el-tab-pane>
 
@@ -328,8 +351,8 @@ export default {
       return allTasks.filter(task => {
         const taskDate = new Date(task.date)
         return taskDate.getMonth() === currentMonth &&
-               taskDate.getFullYear() === currentYear &&
-               task.status !== 'pending'
+            taskDate.getFullYear() === currentYear &&
+            task.status !== 'pending'
       }).reduce((total, task) => {
         return total + (task.status === 'success' ? task.successPoints : task.failPoints)
       }, 0)
@@ -342,8 +365,8 @@ export default {
       return allTasks.filter(task => {
         const taskDate = new Date(task.date)
         return taskDate.getMonth() === currentMonth &&
-               taskDate.getFullYear() === currentYear &&
-               task.status === 'success'
+            taskDate.getFullYear() === currentYear &&
+            task.status === 'success'
       }).length
     },
     successRate() {
@@ -354,8 +377,8 @@ export default {
       const monthTasks = allTasks.filter(task => {
         const taskDate = new Date(task.date)
         return taskDate.getMonth() === currentMonth &&
-               taskDate.getFullYear() === currentYear &&
-               task.status !== 'pending'
+            taskDate.getFullYear() === currentYear &&
+            task.status !== 'pending'
       })
 
       if (monthTasks.length === 0) return 0
@@ -549,7 +572,7 @@ export default {
       return {
         labels: months.map(m => {
           const [year, month] = m.split('-')
-          return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          return new Date(year, month - 1).toLocaleDateString('en-US', {month: 'short', year: 'numeric'})
         }),
         data: months.map(m => monthlyPoints[m])
       }
@@ -615,6 +638,112 @@ export default {
       this.refreshTrigger++
 
       this.$message.success(this.$t('todo.taskDeletedSuccess'))
+    },
+    exportTodoData() {
+      try {
+        const todoData = {
+          exportDate: new Date().toISOString(),
+          version: '1.0',
+          data: {}
+        }
+
+        // Collect all todo data from localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key.startsWith('todo_')) {
+            const dateKey = key.replace('todo_', '')
+            const tasks = JSON.parse(localStorage.getItem(key))
+            todoData.data[dateKey] = tasks
+          }
+        }
+
+        // Create and download JSON file
+        const dataStr = JSON.stringify(todoData, null, 2)
+        const dataBlob = new Blob([dataStr], {type: 'application/json'})
+        const url = URL.createObjectURL(dataBlob)
+
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `todo-data-${new Date().toISOString().split('T')[0]}.json`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
+        this.$message.success('Todo data exported successfully!')
+      } catch (error) {
+        console.error('Export failed:', error)
+        this.$message.error('Failed to export todo data')
+      }
+    },
+    importTodoData(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+
+        reader.onload = (e) => {
+          try {
+            const importedData = JSON.parse(e.target.result)
+
+            // Validate imported data structure
+            if (!importedData.data || typeof importedData.data !== 'object') {
+              throw new Error('Invalid file format')
+            }
+
+            // Show confirmation dialog
+            this.$confirm(
+                'This will merge the imported data with your existing tasks. Continue?',
+                'Import Confirmation',
+                {
+                  confirmButtonText: 'Import',
+                  cancelButtonText: 'Cancel',
+                  type: 'warning'
+                }
+            ).then(() => {
+              let importedCount = 0
+
+              // Import each date's tasks
+              Object.keys(importedData.data).forEach(dateKey => {
+                const tasksToImport = importedData.data[dateKey]
+
+                if (Array.isArray(tasksToImport)) {
+                  const existingTasks = this.getTasksForDate(dateKey)
+                  const existingIds = new Set(existingTasks.map(t => t.id))
+
+                  // Filter out tasks with duplicate IDs to avoid conflicts
+                  const newTasks = tasksToImport.filter(task => !existingIds.has(task.id))
+
+                  if (newTasks.length > 0) {
+                    const mergedTasks = [...existingTasks, ...newTasks]
+                    localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
+                    importedCount += newTasks.length
+                  }
+                }
+              })
+
+              // Refresh UI
+              this.refreshTrigger++
+              this.loadHistoryForDate()
+
+              this.$message.success(`Successfully imported ${importedCount} tasks!`)
+              resolve(false) // Prevent default upload behavior
+            }).catch(() => {
+              resolve(false) // User cancelled
+            })
+
+          } catch (error) {
+            console.error('Import failed:', error)
+            this.$message.error('Failed to import todo data. Please check file format.')
+            reject(error)
+          }
+        }
+
+        reader.onerror = () => {
+          this.$message.error('Failed to read file')
+          reject(new Error('File read error'))
+        }
+
+        reader.readAsText(file)
+      })
     }
   }
 }
@@ -631,7 +760,7 @@ export default {
 .main-card {
   min-height: calc(100vh - 120px);
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
 }
 
 .header {
@@ -645,13 +774,29 @@ export default {
   color: #409EFF;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.import-export-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.import-export-controls .el-upload {
+  display: inline-block;
+}
+
 .points-badge {
   background: linear-gradient(45deg, #409EFF, #67C23A);
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 6px 12px;
+  border-radius: 10px;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .task-input-section {
@@ -673,7 +818,7 @@ export default {
 
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .task-success {
@@ -925,6 +1070,25 @@ export default {
   .edit-form-container {
     gap: 12px;
     padding: 12px;
+  }
+
+  .header-controls {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .import-export-controls {
+    order: 2;
+  }
+
+  .total-points {
+    order: 1;
+  }
+
+  .import-export-controls .el-button {
+    padding: 7px 15px;
+    font-size: 12px;
   }
 }
 </style>
