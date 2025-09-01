@@ -2,7 +2,7 @@
   <div class="todo-gamification">
     <el-card class="main-card">
       <div slot="header" class="header">
-        <h2>📝 Daily To-Do Gamification</h2>
+        <h2>To-Do</h2>
         <div class="total-points">
           Total Points: <span class="points-badge">{{ totalPoints }}</span>
         </div>
@@ -66,18 +66,18 @@
                     type="success"
                     size="small"
                     icon="el-icon-check"
+                    circle
                     @click="completeTask(task.id, 'success')"
                   >
-                    Success
                   </el-button>
                   <el-button
                     v-if="task.status === 'pending'"
                     type="danger"
                     size="small"
                     icon="el-icon-close"
+                    circle
                     @click="completeTask(task.id, 'fail')"
                   >
-                    Fail
                   </el-button>
                   <el-tag v-else :type="task.status === 'success' ? 'success' : 'danger'">
                     {{ task.status === 'success' ? '✅ Completed' : '❌ Failed' }}
