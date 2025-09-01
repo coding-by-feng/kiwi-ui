@@ -512,5 +512,40 @@ export default {
         positive: 'Please enter a positive number',
         min: 'Minimum value is {min}',
         max: 'Maximum value is {max}'
+    },
+
+    // Todo Gamification
+    todo: {
+        title: 'To-Do',
+        totalPoints: 'Total Points',
+        todayTasks: "Today's Tasks",
+        history: 'History',
+        analytics: 'Analytics',
+        task: 'Task',
+        enterTaskDescription: 'Enter task description',
+        successPoints: 'Success Points',
+        failPoints: 'Fail Points',
+        addTask: 'Add Task',
+        completed: '✅ Completed',
+        failed: '❌ Failed',
+        success: 'success',
+        fail: 'failed',
+        noTasksToday: 'No tasks for today. Add your first task above!',
+        selectDate: 'Select date',
+        noTasksForDate: 'No tasks found for selected date',
+        barChart: '📊 Bar Chart',
+        lineChart: '📈 Line Chart',
+        donutChart: '🍩 Donut Chart',
+        monthlySummary: 'Monthly Summary',
+        tasksCompleted: 'Tasks Completed',
+        successRate: 'Success Rate',
+        taskAddedSuccess: 'Task added successfully!',
+        taskStatusUpdate: 'Task {status}! {points} points',
+        taskUpdatedSuccess: 'Task updated successfully!',
+        taskDeletedSuccess: 'Task deleted successfully!',
+        taskTitleRequired: 'Task title is required',
+        confirmDeleteTask: 'Are you sure you want to delete this task?',
+        editTask: 'Edit Task',
+        deleteTask: 'Delete Task'
     }
 }
