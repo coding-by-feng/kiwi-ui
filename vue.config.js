@@ -18,7 +18,8 @@ module.exports = {
     productionSourceMap: false, // MUST be false for production
 
     transpileDependencies: [
-        '@smallwei/avue'
+        '@smallwei/avue',
+        'chart.js'
     ],
 
     configureWebpack: {
