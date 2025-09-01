@@ -234,28 +234,81 @@
                   <el-tag :type="task.status === 'success' ? 'success' : 'danger'">
                     {{ task.status === 'success' ? $t('todo.completed') : $t('todo.failed') }}
                   </el-tag>
-
-                  <!-- Delete button for history -->
-                  <el-popconfirm
-                      :title="$t('todo.confirmDeleteTask')"
-                      @confirm="deleteHistoryTask(task.id, selectedDate)"
-                  >
-                    <el-button
-                        slot="reference"
-                        type="danger"
-                        size="mini"
-                        icon="el-icon-delete"
-                        circle
-                        style="margin-left: 10px"
-                    >
-                    </el-button>
-                  </el-popconfirm>
                 </div>
               </div>
             </el-card>
           </div>
           <div v-else class="no-data">
             <el-empty :description="$t('todo.noTasksForDate')"/>
+          </div>
+        </el-tab-pane>
+
+        <!-- Trash Tab -->
+        <el-tab-pane :label="$t('todo.trash')" name="trash">
+          <div class="trash-controls">
+            <el-button
+              v-if="trashedTasks.length > 0"
+              type="danger"
+              size="small"
+              icon="el-icon-delete"
+              @click="clearTrash"
+            >
+              Clear All Trash
+            </el-button>
+          </div>
+
+          <div v-if="trashedTasks.length > 0" class="trash-tasks">
+            <el-card
+                v-for="task in trashedTasks"
+                :key="task.id"
+                class="task-card trash-card"
+            >
+              <div class="task-content">
+                <div class="task-info">
+                  <h4>{{ task.title }}</h4>
+                  <div class="task-details">
+                    <div class="task-points">
+                      <el-tag size="mini" type="success">+{{ task.successPoints }}</el-tag>
+                      <el-tag size="mini" type="danger">{{ task.failPoints }}</el-tag>
+                    </div>
+                    <div class="task-meta">
+                      <el-tag size="mini" type="info">{{ formatDate(task.originalDate) }}</el-tag>
+                      <el-tag size="mini" type="warning">{{ formatDate(task.deletedDate) }}</el-tag>
+                    </div>
+                  </div>
+                </div>
+                <div class="trash-actions">
+                  <el-tooltip content="Restore to original date" placement="top">
+                    <el-button
+                        type="success"
+                        size="mini"
+                        icon="el-icon-refresh-right"
+                        circle
+                        @click="restoreTask(task.id)"
+                    >
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip content="Permanently delete" placement="top">
+                    <el-popconfirm
+                        title="Permanently delete this task? This cannot be undone."
+                        @confirm="permanentlyDeleteTask(task.id)"
+                    >
+                      <el-button
+                          slot="reference"
+                          type="danger"
+                          size="mini"
+                          icon="el-icon-close"
+                          circle
+                      >
+                      </el-button>
+                    </el-popconfirm>
+                  </el-tooltip>
+                </div>
+              </div>
+            </el-card>
+          </div>
+          <div v-else class="no-data">
+            <el-empty description="No items in trash"/>
           </div>
         </el-tab-pane>
 
@@ -385,6 +438,11 @@ export default {
 
       const successTasks = monthTasks.filter(task => task.status === 'success').length
       return Math.round((successTasks / monthTasks.length) * 100)
+    },
+    trashedTasks() {
+      this.refreshTrigger
+      const stored = localStorage.getItem('todo_trash')
+      return stored ? JSON.parse(stored) : []
     }
   },
   mounted() {
@@ -617,27 +675,102 @@ export default {
       }
     },
     deleteTask(taskId) {
-      const dateKey = this.formatDateKey(new Date())
-      const tasks = this.getTasksForDate(dateKey)
-      const filteredTasks = tasks.filter(t => t.id !== taskId)
-
-      localStorage.setItem(`todo_${dateKey}`, JSON.stringify(filteredTasks))
-
-      this.refreshTrigger++
-      this.$message.success(this.$t('todo.taskDeletedSuccess'))
+      this.moveTaskToTrash(taskId, this.formatDateKey(new Date()))
     },
-    deleteHistoryTask(taskId, date) {
+    moveTaskToTrash(taskId, dateKey) {
+      const tasks = this.getTasksForDate(dateKey)
+      const taskToTrash = tasks.find(t => t.id === taskId)
+
+      if (taskToTrash) {
+        // Add metadata for trash
+        const trashedTask = {
+          ...taskToTrash,
+          originalDate: taskToTrash.date || new Date(dateKey).toISOString(),
+          deletedDate: new Date().toISOString()
+        }
+
+        // Add to trash
+        const trashedTasks = this.trashedTasks
+        trashedTasks.push(trashedTask)
+        localStorage.setItem('todo_trash', JSON.stringify(trashedTasks))
+
+        // Remove from original location
+        const filteredTasks = tasks.filter(t => t.id !== taskId)
+        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(filteredTasks))
+
+        this.refreshTrigger++
+        this.loadHistoryForDate()
+        this.$message.success('Task moved to trash')
+      }
+    },
+    deleteHistoryRecord(taskId, date) {
       const dateKey = this.formatDateKey(date)
       const tasks = this.getTasksForDate(dateKey)
-      const filteredTasks = tasks.filter(t => t.id !== taskId)
+      const taskIndex = tasks.findIndex(t => t.id === taskId)
 
-      localStorage.setItem(`todo_${dateKey}`, JSON.stringify(filteredTasks))
+      if (taskIndex !== -1) {
+        // Reset task status to pending
+        tasks[taskIndex].status = 'pending'
+        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
 
-      // Refresh history display
-      this.loadHistoryForDate()
+        this.loadHistoryForDate()
+        this.refreshTrigger++
+
+        this.$message.success('Task status reset to pending')
+      }
+    },
+    restoreTask(taskId) {
+      const trashedTasks = this.trashedTasks
+      const taskIndex = trashedTasks.findIndex(t => t.id === taskId)
+
+      if (taskIndex !== -1) {
+        const taskToRestore = trashedTasks[taskIndex]
+
+        // Remove metadata
+        const restoredTask = { ...taskToRestore }
+        delete restoredTask.originalDate
+        delete restoredTask.deletedDate
+
+        // Restore to original date
+        const originalDateKey = this.formatDateKey(new Date(taskToRestore.originalDate))
+        const existingTasks = this.getTasksForDate(originalDateKey)
+        existingTasks.push(restoredTask)
+        localStorage.setItem(`todo_${originalDateKey}`, JSON.stringify(existingTasks))
+
+        // Remove from trash
+        trashedTasks.splice(taskIndex, 1)
+        localStorage.setItem('todo_trash', JSON.stringify(trashedTasks))
+
+        this.refreshTrigger++
+        this.$message.success(`Task restored to ${this.formatDate(taskToRestore.originalDate)}`)
+      }
+    },
+    permanentlyDeleteTask(taskId) {
+      const trashedTasks = this.trashedTasks
+      const filteredTasks = trashedTasks.filter(t => t.id !== taskId)
+      localStorage.setItem('todo_trash', JSON.stringify(filteredTasks))
+
       this.refreshTrigger++
-
-      this.$message.success(this.$t('todo.taskDeletedSuccess'))
+      this.$message.success('Task permanently deleted')
+    },
+    clearTrash() {
+      this.$confirm(
+        'This will permanently delete all items in trash. This cannot be undone.',
+        'Clear Trash Confirmation',
+        {
+          confirmButtonText: 'Clear All',
+          cancelButtonText: 'Cancel',
+          type: 'warning'
+        }
+      ).then(() => {
+        localStorage.removeItem('todo_trash')
+        this.refreshTrigger++
+        this.$message.success('Trash cleared')
+      })
+    },
+    deleteHistoryTask(taskId, date) {
+      // This method is deprecated - use moveTaskToTrash instead
+      this.moveTaskToTrash(taskId, this.formatDateKey(date))
     },
     exportTodoData() {
       try {
@@ -1003,6 +1136,53 @@ export default {
   color: #409EFF;
   font-size: 24px;
   font-weight: bold;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.trash-controls {
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.trash-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trash-card {
+  opacity: 0.8;
+  border-left: 4px solid #909399;
+  background: #f8f9fa;
+}
+
+.trash-card:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.task-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.trash-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* Mobile responsive */
