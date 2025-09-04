@@ -1463,53 +1463,90 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .import-export-controls {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .control-btn {
-  margin-right: 8px;
+  margin: 0;
 }
 
 .ranking-display {
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 0;
+  max-width: 500px;
 }
 
 .rank-badge {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  border-radius: 16px;
+  border-radius: 12px;
   margin-right: 16px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rank-icon {
   margin-right: 8px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .rank-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .rank-name {
   color: #333;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rank-level {
   color: #666;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .rank-progress {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 120px;
+  margin-right: 16px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+}
+
+.progress-text {
+  color: #666;
+  font-weight: 500;
+}
+
+.progress-percentage {
+  color: #409EFF;
+  font-weight: 600;
 }
 
 .rank-progress-bar {
@@ -1517,14 +1554,33 @@ export default {
   border-radius: 3px;
 }
 
+.next-rank-info,
+.max-rank-info {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.next-rank-text {
+  font-size: 0.7rem;
+  color: #909399;
+  font-weight: 500;
+}
+
+.max-rank-text {
+  font-size: 0.7rem;
+  color: #67C23A;
+  font-weight: 600;
+}
+
 .total-points {
   font-size: 1rem;
   font-weight: 500;
   color: #333;
+  white-space: nowrap;
 }
 
 .points-label {
-  margin-right: 4px;
+  margin-right: 6px;
 }
 
 .points-badge {
@@ -1533,512 +1589,542 @@ export default {
   padding: 4px 8px;
   border-radius: 12px;
   font-weight: 500;
+  font-size: 0.85rem;
 }
 
-.responsive-tabs {
-  margin-top: 16px;
-}
-
+/* Task input and form styles for larger screens */
 .task-input-section {
-  background-color: #fff;
-  padding: 16px;
+  padding: 20px;
+  background-color: #fafbfc;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .responsive-form {
-  max-width: 600px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
 .form-row {
+  display: flex;
+  gap: 16px;
   margin-bottom: 16px;
+  align-items: flex-start;
 }
 
 .form-item {
+  flex: 1;
   margin-bottom: 0;
 }
 
-.responsive-input,
-.responsive-textarea,
-.responsive-select,
-.responsive-number,
-.responsive-number-small {
+.full-width {
   width: 100%;
 }
 
-.responsive-textarea {
-  resize: none;
+.points-row {
+  max-width: 400px;
+}
+
+.points-item {
+  min-width: 120px;
+}
+
+.frequency-row {
+  max-width: 500px;
+}
+
+.frequency-item {
+  min-width: 150px;
+}
+
+.custom-days-item {
+  min-width: 120px;
+}
+
+.submit-row {
+  justify-content: flex-start;
+  max-width: 200px;
 }
 
 .add-task-btn {
-  width: 100%;
+  padding: 10px 20px;
 }
 
+/* Task filter styles */
 .task-filter-section {
-  background-color: #f9f9f9;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .filter-controls {
   display: flex;
+  gap: 24px;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .filter-label {
-  margin-right: 8px;
   font-weight: 500;
-  color: #333;
+  color: #666;
+  white-space: nowrap;
 }
 
 .filter-radio-group {
-  display: flex;
+  margin-left: 8px;
 }
 
 .frequency-filter-select {
-  width: 200px;
+  min-width: 140px;
 }
 
+/* Task cards */
 .tasks-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
 .task-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
 }
 
 .task-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .task-content {
-  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.task-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .task-title {
   margin: 0 0 8px 0;
-  font-size: 1.125rem;
-  font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: #333;
 }
 
 .task-description {
   margin: 0 0 12px 0;
   color: #666;
+  line-height: 1.4;
 }
 
 .task-meta {
   display: flex;
+  gap: 12px;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
 }
 
 .task-points {
   display: flex;
-  align-items: center;
+  gap: 6px;
 }
 
 .task-frequency {
-  margin-left: 8px;
-}
-
-.task-completion-status {
-  margin-left: auto;
-}
-
-.edit-form-container {
-  background-color: #f9f9f9;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.edit-form-row {
-  margin-bottom: 16px;
-}
-
-.edit-label {
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #333;
-}
-
-.edit-input,
-.edit-select,
-.edit-number-input {
-  width: 100%;
-}
-
-.edit-points-group {
-  display: flex;
-  gap: 8px;
-}
-
-.edit-points-item {
-  flex: 1;
-}
-
-.task-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-}
-
-.edit-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.normal-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-display {
   display: flex;
   align-items: center;
 }
 
-.status-tag {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.no-tasks {
-  text-align: center;
-  padding: 40px 0;
-}
-
-.history-tab {
-  padding: 0;
-}
-
-.history-controls {
-  background-color: #f9f9f9;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.responsive-date-picker {
-  width: 100%;
-}
-
-.history-date-title {
-  margin: 0 0 16px 0;
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: #333;
-  text-align: center;
-}
-
-.task-card.history-task-card {
-  margin-bottom: 16px;
-}
-
-.task-content.history-task-content {
-  padding: 16px;
-}
-
-.task-info.history-task-info {
-  margin-bottom: 8px;
-}
-
-.task-meta-history {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.completion-time {
-  margin-left: auto;
-}
-
-.history-task-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.history-status-tag {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.trash-tab {
-  padding: 0;
-}
-
-.trash-controls {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
-}
-
-.clear-trash-btn {
-  display: flex;
-  align-items: center;
-}
-
-.task-card.trash-card {
-  margin-bottom: 16px;
-}
-
-.task-content {
-  padding: 16px;
-}
-
-.task-info {
-  margin-bottom: 8px;
-}
-
-.task-details {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.date-tag {
-  display: flex;
-  align-items: center;
-}
-
-.date-label {
-  margin-right: 4px;
-  font-weight: 500;
-  color: #333;
-}
-
-.trash-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.trash-action-btn {
-  min-width: 40px;
-  height: 40px;
-}
-
-.analytics-tab {
-  padding: 0;
-}
-
-.analytics-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.chart-option {
-  display: flex;
-  align-items: center;
-}
-
-.option-text {
+.frequency-text {
   margin-left: 4px;
 }
 
+.task-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-actions,
+.manage-actions,
+.reset-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Responsive breakpoints */
+
+/* Tablet (768px to 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .header-controls {
+    gap: 12px;
+  }
+
+  .ranking-display {
+    max-width: 400px;
+  }
+
+  .form-row {
+    gap: 12px;
+  }
+
+  .filter-controls {
+    gap: 16px;
+  }
+}
+
+/* Small tablet and large mobile (481px to 768px) */
+@media (max-width: 768px) and (min-width: 481px) {
+  .todo-gamification {
+    padding: 16px;
+  }
+
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .import-export-controls {
+    order: 1;
+    justify-content: center;
+  }
+
+  .ranking-display {
+    order: 2;
+    max-width: none;
+  }
+
+  .total-points {
+    order: 3;
+    text-align: center;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .points-row,
+  .frequency-row {
+    flex-direction: row;
+    max-width: none;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .task-content {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .task-actions {
+    align-self: flex-end;
+  }
+}
+
+/* Mobile (320px to 480px) */
+@media (max-width: 480px) {
+  .todo-gamification {
+    padding: 12px;
+  }
+
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .import-export-controls {
+    order: 1;
+    justify-content: center;
+  }
+
+  .ranking-display {
+    order: 2;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rank-badge {
+    margin-right: 0;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    justify-content: center;
+  }
+
+  .rank-info {
+    align-items: center;
+  }
+
+  .rank-name {
+    text-align: center;
+  }
+
+  .rank-level {
+    text-align: center;
+  }
+
+  .rank-progress {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .total-points {
+    order: 3;
+    text-align: center;
+  }
+
+  .control-btn .btn-text {
+    display: none;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .points-row {
+    flex-direction: column;
+  }
+
+  .frequency-row {
+    flex-direction: column;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .filter-radio-group {
+    margin-left: 0;
+  }
+
+  .task-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .task-actions {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* Extra small screens (320px and below) */
+@media (max-width: 320px) {
+  .todo-gamification {
+    padding: 8px;
+  }
+
+  .header-controls {
+    gap: 6px;
+  }
+
+  .rank-badge {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .rank-icon {
+    font-size: 0.9rem;
+    margin-right: 4px;
+  }
+
+  .rank-name {
+    font-size: 0.8rem;
+  }
+
+  .rank-level {
+    font-size: 0.7rem;
+  }
+
+  .progress-info {
+    font-size: 0.7rem;
+  }
+
+  .next-rank-text,
+  .max-rank-text {
+    font-size: 0.6rem;
+  }
+
+  .total-points {
+    font-size: 0.9rem;
+  }
+
+  .points-badge {
+    padding: 3px 6px;
+    font-size: 0.8rem;
+  }
+
+  .rank-progress-bar {
+    height: 4px;
+  }
+}
+
+/* History, Analytics and Trash tabs specific styles */
+.history-tab,
+.analytics-tab,
+.trash-tab {
+  padding: 20px;
+}
+
+.history-controls,
+.analytics-controls,
+.trash-controls {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.responsive-date-picker {
+  min-width: 200px;
+}
+
 .chart-container {
-  position: relative;
-  width: 100%;
   height: 400px;
-  margin-bottom: 16px;
+  margin-bottom: 30px;
+  position: relative;
 }
 
-.summary-card {
-  padding: 16px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.responsive-chart {
+  max-width: 100%;
+  height: 100%;
 }
 
-.summary-title {
-  margin: 0 0 16px 0;
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: #333;
+.monthly-summary {
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .summary-stats {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  flex: 1 1 200px;
-  margin-bottom: 16px;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
 .stat-icon {
-  margin-right: 8px;
   font-size: 1.5rem;
-  color: #409eff;
+  color: #409EFF;
 }
 
 .stat-content {
-  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-label {
-  display: block;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: #666;
+  margin-bottom: 4px;
 }
 
 .stat-value {
-  font-size: 1.125rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #333;
 }
 
-/* Update rank color classes to use keys instead of names */
-.rank-legendary {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #fff;
+/* Responsive adjustments for tabs content */
+@media (max-width: 768px) {
+  .history-tab,
+  .analytics-tab,
+  .trash-tab {
+    padding: 16px;
+  }
+
+  .history-controls,
+  .analytics-controls,
+  .trash-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .chart-container {
+    height: 300px;
+  }
+
+  .summary-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
-.rank-mythic {
-  background: linear-gradient(135deg, #FF6B35, #FF4500);
-  color: #fff;
+@media (max-width: 480px) {
+  .history-tab,
+  .analytics-tab,
+  .trash-tab {
+    padding: 12px;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+
+  .stat-item {
+    padding: 12px;
+  }
+
+  .responsive-date-picker {
+    min-width: auto;
+    width: 100%;
+  }
 }
 
-.rank-immortal {
-  background: linear-gradient(135deg, #E74C3C, #C0392B);
-  color: #fff;
-}
-
-.rank-divine {
-  background: linear-gradient(135deg, #9B59B6, #8E44AD);
-  color: #fff;
-}
-
-.rank-celestial {
-  background: linear-gradient(135deg, #3498DB, #2980B9);
-  color: #fff;
-}
-
-.rank-grandmaster {
-  background: linear-gradient(135deg, #1ABC9C, #16A085);
-  color: #fff;
-}
-
-.rank-master {
-  background: linear-gradient(135deg, #2ECC71, #27AE60);
-  color: #fff;
-}
-
-.rank-diamond {
-  background: linear-gradient(135deg, #85C1E9, #5DADE2);
-  color: #fff;
-}
-
-.rank-platinum {
-  background: linear-gradient(135deg, #AED6F1, #85C1E9);
-  color: #2C3E50;
-}
-
-.rank-gold {
-  background: linear-gradient(135deg, #F7DC6F, #F4D03F);
-  color: #2C3E50;
-}
-
-.rank-silver {
-  background: linear-gradient(135deg, #D5DBDB, #BDC3C7);
-  color: #2C3E50;
-}
-
-.rank-bronze {
-  background: linear-gradient(135deg, #CD853F, #B8860B);
-  color: #fff;
-}
-
-.rank-iron {
-  background: linear-gradient(135deg, #2C3E50, #34495E);
-  color: #fff;
-}
-
-.rank-steel {
-  background: linear-gradient(135deg, #566573, #5D6D7E);
-  color: #fff;
-}
-
-.rank-stone {
-  background: linear-gradient(135deg, #7D8B8C, #85929E);
-  color: #fff;
-}
-
-.rank-wood {
-  background: linear-gradient(135deg, #8B4513, #A0522D);
-  color: #fff;
-}
-
-.rank-apprentice {
-  background: linear-gradient(135deg, #52C41A, #389E0D);
-  color: #fff;
-}
-
-.rank-novice {
-  background: linear-gradient(135deg, #13C2C2, #08979C);
-  color: #fff;
-}
-
-.rank-trainee {
-  background: linear-gradient(135deg, #722ED1, #531DAB);
-  color: #fff;
-}
-
-.rank-beginner {
-  background: linear-gradient(135deg, #595959, #434343);
-  color: #fff;
-}
-
-/* Next rank and max rank info styles */
-.next-rank-info,
-.max-rank-info {
-  text-align: center;
-  margin-top: 4px;
-}
-
-.next-rank-text {
-  font-size: 0.75rem;
-  color: #909399;
-  font-weight: 500;
-}
-
-.max-rank-text {
-  font-size: 0.75rem;
-  color: #67C23A;
-  font-weight: 600;
-}
+/* Rank color classes */
+.rank-legendary { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
+.rank-mythic { background: linear-gradient(135deg, #FF6B35, #FF4500); color: #fff; }
+.rank-immortal { background: linear-gradient(135deg, #E74C3C, #C0392B); color: #fff; }
+.rank-divine { background: linear-gradient(135deg, #9B59B6, #8E44AD); color: #fff; }
+.rank-celestial { background: linear-gradient(135deg, #3498DB, #2980B9); color: #fff; }
+.rank-grandmaster { background: linear-gradient(135deg, #1ABC9C, #16A085); color: #fff; }
+.rank-master { background: linear-gradient(135deg, #2ECC71, #27AE60); color: #fff; }
+.rank-diamond { background: linear-gradient(135deg, #85C1E9, #5DADE2); color: #fff; }
+.rank-platinum { background: linear-gradient(135deg, #AED6F1, #85C1E9); color: #333; }
+.rank-gold { background: linear-gradient(135deg, #F7DC6F, #F4D03F); color: #333; }
+.rank-silver { background: linear-gradient(135deg, #D5DBDB, #BDC3C7); color: #333; }
+.rank-bronze { background: linear-gradient(135deg, #CD853F, #A0522D); color: #fff; }
+.rank-iron { background: linear-gradient(135deg, #2C3E50, #34495E); color: #fff; }
+.rank-steel { background: linear-gradient(135deg, #566573, #5D6D7E); color: #fff; }
+.rank-stone { background: linear-gradient(135deg, #7D8B8C, #85929E); color: #fff; }
+.rank-wood { background: linear-gradient(135deg, #8B4513, #A0522D); color: #fff; }
+.rank-apprentice { background: linear-gradient(135deg, #52C41A, #389E0D); color: #fff; }
+.rank-novice { background: linear-gradient(135deg, #13C2C2, #08979C); color: #fff; }
+.rank-trainee { background: linear-gradient(135deg, #722ED1, #531DAB); color: #fff; }
+.rank-beginner { background: linear-gradient(135deg, #595959, #434343); color: #fff; }
 </style>
