@@ -4,62 +4,119 @@ export default {
         englishName: 'German'
     },
 
+    // Common terms
+    common: {
+        search: 'Suchen',
+        loading: 'Laden...',
+        submit: 'Absenden',
+        cancel: 'Abbrechen',
+        confirm: 'Bestätigen',
+        delete: 'Löschen',
+        edit: 'Bearbeiten',
+        save: 'Speichern',
+        close: 'Schließen',
+        back: 'Zurück',
+        next: 'Weiter',
+        previous: 'Zurück',
+        add: 'Hinzufügen',
+        remove: 'Entfernen',
+        refresh: 'Aktualisieren',
+        copy: 'Kopieren',
+        paste: 'Einfügen',
+        clear: 'Löschen',
+        reset: 'Zurücksetzen',
+        settings: 'Einstellungen',
+        help: 'Hilfe',
+        about: 'Über',
+        success: 'Erfolg',
+        error: 'Fehler',
+        warning: 'Warnung',
+        info: 'Information',
+        yes: 'Ja',
+        no: 'Nein',
+        ok: 'OK',
+        name: 'Name',
+        description: 'Beschreibung',
+        type: 'Typ',
+        status: 'Status',
+        date: 'Datum',
+        time: 'Zeit',
+        language: 'Sprache',
+        enable: 'Aktivieren',
+        disable: 'Deaktivieren',
+        on: 'Ein',
+        off: 'Aus',
+        play: 'Wiedergabe',
+        pause: 'Pause',
+        stop: 'Stopp',
+        volume: 'Lautstärke',
+        more: 'Mehr',
+        less: 'Weniger',
+        expand: 'Erweitern',
+        collapse: 'Einklappen',
+        show: 'Anzeigen',
+        hide: 'Verstecken',
+        open: 'Öffnen',
+        download: 'Herunterladen',
+        upload: 'Hochladen',
+        default: 'Standard'
+    },
+
     // Navigation
     nav: {
         search: 'Suchen',
-        dictionary: 'Wörterbuch',
         starList: 'Sammlungen',
-        youtube: 'YouTube-Lernen',
+        youtube: 'YouTube',
         grammarListener: 'Grammatik',
         userCenter: 'Profil',
         login: 'Anmelden',
         about: 'Über',
-        bgm: 'Audio-Einstellungen'
+        bgm: 'Audio'
     },
 
-    // Search functionality
-    search: {
-        placeholder: {
-            dictionary: 'Vokabular eingeben',
-            translation: 'Beliebigen Text eingeben',
-            explanation: 'Beliebigen Text eingeben',
-            grammar: 'Beliebigen Text eingeben',
-            vocabulary: 'Vokabular eingeben'
-        },
-        modes: {
-            dictionary: 'Wörterbuch',
-            directTranslation: 'Direkte Übersetzung',
-            explanation: 'Erklärung',
-            grammarExplanation: 'Grammatikerklärung',
-            grammarCorrection: 'Grammatikkorrektur',
-            vocabularyExplanation: 'Vokabularerklärung',
-            synonym: 'Synonym',
-            antonym: 'Antonym',
-            vocabularyAssociation: 'Vokabularassoziation',
-            phrasesAssociation: 'Phrasenassoziation'
-        },
-        buttons: {
-            search: 'Suchen',
-            back: 'Zurück',
-            explainMore: 'Mehr erklären',
-            viewHistory: 'KI-Verlauf anzeigen'
-        }
-    },
-
+    // Authentication
     auth: {
         welcome: 'Willkommen zurück',
         loginWith: 'Anmelden mit',
-        google: 'Mit Google-Konto anmelden'
+        google: 'Mit Google-Konto anmelden',
+        connecting: 'Verbindung zu Google...',
+        processing: 'Verarbeitung...',
+        loginFailed: 'Google-Anmeldung fehlgeschlagen, bitte erneut versuchen',
+        accountNotFound: 'Konto nicht gefunden, bitte Administrator kontaktieren',
+        loginSuccess: 'Anmeldung erfolgreich',
+        logout: 'Abmelden',
+        autoLoginSuccess: 'Automatische Anmeldung erfolgreich!',
+        guestLogin: 'Gastbenutzer bitte anmelden!',
+        features: {
+            intelligentMemory: 'Intelligentes Vokabelgedächtnis',
+            pronunciation: 'Authentische Aussprachepraxis',
+            personalizedPlan: 'Personalisierter Lernplan'
+        },
+        brand: {
+            title: 'Kason English Learning Platform',
+            subtitle: 'Intelligente Englisch-Lernplattform'
+        },
+        copyright: '©2025 Kason English Learning Platform v2.0'
     },
 
-    ui: {
-        loading: 'Laden',
-        confirm: 'Bestätigen',
-        cancel: 'Abbrechen',
-        close: 'Schließen',
-        save: 'Speichern',
-        edit: 'Bearbeiten',
-        delete: 'Löschen'
+    // Search modes
+    searchModes: {
+        dictionary: 'Wörterbuch',
+        directTranslation: 'Direkte Übersetzung',
+        explanation: 'Erklärung',
+        grammarExplanation: 'Grammatikerklärung',
+        grammarCorrection: 'Grammatikkorrektur',
+        vocabularyExplanation: 'Vokabularerklärung',
+        synonym: 'Synonym',
+        antonym: 'Antonym',
+        vocabularyAssociation: 'Vokabularassoziation',
+        phrasesAssociation: 'Phrasenassoziation',
+        selectMode: 'Modus auswählen'
+    },
+
+    // AI features
+    ai: {
+        useClipboardContent: 'Möchten Sie nach "{text}" suchen? Klicken Sie zum Fortfahren.'
     },
 
     // Todo Gamification
@@ -80,16 +137,16 @@ export default {
         selectFrequency: 'Häufigkeit auswählen',
         everyNDays: 'Alle N Tage',
         addTask: 'Aufgabe hinzufügen',
-        completed: '✅ Abgeschlossen',
-        failed: '❌ Fehlgeschlagen',
+        completed: 'Abgeschlossen',
+        failed: 'Fehlgeschlagen',
         success: 'Erfolg',
         fail: 'Fehler',
         noTasksToday: 'Keine Aufgaben für heute. Fügen Sie Ihre erste Aufgabe oben hinzu!',
         selectDate: 'Datum auswählen',
         noTasksForDate: 'Keine Aufgaben für das ausgewählte Datum gefunden',
-        barChart: '📊 Balkendiagramm',
-        lineChart: '📈 Liniendiagramm',
-        donutChart: '🍩 Donut-Diagramm',
+        barChart: 'Balkendiagramm',
+        lineChart: 'Liniendiagramm',
+        donutChart: 'Donut-Diagramm',
         monthlySummary: 'Monatszusammenfassung',
         tasksCompleted: 'Abgeschlossene Aufgaben',
         successRate: 'Erfolgsrate',
@@ -99,7 +156,37 @@ export default {
         taskDeletedSuccess: 'Aufgabe erfolgreich gelöscht!',
         taskTitleRequired: 'Aufgabentitel ist erforderlich',
         confirmDeleteTask: 'Sind Sie sicher, dass Sie diese Aufgabe löschen möchten?',
+        confirmDeleteHistoryRecord: 'Sind Sie sicher, dass Sie diesen historischen Datensatz löschen möchten?',
+        deleteHistoryRecord: 'Historischen Datensatz löschen',
+        historyRecordDeleted: 'Historischer Datensatz erfolgreich gelöscht!',
         editTask: 'Aufgabe bearbeiten',
-        deleteTask: 'Aufgabe löschen'
+        deleteTask: 'Aufgabe löschen',
+
+        // Ranking system
+        ranks: {
+            legendary: 'Legendär',
+            mythic: 'Mythisch',
+            immortal: 'Unsterblich',
+            divine: 'Göttlich',
+            celestial: 'Himmlisch',
+            grandmaster: 'Großmeister',
+            master: 'Meister',
+            diamond: 'Diamant',
+            platinum: 'Platin',
+            gold: 'Gold',
+            silver: 'Silber',
+            bronze: 'Bronze',
+            iron: 'Eisen',
+            steel: 'Stahl',
+            stone: 'Stein',
+            wood: 'Holz',
+            apprentice: 'Lehrling',
+            novice: 'Anfänger',
+            trainee: 'Auszubildender',
+            beginner: 'Neuling'
+        },
+        rankLevel: 'Level {level}',
+        nextRank: 'Nächste: {rank}',
+        maxRank: 'Maximaler Rang erreicht!'
     }
 }

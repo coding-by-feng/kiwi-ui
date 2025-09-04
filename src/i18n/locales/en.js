@@ -110,7 +110,8 @@ export default {
         synonym: 'Synonym',
         antonym: 'Antonym',
         vocabularyAssociation: 'Vocabulary Association',
-        phrasesAssociation: 'Phrases Association'
+        phrasesAssociation: 'Phrases Association',
+        selectMode: 'Select Mode'
     },
 
     // Search placeholders
@@ -532,16 +533,16 @@ export default {
         selectFrequency: 'Select frequency',
         everyNDays: 'Every N Days',
         addTask: 'Add Task',
-        completed: '✅ Completed',
-        failed: '❌ Failed',
+        completed: 'Completed',
+        failed: 'Failed',
         success: 'success',
         fail: 'failed',
         noTasksToday: 'No tasks for today. Add your first task above!',
         selectDate: 'Select date',
         noTasksForDate: 'No tasks found for selected date',
-        barChart: '📊 Bar Chart',
-        lineChart: '📈 Line Chart',
-        donutChart: '🍩 Donut Chart',
+        barChart: 'Bar Chart',
+        lineChart: 'Line Chart',
+        donutChart: 'Donut Chart',
         monthlySummary: 'Monthly Summary',
         tasksCompleted: 'Tasks Completed',
         successRate: 'Success Rate',
@@ -555,7 +556,37 @@ export default {
         deleteHistoryRecord: 'Delete Historical Record',
         historyRecordDeleted: 'Historical record deleted successfully!',
         taskResetToPending: 'Task reset to pending status successfully!',
+        taskResetToPending: 'Task reset to pending status successfully!',
         editTask: 'Edit Task',
-        deleteTask: 'Delete Task'
+        deleteTask: 'Delete Task',
+        editTask: 'Edit Task',
+        deleteTask: 'Delete Task',
+
+        // Ranking system
+        ranks: {
+            legendary: 'Legendary',
+            mythic: 'Mythic',
+            immortal: 'Immortal',
+            divine: 'Divine',
+            celestial: 'Celestial',
+            grandmaster: 'Grandmaster',
+            master: 'Master',
+            diamond: 'Diamond',
+            platinum: 'Platinum',
+            gold: 'Gold',
+            silver: 'Silver',
+            bronze: 'Bronze',
+            iron: 'Iron',
+            steel: 'Steel',
+            stone: 'Stone',
+            wood: 'Wood',
+            apprentice: 'Apprentice',
+            novice: 'Novice',
+            trainee: 'Trainee',
+            beginner: 'Beginner'
+        },
+        rankLevel: 'Level {level}',
+        nextRank: 'Next: {rank}',
+        maxRank: 'Max Rank Achieved!'
     }
 }
