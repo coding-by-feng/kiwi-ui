@@ -200,8 +200,8 @@
                         <span class="frequency-text">{{ getFrequencyText(task.frequency, task.customDays) }}</span>
                       </el-tag>
                     </div>
-                    <!-- Task Completion Status Tag for Non-Daily Tasks -->
-                    <div class="task-completion-status" v-if="shouldShowDoneTag(task)">
+                    <!-- Task Completion Status Tag for Non-Daily Tasks (only show if no status display below) -->
+                    <div class="task-completion-status" v-if="shouldShowDoneTag(task) && !shouldShowStatusDisplay(task)">
                       <el-tag
                         size="mini"
                         :type="getCompletionTagType(task)"
@@ -1431,6 +1431,11 @@ export default {
         this.refreshTrigger++
         this.$message.success('Trash cleared')
       })
+    },
+
+    shouldShowStatusDisplay(task) {
+      // Show status display section for completed tasks (both daily and non-daily)
+      return task.status !== 'pending'
     }
   }
 }
@@ -2127,4 +2132,91 @@ export default {
 .rank-novice { background: linear-gradient(135deg, #13C2C2, #08979C); color: #fff; }
 .rank-trainee { background: linear-gradient(135deg, #722ED1, #531DAB); color: #fff; }
 .rank-beginner { background: linear-gradient(135deg, #595959, #434343); color: #fff; }
+
+/* Responsive tabs - ensure horizontal display on mobile */
+.responsive-tabs {
+  width: 100%;
+}
+
+.responsive-tabs .el-tabs__header {
+  margin-bottom: 0;
+}
+
+.responsive-tabs .el-tabs__nav-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.responsive-tabs .el-tabs__nav-wrap::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.responsive-tabs .el-tabs__nav-scroll {
+  white-space: nowrap;
+}
+
+.responsive-tabs .el-tabs__nav {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+.responsive-tabs .el-tabs__item {
+  flex-shrink: 0;
+  min-width: auto;
+  padding: 0 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Mobile specific tab improvements */
+@media (max-width: 768px) {
+  .responsive-tabs .el-tabs__item {
+    padding: 0 12px;
+    font-size: 13px;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .responsive-tabs .el-tabs__nav-wrap {
+    padding: 0 8px;
+  }
+
+  .responsive-tabs .el-tabs__nav {
+    min-width: calc(4 * 90px); /* Ensure minimum width for 4 tabs */
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-tabs .el-tabs__item {
+    padding: 0 8px;
+    font-size: 12px;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .responsive-tabs .el-tabs__nav-wrap {
+    padding: 0 4px;
+  }
+
+  .responsive-tabs .el-tabs__nav {
+    min-width: calc(4 * 80px); /* Ensure minimum width for 4 tabs */
+  }
+}
+
+@media (max-width: 360px) {
+  .responsive-tabs .el-tabs__item {
+    padding: 0 6px;
+    font-size: 11px;
+    min-width: 65px;
+    text-align: center;
+  }
+
+  .responsive-tabs .el-tabs__nav {
+    min-width: calc(4 * 75px); /* Ensure minimum width for 4 tabs */
+  }
+}
 </style>
