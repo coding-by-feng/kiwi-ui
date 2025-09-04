@@ -115,12 +115,14 @@ export default {
 
     // Todo Gamification
     todo: {
-        title: 'ToDoリスト',
-        totalPoints: '総ポイント',
-        todayTasks: '今日のタスク',
+        title: 'To-Do',
+        totalPoints: '合計ポイント',
+        todayTasks: "今日のタスク",
+        trash: 'ゴミ箱',
         history: '履歴',
         analytics: '分析',
         task: 'タスク',
+        description: '説明',
         enterTaskDescription: 'タスクの説明を入力',
         successPoints: '成功ポイント',
         failPoints: '失敗ポイント',
