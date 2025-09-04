@@ -31,6 +31,39 @@
               </el-button>
             </el-upload>
           </div>
+
+          <!-- Ranking Display -->
+          <div class="ranking-display">
+            <div class="rank-badge" :class="getRankClass(currentRank.name)">
+              <div class="rank-icon">
+                <i :class="getRankIcon(currentRank.name)"></i>
+              </div>
+              <div class="rank-info">
+                <div class="rank-name">{{ currentRank.name }}</div>
+                <div class="rank-level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</div>
+              </div>
+            </div>
+            <div class="rank-progress">
+              <div class="progress-info">
+                <span class="progress-text">{{ totalPoints }} / {{ currentRank.nextThreshold || '∞' }}</span>
+                <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Math.round(rankProgress) }}%</span>
+              </div>
+              <el-progress
+                :percentage="rankProgress"
+                :show-text="false"
+                :stroke-width="6"
+                :color="getRankColor(currentRank.name)"
+                class="rank-progress-bar"
+              />
+              <div v-if="currentRank.nextRankName" class="next-rank-info">
+                <span class="next-rank-text">{{ $t('todo.nextRank', { rank: currentRank.nextRankName }) }}</span>
+              </div>
+              <div v-else class="max-rank-info">
+                <span class="max-rank-text">{{ $t('todo.maxRank') }}</span>
+              </div>
+            </div>
+          </div>
+
           <div class="total-points">
             <span class="points-label">{{ $t('todo.totalPoints') }}:</span>
             <span class="points-badge">{{ totalPoints }}</span>
@@ -601,7 +634,31 @@ export default {
         failPoints: -5,
         frequency: 'once',
         customDays: 7
-      }
+      },
+
+      // Ranking system data - using keys for i18n lookup
+      ranks: [
+        { level: 20, key: 'legendary', threshold: 50000, color: '#FFD700', icon: 'el-icon-trophy' },
+        { level: 19, key: 'mythic', threshold: 40000, color: '#FF6B35', icon: 'el-icon-star-off' },
+        { level: 18, key: 'immortal', threshold: 32000, color: '#E74C3C', icon: 'el-icon-medal' },
+        { level: 17, key: 'divine', threshold: 26000, color: '#9B59B6', icon: 'el-icon-magic-stick' },
+        { level: 16, key: 'celestial', threshold: 21000, color: '#3498DB', icon: 'el-icon-sunny' },
+        { level: 15, key: 'grandmaster', threshold: 17000, color: '#1ABC9C', icon: 'el-icon-crown' },
+        { level: 14, key: 'master', threshold: 14000, color: '#2ECC71', icon: 'el-icon-key' },
+        { level: 13, key: 'diamond', threshold: 11500, color: '#85C1E9', icon: 'el-icon-present' },
+        { level: 12, key: 'platinum', threshold: 9500, color: '#AED6F1', icon: 'el-icon-medal-1' },
+        { level: 11, key: 'gold', threshold: 7800, color: '#F7DC6F', icon: 'el-icon-coin' },
+        { level: 10, key: 'silver', threshold: 6400, color: '#D5DBDB', icon: 'el-icon-wallet' },
+        { level: 9, key: 'bronze', threshold: 5200, color: '#CD853F', icon: 'el-icon-goods' },
+        { level: 8, key: 'iron', threshold: 4200, color: '#2C3E50', icon: 'el-icon-service' },
+        { level: 7, key: 'steel', threshold: 3400, color: '#566573', icon: 'el-icon-suitcase' },
+        { level: 6, key: 'stone', threshold: 2700, color: '#7D8B8C', icon: 'el-icon-position' },
+        { level: 5, key: 'wood', threshold: 2100, color: '#8B4513', icon: 'el-icon-postcard' },
+        { level: 4, key: 'apprentice', threshold: 1600, color: '#52C41A', icon: 'el-icon-school' },
+        { level: 3, key: 'novice', threshold: 1200, color: '#13C2C2', icon: 'el-icon-user' },
+        { level: 2, key: 'trainee', threshold: 800, color: '#722ED1', icon: 'el-icon-reading' },
+        { level: 1, key: 'beginner', threshold: 0, color: '#595959', icon: 'el-icon-help' }
+      ]
     }
   },
   computed: {
@@ -694,8 +751,40 @@ export default {
       this.refreshTrigger
       const stored = localStorage.getItem('todo_trash')
       return stored ? JSON.parse(stored) : []
+    },
+    currentRank() {
+      const sortedRanks = [...this.ranks].sort((a, b) => b.threshold - a.threshold)
+      for (let rank of sortedRanks) {
+        if (this.totalPoints >= rank.threshold) {
+          const nextRank = sortedRanks.find(r => r.threshold > rank.threshold)
+          return {
+            ...rank,
+            name: this.getRankName(rank.key),
+            nextThreshold: nextRank ? nextRank.threshold : null,
+            nextRankName: nextRank ? this.getRankName(nextRank.key) : null
+          }
+        }
+      }
+      const beginnerRank = this.ranks[this.ranks.length - 1]
+      return {
+        ...beginnerRank,
+        name: this.getRankName(beginnerRank.key),
+        nextThreshold: this.ranks[this.ranks.length - 2].threshold,
+        nextRankName: this.getRankName(this.ranks[this.ranks.length - 2].key)
+      }
+    },
+
+    rankProgress() {
+      if (!this.currentRank.nextThreshold) return 100
+
+      const currentThreshold = this.currentRank.threshold
+      const nextThreshold = this.currentRank.nextThreshold
+      const progress = ((this.totalPoints - currentThreshold) / (nextThreshold - currentThreshold)) * 100
+
+      return Math.min(Math.max(progress, 0), 100)
     }
   },
+
   mounted() {
     this.loadHistoryForDate()
     this.$nextTick(() => {
@@ -1163,91 +1252,171 @@ export default {
                 })
               }
 
-              this.refreshAllData()
-              this.$message.success(`Successfully imported ${importedCount} tasks!`)
-              resolve(false)
+              this.refreshTrigger++
+              this.$message.success(`Successfully imported ${importedCount} tasks`)
+              resolve()
             }).catch(() => {
-              resolve(false)
+              reject(new Error('Import cancelled'))
             })
-
           } catch (error) {
-            console.error('Import failed:', error)
-            this.$message.error('Failed to import todo data. Please check file format.')
+            console.error('Import error:', error)
+            this.$message.error('Failed to import todo data')
             reject(error)
           }
         }
 
-        reader.onerror = () => {
-          this.$message.error('Failed to read file')
-          reject(new Error('File read error'))
-        }
-
-        reader.readAsText(file)
+        reader.readAsText(file.raw)
       })
     },
-    refreshAllData() {
-      this.refreshTrigger++
-      this.loadHistoryForDate()
+    getRankName(rankKey) {
+      return this.$t(`todo.ranks.${rankKey}`)
+    },
 
-      this.$nextTick(() => {
+    getRankClass(rankName) {
+      // Extract the key from the localized name by finding the matching rank
+      const rank = this.ranks.find(r => this.getRankName(r.key) === rankName)
+      const key = rank ? rank.key : 'beginner'
+      return `rank-${key}`
+    },
+
+    getRankIcon(rankName) {
+      // Extract the key from the localized name by finding the matching rank
+      const rank = this.ranks.find(r => this.getRankName(r.key) === rankName)
+      return rank ? rank.icon : 'el-icon-help'
+    },
+
+    getRankColor(rankName) {
+      // Extract the key from the localized name by finding the matching rank
+      const rank = this.ranks.find(r => this.getRankName(r.key) === rankName)
+      return rank ? rank.color : '#595959'
+    },
+
+    getRankByPoints(points) {
+      const sortedRanks = [...this.ranks].sort((a, b) => b.threshold - a.threshold)
+      for (let rank of sortedRanks) {
+        if (points >= rank.threshold) {
+          return {
+            ...rank,
+            name: this.getRankName(rank.key)
+          }
+        }
+      }
+      const beginnerRank = this.ranks[this.ranks.length - 1]
+      return {
+        ...beginnerRank,
+        name: this.getRankName(beginnerRank.key)
+      }
+    },
+
+    shouldShowDoneTag(task) {
+      // Show done tag for non-daily tasks that have been completed
+      const isNonDaily = task.frequency && task.frequency !== 'daily'
+      return isNonDaily && (task.status === 'success' || task.status === 'fail')
+    },
+
+    shouldShowStatusActions(task) {
+      // Show status action buttons for daily tasks or pending non-daily tasks
+      const isDaily = !task.frequency || task.frequency === 'daily'
+      return isDaily || task.status === 'pending'
+    },
+
+    shouldShowResetAction(task) {
+      // Show reset action for completed non-daily tasks
+      const isNonDaily = task.frequency && task.frequency !== 'daily'
+      return isNonDaily && (task.status === 'success' || task.status === 'fail')
+    },
+
+    getCompletionTagType(task) {
+      if (task.status === 'success') return 'success'
+      if (task.status === 'fail') return 'danger'
+      return 'info'
+    },
+
+    getCompletionTagText(task) {
+      if (task.status === 'success') return this.$t('todo.completed')
+      if (task.status === 'fail') return this.$t('todo.failed')
+      return 'Done'
+    },
+
+    getFrequencyText(frequency, customDays) {
+      switch (frequency) {
+        case 'daily':
+          return 'Daily'
+        case 'weekly':
+          return 'Weekly'
+        case 'monthly':
+          return 'Monthly'
+        case 'custom':
+          return `Every ${customDays} days`
+        default:
+          return 'One-time'
+      }
+    },
+
+    getEmptyDescription() {
+      switch (this.taskFilter) {
+        case 'pending':
+          return 'No pending tasks'
+        case 'completed':
+          return 'No completed tasks'
+        case 'done':
+          return 'No done tasks'
+        default:
+          return 'No tasks for today'
+      }
+    },
+
+    resetTaskStatus(taskId) {
+      const dateKey = this.formatDateKey(new Date())
+      const tasks = this.getTasksForDate(dateKey)
+      const taskIndex = tasks.findIndex(t => t.id === taskId)
+
+      if (taskIndex !== -1) {
+        tasks[taskIndex].status = 'pending'
+        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
         this.refreshTrigger++
-        console.log('Today tasks after import:', this.todayTasks.length)
-        console.log('Total points after import:', this.totalPoints)
-
-        if (this.activeTab === 'analytics') {
-          this.$nextTick(() => {
-            this.updateChart()
-          })
-        }
-      })
+        this.$message.success('Task status reset to pending')
+      }
     },
+
     restoreTask(taskId) {
       const trashedTasks = this.trashedTasks
-      const taskToRestore = trashedTasks.find(t => t.id === taskId)
+      const taskIndex = trashedTasks.findIndex(t => t.id === taskId)
 
-      if (taskToRestore) {
-        const filteredTrash = trashedTasks.filter(t => t.id !== taskId)
-        localStorage.setItem('todo_trash', JSON.stringify(filteredTrash))
+      if (taskIndex !== -1) {
+        const taskToRestore = trashedTasks[taskIndex]
+        const originalDate = new Date(taskToRestore.originalDate)
+        const dateKey = this.formatDateKey(originalDate)
 
-        let restoreDate
-        try {
-          restoreDate = new Date(taskToRestore.originalDate)
-          if (isNaN(restoreDate.getTime())) {
-            restoreDate = new Date()
-          }
-        } catch (error) {
-          restoreDate = new Date()
-        }
+        // Remove from trash
+        trashedTasks.splice(taskIndex, 1)
+        localStorage.setItem('todo_trash', JSON.stringify(trashedTasks))
 
-        const restoreDateKey = this.formatDateKey(restoreDate)
-        const existingTasks = this.getTasksForDate(restoreDateKey)
-
+        // Restore to original date
+        const existingTasks = this.getTasksForDate(dateKey)
         const restoredTask = {
-          id: taskToRestore.id,
-          title: taskToRestore.title,
-          description: taskToRestore.description,
-          successPoints: taskToRestore.successPoints,
-          failPoints: taskToRestore.failPoints,
-          frequency: taskToRestore.frequency,
-          customDays: taskToRestore.customDays,
-          status: 'pending',
-          date: restoreDate.toISOString(),
-          dateKey: restoreDateKey
+          ...taskToRestore,
+          status: 'pending' // Reset status when restoring
         }
+        delete restoredTask.originalDate
+        delete restoredTask.deletedDate
 
         existingTasks.push(restoredTask)
-        localStorage.setItem(`todo_${restoreDateKey}`, JSON.stringify(existingTasks))
+        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(existingTasks))
 
         this.refreshTrigger++
         this.$message.success('Task restored successfully')
       }
     },
+
     permanentlyDeleteTask(taskId) {
-      const trashedTasks = this.trashedTasks.filter(t => t.id !== taskId)
-      localStorage.setItem('todo_trash', JSON.stringify(trashedTasks))
+      const trashedTasks = this.trashedTasks
+      const filteredTasks = trashedTasks.filter(t => t.id !== taskId)
+      localStorage.setItem('todo_trash', JSON.stringify(filteredTasks))
       this.refreshTrigger++
       this.$message.success('Task permanently deleted')
     },
+
     clearTrash() {
       this.$confirm(
         'This will permanently delete all items in trash. This cannot be undone.',
@@ -1258,954 +1427,294 @@ export default {
           type: 'warning'
         }
       ).then(() => {
-        localStorage.setItem('todo_trash', JSON.stringify([]))
+        localStorage.removeItem('todo_trash')
         this.refreshTrigger++
-        this.$message.success('Trash cleared successfully')
+        this.$message.success('Trash cleared')
       })
-    },
-    getFrequencyText(frequency, customDays) {
-      switch (frequency) {
-        case 'daily': return 'Daily'
-        case 'weekly': return 'Weekly'
-        case 'monthly': return 'Monthly'
-        case 'custom': return `Every ${customDays} days`
-        default: return 'One-time'
-      }
-    },
-    shouldShowStatusActions(task) {
-      // Daily tasks always show status actions when pending
-      if (task.frequency === 'daily') {
-        return task.status === 'pending'
-      }
-
-      // Non-daily tasks show status actions when pending
-      return task.status === 'pending'
-    },
-
-    shouldShowDoneTag(task) {
-      // Only show "Done" tag for non-daily tasks that are completed
-      const isNonDaily = task.frequency && task.frequency !== 'once' && task.frequency !== 'daily'
-      const isCompleted = task.status === 'success' || task.status === 'fail'
-      return isNonDaily && isCompleted
-    },
-
-    shouldShowResetAction(task) {
-      // Show reset action for non-daily completed tasks
-      const isNonDaily = task.frequency && task.frequency !== 'once' && task.frequency !== 'daily'
-      const isCompleted = task.status === 'success' || task.status === 'fail'
-      return isNonDaily && isCompleted
-    },
-
-    getCompletionTagType(task) {
-      if (task.status === 'success') return 'success'
-      if (task.status === 'fail') return 'danger'
-      return 'info'
-    },
-
-    getCompletionTagText(task) {
-      const frequency = task.frequency || 'once'
-      const period = this.getFrequencyPeriod(frequency)
-
-      if (task.status === 'success') {
-        return `Done this ${period}`
-      } else if (task.status === 'fail') {
-        return `Failed this ${period}`
-      }
-      return `Pending for ${period}`
-    },
-
-    getFrequencyPeriod(frequency) {
-      switch (frequency) {
-        case 'weekly': return 'week'
-        case 'monthly': return 'month'
-        case 'custom': return 'cycle'
-        default: return 'period'
-      }
-    },
-
-    resetTaskStatus(taskId) {
-      const dateKey = this.formatDateKey(new Date())
-      const tasks = this.getTasksForDate(dateKey)
-      const taskIndex = tasks.findIndex(t => t.id === taskId)
-
-      if (taskIndex !== -1) {
-        // Reset task status to pending
-        tasks[taskIndex].status = 'pending'
-        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
-
-        // Remove the corresponding history record
-        this.removeLatestHistoryRecord(taskId)
-
-        this.refreshTrigger++
-        this.$message.success('Task status reset to pending')
-      }
-    },
-
-    removeLatestHistoryRecord(taskId) {
-      const dateKey = this.formatDateKey(new Date())
-      const historyRecords = this.getHistoryRecordsForDate(dateKey)
-
-      // Find and remove the most recent history record for this task
-      const recordIndex = historyRecords.findLastIndex(record => record.originalTaskId === taskId)
-      if (recordIndex !== -1) {
-        historyRecords.splice(recordIndex, 1)
-        localStorage.setItem(`history_${dateKey}`, JSON.stringify(historyRecords))
-      }
-    },
-
-    getEmptyDescription() {
-      if (this.taskFilter === 'all' && this.frequencyFilter === 'all') {
-        return this.$t('todo.noTasksToday')
-      }
-
-      let description = 'No tasks found'
-
-      if (this.taskFilter !== 'all') {
-        const statusText = {
-          'pending': 'pending',
-          'completed': 'completed',
-          'done': 'done (non-daily)'
-        }[this.taskFilter]
-        description += ` with status: ${statusText}`
-      }
-
-      if (this.frequencyFilter !== 'all') {
-        description += ` with frequency: ${this.frequencyFilter}`
-      }
-
-      return description
     }
   }
 }
 </script>
 
 <style scoped>
-/* Base styles */
 .todo-gamification {
-  padding: 16px;
-  max-width: 100%;
+  padding: 20px;
 }
 
 .main-card {
-  margin-bottom: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* Header styles */
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+  background-color: #f5f7fa;
+  padding: 16px;
+  border-bottom: 1px solid #e4e7ec;
 }
 
 .header-title {
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  margin: 0;
-  color: #303133;
+  color: #333;
 }
 
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .import-export-controls {
   display: flex;
-  gap: 8px;
+  align-items: center;
 }
 
 .control-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  margin-right: 8px;
 }
 
-.btn-text {
-  display: inline;
+.ranking-display {
+  display: flex;
+  align-items: center;
+}
+
+.rank-badge {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 16px;
+  margin-right: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.rank-icon {
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+.rank-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.rank-name {
+  color: #333;
+}
+
+.rank-level {
+  color: #666;
+}
+
+.rank-progress {
+  flex-grow: 1;
+}
+
+.rank-progress-bar {
+  height: 6px;
+  border-radius: 3px;
 }
 
 .total-points {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
 }
 
 .points-label {
-  color: #606266;
+  margin-right: 4px;
 }
 
 .points-badge {
-  color: #409eff;
-  font-size: 1.1em;
-  font-weight: bold;
+  background-color: #67c23a;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
 }
 
-/* Tabs styles */
 .responsive-tabs {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
-.responsive-tabs >>> .el-tabs__nav-wrap {
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.responsive-tabs >>> .el-tabs__nav {
-  white-space: nowrap;
-}
-
-/* Form styles */
 .task-input-section {
-  background: #fafbfc;
-  padding: 20px;
+  background-color: #fff;
+  padding: 16px;
   border-radius: 8px;
-  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
 }
 
 .responsive-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .form-row {
-  display: flex;
-  gap: 16px;
-  align-items: flex-end;
-  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .form-item {
-  flex: 1;
-  min-width: 100px;
-  margin-bottom: 0 !important;
-}
-
-.form-item.full-width {
-  flex: 1 1 100%;
-}
-
-.points-row {
-  justify-content: flex-start;
-}
-
-.points-item {
-  flex: 0 0 auto;
-  min-width: 140px;
-}
-
-.frequency-row {
-  align-items: flex-end;
-}
-
-.frequency-item {
-  flex: 1;
-  min-width: 160px;
-}
-
-.custom-days-item {
-  flex: 0 0 auto;
-  min-width: 120px;
-}
-
-.submit-row {
-  justify-content: center;
+  margin-bottom: 0;
 }
 
 .responsive-input,
 .responsive-textarea,
-.responsive-select {
-  width: 100%;
-}
-
+.responsive-select,
 .responsive-number,
 .responsive-number-small {
   width: 100%;
 }
 
+.responsive-textarea {
+  resize: none;
+}
+
 .add-task-btn {
-  padding: 10px 24px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Task card styles */
-.tasks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.responsive-task-card {
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.responsive-task-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.task-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.task-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.task-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #303133;
-  word-break: break-word;
-}
-
-.task-description {
-  color: #606266;
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.task-meta {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.task-points {
-  display: flex;
-  gap: 6px;
-}
-
-.task-frequency {
-  display: flex;
-  align-items: center;
-}
-
-.frequency-text {
-  margin-left: 4px;
-}
-
-.task-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.status-actions,
-.manage-actions,
-.edit-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.normal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-.status-btn,
-.manage-btn,
-.action-btn {
-  min-width: 32px;
-  height: 32px;
-}
-
-.btn-text-small {
-  font-size: 0.85rem;
-}
-
-.status-tag {
-  white-space: nowrap;
-}
-
-/* Edit form styles */
-.task-edit-form {
-  flex: 1;
   width: 100%;
 }
 
-.edit-form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.edit-form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.edit-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #606266;
-}
-
-.edit-input,
-.edit-select {
-  width: 100%;
-}
-
-.edit-points-row {
-  gap: 12px;
-}
-
-.edit-points-group {
-  display: flex;
-  gap: 12px;
-}
-
-.edit-points-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.edit-number-input {
-  width: 100%;
-}
-
-/* History styles */
-.history-controls {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.responsive-date-picker {
-  width: 200px;
-}
-
-.history-date-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0 0 16px 0;
-  color: #303133;
-}
-
-.responsive-history-card {
-  margin-bottom: 16px;
-}
-
-.history-task-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.history-task-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.task-meta-history {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.completion-time {
-  display: flex;
-  align-items: center;
-}
-
-.time-text {
-  margin-left: 4px;
-  font-size: 0.85rem;
-}
-
-.history-task-status {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-
-.history-status-tag {
-  white-space: nowrap;
-}
-
-.history-delete-btn {
-  min-width: 28px;
-  height: 28px;
-}
-
-/* Trash styles */
-.trash-controls {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.clear-trash-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.responsive-trash-card {
-  margin-bottom: 16px;
-}
-
-.task-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.task-dates {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.date-tag {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.date-value {
-  font-size: 0.85rem;
-}
-
-.trash-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.trash-action-btn {
-  min-width: 32px;
-  height: 32px;
-}
-
-/* Analytics styles */
-.analytics-controls {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.responsive-radio-group {
-  display: flex;
-  gap: 8px;
-}
-
-.chart-option {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-}
-
-.option-text {
-  font-size: 0.9rem;
-}
-
-.chart-container {
-  height: 400px;
-  margin: 20px 0;
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid #ebeef5;
-}
-
-.responsive-chart {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-.responsive-summary-card {
-  border-radius: 8px;
-}
-
-.summary-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0 0 20px 0;
-  color: #303133;
-  text-align: center;
-}
-
-.summary-stats {
-  display: flex;
-  justify-content: space-around;
-  gap: 16px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  flex: 1;
-}
-
-.stat-icon {
-  font-size: 2rem;
-  color: #409eff;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: #606266;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #303133;
-}
-
-/* Status classes */
-.task-success {
-  border-left: 4px solid #67c23a;
-}
-
-.task-fail {
-  border-left: 4px solid #f56c6c;
-}
-
-.task-pending {
-  border-left: 4px solid #e6a23c;
-}
-
-/* No data states */
-.no-tasks,
-.no-templates,
-.no-data {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.template-hint {
-  color: #909399;
-  font-size: 0.9rem;
-  margin-top: 8px;
-}
-
-/* Responsive breakpoints */
-/* Tablet styles */
-@media (max-width: 768px) {
-  .todo-gamification {
-    padding: 12px;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-    gap: 12px;
-  }
-
-  .header-controls {
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .control-btn .btn-text {
-    display: none;
-  }
-
-  .task-input-section {
-    padding: 16px;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .form-item {
-    min-width: unset;
-  }
-
-  .points-row {
-    flex-direction: row;
-  }
-
-  .points-item {
-    flex: 1;
-    min-width: unset;
-  }
-
-  .frequency-row {
-    flex-direction: column;
-  }
-
-  .frequency-item,
-  .custom-days-item {
-    min-width: unset;
-    flex: 1;
-  }
-
-  .task-content {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .task-actions {
-    align-self: stretch;
-  }
-
-  .normal-actions {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .status-actions {
-    order: 1;
-  }
-
-  .manage-actions {
-    order: 2;
-  }
-
-  .template-content,
-  .history-task-content {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .template-actions,
-  .history-task-status {
-    align-self: stretch;
-    align-items: center;
-    flex-direction: row;
-    justify-content: center;
-  }
-
-  .summary-stats {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .stat-item {
-    flex-direction: row;
-    text-align: left;
-    padding: 12px;
-  }
-
-  .stat-icon {
-    font-size: 1.5rem;
-  }
-
-  .responsive-radio-group {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .chart-option .option-text {
-    display: inline;
-  }
-
-  .chart-container {
-    height: 300px;
-    padding: 12px;
-  }
-
-  .edit-points-group {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .task-dates {
-    flex-direction: column;
-    gap: 4px;
-  }
-}
-
-/* Mobile styles */
-@media (max-width: 480px) {
-  .todo-gamification {
-    padding: 8px;
-  }
-
-  .task-input-section {
-    padding: 12px;
-  }
-
-  .header-title {
-    font-size: 1.3rem;
-  }
-
-  .total-points {
-    font-size: 0.9rem;
-  }
-
-  .points-badge {
-    font-size: 1rem;
-  }
-
-  .task-title,
-  .template-title {
-    font-size: 1rem;
-  }
-
-  .task-description,
-  .template-description {
-    font-size: 0.9rem;
-  }
-
-  .btn-text-small {
-    display: none;
-  }
-
-  .action-btn,
-  .template-btn {
-    min-width: 32px;
-  }
-
-  .responsive-date-picker {
-    width: 100%;
-  }
-
-  .chart-container {
-    height: 250px;
-    padding: 8px;
-  }
-
-  .summary-title {
-    font-size: 1.1rem;
-  }
-
-  .stat-value {
-    font-size: 1.2rem;
-  }
-
-  .responsive-tabs >>> .el-tabs__item {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
-
-  .task-meta,
-  .template-meta,
-  .task-meta-history {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .edit-form-row {
-    gap: 8px;
-  }
-
-  .template-actions,
-  .trash-actions {
-    gap: 6px;
-  }
-}
-
-/* Large screen optimizations */
-@media (min-width: 1200px) {
-  .todo-gamification {
-    padding: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .form-row {
-    flex-wrap: nowrap;
-  }
-
-  .form-item.full-width {
-    flex: 1 1 auto;
-  }
-
-  .summary-stats {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-}
-
-/* Task Filter Styles */
 .task-filter-section {
-  background: #f8f9fa;
-  padding: 16px;
+  background-color: #f9f9f9;
+  padding: 12px;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .filter-controls {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
 .filter-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #606266;
-  min-width: 100px;
+  margin-right: 8px;
+  font-weight: 500;
+  color: #333;
 }
 
 .filter-radio-group {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
 }
 
 .frequency-filter-select {
-  min-width: 140px;
+  width: 200px;
 }
 
-/* Task Status and Completion Styles */
-.task-completion-status {
+.tasks-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.task-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+}
+
+.task-content {
+  padding: 16px;
+}
+
+.task-title {
+  margin: 0 0 8px 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.task-description {
+  margin: 0 0 12px 0;
+  color: #666;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.task-points {
   display: flex;
   align-items: center;
 }
 
-.completion-tag {
-  font-size: 0.8rem;
-  padding: 2px 6px;
+.task-frequency {
+  margin-left: 8px;
+}
+
+.task-completion-status {
+  margin-left: auto;
+}
+
+.edit-form-container {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit-form-row {
+  margin-bottom: 16px;
+}
+
+.edit-label {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.edit-input,
+.edit-select,
+.edit-number-input {
+  width: 100%;
+}
+
+.edit-points-group {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-points-item {
+  flex: 1;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.normal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .status-display {
@@ -2213,106 +1722,323 @@ export default {
   align-items: center;
 }
 
-.reset-actions {
+.status-tag {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.no-tasks {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.history-tab {
+  padding: 0;
+}
+
+.history-controls {
+  background-color: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.responsive-date-picker {
+  width: 100%;
+}
+
+.history-date-title {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+}
+
+.task-card.history-task-card {
+  margin-bottom: 16px;
+}
+
+.task-content.history-task-content {
+  padding: 16px;
+}
+
+.task-info.history-task-info {
+  margin-bottom: 8px;
+}
+
+.task-meta-history {
   display: flex;
   align-items: center;
-}
-
-.reset-btn {
-  min-width: 28px;
-  height: 28px;
-}
-
-.reset-btn:hover {
-  transform: rotate(180deg);
-  transition: transform 0.3s ease;
-}
-
-/* Enhanced Task Meta Layout */
-.task-meta {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
 }
 
-/* Enhanced Action Button Layouts */
-.normal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+.completion-time {
+  margin-left: auto;
 }
 
-.status-actions,
-.reset-actions,
-.manage-actions {
+.history-task-status {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-status-tag {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.trash-tab {
+  padding: 0;
+}
+
+.trash-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.clear-trash-btn {
+  display: flex;
   align-items: center;
 }
 
-/* Responsive Filter Styles */
-@media (max-width: 768px) {
-  .filter-controls {
-    gap: 12px;
-  }
-
-  .filter-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .filter-label {
-    min-width: unset;
-    font-size: 0.85rem;
-  }
-
-  .filter-radio-group {
-    width: 100%;
-  }
-
-  .filter-radio-group >>> .el-radio-button {
-    flex: 1;
-  }
-
-  .frequency-filter-select {
-    width: 100%;
-  }
+.task-card.trash-card {
+  margin-bottom: 16px;
 }
 
-@media (max-width: 480px) {
-  .task-filter-section {
-    padding: 12px;
-  }
-
-  .filter-radio-group >>> .el-radio-button__inner {
-    font-size: 0.8rem;
-    padding: 6px 8px;
-  }
-
-  .completion-tag {
-    font-size: 0.75rem;
-  }
-
-  .task-meta {
-    gap: 6px;
-  }
+.task-content {
+  padding: 16px;
 }
 
-/* Large screen optimizations */
-@media (min-width: 1200px) {
-  .filter-controls {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 32px;
-  }
+.task-info {
+  margin-bottom: 8px;
+}
 
-  .filter-group {
-    flex-direction: row;
-    align-items: center;
-  }
+.task-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.date-tag {
+  display: flex;
+  align-items: center;
+}
+
+.date-label {
+  margin-right: 4px;
+  font-weight: 500;
+  color: #333;
+}
+
+.trash-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trash-action-btn {
+  min-width: 40px;
+  height: 40px;
+}
+
+.analytics-tab {
+  padding: 0;
+}
+
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.chart-option {
+  display: flex;
+  align-items: center;
+}
+
+.option-text {
+  margin-left: 4px;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-title {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  flex: 1 1 200px;
+  margin-bottom: 16px;
+}
+
+.stat-icon {
+  margin-right: 8px;
+  font-size: 1.5rem;
+  color: #409eff;
+}
+
+.stat-content {
+  flex-grow: 1;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.stat-value {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Update rank color classes to use keys instead of names */
+.rank-legendary {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #fff;
+}
+
+.rank-mythic {
+  background: linear-gradient(135deg, #FF6B35, #FF4500);
+  color: #fff;
+}
+
+.rank-immortal {
+  background: linear-gradient(135deg, #E74C3C, #C0392B);
+  color: #fff;
+}
+
+.rank-divine {
+  background: linear-gradient(135deg, #9B59B6, #8E44AD);
+  color: #fff;
+}
+
+.rank-celestial {
+  background: linear-gradient(135deg, #3498DB, #2980B9);
+  color: #fff;
+}
+
+.rank-grandmaster {
+  background: linear-gradient(135deg, #1ABC9C, #16A085);
+  color: #fff;
+}
+
+.rank-master {
+  background: linear-gradient(135deg, #2ECC71, #27AE60);
+  color: #fff;
+}
+
+.rank-diamond {
+  background: linear-gradient(135deg, #85C1E9, #5DADE2);
+  color: #fff;
+}
+
+.rank-platinum {
+  background: linear-gradient(135deg, #AED6F1, #85C1E9);
+  color: #2C3E50;
+}
+
+.rank-gold {
+  background: linear-gradient(135deg, #F7DC6F, #F4D03F);
+  color: #2C3E50;
+}
+
+.rank-silver {
+  background: linear-gradient(135deg, #D5DBDB, #BDC3C7);
+  color: #2C3E50;
+}
+
+.rank-bronze {
+  background: linear-gradient(135deg, #CD853F, #B8860B);
+  color: #fff;
+}
+
+.rank-iron {
+  background: linear-gradient(135deg, #2C3E50, #34495E);
+  color: #fff;
+}
+
+.rank-steel {
+  background: linear-gradient(135deg, #566573, #5D6D7E);
+  color: #fff;
+}
+
+.rank-stone {
+  background: linear-gradient(135deg, #7D8B8C, #85929E);
+  color: #fff;
+}
+
+.rank-wood {
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  color: #fff;
+}
+
+.rank-apprentice {
+  background: linear-gradient(135deg, #52C41A, #389E0D);
+  color: #fff;
+}
+
+.rank-novice {
+  background: linear-gradient(135deg, #13C2C2, #08979C);
+  color: #fff;
+}
+
+.rank-trainee {
+  background: linear-gradient(135deg, #722ED1, #531DAB);
+  color: #fff;
+}
+
+.rank-beginner {
+  background: linear-gradient(135deg, #595959, #434343);
+  color: #fff;
+}
+
+/* Next rank and max rank info styles */
+.next-rank-info,
+.max-rank-info {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.next-rank-text {
+  font-size: 0.75rem;
+  color: #909399;
+  font-weight: 500;
+}
+
+.max-rank-text {
+  font-size: 0.75rem;
+  color: #67C23A;
+  font-weight: 600;
 }
 </style>

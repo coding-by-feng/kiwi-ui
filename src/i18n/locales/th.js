@@ -111,7 +111,6 @@ export default {
         antonym: 'คำตรงข้าม',
         vocabularyAssociation: 'เชื่อมโยงคำศัพท์',
         phrasesAssociation: 'เชื่อมโยงวลี'
-    },
 
     // Word details
     word: {
@@ -333,12 +332,7 @@ export default {
         copyResponseText: 'คัดลอกข้อความตอบกลับ',
         textCopiedToClipboard: 'คัดลอกข้อความไปยังคลิปบอร์ดแล้ว!',
         failedToCopyText: 'คัดลอกข้อความล้มเหลว'
-    },
-
-    // Audio and BGM
-    audio: {
-        title: 'การตั้งค่าเสียง',
-        management: 'จัดการเสียง',
+        failedToCopyText: 'คัดลอกข้อความล้มเหลว'
         cleanAudioData: 'ล้างข้อมูลเสียงทั้งหมด {count}',
         cleanAllCache: 'ล้างแคชทั้งหมด',
         backgroundMusic: 'เพลงพื้นหลัง',
@@ -539,6 +533,33 @@ export default {
         taskTitleRequired: 'ต้องใส่ชื่องาน',
         confirmDeleteTask: 'แน่ใจว่าต้องการลบงานนี้?',
         editTask: 'แก้ไขงาน',
-        deleteTask: 'ลบงาน'
+        deleteTask: 'ลบงาน',
+
+        // Ranking system
+        ranks: {
+            legendary: 'ตำนาน',
+            mythic: 'เทพนิยาย',
+            immortal: 'อมตะ',
+            divine: 'ศักดิ์สิทธิ์',
+            celestial: 'สวรรค์',
+            grandmaster: 'อาจารย์ใหญ่',
+            master: 'อาจารย์',
+            diamond: 'เพชร',
+            platinum: 'แพลทินัม',
+            gold: 'ทอง',
+            silver: 'เงิน',
+            bronze: 'ทองแดง',
+            iron: 'เหล็ก',
+            steel: 'เหล็กกล้า',
+            stone: 'หิน',
+            wood: 'ไม้',
+            apprentice: 'ศิษย์',
+            novice: 'มือใหม่',
+            trainee: 'นักฝึก',
+            beginner: 'ผู้เริ่มต้น'
+        },
+        rankLevel: 'ระดับ {level}',
+        nextRank: 'ถัดไป: {rank}',
+        maxRank: 'ถึงระดับสูงสุดแล้ว!'
     }
 }
