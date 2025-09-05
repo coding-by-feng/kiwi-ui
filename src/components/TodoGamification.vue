@@ -2468,234 +2468,115 @@ export default {
   flex-shrink: 0;
 }
 
-/* Mobile optimizations for task actions */
+/* Mobile optimizations for header controls */
 @media (max-width: 768px) {
-  .task-content {
+  .header-controls {
     flex-direction: column;
     gap: 12px;
   }
 
-  .task-actions {
-    align-self: stretch;
-    justify-content: space-between;
-    flex-wrap: nowrap;
+  .import-export-controls {
     gap: 6px;
   }
 
-  .normal-actions {
-    flex: 1;
-    justify-content: space-between;
-    gap: 6px;
+  .control-btn .btn-text {
+    display: none;
   }
 
-  .status-actions,
-  .manage-actions,
-  .reset-actions,
-  .edit-actions {
-    gap: 4px;
+  .control-btn {
+    padding: 8px;
+    min-width: 36px;
   }
 
-  .status-display {
-    flex-shrink: 0;
+  .ranking-display {
+    order: -1;
+    width: 100%;
+    max-width: none;
+  }
+
+  .total-points {
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .task-actions {
+  .header-controls {
+    gap: 8px;
+  }
+
+  .import-export-controls {
     gap: 4px;
-    padding: 0 4px;
   }
 
-  .normal-actions {
-    gap: 4px;
-  }
-
-  .status-actions,
-  .manage-actions,
-  .reset-actions,
-  .edit-actions {
-    gap: 3px;
-  }
-
-  /* Make action buttons slightly smaller on very small screens */
-  .task-actions .el-button--mini {
-    padding: 4px;
-  }
-
-  .task-actions .el-button--small {
+  .control-btn {
     padding: 6px;
+    min-width: 32px;
+  }
+
+  .rank-badge {
+    padding: 6px 8px;
+    margin-right: 8px;
+  }
+
+  .rank-name {
+    font-size: 0.8rem;
+  }
+
+  .rank-level {
+    font-size: 0.7rem;
+  }
+
+  .progress-info {
+    font-size: 0.75rem;
+  }
+
+  .total-points {
+    font-size: 0.85rem;
+  }
+
+  .points-badge {
+    padding: 3px 6px;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 360px) {
-  .task-actions {
-    gap: 2px;
-    padding: 0 2px;
+  .import-export-controls {
+    gap: 3px;
   }
 
-  .normal-actions {
-    gap: 2px;
-  }
-
-  .status-actions,
-  .manage-actions,
-  .reset-actions,
-  .edit-actions {
-    gap: 2px;
-  }
-
-  /* Further reduce button padding on extra small screens */
-  .task-actions .el-button--mini {
-    padding: 3px;
-  }
-
-  .task-actions .el-button--small {
+  .control-btn {
     padding: 5px;
+    min-width: 30px;
+  }
+
+  .rank-badge {
+    padding: 4px 6px;
+    margin-right: 6px;
+  }
+
+  .rank-progress {
+    margin-right: 8px;
+    min-width: 80px;
   }
 }
 
-/* History, Analytics and Trash tabs specific styles */
-.history-tab,
-.analytics-tab,
-.trash-tab {
-  padding: 20px;
-}
-
-.history-controls,
-.analytics-controls,
-.trash-controls {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.responsive-date-picker {
-  min-width: 200px;
-}
-
-.chart-container {
-  height: 400px;
-  margin-bottom: 30px;
-  position: relative;
-}
-
-.responsive-chart {
-  max-width: 100%;
-  height: 100%;
-}
-
-.monthly-summary {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.summary-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.stat-icon {
-  font-size: 1.5rem;
-  color: #409EFF;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-}
-
-/* Responsive adjustments for tabs content */
-@media (max-width: 768px) {
-  .history-tab,
-  .analytics-tab,
-  .trash-tab {
-    padding: 16px;
-  }
-
-  .history-controls,
-  .analytics-controls,
-  .trash-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .chart-container {
-    height: 300px;
-  }
-
-  .summary-stats {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+/* Ensure button icons remain visible */
+.control-btn i {
+  font-size: 14px;
 }
 
 @media (max-width: 480px) {
-  .history-tab,
-  .analytics-tab,
-  .trash-tab {
-    padding: 12px;
-  }
-
-  .chart-container {
-    height: 250px;
-  }
-
-  .stat-item {
-    padding: 12px;
-  }
-
-  .responsive-date-picker {
-    min-width: auto;
-    width: 100%;
+  .control-btn i {
+    font-size: 13px;
   }
 }
 
-/* Rank color classes */
-.rank-legendary { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
-.rank-mythic { background: linear-gradient(135deg, #FF6B35, #FF4500); color: #fff; }
-.rank-immortal { background: linear-gradient(135deg, #E74C3C, #C0392B); color: #fff; }
-.rank-divine { background: linear-gradient(135deg, #9B59B6, #8E44AD); color: #fff; }
-.rank-celestial { background: linear-gradient(135deg, #3498DB, #2980B9); color: #fff; }
-.rank-grandmaster { background: linear-gradient(135deg, #1ABC9C, #16A085); color: #fff; }
-.rank-master { background: linear-gradient(135deg, #2ECC71, #27AE60); color: #fff; }
-.rank-diamond { background: linear-gradient(135deg, #85C1E9, #5DADE2); color: #fff; }
-.rank-platinum { background: linear-gradient(135deg, #AED6F1, #85C1E9); color: #333; }
-.rank-gold { background: linear-gradient(135deg, #F7DC6F, #F4D03F); color: #333; }
-.rank-silver { background: linear-gradient(135deg, #D5DBDB, #BDC3C7); color: #333; }
-.rank-bronze { background: linear-gradient(135deg, #CD853F, #A0522D); color: #fff; }
-.rank-iron { background: linear-gradient(135deg, #2C3E50, #34495E); color: #fff; }
-.rank-steel { background: linear-gradient(135deg, #566573, #5D6D7E); color: #fff; }
-.rank-stone { background: linear-gradient(135deg, #7D8B8C, #85929E); color: #fff; }
-.rank-wood { background: linear-gradient(135deg, #8B4513, #A0522D); color: #fff; }
-.rank-apprentice { background: linear-gradient(135deg, #52C41A, #389E0D); color: #fff; }
-.rank-novice { background: linear-gradient(135deg, #13C2C2, #08979C); color: #fff; }
-.rank-trainee { background: linear-gradient(135deg, #722ED1, #531DAB); color: #fff; }
-.rank-beginner { background: linear-gradient(135deg, #595959, #434343); color: #fff; }
+@media (max-width: 360px) {
+  .control-btn i {
+    font-size: 12px;
+  }
+}
 
 /* Responsive tabs - ensure horizontal display on mobile */
 .responsive-tabs {
