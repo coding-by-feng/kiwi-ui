@@ -54,7 +54,7 @@
           <div class="ranking-display">
             <div class="rank-badge" :class="getRankClass(currentRank.name)">
               <div class="rank-icon">
-                <i :class="getRankIcon(currentRank.name)"></i>
+                <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-image" />
               </div>
               <div class="rank-info">
                 <div class="rank-name">{{ currentRank.name }}</div>
@@ -71,7 +71,7 @@
                     <div class="current-rank-details">
                       <h4>{{ $t('todo.currentRank') }}</h4>
                       <div class="rank-item">
-                        <i :class="getRankIcon(currentRank.name)" :style="{color: getRankColor(currentRank.name)}"></i>
+                        <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-preview-image" />
                         <span class="rank-name">{{ currentRank.name }}</span>
                         <span class="rank-points">{{ currentRank.threshold }}+ {{ $t('todo.points') }}</span>
                       </div>
@@ -79,7 +79,7 @@
                     <div class="next-rank-details" v-if="currentRank.nextRankName">
                       <h4>{{ $t('todo.nextRankTarget') }}</h4>
                       <div class="rank-item">
-                        <i :class="getNextRankIcon()" :style="{color: getNextRankColor()}"></i>
+                        <img :src="getNextRankImage()" :alt="currentRank.nextRankName" class="rank-preview-image" />
                         <span class="rank-name">{{ currentRank.nextRankName }}</span>
                         <span class="rank-points">{{ currentRank.nextThreshold }}+ {{ $t('todo.points') }}</span>
                       </div>
@@ -96,11 +96,11 @@
                       <div class="ranks-grid">
                         <div
                           v-for="rank in sortedRanksForDisplay"
-                          :key="rank.key"
+                          :key="`rank-${rank.key}-${rank.threshold}`"
                           class="rank-preview-item"
                           :class="{ 'current-rank': rank.threshold <= totalPoints }"
                         >
-                          <i :class="rank.icon" :style="{color: rank.color}"></i>
+                          <img :src="rank.image" :alt="getRankName(rank.key)" class="rank-grid-image" />
                           <span class="rank-preview-name">{{ getRankName(rank.key) }}</span>
                           <span class="rank-preview-threshold">{{ rank.threshold }}+</span>
                         </div>
@@ -141,8 +141,8 @@
       </div>
 
       <el-tabs v-model="activeTab" type="card" class="responsive-tabs">
-        <!-- Daily Tasks Tab -->
-        <el-tab-pane :label="$t('todo.todayTasks')" name="today">
+        <!-- Task List Tab -->
+        <el-tab-pane :label="$t('todo.taskList')" name="tasks">
           <div class="task-input-section">
             <el-form :model="newTask" class="responsive-form">
               <div class="form-row">
@@ -249,7 +249,7 @@
           <div class="tasks-list">
             <el-card
                 v-for="task in filteredTasks"
-                :key="task.id"
+                :key="`task-${task.id}-${task.dateKey || 'default'}`"
                 class="task-card responsive-task-card"
                 :class="getTaskStatusClass(task.status)"
             >
@@ -466,14 +466,16 @@
             <h3 class="history-date-title">{{ formatDate(selectedDate) }}</h3>
             <el-card
                 v-for="task in historyTasks"
-                :key="task.id"
+                :key="`history-${task.id}-${task.completedDate || task.date || Date.now()}`"
                 class="task-card history-task-card responsive-history-card"
                 :class="getTaskStatusClass(task.status)"
             >
               <div class="task-content history-task-content">
-                <div class="task-info history-task-info">
-                  <h4 class="task-title">{{ task.title }}</h4>
-                  <p v-if="task.description" class="task-description">{{ task.description }}</p>
+                <div class="history-task-main">
+                  <div class="task-info history-task-info">
+                    <h4 class="task-title history-task-title">{{ task.title }}</h4>
+                    <p v-if="task.description" class="task-description history-task-description">{{ task.description }}</p>
+                  </div>
                   <div class="task-meta-history">
                     <div class="task-points">
                       <el-tag size="mini" type="success">+{{ task.successPoints }}</el-tag>
@@ -542,7 +544,7 @@
           <div v-if="trashedTasks.length > 0" class="trash-tasks">
             <el-card
                 v-for="task in trashedTasks"
-                :key="task.id"
+                :key="`trash-${task.id}-${task.deletedDate || task.originalDate || Date.now()}`"
                 class="task-card trash-card responsive-trash-card"
             >
               <div class="task-content">
@@ -673,7 +675,7 @@ export default {
   name: 'TodoGamification',
   data() {
     return {
-      activeTab: 'today',
+      activeTab: 'tasks',
       taskFilter: 'all', // all, pending, completed, done
       frequencyFilter: 'all', // all, once, daily, weekly, monthly, custom
       newTask: {
@@ -699,39 +701,38 @@ export default {
         customDays: 7
       },
 
-      // Ranking system data - using keys for i18n lookup
+      // Ranking system data - using images instead of icons
       ranks: [
-        { level: 20, key: 'legendary', threshold: 50000, color: '#FFD700', icon: 'el-icon-trophy' },
-        { level: 19, key: 'mythic', threshold: 40000, color: '#FF6B35', icon: 'el-icon-star-off' },
-        { level: 18, key: 'immortal', threshold: 32000, color: '#E74C3C', icon: 'el-icon-medal' },
-        { level: 17, key: 'divine', threshold: 26000, color: '#9B59B6', icon: 'el-icon-magic-stick' },
-        { level: 16, key: 'celestial', threshold: 21000, color: '#3498DB', icon: 'el-icon-sunny' },
-        { level: 15, key: 'grandmaster', threshold: 17000, color: '#1ABC9C', icon: 'el-icon-crown' },
-        { level: 14, key: 'master', threshold: 14000, color: '#2ECC71', icon: 'el-icon-key' },
-        { level: 13, key: 'diamond', threshold: 11500, color: '#85C1E9', icon: 'el-icon-present' },
-        { level: 12, key: 'platinum', threshold: 9500, color: '#AED6F1', icon: 'el-icon-medal-1' },
-        { level: 11, key: 'gold', threshold: 7800, color: '#F7DC6F', icon: 'el-icon-coin' },
-        { level: 10, key: 'silver', threshold: 6400, color: '#D5DBDB', icon: 'el-icon-wallet' },
-        { level: 9, key: 'bronze', threshold: 5200, color: '#CD853F', icon: 'el-icon-goods' },
-        { level: 8, key: 'iron', threshold: 4200, color: '#2C3E50', icon: 'el-icon-service' },
-        { level: 7, key: 'steel', threshold: 3400, color: '#566573', icon: 'el-icon-suitcase' },
-        { level: 6, key: 'stone', threshold: 2700, color: '#7D8B8C', icon: 'el-icon-position' },
-        { level: 5, key: 'wood', threshold: 2100, color: '#8B4513', icon: 'el-icon-postcard' },
-        { level: 4, key: 'apprentice', threshold: 1600, color: '#52C41A', icon: 'el-icon-school' },
-        { level: 3, key: 'novice', threshold: 1200, color: '#13C2C2', icon: 'el-icon-user' },
-        { level: 2, key: 'trainee', threshold: 800, color: '#722ED1', icon: 'el-icon-reading' },
-        { level: 1, key: 'beginner', threshold: 0, color: '#595959', icon: 'el-icon-help' }
+        { level: 20, key: 'legendary', threshold: 100000, color: '#FFD700', image: '/assets/rankings/legendary.png' },
+        { level: 19, key: 'mythic', threshold: 80000, color: '#FF6B35', image: '/assets/rankings/mythic.png' },
+        { level: 18, key: 'immortal', threshold: 64000, color: '#E74C3C', image: '/assets/rankings/immortal.png' },
+        { level: 17, key: 'divine', threshold: 52000, color: '#9B59B6', image: '/assets/rankings/divine.png' },
+        { level: 16, key: 'celestial', threshold: 42000, color: '#3498DB', image: '/assets/rankings/celestial.png' },
+        { level: 15, key: 'grandmaster', threshold: 34000, color: '#1ABC9C', image: '/assets/rankings/grandmaster.png' },
+        { level: 14, key: 'master', threshold: 28000, color: '#2ECC71', image: '/assets/rankings/master.png' },
+        { level: 13, key: 'diamond', threshold: 23000, color: '#85C1E9', image: '/assets/rankings/diamond.png' },
+        { level: 12, key: 'platinum', threshold: 19000, color: '#AED6F1', image: '/assets/rankings/platinum.png' },
+        { level: 11, key: 'gold', threshold: 15600, color: '#F7DC6F', image: '/assets/rankings/gold.png' },
+        { level: 10, key: 'silver', threshold: 12800, color: '#D5DBDB', image: '/assets/rankings/silver.png' },
+        { level: 9, key: 'bronze', threshold: 10400, color: '#CD853F', image: '/assets/rankings/bronze.png' },
+        { level: 8, key: 'iron', threshold: 8400, color: '#2C3E50', image: '/assets/rankings/iron.png' },
+        { level: 7, key: 'steel', threshold: 6800, color: '#566573', image: '/assets/rankings/steel.png' },
+        { level: 6, key: 'stone', threshold: 5400, color: '#7D8B8C', image: '/assets/rankings/stone.png' },
+        { level: 5, key: 'wood', threshold: 4200, color: '#8B4513', image: '/assets/rankings/wood.png' },
+        { level: 4, key: 'apprentice', threshold: 3200, color: '#52C41A', image: '/assets/rankings/apprentice.png' },
+        { level: 3, key: 'novice', threshold: 2400, color: '#13C2C2', image: '/assets/rankings/novice.png' },
+        { level: 2, key: 'trainee', threshold: 1600, color: '#722ED1', image: '/assets/rankings/trainee.png' },
+        { level: 1, key: 'beginner', threshold: 0, color: '#595959', image: '/assets/rankings/beginner.png' }
       ]
     }
   },
   computed: {
-    todayTasks() {
+    allTasks() {
       this.refreshTrigger
-      const today = this.formatDateKey(new Date())
-      return this.getTasksForDate(today)
+      return this.getAllTasks()
     },
     filteredTasks() {
-      let tasks = this.todayTasks
+      let tasks = this.allTasks
 
       // Filter by frequency
       if (this.frequencyFilter !== 'all') {
@@ -758,7 +759,17 @@ export default {
         })
       }
 
-      return tasks
+      // Sort by creation date (newest first) and then by points (highest first)
+      return tasks.sort((a, b) => {
+        const aDate = new Date(a.date || 0)
+        const bDate = new Date(b.date || 0)
+        if (aDate.getTime() !== bDate.getTime()) {
+          return bDate.getTime() - aDate.getTime()
+        }
+        const aPoints = a.successPoints || 0
+        const bPoints = b.successPoints || 0
+        return bPoints - aPoints
+      })
     },
     totalPoints() {
       this.refreshTrigger
@@ -881,7 +892,7 @@ export default {
       if (!this.newTask.title.trim()) return
 
       const task = {
-        id: Date.now(),
+        id: Date.now() + Math.floor(Math.random() * 1000), // Add random component to ensure uniqueness
         title: this.newTask.title,
         description: this.newTask.description,
         successPoints: this.newTask.successPoints,
@@ -890,7 +901,7 @@ export default {
         customDays: this.newTask.customDays,
         status: 'pending',
         date: new Date().toISOString(),
-        dateKey: this.formatDateKey(new Date())
+        dateKey: 'general' // Use a general key instead of date-specific
       }
 
       this.saveTask(task)
@@ -903,16 +914,16 @@ export default {
       this.$message.success(this.$t('todo.taskAddedSuccess'))
     },
     completeTask(taskId, status) {
-      const dateKey = this.formatDateKey(new Date())
-      const tasks = this.getTasksForDate(dateKey)
-      const taskIndex = tasks.findIndex(t => t.id === taskId)
+      const tasks = this.getAllTasks()
+      const task = tasks.find(t => t.id === taskId)
 
-      if (taskIndex !== -1) {
-        tasks[taskIndex].status = status
-        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
+      if (task) {
+        // Update task status
+        task.status = status
+        this.updateTaskInStorage(task)
 
-        this.createHistoryRecord(tasks[taskIndex], status)
-        const points = status === 'success' ? tasks[taskIndex].successPoints : tasks[taskIndex].failPoints
+        this.createHistoryRecord(task, status)
+        const points = status === 'success' ? task.successPoints : task.failPoints
 
         this.refreshTrigger++
 
@@ -926,10 +937,20 @@ export default {
       }
     },
     saveTask(task) {
-      const dateKey = task.dateKey
+      const dateKey = task.dateKey || 'general'
       const existingTasks = this.getTasksForDate(dateKey)
       existingTasks.push(task)
       localStorage.setItem(`todo_${dateKey}`, JSON.stringify(existingTasks))
+    },
+    updateTaskInStorage(task) {
+      const dateKey = task.dateKey || 'general'
+      const tasks = this.getTasksForDate(dateKey)
+      const taskIndex = tasks.findIndex(t => t.id === task.id)
+
+      if (taskIndex !== -1) {
+        tasks[taskIndex] = task
+        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
+      }
     },
     getTasksForDate(dateKey) {
       const stored = localStorage.getItem(`todo_${dateKey}`)
@@ -948,10 +969,17 @@ export default {
     },
     loadHistoryForDate() {
       const dateKey = this.formatDateKey(this.selectedDate)
+      console.log('Loading history for date:', dateKey)
       this.historyTasks = this.getHistoryRecordsForDate(dateKey)
     },
     formatDateKey(date) {
-      return date.toISOString().split('T')[0]
+      const d = new Date(date)
+      const year = d.getFullYear()
+      const month = (d.getMonth() + 1).toString().padStart(2, '0')
+      const day = d.getDate().toString().padStart(2, '0')
+      const key = `${year}-${month}-${day}`
+      console.log('Loading history for date:', key)
+      return key
     },
     formatDate(date) {
       return new Date(date).toLocaleDateString('en-US', {
@@ -1063,19 +1091,18 @@ export default {
         return
       }
 
-      const dateKey = this.formatDateKey(new Date())
-      const tasks = this.getTasksForDate(dateKey)
-      const taskIndex = tasks.findIndex(t => t.id === taskId)
+      const tasks = this.getAllTasks()
+      const task = tasks.find(t => t.id === taskId)
 
-      if (taskIndex !== -1) {
-        tasks[taskIndex].title = this.editingTask.title
-        tasks[taskIndex].description = this.editingTask.description
-        tasks[taskIndex].successPoints = this.editingTask.successPoints
-        tasks[taskIndex].failPoints = this.editingTask.failPoints
-        tasks[taskIndex].frequency = this.editingTask.frequency
-        tasks[taskIndex].customDays = this.editingTask.customDays
+      if (task) {
+        task.title = this.editingTask.title
+        task.description = this.editingTask.description
+        task.successPoints = this.editingTask.successPoints
+        task.failPoints = this.editingTask.failPoints
+        task.frequency = this.editingTask.frequency
+        task.customDays = this.editingTask.customDays
 
-        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
+        this.updateTaskInStorage(task)
 
         this.editingTaskId = null
         this.refreshTrigger++
@@ -1094,7 +1121,13 @@ export default {
       }
     },
     deleteTask(taskId) {
-      this.moveTaskToTrash(taskId, this.formatDateKey(new Date()))
+      const tasks = this.getAllTasks()
+      const task = tasks.find(t => t.id === taskId)
+
+      if (task) {
+        const dateKey = task.dateKey || 'general'
+        this.moveTaskToTrash(taskId, dateKey)
+      }
     },
     moveTaskToTrash(taskId, dateKey) {
       const tasks = this.getTasksForDate(dateKey)
@@ -1176,7 +1209,8 @@ export default {
         failPoints: task.failPoints,
         status: status,
         completedDate: new Date().toISOString(),
-        originalTaskId: task.id
+        originalTaskId: task.id,
+        historyId: `${task.id}-${Date.now()}` // Add unique history identifier
       }
 
       const existingHistory = this.getHistoryRecordsForDate(dateKey)
@@ -1652,10 +1686,10 @@ export default {
       return `rank-${key}`
     },
 
-    getRankIcon(rankName) {
+    getRankImage(rankName) {
       // Extract the key from the localized name by finding the matching rank
       const rank = this.ranks.find(r => this.getRankName(r.key) === rankName)
-      return rank ? rank.icon : 'el-icon-help'
+      return rank ? rank.image : '/assets/rankings/beginner.png'
     },
 
     getRankColor(rankName) {
@@ -1664,35 +1698,11 @@ export default {
       return rank ? rank.color : '#595959'
     },
 
-    getRankByPoints(points) {
-      const sortedRanks = [...this.ranks].sort((a, b) => b.threshold - a.threshold)
-      for (let rank of sortedRanks) {
-        if (points >= rank.threshold) {
-          return {
-            ...rank,
-            name: this.getRankName(rank.key)
-          }
-        }
-      }
-      const beginnerRank = this.ranks[this.ranks.length - 1]
-      return {
-        ...beginnerRank,
-        name: this.getRankName(beginnerRank.key)
-      }
-    },
-
-    getNextRankIcon() {
-      if (!this.currentRank.nextThreshold) return 'el-icon-trophy'
+    getNextRankImage() {
+      if (!this.currentRank.nextThreshold) return '/assets/rankings/legendary.png'
       const sortedRanks = [...this.ranks].sort((a, b) => a.threshold - b.threshold) // Sort ascending
       const nextRank = sortedRanks.find(r => r.threshold === this.currentRank.nextThreshold)
-      return nextRank ? nextRank.icon : 'el-icon-trophy'
-    },
-
-    getNextRankColor() {
-      if (!this.currentRank.nextThreshold) return '#FFD700'
-      const sortedRanks = [...this.ranks].sort((a, b) => a.threshold - b.threshold) // Sort ascending
-      const nextRank = sortedRanks.find(r => r.threshold === this.currentRank.nextThreshold)
-      return nextRank ? nextRank.color : '#FFD700'
+      return nextRank ? nextRank.image : '/assets/rankings/legendary.png'
     },
 
     shouldShowDoneTag(task) {
@@ -1748,18 +1758,17 @@ export default {
         case 'done':
           return 'No done tasks'
         default:
-          return 'No tasks for today'
+          return 'No tasks available'
       }
     },
 
     resetTaskStatus(taskId) {
-      const dateKey = this.formatDateKey(new Date())
-      const tasks = this.getTasksForDate(dateKey)
-      const taskIndex = tasks.findIndex(t => t.id === taskId)
+      const tasks = this.getAllTasks()
+      const task = tasks.find(t => t.id === taskId)
 
-      if (taskIndex !== -1) {
-        tasks[taskIndex].status = 'pending'
-        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
+      if (task) {
+        task.status = 'pending'
+        this.updateTaskInStorage(task)
         this.refreshTrigger++
         this.$message.success('Task status reset to pending')
       }
@@ -1885,7 +1894,7 @@ export default {
             this.selectedDate = new Date()
             this.taskFilter = 'all'
             this.frequencyFilter = 'all'
-            this.activeTab = 'today'
+            this.activeTab = 'tasks'
 
             // Reset form
             this.newTask = {
@@ -1960,17 +1969,11 @@ export default {
 
     generateDemoTasks() {
       const today = new Date()
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
-      const twoDaysAgo = new Date(today)
-      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
-      const weekAgo = new Date(today)
-      weekAgo.setDate(weekAgo.getDate() - 7)
 
-      // Demo tasks for today
-      const todayTasks = [
+      // Demo tasks for general use
+      const demoTasks = [
         {
-          id: Date.now() + 1,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 1,
           title: 'Morning Exercise',
           description: 'Do 30 minutes of cardio or strength training',
           successPoints: 20,
@@ -1979,10 +1982,10 @@ export default {
           customDays: 7,
           status: 'pending',
           date: today.toISOString(),
-          dateKey: this.formatDateKey(today)
+          dateKey: 'general'
         },
         {
-          id: Date.now() + 2,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 2,
           title: 'Read for 20 minutes',
           description: 'Read a book, article, or educational material',
           successPoints: 15,
@@ -1991,10 +1994,10 @@ export default {
           customDays: 7,
           status: 'success',
           date: today.toISOString(),
-          dateKey: this.formatDateKey(today)
+          dateKey: 'general'
         },
         {
-          id: Date.now() + 3,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 3,
           title: 'Weekly Team Meeting',
           description: 'Attend the weekly team sync meeting',
           successPoints: 25,
@@ -2003,10 +2006,10 @@ export default {
           customDays: 7,
           status: 'pending',
           date: today.toISOString(),
-          dateKey: this.formatDateKey(today)
+          dateKey: 'general'
         },
         {
-          id: Date.now() + 4,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 4,
           title: 'Learn Something New',
           description: 'Spend time learning a new skill or technology',
           successPoints: 30,
@@ -2015,10 +2018,10 @@ export default {
           customDays: 3,
           status: 'pending',
           date: today.toISOString(),
-          dateKey: this.formatDateKey(today)
+          dateKey: 'general'
         },
         {
-          id: Date.now() + 5,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 5,
           title: 'Complete Project Report',
           description: 'Finish and submit the quarterly project report',
           successPoints: 50,
@@ -2027,117 +2030,15 @@ export default {
           customDays: 7,
           status: 'pending',
           date: today.toISOString(),
-          dateKey: this.formatDateKey(today)
+          dateKey: 'general'
         }
       ]
 
-      // Demo tasks for yesterday
-      const yesterdayTasks = [
-        {
-          id: Date.now() + 10,
-          title: 'Drink 8 glasses of water',
-          description: 'Stay hydrated throughout the day',
-          successPoints: 10,
-          failPoints: -5,
-          frequency: 'daily',
-          customDays: 7,
-          status: 'success',
-          date: yesterday.toISOString(),
-          dateKey: this.formatDateKey(yesterday)
-        },
-        {
-          id: Date.now() + 11,
-          title: 'Meditate for 15 minutes',
-          description: 'Practice mindfulness or breathing exercises',
-          successPoints: 20,
-          failPoints: -8,
-          frequency: 'daily',
-          customDays: 7,
-          status: 'fail',
-          date: yesterday.toISOString(),
-          dateKey: this.formatDateKey(yesterday)
-        },
-        {
-          id: Date.now() + 12,
-          title: 'Review Monthly Budget',
-          description: 'Check expenses and update budget spreadsheet',
-          successPoints: 35,
-          failPoints: -15,
-          frequency: 'monthly',
-          customDays: 30,
-          status: 'success',
-          date: yesterday.toISOString(),
-          dateKey: this.formatDateKey(yesterday)
-        }
-      ]
-
-      // Demo tasks for two days ago
-      const twoDaysAgoTasks = [
-        {
-          id: Date.now() + 20,
-          title: 'Weekly Grocery Shopping',
-          description: 'Buy groceries for the week',
-          successPoints: 15,
-          failPoints: -8,
-          frequency: 'weekly',
-          customDays: 7,
-          status: 'success',
-          date: twoDaysAgo.toISOString(),
-          dateKey: this.formatDateKey(twoDaysAgo)
-        },
-        {
-          id: Date.now() + 21,
-          title: 'Call Family',
-          description: 'Check in with family members',
-          successPoints: 25,
-          failPoints: -10,
-          frequency: 'custom',
-          customDays: 5,
-          status: 'success',
-          date: twoDaysAgo.toISOString(),
-          dateKey: this.formatDateKey(twoDaysAgo)
-        }
-      ]
-
-      // Demo tasks for a week ago
-      const weekAgoTasks = [
-        {
-          id: Date.now() + 30,
-          title: 'Organize Workspace',
-          description: 'Clean and organize desk and work area',
-          successPoints: 20,
-          failPoints: -5,
-          frequency: 'weekly',
-          customDays: 7,
-          status: 'success',
-          date: weekAgo.toISOString(),
-          dateKey: this.formatDateKey(weekAgo)
-        },
-        {
-          id: Date.now() + 31,
-          title: 'Practice Guitar',
-          description: 'Practice guitar for 30 minutes',
-          successPoints: 25,
-          failPoints: -10,
-          frequency: 'custom',
-          customDays: 2,
-          status: 'fail',
-          date: weekAgo.toISOString(),
-          dateKey: this.formatDateKey(weekAgo)
-        }
-      ]
-
-      // Save all demo tasks
-      this.saveDemoTasksForDate(todayTasks, this.formatDateKey(today))
-      this.saveDemoTasksForDate(yesterdayTasks, this.formatDateKey(yesterday))
-      this.saveDemoTasksForDate(twoDaysAgoTasks, this.formatDateKey(twoDaysAgo))
-      this.saveDemoTasksForDate(weekAgoTasks, this.formatDateKey(weekAgo))
+      // Save demo tasks
+      this.saveDemoTasksForDate(demoTasks, 'general')
 
       // Create history records for completed tasks
-      this.createDemoHistoryRecords(todayTasks, today)
-      this.createDemoHistoryRecords(yesterdayTasks, yesterday)
-      this.createDemoHistoryRecords(twoDaysAgoTasks, twoDaysAgo)
-      this.createDemoHistoryRecords(weekAgoTasks, weekAgo)
+      this.createDemoHistoryRecords(demoTasks, today)
 
       // Create some demo trash items
       this.createDemoTrashItems()
@@ -2146,7 +2047,6 @@ export default {
       this.refreshTrigger++
       this.loadHistoryForDate()
     },
-
     saveDemoTasksForDate(tasks, dateKey) {
       const existingTasks = this.getTasksForDate(dateKey)
       const existingIds = new Set(existingTasks.map(t => t.id))
@@ -2159,7 +2059,6 @@ export default {
         localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
       }
     },
-
     createDemoHistoryRecords(tasks, date) {
       const dateKey = this.formatDateKey(date)
       const completedTasks = tasks.filter(task => task.status !== 'pending')
@@ -2199,14 +2098,13 @@ export default {
         localStorage.setItem(`history_${dateKey}`, JSON.stringify(mergedHistory))
       }
     },
-
     createDemoTrashItems() {
       const existingTrash = JSON.parse(localStorage.getItem('todo_trash') || '[]')
       const existingTrashIds = new Set(existingTrash.map(t => t.id))
 
       const demoTrashItems = [
         {
-          id: Date.now() + 100,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 100,
           title: 'Old Task Example',
           description: 'This is an example of a deleted task',
           successPoints: 15,
@@ -2218,7 +2116,7 @@ export default {
           deletedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
         },
         {
-          id: Date.now() + 101,
+          id: Date.now() + Math.floor(Math.random() * 10000) + 101,
           title: 'Cancelled Project',
           description: 'A project that was cancelled and moved to trash',
           successPoints: 40,
@@ -2462,12 +2360,49 @@ export default {
   }
 
   .points-label {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .points-badge {
+    font-size: 13px;
+    padding: 3px 10px;
+  }
+
+  .history-task-content {
+    gap: 8px;
+  }
+
+  .history-task-title {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .history-task-description {
     font-size: 12px;
-    padding: 2px 8px;
+  }
+
+  .task-meta-history {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .history-task-status {
+    gap: 12px;
+  }
+
+  .history-status-tag {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .history-delete-btn {
+    padding: 5px;
+    min-width: 26px;
+    height: 26px;
+  }
+
+  .history-delete-btn i {
+    font-size: 12px;
   }
 }
 
@@ -2511,6 +2446,33 @@ export default {
   .points-badge {
     font-size: 11px;
     padding: 2px 6px;
+  }
+
+  .history-task-title {
+    font-size: 0.95rem;
+  }
+
+  .history-task-description {
+    font-size: 11px;
+  }
+
+  .history-task-status {
+    gap: 8px;
+  }
+
+  .history-status-tag {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+
+  .history-delete-btn {
+    padding: 4px;
+    min-width: 24px;
+    height: 24px;
+  }
+
+  .history-delete-btn i {
+    font-size: 11px;
   }
 }
 
@@ -2840,19 +2802,45 @@ export default {
 .history-task-content {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 16px;
 }
 
-.history-task-info {
+.history-task-main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   min-width: 0;
+  padding: 8px 0;
+}
+
+.history-task-info {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.history-task-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.history-task-description {
+  color: #666;
+  line-height: 1.4;
+  margin: 0;
+  font-size: 14px;
 }
 
 .task-meta-history {
   display: flex;
   gap: 12px;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
 }
 
@@ -2867,10 +2855,12 @@ export default {
 
 .history-task-status {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
-  flex-wrap: nowrap;
+  justify-content: center;
+  min-width: 100px;
 }
 
 .status-section {
@@ -2881,6 +2871,7 @@ export default {
 
 .history-status-tag {
   white-space: nowrap;
+  font-weight: 600;
 }
 
 .history-actions {
@@ -2894,238 +2885,6 @@ export default {
   padding: 8px;
   min-width: 32px;
   height: 32px;
-}
-
-.no-data {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-/* Trash controls */
-.trash-controls {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.clear-trash-btn {
-  margin: 0;
-}
-
-.trash-tasks {
-  display: grid;
-  gap: 16px;
-}
-
-.task-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.task-dates {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.date-tag {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.date-label {
-  font-weight: 500;
-}
-
-.date-value {
-  font-weight: normal;
-}
-
-.trash-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.trash-action-btn {
-  padding: 6px 8px;
-}
-
-/* Analytics controls */
-.analytics-controls {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.responsive-radio-group {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chart-option {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  min-width: 100px;
-  justify-content: center;
-}
-
-.chart-option i {
-  font-size: 16px;
-}
-
-.option-text {
-  font-size: 13px;
-}
-
-.chart-container {
-  background: #fafbfc;
-  border-radius: 8px;
-  padding: 20px;
-  margin: 20px 0;
-  border: 1px solid #e4e7ec;
-}
-
-.responsive-chart {
-  max-height: 400px;
-  width: 100% !important;
-  height: 400px !important;
-}
-
-/* Monthly summary styles */
-.monthly-summary {
-  margin-top: 24px;
-}
-
-.summary-card {
-  border-radius: 12px;
-  border: 1px solid #e4e7ec;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.summary-title {
-  margin: 0 0 20px 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2c3e50;
-  text-align: center;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f0f2f5;
-}
-
-.summary-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 8px 0;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #cbd5e1 100%);
-  border-radius: 10px;
-  border: 1px solid #dee2e6;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #409eff;
-}
-
-.stat-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(45deg, #409eff, #67c23a);
-  transition: width 0.3s ease;
-}
-
-.stat-item:hover::before {
-  width: 6px;
-}
-
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: white;
-  font-size: 20px;
-  flex-shrink: 0;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
-}
-
-.stat-icon::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-  pointer-events: none;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.stat-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6c757d;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0;
-  line-height: 1.2;
-  background: linear-gradient(135deg, #2c3e50 0%, #409eff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.stat-item:nth-child(1) .stat-icon {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-}
-
-.stat-item:nth-child(2) .stat-icon {
-  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
-}
-
-.stat-item:nth-child(3) .stat-icon {
-  background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-  box-shadow: 0 2px 8px rgba(142, 68, 173, 0.3);
 }
 
 /* Responsive tabs */
@@ -3239,7 +2998,6 @@ export default {
 }
 
 .rank-icon {
-  font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3247,111 +3005,24 @@ export default {
   height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   position: relative;
   overflow: hidden;
   z-index: 2;
+  padding: 4px;
 }
 
-.rank-icon::before {
-  content: '';
-  position: absolute;
-  inset: 2px;
+.rank-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  z-index: 1;
-}
-
-.rank-icon i {
   position: relative;
   z-index: 2;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
-.rank-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  z-index: 2;
-}
-
-.rank-name {
-  font-weight: 700;
-  font-size: 16px;
-  color: #1a202c;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.rank-level {
-  font-size: 12px;
-  color: #718096;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.rank-details-icon {
-  margin-left: 8px;
-  display: flex;
-  align-items: center;
-  z-index: 2;
-}
-
-.rank-info-icon {
-  color: #4299e1;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 6px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
-}
-
-.rank-info-icon:hover {
-  background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
-  transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
-}
-
-.ranking-details {
-  padding: 16px 0;
-}
-
-.current-rank-details,
-.next-rank-details,
-.all-ranks-preview {
-  margin-bottom: 20px;
-}
-
-.current-rank-details h4,
-.next-rank-details h4,
-.all-ranks-preview h4 {
-  margin: 0 0 12px 0;
-  color: #2d3748;
-  font-size: 15px;
-  font-weight: 600;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #e2e8f0;
-  position: relative;
-}
-
-.current-rank-details h4::after,
-.next-rank-details h4::after,
-.all-ranks-preview h4::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 30px;
-  height: 2px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 1px;
-}
+/* ...existing code... */
 
 .rank-item {
   display: flex;
@@ -3373,6 +3044,7 @@ export default {
   background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
   border-color: #4299e1;
   box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+  position: relative;
 }
 
 .rank-item.current-rank::before {
@@ -3384,21 +3056,80 @@ export default {
   font-size: 12px;
 }
 
-.rank-item i {
-  font-size: 16px;
+.rank-preview-image {
   width: 20px;
-  text-align: center;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ranks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rank-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.rank-preview-item:hover {
+  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  transform: translateY(-1px);
+}
+
+.rank-preview-item.current-rank {
+  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+  border-color: #4299e1;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+}
+
+.rank-preview-item.current-rank::before {
+  content: '✓';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: #2b6cb0;
+  font-weight: bold;
+  font-size: 10px;
+  background: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.rank-grid-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .rank-preview-name {
-  flex: 1;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: #2d3748;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .rank-preview-threshold {
-  font-size: 11px;
+  font-size: 10px;
   color: #718096;
   font-weight: 500;
   padding: 2px 6px;
@@ -3406,525 +3137,72 @@ export default {
   border-radius: 8px;
 }
 
-.rank-progress {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.progress-text {
-  font-size: 13px;
-  color: #4a5568;
-  font-weight: 600;
-}
-
-.progress-percentage {
-  font-size: 13px;
-  color: #4a5568;
-  font-weight: 700;
-  padding: 2px 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-}
-
-.progress-percentage.max-rank {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
-}
-
-.rank-progress-bar {
-  margin: 8px 0;
-}
-
-.next-rank-info,
-.max-rank-info {
-  text-align: center;
-  margin-top: 6px;
-}
-
-.next-rank-text,
-.max-rank-text {
-  font-size: 11px;
-  color: #718096;
-  font-weight: 500;
-  padding: 4px 8px;
-  background-color: #edf2f7;
-  border-radius: 8px;
-  display: inline-block;
-}
-
-.max-rank-text {
-  background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
-  color: #2f855a;
-  font-weight: 600;
-}
-
-/* Mobile optimizations for task cards */
+/* Mobile responsive adjustments for images */
 @media (max-width: 768px) {
-  .responsive-tabs .el-tabs__item {
-    padding: 0 12px;
-    font-size: 13px;
-    min-width: 80px;
-    text-align: center;
-  }
-
-  .responsive-tabs .el-tabs__nav-wrap {
-    padding: 0 8px;
-  }
-
-  .responsive-tabs .el-tabs__nav {
-    min-width: calc(4 * 90px);
-  }
-
-  .task-content {
-    gap: 12px;
-  }
-
-  .task-actions {
-    padding-top: 10px;
-    margin-top: 6px;
-    gap: 6px;
-  }
-
-  .normal-actions {
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .status-actions,
-  .manage-actions,
-  .reset-actions {
-    gap: 4px;
-  }
-
-  .history-task-content {
-    gap: 12px;
-  }
-
-  .history-task-status {
-    gap: 8px;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .history-status-tag {
-    font-size: 12px;
-    padding: 4px 8px;
-  }
-
-  .history-delete-btn {
-    padding: 6px;
-    min-width: 28px;
-    height: 28px;
-  }
-
-  .task-meta-history {
-    gap: 8px;
-  }
-
-  .monthly-summary {
-    margin-top: 20px;
-  }
-
-  .summary-title {
-    font-size: 1.15rem;
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-  }
-
-  .summary-stats {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 4px 0;
-  }
-
-  .stat-item {
-    padding: 14px;
-    gap: 14px;
-  }
-
-  .stat-icon {
+  .rank-icon {
     width: 42px;
     height: 42px;
-    font-size: 18px;
-  }
-
-  .stat-label {
-    font-size: 13px;
-  }
-
-  .stat-value {
-    font-size: 22px;
-  }
-
-  .chart-container {
-    padding: 16px;
-    margin: 16px 0;
-  }
-
-  .responsive-chart {
-    max-height: 300px;
-    height: 300px !important;
-  }
-
-  .ranking-display {
-    min-width: 180px;
-  }
-
-  .rank-badge {
-    gap: 10px;
-    padding: 10px 14px;
-  }
-
-  .rank-icon {
-    font-size: 24px;
-    width: 42px;
-    height: 42px;
-  }
-
-  .rank-name {
-    font-size: 15px;
-  }
-
-  .rank-level {
-    font-size: 11px;
-  }
-
-  .rank-info-icon {
-    font-size: 16px;
-    padding: 5px;
-  }
-}
-
-@media (max-width: 480px) {
-  .responsive-tabs .el-tabs__item {
-    padding: 0 8px;
-    font-size: 12px;
-    min-width: 70px;
-    text-align: center;
-  }
-
-  .responsive-tabs .el-tabs__nav-wrap {
-    padding: 0 4px;
-  }
-
-  .responsive-tabs .el-tabs__nav {
-    min-width: calc(4 * 80px);
-  }
-
-  .task-content {
-    gap: 10px;
-  }
-
-  .task-actions {
-    padding-top: 8px;
-    margin-top: 4px;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-
-  .normal-actions {
-    gap: 4px;
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-
-  .status-actions,
-  .manage-actions,
-  .reset-actions {
-    gap: 3px;
-  }
-
-  .edit-actions {
-    gap: 4px;
-  }
-
-  .history-task-content {
-    gap: 8px;
-  }
-
-  .history-task-status {
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .history-status-tag {
-    font-size: 11px;
-    padding: 3px 6px;
-    min-width: 0;
-  }
-
-  .history-delete-btn {
-    padding: 5px;
-    min-width: 26px;
-    height: 26px;
-  }
-
-  .history-delete-btn i {
-    font-size: 12px;
-  }
-
-  .task-meta-history {
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .completion-time .el-tag {
-    font-size: 11px;
-    padding: 2px 4px;
-  }
-
-  .time-text {
-    font-size: 10px;
-  }
-
-  .monthly-summary {
-    margin-top: 16px;
-  }
-
-  .summary-title {
-    font-size: 1.1rem;
-    margin-bottom: 14px;
-    padding-bottom: 8px;
-  }
-
-  .summary-stats {
-    gap: 12px;
-  }
-
-  .stat-item {
-    padding: 12px;
-    gap: 12px;
-    border-radius: 8px;
-  }
-
-  .stat-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 16px;
-  }
-
-  .stat-label {
-    font-size: 12px;
-  }
-
-  .stat-value {
-    font-size: 20px;
-  }
-
-  .chart-container {
-    padding: 12px;
-    margin: 12px 0;
-  }
-
-  .responsive-chart {
-    max-height: 250px;
-    height: 250px !important;
-  }
-
-  .ranking-display {
-    min-width: 160px;
-  }
-
-  .rank-badge {
-    gap: 8px;
-    padding: 8px 12px;
-  }
-
-  .rank-icon {
-    font-size: 22px;
-    width: 38px;
-    height: 38px;
-  }
-
-  .rank-name {
-    font-size: 14px;
-  }
-
-  .rank-level {
-    font-size: 10px;
-  }
-
-  .rank-info-icon {
-    font-size: 15px;
-    padding: 4px;
-  }
-
-  .rank-progress {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 360px) {
-  .responsive-tabs .el-tabs__item {
-    padding: 0 6px;
-    font-size: 11px;
-    min-width: 65px;
-    text-align: center;
-  }
-
-  .responsive-tabs .el-tabs__nav {
-    min-width: calc(4 * 75px);
-  }
-
-  .task-actions {
-    padding-top: 6px;
-    margin-top: 2px;
-    gap: 3px;
-  }
-
-  .normal-actions {
-    gap: 3px;
-  }
-
-  .status-actions,
-  .manage-actions,
-  .reset-actions {
-    gap: 2px;
-  }
-
-  .edit-actions {
-    gap: 3px;
-  }
-
-  .history-task-status {
-    gap: 4px;
-  }
-
-  .history-status-tag {
-    font-size: 10px;
-    padding: 2px 4px;
-  }
-
-  .history-delete-btn {
-    padding: 4px;
-    min-width: 24px;
-    height: 24px;
-  }
-
-  .history-delete-btn i {
-    font-size: 11px;
-  }
-
-  .monthly-summary {
-    margin-top: 12px;
-  }
-
-  .summary-title {
-    font-size: 1rem;
-    margin-bottom: 12px;
-    padding-bottom: 6px;
-  }
-
-  .summary-stats {
-    gap: 10px;
-  }
-
-  .stat-item {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .stat-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 15px;
-  }
-
-  .stat-label {
-    font-size: 11px;
-  }
-
-  .stat-value {
-    font-size: 18px;
-  }
-
-  .ranking-display {
-    min-width: 140px;
-  }
-
-  .rank-badge {
-    gap: 6px;
-    padding: 6px 10px;
-  }
-
-  .rank-icon {
-    font-size: 20px;
-    width: 34px;
-    height: 34px;
-  }
-
-  .rank-name {
-    font-size: 13px;
-  }
-
-  .rank-level {
-    font-size: 9px;
-  }
-
-  .rank-info-icon {
-    font-size: 14px;
     padding: 3px;
   }
 
-  .rank-progress {
-    padding: 8px;
+  .rank-preview-image {
+    width: 18px;
+    height: 18px;
   }
 
-  .progress-text,
-  .progress-percentage {
-    font-size: 12px;
-  }
-}
-
-/* Demo button specific fix for mobile */
-@media (max-width: 600px) {
-  .control-btn .btn-text {
-    display: none;
+  .rank-grid-image {
+    width: 28px;
+    height: 28px;
   }
 
-  .control-btn i {
-    display: block !important;
-    font-size: 14px;
-    margin: 0;
+  .ranks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
   }
 
-  .demo-btn i {
-    display: inline-block !important;
-    font-size: 14px;
-    margin: 0;
+  .rank-preview-item {
+    padding: 6px 4px;
+    gap: 4px;
   }
 }
 
 @media (max-width: 480px) {
-  .control-btn i {
-    font-size: 13px;
+  .rank-icon {
+    width: 36px;
+    height: 36px;
+    padding: 2px;
   }
 
-  .demo-btn i {
-    font-size: 13px !important;
+  .rank-preview-image {
+    width: 16px;
+    height: 16px;
+  }
+
+  .rank-grid-image {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ranks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 4px;
+  }
+
+  .rank-preview-item {
+    padding: 4px 3px;
+    gap: 3px;
+  }
+
+  .rank-preview-name {
+    font-size: 10px;
+  }
+
+  .rank-preview-threshold {
+    font-size: 9px;
+    padding: 1px 4px;
   }
 }
 
-@media (max-width: 360px) {
-  .control-btn i {
-    font-size: 12px;
-  }
-
-  .demo-btn i {
-    font-size: 12px !important;
-  }
-}
+/* ...existing code... */
 </style>
+

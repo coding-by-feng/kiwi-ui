@@ -499,6 +499,7 @@ export default {
     todo: {
         title: 'รายการสิ่งที่ต้องทำ',
         totalPoints: 'คะแนนรวม',
+        taskList: 'รายการงาน',
         todayTasks: "งานวันนี้",
         trash: 'ถังขยะ',
         history: 'ประวัติ',

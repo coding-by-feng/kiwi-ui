@@ -117,6 +117,7 @@ export default {
     todo: {
         title: '待办事项',
         totalPoints: '总积分',
+        taskList: '任务列表',
         todayTasks: '今日任务',
         trash: '垃圾箱',
         history: '历史记录',
