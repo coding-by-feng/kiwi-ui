@@ -870,7 +870,6 @@ export default {
             case 'completed':
               return task.status === 'success' || task.status === 'fail'
             case 'done':
-              // Show non-daily tasks that are completed (done for their cycle)
               return this.shouldShowDoneTag(task) && (task.status === 'success' || task.status === 'fail')
             default:
               return true
@@ -878,16 +877,14 @@ export default {
         })
       }
 
-      // Sort by creation date (newest first) and then by points (highest first)
+      // Sort by points (desc), then by creation date (newest first) as tiebreaker
       return tasks.sort((a, b) => {
-        const aDate = new Date(a.date || 0)
-        const bDate = new Date(b.date || 0)
-        if (aDate.getTime() !== bDate.getTime()) {
-          return bDate.getTime() - aDate.getTime()
-        }
         const aPoints = a.successPoints || 0
         const bPoints = b.successPoints || 0
-        return bPoints - aPoints
+        if (bPoints !== aPoints) return bPoints - aPoints
+        const aDate = new Date(a.date || 0).getTime()
+        const bDate = new Date(b.date || 0).getTime()
+        return bDate - aDate
       })
     },
     totalPoints() {
@@ -2393,13 +2390,12 @@ export default {
   .ranking-display { min-width: 0; }
 
   /* Small screens: only show icons for import-export-controls */
-  /* Replace the previous '.header-controls .control-btn .btn-text' rule with this narrower scope */
   .import-export-controls .control-btn .btn-text {
     display: none !important;
   }
 
-  /* Center icons inside buttons */
-  .header-controls .control-btn i {
+  /* Center icons inside import/export buttons */
+  .import-export-controls .control-btn i {
     margin: 0 !important;
   }
 
