@@ -2377,12 +2377,33 @@ export default {
 }
 
 @media (max-width: 768px) {
-  /* Only show icons inside header buttons */
-  .header-controls .control-btn .btn-text {
+  /* Center the header content (actions, rankings, points) */
+  .header-controls {
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center;
+  }
+  .ranking-display,
+  .import-export-controls,
+  .total-points {
+    margin: 0 auto;
+    align-self: center;
+    text-align: center;
+  }
+  .ranking-display { min-width: 0; }
+
+  /* Small screens: only show icons for import-export-controls */
+  /* Replace the previous '.header-controls .control-btn .btn-text' rule with this narrower scope */
+  .import-export-controls .control-btn .btn-text {
     display: none !important;
   }
 
-  /* Unify header button sizes; works for import-export-controls and other header buttons */
+  /* Center icons inside buttons */
+  .header-controls .control-btn i {
+    margin: 0 !important;
+  }
+
+  /* Make header buttons square and equal-sized (including el-upload button) */
   .todo-gamification { --hdr-btn-size: 40px; }
 
   .header-controls .control-btn {
@@ -2394,7 +2415,6 @@ export default {
     justify-content: center;
   }
 
-  /* Ensure el-upload wrapped button matches the same size */
   .header-controls .el-upload {
     flex: 0 0 var(--hdr-btn-size);
     max-width: var(--hdr-btn-size);
@@ -2431,7 +2451,6 @@ export default {
     min-width: var(--hdr-btn-size) !important;
     max-width: var(--hdr-btn-size) !important;
   }
-  /* Text is already hidden at <=600px in existing CSS */
 }
 
 @media (max-width: 480px) {
