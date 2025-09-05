@@ -175,7 +175,7 @@
                       :min="1"
                       :max="100"
                       size="small"
-                      class="responsive-number"
+                      style="width: 120px;"
                   />
                 </el-form-item>
                 <el-form-item :label="$t('todo.failPoints')" class="form-item points-item">
@@ -184,7 +184,7 @@
                       :min="-100"
                       :max="0"
                       size="small"
-                      class="responsive-number"
+                      style="width: 120px;"
                   />
                 </el-form-item>
               </div>
@@ -205,7 +205,6 @@
                       :min="2"
                       :max="365"
                       size="small"
-                      class="responsive-number-small"
                   />
                 </el-form-item>
               </div>
@@ -1703,15 +1702,14 @@ export default {
     },
 
     shouldShowStatusActions(task) {
-      // Show status action buttons for daily tasks or pending non-daily tasks
-      const isDaily = !task.frequency || task.frequency === 'daily'
-      return isDaily || task.status === 'pending'
+      // Only show status action buttons for pending tasks
+      // Once a task is completed (success or fail), these buttons should be hidden
+      return task.status === 'pending'
     },
 
     shouldShowResetAction(task) {
-      // Show reset action for completed non-daily tasks
-      const isNonDaily = task.frequency && task.frequency !== 'daily'
-      return isNonDaily && (task.status === 'success' || task.status === 'fail')
+      // Show reset action for any completed task (both daily and non-daily)
+      return task.status === 'success' || task.status === 'fail'
     },
 
     getCompletionTagType(task) {
@@ -2250,11 +2248,11 @@ export default {
 
 <style scoped>
 .todo-gamification {
-  padding: 20px;
+  padding: 0;
 }
 
 .main-card {
-  border-radius: 12px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -2578,7 +2576,7 @@ export default {
 }
 
 .points-row {
-  max-width: 400px;
+  max-width: 300px;
 }
 
 .points-item {
@@ -3369,121 +3367,15 @@ export default {
 .rank-item:hover {
   background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.rank-item i {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-}
-
-.rank-item .rank-name {
-  flex: 1;
-  font-weight: 600;
-  font-size: 14px;
-  color: #2d3748;
-}
-
-.rank-item .rank-points {
-  font-size: 12px;
-  color: #718096;
-  font-weight: 500;
-  padding: 2px 8px;
-  background-color: #edf2f7;
-  border-radius: 12px;
-}
-
-.progress-needed {
-  margin-top: 10px;
-  font-size: 13px;
-  color: #e53e3e;
-  text-align: center;
-  font-weight: 600;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-  border-radius: 8px;
-  border: 1px solid #fc8181;
-}
-
-.max-rank-notice {
-  text-align: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
-  border-radius: 12px;
-  border: 1px solid #9ae6b4;
-}
-
-.max-rank-notice h4 {
-  color: #2f855a !important;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-.max-rank-notice h4::after {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;
-}
-
-.max-rank-notice p {
-  color: #2f855a;
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.all-ranks-preview {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.all-ranks-preview::-webkit-scrollbar {
-  width: 6px;
-}
-
-.all-ranks-preview::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.all-ranks-preview::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-}
-
-.all-ranks-preview::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-}
-
-.ranks-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
-
-.rank-preview-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-  position: relative;
-}
-
-.rank-preview-item:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
-  transform: translateX(4px);
-}
-
-.rank-preview-item.current-rank {
+.rank-item.current-rank {
   background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
   border-color: #4299e1;
   box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
 }
 
-.rank-preview-item.current-rank::before {
+.rank-item.current-rank::before {
   content: '✓';
   position: absolute;
   right: 8px;
@@ -3492,7 +3384,7 @@ export default {
   font-size: 12px;
 }
 
-.rank-preview-item i {
+.rank-item i {
   font-size: 16px;
   width: 20px;
   text-align: center;
