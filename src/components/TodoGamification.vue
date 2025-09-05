@@ -60,11 +60,62 @@
                 <div class="rank-name">{{ currentRank.name }}</div>
                 <div class="rank-level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</div>
               </div>
+              <div class="rank-details-icon">
+                <el-popover
+                  placement="bottom"
+                  width="320"
+                  trigger="click"
+                  :title="$t('todo.rankingSystem')"
+                >
+                  <div class="ranking-details">
+                    <div class="current-rank-details">
+                      <h4>{{ $t('todo.currentRank') }}</h4>
+                      <div class="rank-item">
+                        <i :class="getRankIcon(currentRank.name)" :style="{color: getRankColor(currentRank.name)}"></i>
+                        <span class="rank-name">{{ currentRank.name }}</span>
+                        <span class="rank-points">{{ currentRank.threshold }}+ {{ $t('todo.points') }}</span>
+                      </div>
+                    </div>
+                    <div class="next-rank-details" v-if="currentRank.nextRankName">
+                      <h4>{{ $t('todo.nextRankTarget') }}</h4>
+                      <div class="rank-item">
+                        <i :class="getNextRankIcon()" :style="{color: getNextRankColor()}"></i>
+                        <span class="rank-name">{{ currentRank.nextRankName }}</span>
+                        <span class="rank-points">{{ currentRank.nextThreshold }}+ {{ $t('todo.points') }}</span>
+                      </div>
+                      <div class="progress-needed">
+                        {{ $t('todo.pointsNeeded', { points: currentRank.nextThreshold - totalPoints }) }}
+                      </div>
+                    </div>
+                    <div class="max-rank-notice" v-else>
+                      <h4>🎉 {{ $t('todo.congratulations') }}</h4>
+                      <p>{{ $t('todo.maxRankAchieved') }}</p>
+                    </div>
+                    <div class="all-ranks-preview">
+                      <h4>{{ $t('todo.allRanks') }}</h4>
+                      <div class="ranks-grid">
+                        <div
+                          v-for="rank in sortedRanksForDisplay"
+                          :key="rank.key"
+                          class="rank-preview-item"
+                          :class="{ 'current-rank': rank.threshold <= totalPoints }"
+                        >
+                          <i :class="rank.icon" :style="{color: rank.color}"></i>
+                          <span class="rank-preview-name">{{ getRankName(rank.key) }}</span>
+                          <span class="rank-preview-threshold">{{ rank.threshold }}+</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <i slot="reference" class="el-icon-info rank-info-icon" :title="$t('todo.viewRankingDetails')"></i>
+                </el-popover>
+              </div>
             </div>
             <div class="rank-progress">
               <div class="progress-info">
                 <span class="progress-text">{{ totalPoints }} / {{ currentRank.nextThreshold || '∞' }}</span>
                 <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Math.round(rankProgress) }}%</span>
+                <span class="progress-percentage max-rank" v-else>{{ $t('todo.maxRank') }}</span>
               </div>
               <el-progress
                 :percentage="rankProgress"
@@ -77,7 +128,7 @@
                 <span class="next-rank-text">{{ $t('todo.nextRank', { rank: currentRank.nextRankName }) }}</span>
               </div>
               <div v-else class="max-rank-info">
-                <span class="max-rank-text">{{ $t('todo.maxRank') }}</span>
+                <span class="max-rank-text">{{ $t('todo.maxRankReached') }}</span>
               </div>
             </div>
           </div>
@@ -309,17 +360,13 @@
                         icon="el-icon-check"
                         @click="saveTaskEdit(task.id)"
                         class="action-btn"
-                    >
-                      <span class="btn-text-small">{{ $t('common.save') }}</span>
-                    </el-button>
+                    ></el-button>
                     <el-button
                         size="mini"
                         icon="el-icon-close"
                         @click="cancelTaskEdit"
                         class="action-btn"
-                    >
-                      <span class="btn-text-small">{{ $t('common.cancel') }}</span>
-                    </el-button>
+                    ></el-button>
                   </div>
 
                   <!-- Normal Actions -->
@@ -370,7 +417,6 @@
                     <!-- Edit/Delete Actions -->
                     <div class="manage-actions">
                       <el-button
-                          v-if="task.status === 'pending'"
                           type="primary"
                           size="mini"
                           icon="el-icon-edit"
@@ -771,10 +817,11 @@ export default {
       return stored ? JSON.parse(stored) : []
     },
     currentRank() {
-      const sortedRanks = [...this.ranks].sort((a, b) => b.threshold - a.threshold)
-      for (let rank of sortedRanks) {
+      const sortedRanks = [...this.ranks].sort((a, b) => a.threshold - b.threshold) // Sort ascending for correct next rank logic
+      for (let i = sortedRanks.length - 1; i >= 0; i--) {
+        const rank = sortedRanks[i]
         if (this.totalPoints >= rank.threshold) {
-          const nextRank = sortedRanks.find(r => r.threshold > rank.threshold)
+          const nextRank = i < sortedRanks.length - 1 ? sortedRanks[i + 1] : null // Get higher rank
           return {
             ...rank,
             name: this.getRankName(rank.key),
@@ -783,13 +830,19 @@ export default {
           }
         }
       }
-      const beginnerRank = this.ranks[this.ranks.length - 1]
+      // Default to beginner rank if no rank matches
+      const beginnerRank = sortedRanks[0] // First rank (lowest threshold)
+      const nextRank = sortedRanks.length > 1 ? sortedRanks[1] : null
       return {
         ...beginnerRank,
         name: this.getRankName(beginnerRank.key),
-        nextThreshold: this.ranks[this.ranks.length - 2].threshold,
-        nextRankName: this.getRankName(this.ranks[this.ranks.length - 2].key)
+        nextThreshold: nextRank ? nextRank.threshold : null,
+        nextRankName: nextRank ? this.getRankName(nextRank.key) : null
       }
+    },
+
+    sortedRanksForDisplay() {
+      return [...this.ranks].sort((a, b) => b.threshold - a.threshold)
     },
 
     rankProgress() {
@@ -1264,9 +1317,19 @@ export default {
 
     importTodoData(file) {
       return new Promise((resolve, reject) => {
-        if (!file || !file.raw) {
+        // Handle both direct file objects and file objects with .raw property
+        const fileToRead = file.raw || file
+
+        if (!fileToRead) {
           this.$message.error('Invalid file selected')
           reject(new Error('Invalid file'))
+          return
+        }
+
+        // Validate file type
+        if (fileToRead.type !== 'application/json' && !fileToRead.name.toLowerCase().endsWith('.json')) {
+          this.$message.error('Please select a valid JSON file')
+          reject(new Error('Invalid file type'))
           return
         }
 
@@ -1283,19 +1346,38 @@ export default {
             try {
               importedData = JSON.parse(e.target.result)
             } catch (parseError) {
-              throw new Error('Invalid JSON format')
+              throw new Error('Invalid JSON format - please check your file content')
             }
 
             // Validate import data structure
             if (!importedData || typeof importedData !== 'object') {
-              throw new Error('Invalid data format')
+              throw new Error('Invalid data format - expected JSON object')
             }
 
-            const isNewFormat = importedData.version === '1.1'
-            const isLegacyFormat = importedData.data && typeof importedData.data === 'object'
+            // Check for current v1.1 format
+            const isCurrentFormat = importedData.version === '1.1' &&
+                                  importedData.exportDate &&
+                                  typeof importedData.tasks === 'object' &&
+                                  typeof importedData.history === 'object' &&
+                                  Array.isArray(importedData.trash)
 
-            if (!isNewFormat && !isLegacyFormat) {
-              throw new Error('Unsupported file format')
+            // Check for legacy format
+            const isLegacyFormat = importedData.data &&
+                                  typeof importedData.data === 'object' &&
+                                  !importedData.version
+
+            if (!isCurrentFormat && !isLegacyFormat) {
+              console.error('Unsupported format. Data structure:', {
+                hasVersion: !!importedData.version,
+                version: importedData.version,
+                hasExportDate: !!importedData.exportDate,
+                hasTasks: !!importedData.tasks,
+                hasHistory: !!importedData.history,
+                hasTrash: !!importedData.trash,
+                hasLegacyData: !!importedData.data,
+                topLevelKeys: Object.keys(importedData)
+              })
+              throw new Error('Unsupported file format. Please make sure you are importing a valid todo data export file (version 1.1 or legacy format).')
             }
 
             // Show import preview and confirmation
@@ -1304,27 +1386,47 @@ export default {
             let historyToImport = 0
             let trashToImport = 0
 
-            if (isNewFormat) {
-              if (importedData.tasks) {
-                tasksToImport = Object.values(importedData.tasks).flat().length
+            if (isCurrentFormat) {
+              // Count tasks
+              if (importedData.tasks && typeof importedData.tasks === 'object') {
+                tasksToImport = Object.values(importedData.tasks)
+                  .filter(dateArray => Array.isArray(dateArray))
+                  .reduce((total, dateArray) => total + dateArray.length, 0)
               }
-              if (importedData.history) {
-                historyToImport = Object.values(importedData.history).flat().length
+
+              // Count history
+              if (importedData.history && typeof importedData.history === 'object') {
+                historyToImport = Object.values(importedData.history)
+                  .filter(dateArray => Array.isArray(dateArray))
+                  .reduce((total, dateArray) => total + dateArray.length, 0)
               }
+
+              // Count trash
               if (importedData.trash && Array.isArray(importedData.trash)) {
                 trashToImport = importedData.trash.length
               }
-              if (importedData.metadata) {
+
+              if (importedData.metadata && importedData.exportDate) {
                 previewMessage += `Export Date: ${new Date(importedData.exportDate).toLocaleDateString()}\n`
                 previewMessage += `Exported Dates: ${importedData.metadata.exportedDates?.length || 0} dates\n`
               }
             } else {
-              tasksToImport = Object.values(importedData.data).flat().length
+              // Legacy format
+              if (importedData.data && typeof importedData.data === 'object') {
+                tasksToImport = Object.values(importedData.data)
+                  .filter(dateArray => Array.isArray(dateArray))
+                  .reduce((total, dateArray) => total + dateArray.length, 0)
+              }
             }
 
             previewMessage += `Tasks: ${tasksToImport}\n`
             previewMessage += `History Records: ${historyToImport}\n`
             previewMessage += `Trash Items: ${trashToImport}\n\n`
+
+            if (tasksToImport === 0 && historyToImport === 0 && trashToImport === 0) {
+              throw new Error('No valid data found in the import file')
+            }
+
             previewMessage += 'This will merge with your existing data. Continue?'
 
             this.$confirm(previewMessage, 'Import Confirmation', {
@@ -1338,18 +1440,19 @@ export default {
               let skippedDuplicates = 0
 
               try {
-                if (isNewFormat) {
+                if (isCurrentFormat) {
                   // Import tasks
                   if (importedData.tasks && typeof importedData.tasks === 'object') {
                     Object.keys(importedData.tasks).forEach(dateKey => {
                       const tasksToImport = importedData.tasks[dateKey]
-                      if (Array.isArray(tasksToImport)) {
+                      if (Array.isArray(tasksToImport) && tasksToImport.length > 0) {
                         const existingTasks = this.getTasksForDate(dateKey)
                         const existingIds = new Set(existingTasks.map(t => t.id))
 
                         const newTasks = tasksToImport.filter(task => {
                           // Validate task structure
                           if (!task || typeof task !== 'object' || !task.id || !task.title) {
+                            console.warn('Invalid task structure:', task)
                             return false
                           }
 
@@ -1388,13 +1491,14 @@ export default {
                   if (importedData.history && typeof importedData.history === 'object') {
                     Object.keys(importedData.history).forEach(dateKey => {
                       const historyToImport = importedData.history[dateKey]
-                      if (Array.isArray(historyToImport)) {
+                      if (Array.isArray(historyToImport) && historyToImport.length > 0) {
                         const existingHistory = this.getHistoryRecordsForDate(dateKey)
                         const existingIds = new Set(existingHistory.map(h => `${h.id}_${h.completedDate}`))
 
                         const newHistory = historyToImport.filter(record => {
                           // Validate history structure
                           if (!record || typeof record !== 'object' || !record.id || !record.completedDate) {
+                            console.warn('Invalid history record structure:', record)
                             return false
                           }
 
@@ -1436,6 +1540,7 @@ export default {
                     const newTrash = importedData.trash.filter(item => {
                       // Validate trash item structure
                       if (!item || typeof item !== 'object' || !item.id || !item.title) {
+                        console.warn('Invalid trash item structure:', item)
                         return false
                       }
 
@@ -1464,45 +1569,48 @@ export default {
                   }
                 } else {
                   // Handle legacy format
-                  Object.keys(importedData.data).forEach(dateKey => {
-                    const tasksToImport = importedData.data[dateKey]
-                    if (Array.isArray(tasksToImport)) {
-                      const existingTasks = this.getTasksForDate(dateKey)
-                      const existingIds = new Set(existingTasks.map(t => t.id))
+                  if (importedData.data && typeof importedData.data === 'object') {
+                    Object.keys(importedData.data).forEach(dateKey => {
+                      const tasksToImport = importedData.data[dateKey]
+                      if (Array.isArray(tasksToImport) && tasksToImport.length > 0) {
+                        const existingTasks = this.getTasksForDate(dateKey)
+                        const existingIds = new Set(existingTasks.map(t => t.id))
 
-                      const newTasks = tasksToImport.filter(task => {
-                        if (!task || typeof task !== 'object' || !task.id || !task.title) {
-                          return false
+                        const newTasks = tasksToImport.filter(task => {
+                          if (!task || typeof task !== 'object' || !task.id || !task.title) {
+                            console.warn('Invalid legacy task structure:', task)
+                            return false
+                          }
+
+                          if (existingIds.has(task.id)) {
+                            skippedDuplicates++
+                            return false
+                          }
+
+                          return true
+                        })
+
+                        if (newTasks.length > 0) {
+                          const validatedTasks = newTasks.map(task => ({
+                            id: task.id,
+                            title: task.title,
+                            description: task.description || '',
+                            successPoints: task.successPoints || 10,
+                            failPoints: task.failPoints || -5,
+                            frequency: task.frequency || 'once',
+                            customDays: task.customDays || 7,
+                            status: task.status || 'pending',
+                            date: task.date || new Date().toISOString(),
+                            dateKey: task.dateKey || dateKey
+                          }))
+
+                          const mergedTasks = [...existingTasks, ...validatedTasks]
+                          localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
+                          importedTaskCount += validatedTasks.length
                         }
-
-                        if (existingIds.has(task.id)) {
-                          skippedDuplicates++
-                          return false
-                        }
-
-                        return true
-                      })
-
-                      if (newTasks.length > 0) {
-                        const validatedTasks = newTasks.map(task => ({
-                          id: task.id,
-                          title: task.title,
-                          description: task.description || '',
-                          successPoints: task.successPoints || 10,
-                          failPoints: task.failPoints || -5,
-                          frequency: task.frequency || 'once',
-                          customDays: task.customDays || 7,
-                          status: task.status || 'pending',
-                          date: task.date || new Date().toISOString(),
-                          dateKey: task.dateKey || dateKey
-                        }))
-
-                        const mergedTasks = [...existingTasks, ...validatedTasks]
-                        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
-                        importedTaskCount += validatedTasks.length
                       }
-                    }
-                  })
+                    })
+                  }
                 }
 
                 this.refreshTrigger++
@@ -1531,7 +1639,7 @@ export default {
           }
         }
 
-        reader.readAsText(file.raw)
+        reader.readAsText(fileToRead)
       })
     },
     getRankName(rankKey) {
@@ -1572,6 +1680,20 @@ export default {
         ...beginnerRank,
         name: this.getRankName(beginnerRank.key)
       }
+    },
+
+    getNextRankIcon() {
+      if (!this.currentRank.nextThreshold) return 'el-icon-trophy'
+      const sortedRanks = [...this.ranks].sort((a, b) => a.threshold - b.threshold) // Sort ascending
+      const nextRank = sortedRanks.find(r => r.threshold === this.currentRank.nextThreshold)
+      return nextRank ? nextRank.icon : 'el-icon-trophy'
+    },
+
+    getNextRankColor() {
+      if (!this.currentRank.nextThreshold) return '#FFD700'
+      const sortedRanks = [...this.ranks].sort((a, b) => a.threshold - b.threshold) // Sort ascending
+      const nextRank = sortedRanks.find(r => r.threshold === this.currentRank.nextThreshold)
+      return nextRank ? nextRank.color : '#FFD700'
     },
 
     shouldShowDoneTag(task) {
@@ -2162,124 +2284,142 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .control-btn {
   margin: 0;
-}
-
-.ranking-display {
   display: flex;
   align-items: center;
-  flex: 1;
-  min-width: 0;
-  max-width: 500px;
-}
-
-.rank-badge {
-  display: flex;
-  align-items: center;
+  gap: 6px;
   padding: 8px 12px;
-  border-radius: 12px;
-  margin-right: 16px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  white-space: nowrap;
+  min-width: auto;
+}
+
+.control-btn i {
+  font-size: 14px;
   flex-shrink: 0;
 }
 
-.rank-icon {
-  margin-right: 8px;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.rank-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.rank-name {
-  color: #333;
-  font-size: 0.9rem;
-  font-weight: 600;
+.btn-text {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 13px;
 }
 
-.rank-level {
-  color: #666;
-  font-size: 0.75rem;
-  white-space: nowrap;
+/* Responsive header controls */
+@media (max-width: 768px) {
+  .header-controls {
+    gap: 12px;
+  }
+
+  .import-export-controls {
+    gap: 6px;
+  }
+
+  .control-btn {
+    padding: 8px 10px;
+    gap: 4px;
+  }
+
+  .btn-text {
+    font-size: 12px;
+  }
+
+  .control-btn i {
+    font-size: 13px;
+  }
 }
 
-.rank-progress {
-  flex: 1;
-  min-width: 120px;
-  margin-right: 16px;
+@media (max-width: 600px) {
+  .header-controls {
+    gap: 10px;
+  }
+
+  .import-export-controls {
+    gap: 4px;
+  }
+
+  .control-btn {
+    padding: 6px 8px;
+    min-width: 32px;
+    justify-content: center;
+  }
+
+  .btn-text {
+    display: none; /* Hide text on small screens */
+  }
+
+  .control-btn i {
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* Ensure buttons remain recognizable with just icons */
+  .demo-btn {
+    color: #909399;
+  }
+
+  .clear-data-btn {
+    color: #f56c6c;
+  }
 }
 
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 0.8rem;
+@media (max-width: 480px) {
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .import-export-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .control-btn {
+    padding: 6px;
+    min-width: 28px;
+    height: 32px;
+  }
+
+  .control-btn i {
+    font-size: 13px;
+  }
+
+  .ranking-display {
+    order: -1; /* Move ranking to top on very small screens */
+    max-width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .total-points {
+    align-self: center;
+    margin-top: 8px;
+  }
 }
 
-.progress-text {
-  color: #666;
-  font-weight: 500;
-}
+@media (max-width: 360px) {
+  .header-controls {
+    gap: 6px;
+  }
 
-.progress-percentage {
-  color: #409EFF;
-  font-weight: 600;
-}
+  .import-export-controls {
+    gap: 3px;
+  }
 
-.rank-progress-bar {
-  height: 6px;
-  border-radius: 3px;
-}
+  .control-btn {
+    padding: 5px;
+    min-width: 26px;
+    height: 30px;
+  }
 
-.next-rank-info,
-.max-rank-info {
-  text-align: center;
-  margin-top: 4px;
-}
+  .control-btn i {
+    font-size: 12px;
+  }
 
-.next-rank-text {
-  font-size: 0.7rem;
-  color: #909399;
-  font-weight: 500;
-}
-
-.max-rank-text {
-  font-size: 0.7rem;
-  color: #67C23A;
-  font-weight: 600;
-}
-
-.total-points {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  white-space: nowrap;
-}
-
-.points-label {
-  margin-right: 6px;
-}
-
-.points-badge {
-  background-color: #67c23a;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-weight: 500;
-  font-size: 0.85rem;
+  .points-badge {
+    font-size: 0.8rem;
+    padding: 3px 6px;
+  }
 }
 
 /* Task input and form styles for larger screens */
@@ -2468,96 +2608,153 @@ export default {
   flex-shrink: 0;
 }
 
-/* Mobile optimizations for header controls */
+/* History task specific styles */
+.history-task-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.history-task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-meta-history {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.completion-time {
+  display: flex;
+  align-items: center;
+}
+
+.time-text {
+  margin-left: 4px;
+}
+
+.history-task-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.status-section {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.history-status-tag {
+  white-space: nowrap;
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.history-delete-btn {
+  margin: 0;
+  padding: 8px;
+  min-width: 32px;
+  height: 32px;
+}
+
+/* Mobile optimizations for history tasks */
 @media (max-width: 768px) {
-  .header-controls {
-    flex-direction: column;
+  .history-task-content {
     gap: 12px;
   }
 
-  .import-export-controls {
-    gap: 6px;
+  .history-task-status {
+    gap: 8px;
+    flex-direction: row;
+    align-items: center;
   }
 
-  .control-btn .btn-text {
-    display: none;
+  .history-status-tag {
+    font-size: 12px;
+    padding: 4px 8px;
   }
 
-  .control-btn {
-    padding: 8px;
-    min-width: 36px;
+  .history-delete-btn {
+    padding: 6px;
+    min-width: 28px;
+    height: 28px;
   }
 
-  .ranking-display {
-    order: -1;
-    width: 100%;
-    max-width: none;
-  }
-
-  .total-points {
-    font-size: 0.9rem;
+  .task-meta-history {
+    gap: 8px;
   }
 }
 
 @media (max-width: 480px) {
-  .header-controls {
+  .history-task-content {
     gap: 8px;
   }
 
-  .import-export-controls {
-    gap: 4px;
+  .history-task-status {
+    gap: 6px;
+    min-width: 0;
   }
 
-  .control-btn {
-    padding: 6px;
-    min-width: 32px;
-  }
-
-  .rank-badge {
-    padding: 6px 8px;
-    margin-right: 8px;
-  }
-
-  .rank-name {
-    font-size: 0.8rem;
-  }
-
-  .rank-level {
-    font-size: 0.7rem;
-  }
-
-  .progress-info {
-    font-size: 0.75rem;
-  }
-
-  .total-points {
-    font-size: 0.85rem;
-  }
-
-  .points-badge {
+  .history-status-tag {
+    font-size: 11px;
     padding: 3px 6px;
-    font-size: 0.8rem;
+    min-width: 0;
+  }
+
+  .history-delete-btn {
+    padding: 5px;
+    min-width: 26px;
+    height: 26px;
+  }
+
+  .history-delete-btn i {
+    font-size: 12px;
+  }
+
+  .task-meta-history {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .completion-time .el-tag {
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+
+  .time-text {
+    font-size: 10px;
   }
 }
 
 @media (max-width: 360px) {
-  .import-export-controls {
-    gap: 3px;
+  .history-task-status {
+    gap: 4px;
   }
 
-  .control-btn {
-    padding: 5px;
-    min-width: 30px;
+  .history-status-tag {
+    font-size: 10px;
+    padding: 2px 4px;
   }
 
-  .rank-badge {
-    padding: 4px 6px;
-    margin-right: 6px;
+  .history-delete-btn {
+    padding: 4px;
+    min-width: 24px;
+    height: 24px;
   }
 
-  .rank-progress {
-    margin-right: 8px;
-    min-width: 80px;
+  .history-delete-btn i {
+    font-size: 11px;
   }
 }
 
@@ -2566,7 +2763,7 @@ export default {
   font-size: 14px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .control-btn i {
     font-size: 13px;
   }
@@ -2662,6 +2859,310 @@ export default {
 
   .responsive-tabs .el-tabs__nav {
     min-width: calc(4 * 75px); /* Ensure minimum width for 4 tabs */
+  }
+}
+
+/* Ranking display styles */
+.ranking-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 200px;
+}
+
+.rank-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 2px solid #e1e8ed;
+  position: relative;
+}
+
+.rank-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.rank-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rank-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.rank-level {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.rank-details-icon {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.rank-info-icon {
+  color: #409eff;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.rank-info-icon:hover {
+  background-color: #ecf5ff;
+  transform: scale(1.1);
+}
+
+.ranking-details {
+  padding: 8px 0;
+}
+
+.current-rank-details,
+.next-rank-details,
+.all-ranks-preview {
+  margin-bottom: 16px;
+}
+
+.current-rank-details h4,
+.next-rank-details h4,
+.all-ranks-preview h4 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.rank-item i {
+  font-size: 16px;
+}
+
+.rank-item .rank-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.rank-item .rank-points {
+  font-size: 12px;
+  color: #666;
+}
+
+.progress-needed {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #e67e22;
+  text-align: center;
+  font-weight: 500;
+}
+
+.max-rank-notice {
+  text-align: center;
+}
+
+.max-rank-notice h4 {
+  color: #f39c12;
+  margin-bottom: 8px;
+}
+
+.max-rank-notice p {
+  color: #27ae60;
+  margin: 0;
+  font-size: 13px;
+}
+
+.all-ranks-preview {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ranks-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.rank-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease;
+}
+
+.rank-preview-item.current-rank {
+  background-color: #e7f3ff;
+  border: 1px solid #409eff;
+}
+
+.rank-preview-item i {
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+}
+
+.rank-preview-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rank-preview-threshold {
+  font-size: 11px;
+  color: #666;
+}
+
+.rank-progress {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+}
+
+.progress-percentage {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.progress-percentage.max-rank {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.next-rank-info,
+.max-rank-info {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.next-rank-text,
+.max-rank-text {
+  font-size: 11px;
+  color: #888;
+}
+
+.max-rank-text {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+/* Demo button specific fix for mobile */
+@media (max-width: 600px) {
+  .control-btn .btn-text {
+    display: none;
+  }
+
+  .control-btn i {
+    display: block !important;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* Ensure demo button icon specifically remains visible */
+  .demo-btn i {
+    display: inline-block !important;
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .control-btn i {
+    font-size: 13px;
+  }
+
+  .demo-btn i {
+    font-size: 13px !important;
+  }
+
+  .ranking-display {
+    min-width: 180px;
+  }
+
+  .rank-badge {
+    gap: 6px;
+    padding: 6px 10px;
+  }
+
+  .rank-icon {
+    font-size: 20px;
+  }
+
+  .rank-name {
+    font-size: 13px;
+  }
+
+  .rank-level {
+    font-size: 11px;
+  }
+
+  .rank-info-icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .control-btn i {
+    font-size: 12px;
+  }
+
+  .demo-btn i {
+    font-size: 12px !important;
+  }
+
+  .ranking-display {
+    min-width: 160px;
+  }
+
+  .rank-badge {
+    gap: 4px;
+    padding: 5px 8px;
+  }
+
+  .rank-icon {
+    font-size: 18px;
+  }
+
+  .rank-name {
+    font-size: 12px;
+  }
+
+  .rank-level {
+    font-size: 10px;
+  }
+
+  .rank-info-icon {
+    font-size: 13px;
   }
 }
 </style>
