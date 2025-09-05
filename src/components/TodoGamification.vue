@@ -30,6 +30,24 @@
                 <span class="btn-text">Import</span>
               </el-button>
             </el-upload>
+            <el-button
+                type="info"
+                size="small"
+                icon="el-icon-magic-stick"
+                @click="createDemoTasks"
+                class="control-btn demo-btn"
+            >
+              <span class="btn-text">Demo</span>
+            </el-button>
+            <el-button
+                type="danger"
+                size="small"
+                icon="el-icon-delete"
+                @click="clearAllData"
+                class="control-btn clear-data-btn"
+            >
+              <span class="btn-text">Clear All</span>
+            </el-button>
           </div>
 
           <!-- Ranking Display -->
@@ -1133,22 +1151,96 @@ export default {
         const todoData = {
           exportDate: new Date().toISOString(),
           version: '1.1',
+          appVersion: '1.0', // Add app version for compatibility
           tasks: {},
           history: {},
-          trash: JSON.parse(localStorage.getItem('todo_trash') || '[]')
+          trash: JSON.parse(localStorage.getItem('todo_trash') || '[]'),
+          metadata: {
+            totalTasks: 0,
+            totalHistoryRecords: 0,
+            exportedDates: []
+          }
         }
 
+        let taskCount = 0
+        let historyCount = 0
+
+        // Export all tasks
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
-          if (key.startsWith('todo_') && key !== 'todo_trash') {
+          if (key && key.startsWith('todo_') && key !== 'todo_trash') {
             const dateKey = key.replace('todo_', '')
-            const tasks = JSON.parse(localStorage.getItem(key))
-            todoData.tasks[dateKey] = tasks
-          } else if (key.startsWith('history_')) {
-            const dateKey = key.replace('history_', '')
-            const history = JSON.parse(localStorage.getItem(key))
-            todoData.history[dateKey] = history
+            try {
+              const tasks = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(tasks) && tasks.length > 0) {
+                // Validate task structure
+                const validTasks = tasks.filter(task =>
+                  task &&
+                  typeof task === 'object' &&
+                  task.id &&
+                  task.title
+                )
+                if (validTasks.length > 0) {
+                  todoData.tasks[dateKey] = validTasks
+                  taskCount += validTasks.length
+                  todoData.metadata.exportedDates.push(dateKey)
+                }
+              }
+            } catch (error) {
+              console.warn(`Failed to parse tasks for date ${dateKey}:`, error)
+            }
           }
+        }
+
+        // Export all history
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && key.startsWith('history_')) {
+            const dateKey = key.replace('history_', '')
+            try {
+              const history = JSON.parse(localStorage.getItem(key) || '[]')
+              if (Array.isArray(history) && history.length > 0) {
+                // Validate history structure
+                const validHistory = history.filter(record =>
+                  record &&
+                  typeof record === 'object' &&
+                  record.id &&
+                  record.title &&
+                  record.status &&
+                  record.completedDate
+                )
+                if (validHistory.length > 0) {
+                  todoData.history[dateKey] = validHistory
+                  historyCount += validHistory.length
+                }
+              }
+            } catch (error) {
+              console.warn(`Failed to parse history for date ${dateKey}:`, error)
+            }
+          }
+        }
+
+        // Validate trash data
+        if (Array.isArray(todoData.trash)) {
+          todoData.trash = todoData.trash.filter(task =>
+            task &&
+            typeof task === 'object' &&
+            task.id &&
+            task.title
+          )
+        } else {
+          todoData.trash = []
+        }
+
+        // Update metadata
+        todoData.metadata.totalTasks = taskCount
+        todoData.metadata.totalHistoryRecords = historyCount
+        todoData.metadata.totalTrashItems = todoData.trash.length
+
+        // Validate we have data to export
+        if (taskCount === 0 && historyCount === 0 && todoData.trash.length === 0) {
+          this.$message.warning('No data available to export')
+          return
         }
 
         const dataStr = JSON.stringify(todoData, null, 2)
@@ -1163,104 +1255,278 @@ export default {
         document.body.removeChild(link)
         URL.revokeObjectURL(url)
 
-        this.$message.success('Todo data exported successfully!')
+        this.$message.success(`Data exported successfully! (${taskCount} tasks, ${historyCount} history records, ${todoData.trash.length} trash items)`)
       } catch (error) {
         console.error('Export failed:', error)
-        this.$message.error('Failed to export todo data')
+        this.$message.error('Failed to export todo data: ' + error.message)
       }
     },
+
     importTodoData(file) {
       return new Promise((resolve, reject) => {
+        if (!file || !file.raw) {
+          this.$message.error('Invalid file selected')
+          reject(new Error('Invalid file'))
+          return
+        }
+
         const reader = new FileReader()
+
+        reader.onerror = () => {
+          this.$message.error('Failed to read file')
+          reject(new Error('File read error'))
+        }
 
         reader.onload = (e) => {
           try {
-            const importedData = JSON.parse(e.target.result)
-            const isNewFormat = importedData.version === '1.1'
-
-            if (!isNewFormat && (!importedData.data || typeof importedData.data !== 'object')) {
-              throw new Error('Invalid file format')
+            let importedData
+            try {
+              importedData = JSON.parse(e.target.result)
+            } catch (parseError) {
+              throw new Error('Invalid JSON format')
             }
 
-            this.$confirm(
-                'This will merge the imported data with your existing tasks. Continue?',
-                'Import Confirmation',
-                {
-                  confirmButtonText: 'Import',
-                  cancelButtonText: 'Cancel',
-                  type: 'warning'
-                }
-            ).then(() => {
-              let importedCount = 0
+            // Validate import data structure
+            if (!importedData || typeof importedData !== 'object') {
+              throw new Error('Invalid data format')
+            }
 
-              if (isNewFormat) {
-                if (importedData.tasks) {
-                  Object.keys(importedData.tasks).forEach(dateKey => {
-                    const tasksToImport = importedData.tasks[dateKey]
+            const isNewFormat = importedData.version === '1.1'
+            const isLegacyFormat = importedData.data && typeof importedData.data === 'object'
+
+            if (!isNewFormat && !isLegacyFormat) {
+              throw new Error('Unsupported file format')
+            }
+
+            // Show import preview and confirmation
+            let previewMessage = 'Import Preview:\n'
+            let tasksToImport = 0
+            let historyToImport = 0
+            let trashToImport = 0
+
+            if (isNewFormat) {
+              if (importedData.tasks) {
+                tasksToImport = Object.values(importedData.tasks).flat().length
+              }
+              if (importedData.history) {
+                historyToImport = Object.values(importedData.history).flat().length
+              }
+              if (importedData.trash && Array.isArray(importedData.trash)) {
+                trashToImport = importedData.trash.length
+              }
+              if (importedData.metadata) {
+                previewMessage += `Export Date: ${new Date(importedData.exportDate).toLocaleDateString()}\n`
+                previewMessage += `Exported Dates: ${importedData.metadata.exportedDates?.length || 0} dates\n`
+              }
+            } else {
+              tasksToImport = Object.values(importedData.data).flat().length
+            }
+
+            previewMessage += `Tasks: ${tasksToImport}\n`
+            previewMessage += `History Records: ${historyToImport}\n`
+            previewMessage += `Trash Items: ${trashToImport}\n\n`
+            previewMessage += 'This will merge with your existing data. Continue?'
+
+            this.$confirm(previewMessage, 'Import Confirmation', {
+              confirmButtonText: 'Import',
+              cancelButtonText: 'Cancel',
+              type: 'info'
+            }).then(() => {
+              let importedTaskCount = 0
+              let importedHistoryCount = 0
+              let importedTrashCount = 0
+              let skippedDuplicates = 0
+
+              try {
+                if (isNewFormat) {
+                  // Import tasks
+                  if (importedData.tasks && typeof importedData.tasks === 'object') {
+                    Object.keys(importedData.tasks).forEach(dateKey => {
+                      const tasksToImport = importedData.tasks[dateKey]
+                      if (Array.isArray(tasksToImport)) {
+                        const existingTasks = this.getTasksForDate(dateKey)
+                        const existingIds = new Set(existingTasks.map(t => t.id))
+
+                        const newTasks = tasksToImport.filter(task => {
+                          // Validate task structure
+                          if (!task || typeof task !== 'object' || !task.id || !task.title) {
+                            return false
+                          }
+
+                          if (existingIds.has(task.id)) {
+                            skippedDuplicates++
+                            return false
+                          }
+
+                          return true
+                        })
+
+                        if (newTasks.length > 0) {
+                          // Ensure task has required properties with defaults
+                          const validatedTasks = newTasks.map(task => ({
+                            id: task.id,
+                            title: task.title,
+                            description: task.description || '',
+                            successPoints: task.successPoints || 10,
+                            failPoints: task.failPoints || -5,
+                            frequency: task.frequency || 'once',
+                            customDays: task.customDays || 7,
+                            status: task.status || 'pending',
+                            date: task.date || new Date().toISOString(),
+                            dateKey: task.dateKey || dateKey
+                          }))
+
+                          const mergedTasks = [...existingTasks, ...validatedTasks]
+                          localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
+                          importedTaskCount += validatedTasks.length
+                        }
+                      }
+                    })
+                  }
+
+                  // Import history
+                  if (importedData.history && typeof importedData.history === 'object') {
+                    Object.keys(importedData.history).forEach(dateKey => {
+                      const historyToImport = importedData.history[dateKey]
+                      if (Array.isArray(historyToImport)) {
+                        const existingHistory = this.getHistoryRecordsForDate(dateKey)
+                        const existingIds = new Set(existingHistory.map(h => `${h.id}_${h.completedDate}`))
+
+                        const newHistory = historyToImport.filter(record => {
+                          // Validate history structure
+                          if (!record || typeof record !== 'object' || !record.id || !record.completedDate) {
+                            return false
+                          }
+
+                          const recordKey = `${record.id}_${record.completedDate}`
+                          if (existingIds.has(recordKey)) {
+                            skippedDuplicates++
+                            return false
+                          }
+
+                          return true
+                        })
+
+                        if (newHistory.length > 0) {
+                          // Ensure history record has required properties
+                          const validatedHistory = newHistory.map(record => ({
+                            id: record.id,
+                            title: record.title,
+                            description: record.description || '',
+                            successPoints: record.successPoints || 10,
+                            failPoints: record.failPoints || -5,
+                            status: record.status,
+                            completedDate: record.completedDate,
+                            originalTaskId: record.originalTaskId || record.id
+                          }))
+
+                          const mergedHistory = [...existingHistory, ...validatedHistory]
+                          localStorage.setItem(`history_${dateKey}`, JSON.stringify(mergedHistory))
+                          importedHistoryCount += validatedHistory.length
+                        }
+                      }
+                    })
+                  }
+
+                  // Import trash
+                  if (importedData.trash && Array.isArray(importedData.trash)) {
+                    const existingTrash = JSON.parse(localStorage.getItem('todo_trash') || '[]')
+                    const existingTrashIds = new Set(existingTrash.map(t => t.id))
+
+                    const newTrash = importedData.trash.filter(item => {
+                      // Validate trash item structure
+                      if (!item || typeof item !== 'object' || !item.id || !item.title) {
+                        return false
+                      }
+
+                      if (existingTrashIds.has(item.id)) {
+                        skippedDuplicates++
+                        return false
+                      }
+
+                      return true
+                    })
+
+                    if (newTrash.length > 0) {
+                      // Ensure trash item has required properties
+                      const validatedTrash = newTrash.map(item => ({
+                        ...item,
+                        description: item.description || '',
+                        successPoints: item.successPoints || 10,
+                        failPoints: item.failPoints || -5,
+                        originalDate: item.originalDate || item.date || new Date().toISOString(),
+                        deletedDate: item.deletedDate || new Date().toISOString()
+                      }))
+
+                      localStorage.setItem('todo_trash', JSON.stringify([...existingTrash, ...validatedTrash]))
+                      importedTrashCount = validatedTrash.length
+                    }
+                  }
+                } else {
+                  // Handle legacy format
+                  Object.keys(importedData.data).forEach(dateKey => {
+                    const tasksToImport = importedData.data[dateKey]
                     if (Array.isArray(tasksToImport)) {
                       const existingTasks = this.getTasksForDate(dateKey)
                       const existingIds = new Set(existingTasks.map(t => t.id))
-                      const newTasks = tasksToImport.filter(task => !existingIds.has(task.id))
+
+                      const newTasks = tasksToImport.filter(task => {
+                        if (!task || typeof task !== 'object' || !task.id || !task.title) {
+                          return false
+                        }
+
+                        if (existingIds.has(task.id)) {
+                          skippedDuplicates++
+                          return false
+                        }
+
+                        return true
+                      })
 
                       if (newTasks.length > 0) {
-                        const mergedTasks = [...existingTasks, ...newTasks]
+                        const validatedTasks = newTasks.map(task => ({
+                          id: task.id,
+                          title: task.title,
+                          description: task.description || '',
+                          successPoints: task.successPoints || 10,
+                          failPoints: task.failPoints || -5,
+                          frequency: task.frequency || 'once',
+                          customDays: task.customDays || 7,
+                          status: task.status || 'pending',
+                          date: task.date || new Date().toISOString(),
+                          dateKey: task.dateKey || dateKey
+                        }))
+
+                        const mergedTasks = [...existingTasks, ...validatedTasks]
                         localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
-                        importedCount += newTasks.length
+                        importedTaskCount += validatedTasks.length
                       }
                     }
                   })
                 }
 
-                if (importedData.history) {
-                  Object.keys(importedData.history).forEach(dateKey => {
-                    const historyToImport = importedData.history[dateKey]
-                    if (Array.isArray(historyToImport)) {
-                      const existingHistory = this.getHistoryRecordsForDate(dateKey)
-                      const existingIds = new Set(existingHistory.map(h => h.id))
-                      const newHistory = historyToImport.filter(record => !existingIds.has(record.id))
+                this.refreshTrigger++
+                this.loadHistoryForDate() // Refresh history view
 
-                      if (newHistory.length > 0) {
-                        const mergedHistory = [...existingHistory, ...newHistory]
-                        localStorage.setItem(`history_${dateKey}`, JSON.stringify(mergedHistory))
-                      }
-                    }
-                  })
-                }
+                let successMessage = `Import completed successfully!\n`
+                successMessage += `Tasks: ${importedTaskCount} imported\n`
+                if (importedHistoryCount > 0) successMessage += `History: ${importedHistoryCount} imported\n`
+                if (importedTrashCount > 0) successMessage += `Trash: ${importedTrashCount} imported\n`
+                if (skippedDuplicates > 0) successMessage += `Skipped: ${skippedDuplicates} duplicates`
 
-                if (importedData.trash) {
-                  const existingTrash = JSON.parse(localStorage.getItem('todo_trash') || '[]')
-                  const existingTrashIds = new Set(existingTrash.map(t => t.id))
-                  const newTrash = importedData.trash.filter(item => !existingTrashIds.has(item.id))
-                  if (newTrash.length > 0) {
-                    localStorage.setItem('todo_trash', JSON.stringify([...existingTrash, ...newTrash]))
-                  }
-                }
-              } else {
-                Object.keys(importedData.data).forEach(dateKey => {
-                  const tasksToImport = importedData.data[dateKey]
-                  if (Array.isArray(tasksToImport)) {
-                    const existingTasks = this.getTasksForDate(dateKey)
-                    const existingIds = new Set(existingTasks.map(t => t.id))
-                    const newTasks = tasksToImport.filter(task => !existingIds.has(task.id))
-
-                    if (newTasks.length > 0) {
-                      const mergedTasks = [...existingTasks, ...newTasks]
-                      localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
-                      importedCount += newTasks.length
-                    }
-                  }
-                })
+                this.$message.success(successMessage)
+                resolve()
+              } catch (importError) {
+                console.error('Import processing error:', importError)
+                this.$message.error('Import failed during data processing: ' + importError.message)
+                reject(importError)
               }
-
-              this.refreshTrigger++
-              this.$message.success(`Successfully imported ${importedCount} tasks`)
-              resolve()
             }).catch(() => {
               reject(new Error('Import cancelled'))
             })
           } catch (error) {
             console.error('Import error:', error)
-            this.$message.error('Failed to import todo data')
+            this.$message.error('Failed to import todo data: ' + error.message)
             reject(error)
           }
         }
@@ -1431,6 +1697,425 @@ export default {
         this.refreshTrigger++
         this.$message.success('Trash cleared')
       })
+    },
+
+    clearAllData() {
+      this.$confirm(
+        'This will permanently delete all your todo data including tasks, history, and trash. This action cannot be undone.\n\nAre you sure you want to continue?',
+        'Clear All Data',
+        {
+          confirmButtonText: 'Yes, Clear All Data',
+          cancelButtonText: 'Cancel',
+          type: 'error',
+          customClass: 'clear-data-confirm-dialog',
+          dangerouslyUseHTMLString: false
+        }
+      ).then(() => {
+        // Show a second confirmation for extra safety
+        this.$confirm(
+          'Last confirmation: This will delete ALL your todo data permanently. This cannot be undone.',
+          'Final Confirmation',
+          {
+            confirmButtonText: 'DELETE ALL DATA',
+            cancelButtonText: 'Cancel',
+            type: 'error',
+            customClass: 'clear-data-final-confirm'
+          }
+        ).then(() => {
+          try {
+            let deletedItems = 0
+            const keysToDelete = []
+
+            // Collect all todo-related keys
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i)
+              if (key && (
+                key.startsWith('todo_') ||
+                key.startsWith('history_') ||
+                key === 'todo_trash'
+              )) {
+                keysToDelete.push(key)
+              }
+            }
+
+            // Delete all collected keys
+            keysToDelete.forEach(key => {
+              try {
+                const data = localStorage.getItem(key)
+                if (data) {
+                  if (key === 'todo_trash') {
+                    const trashData = JSON.parse(data)
+                    deletedItems += Array.isArray(trashData) ? trashData.length : 0
+                  } else {
+                    const parsedData = JSON.parse(data)
+                    deletedItems += Array.isArray(parsedData) ? parsedData.length : 0
+                  }
+                }
+                localStorage.removeItem(key)
+              } catch (error) {
+                console.warn(`Failed to process key ${key} during cleanup:`, error)
+                // Still remove the key even if parsing fails
+                localStorage.removeItem(key)
+              }
+            })
+
+            // Force refresh all components
+            this.refreshTrigger++
+            this.historyTasks = []
+            this.selectedDate = new Date()
+            this.taskFilter = 'all'
+            this.frequencyFilter = 'all'
+            this.activeTab = 'today'
+
+            // Reset form
+            this.newTask = {
+              title: '',
+              description: '',
+              successPoints: 10,
+              failPoints: -5,
+              frequency: 'once',
+              customDays: 7
+            }
+
+            // Refresh history view
+            this.loadHistoryForDate()
+
+            // Destroy and recreate chart if it exists
+            if (this.chart) {
+              this.chart.destroy()
+              this.chart = null
+            }
+
+            this.$message({
+              message: `All data cleared successfully! Removed ${keysToDelete.length} storage entries containing ${deletedItems} items.`,
+              type: 'success',
+              duration: 5000,
+              showClose: true
+            })
+
+          } catch (error) {
+            console.error('Error during data clearing:', error)
+            this.$message.error('Failed to clear all data: ' + error.message)
+          }
+        }).catch(() => {
+          this.$message.info('Data clearing cancelled')
+        })
+      }).catch(() => {
+        this.$message.info('Data clearing cancelled')
+      })
+    },
+
+    createDemoTasks() {
+      this.$confirm(
+        'This will create sample tasks to demonstrate the app features. The demo includes:\n\n' +
+        '• Various task types (daily, weekly, monthly, one-time, custom)\n' +
+        '• Different point values and descriptions\n' +
+        '• Some completed tasks with history records\n' +
+        '• Tasks across multiple dates\n\n' +
+        'Continue?',
+        'Create Demo Tasks',
+        {
+          confirmButtonText: 'Create Demo',
+          cancelButtonText: 'Cancel',
+          type: 'info',
+          customClass: 'demo-confirm-dialog'
+        }
+      ).then(() => {
+        try {
+          this.generateDemoTasks()
+          this.$message({
+            message: 'Demo tasks created successfully! Explore different tabs to see all features.',
+            type: 'success',
+            duration: 5000,
+            showClose: true
+          })
+        } catch (error) {
+          console.error('Failed to create demo tasks:', error)
+          this.$message.error('Failed to create demo tasks: ' + error.message)
+        }
+      }).catch(() => {
+        this.$message.info('Demo creation cancelled')
+      })
+    },
+
+    generateDemoTasks() {
+      const today = new Date()
+      const yesterday = new Date(today)
+      yesterday.setDate(yesterday.getDate() - 1)
+      const twoDaysAgo = new Date(today)
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+      const weekAgo = new Date(today)
+      weekAgo.setDate(weekAgo.getDate() - 7)
+
+      // Demo tasks for today
+      const todayTasks = [
+        {
+          id: Date.now() + 1,
+          title: 'Morning Exercise',
+          description: 'Do 30 minutes of cardio or strength training',
+          successPoints: 20,
+          failPoints: -10,
+          frequency: 'daily',
+          customDays: 7,
+          status: 'pending',
+          date: today.toISOString(),
+          dateKey: this.formatDateKey(today)
+        },
+        {
+          id: Date.now() + 2,
+          title: 'Read for 20 minutes',
+          description: 'Read a book, article, or educational material',
+          successPoints: 15,
+          failPoints: -5,
+          frequency: 'daily',
+          customDays: 7,
+          status: 'success',
+          date: today.toISOString(),
+          dateKey: this.formatDateKey(today)
+        },
+        {
+          id: Date.now() + 3,
+          title: 'Weekly Team Meeting',
+          description: 'Attend the weekly team sync meeting',
+          successPoints: 25,
+          failPoints: -15,
+          frequency: 'weekly',
+          customDays: 7,
+          status: 'pending',
+          date: today.toISOString(),
+          dateKey: this.formatDateKey(today)
+        },
+        {
+          id: Date.now() + 4,
+          title: 'Learn Something New',
+          description: 'Spend time learning a new skill or technology',
+          successPoints: 30,
+          failPoints: -10,
+          frequency: 'custom',
+          customDays: 3,
+          status: 'pending',
+          date: today.toISOString(),
+          dateKey: this.formatDateKey(today)
+        },
+        {
+          id: Date.now() + 5,
+          title: 'Complete Project Report',
+          description: 'Finish and submit the quarterly project report',
+          successPoints: 50,
+          failPoints: -25,
+          frequency: 'once',
+          customDays: 7,
+          status: 'pending',
+          date: today.toISOString(),
+          dateKey: this.formatDateKey(today)
+        }
+      ]
+
+      // Demo tasks for yesterday
+      const yesterdayTasks = [
+        {
+          id: Date.now() + 10,
+          title: 'Drink 8 glasses of water',
+          description: 'Stay hydrated throughout the day',
+          successPoints: 10,
+          failPoints: -5,
+          frequency: 'daily',
+          customDays: 7,
+          status: 'success',
+          date: yesterday.toISOString(),
+          dateKey: this.formatDateKey(yesterday)
+        },
+        {
+          id: Date.now() + 11,
+          title: 'Meditate for 15 minutes',
+          description: 'Practice mindfulness or breathing exercises',
+          successPoints: 20,
+          failPoints: -8,
+          frequency: 'daily',
+          customDays: 7,
+          status: 'fail',
+          date: yesterday.toISOString(),
+          dateKey: this.formatDateKey(yesterday)
+        },
+        {
+          id: Date.now() + 12,
+          title: 'Review Monthly Budget',
+          description: 'Check expenses and update budget spreadsheet',
+          successPoints: 35,
+          failPoints: -15,
+          frequency: 'monthly',
+          customDays: 30,
+          status: 'success',
+          date: yesterday.toISOString(),
+          dateKey: this.formatDateKey(yesterday)
+        }
+      ]
+
+      // Demo tasks for two days ago
+      const twoDaysAgoTasks = [
+        {
+          id: Date.now() + 20,
+          title: 'Weekly Grocery Shopping',
+          description: 'Buy groceries for the week',
+          successPoints: 15,
+          failPoints: -8,
+          frequency: 'weekly',
+          customDays: 7,
+          status: 'success',
+          date: twoDaysAgo.toISOString(),
+          dateKey: this.formatDateKey(twoDaysAgo)
+        },
+        {
+          id: Date.now() + 21,
+          title: 'Call Family',
+          description: 'Check in with family members',
+          successPoints: 25,
+          failPoints: -10,
+          frequency: 'custom',
+          customDays: 5,
+          status: 'success',
+          date: twoDaysAgo.toISOString(),
+          dateKey: this.formatDateKey(twoDaysAgo)
+        }
+      ]
+
+      // Demo tasks for a week ago
+      const weekAgoTasks = [
+        {
+          id: Date.now() + 30,
+          title: 'Organize Workspace',
+          description: 'Clean and organize desk and work area',
+          successPoints: 20,
+          failPoints: -5,
+          frequency: 'weekly',
+          customDays: 7,
+          status: 'success',
+          date: weekAgo.toISOString(),
+          dateKey: this.formatDateKey(weekAgo)
+        },
+        {
+          id: Date.now() + 31,
+          title: 'Practice Guitar',
+          description: 'Practice guitar for 30 minutes',
+          successPoints: 25,
+          failPoints: -10,
+          frequency: 'custom',
+          customDays: 2,
+          status: 'fail',
+          date: weekAgo.toISOString(),
+          dateKey: this.formatDateKey(weekAgo)
+        }
+      ]
+
+      // Save all demo tasks
+      this.saveDemoTasksForDate(todayTasks, this.formatDateKey(today))
+      this.saveDemoTasksForDate(yesterdayTasks, this.formatDateKey(yesterday))
+      this.saveDemoTasksForDate(twoDaysAgoTasks, this.formatDateKey(twoDaysAgo))
+      this.saveDemoTasksForDate(weekAgoTasks, this.formatDateKey(weekAgo))
+
+      // Create history records for completed tasks
+      this.createDemoHistoryRecords(todayTasks, today)
+      this.createDemoHistoryRecords(yesterdayTasks, yesterday)
+      this.createDemoHistoryRecords(twoDaysAgoTasks, twoDaysAgo)
+      this.createDemoHistoryRecords(weekAgoTasks, weekAgo)
+
+      // Create some demo trash items
+      this.createDemoTrashItems()
+
+      // Refresh the UI
+      this.refreshTrigger++
+      this.loadHistoryForDate()
+    },
+
+    saveDemoTasksForDate(tasks, dateKey) {
+      const existingTasks = this.getTasksForDate(dateKey)
+      const existingIds = new Set(existingTasks.map(t => t.id))
+
+      // Only add tasks that don't already exist
+      const newTasks = tasks.filter(task => !existingIds.has(task.id))
+
+      if (newTasks.length > 0) {
+        const mergedTasks = [...existingTasks, ...newTasks]
+        localStorage.setItem(`todo_${dateKey}`, JSON.stringify(mergedTasks))
+      }
+    },
+
+    createDemoHistoryRecords(tasks, date) {
+      const dateKey = this.formatDateKey(date)
+      const completedTasks = tasks.filter(task => task.status !== 'pending')
+
+      if (completedTasks.length === 0) return
+
+      const existingHistory = this.getHistoryRecordsForDate(dateKey)
+      const existingHistoryIds = new Set(existingHistory.map(h => h.id))
+
+      const newHistoryRecords = []
+
+      completedTasks.forEach(task => {
+        if (!existingHistoryIds.has(task.id)) {
+          // Create completion time within the day
+          const completionDate = new Date(date)
+          completionDate.setHours(
+            Math.floor(Math.random() * 16) + 6, // Random hour between 6 AM and 10 PM
+            Math.floor(Math.random() * 60), // Random minute
+            0, 0
+          )
+
+          newHistoryRecords.push({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            successPoints: task.successPoints,
+            failPoints: task.failPoints,
+            status: task.status,
+            completedDate: completionDate.toISOString(),
+            originalTaskId: task.id
+          })
+        }
+      })
+
+      if (newHistoryRecords.length > 0) {
+        const mergedHistory = [...existingHistory, ...newHistoryRecords]
+        localStorage.setItem(`history_${dateKey}`, JSON.stringify(mergedHistory))
+      }
+    },
+
+    createDemoTrashItems() {
+      const existingTrash = JSON.parse(localStorage.getItem('todo_trash') || '[]')
+      const existingTrashIds = new Set(existingTrash.map(t => t.id))
+
+      const demoTrashItems = [
+        {
+          id: Date.now() + 100,
+          title: 'Old Task Example',
+          description: 'This is an example of a deleted task',
+          successPoints: 15,
+          failPoints: -5,
+          frequency: 'daily',
+          customDays: 7,
+          status: 'pending',
+          originalDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+          deletedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
+        },
+        {
+          id: Date.now() + 101,
+          title: 'Cancelled Project',
+          description: 'A project that was cancelled and moved to trash',
+          successPoints: 40,
+          failPoints: -20,
+          frequency: 'once',
+          customDays: 7,
+          status: 'pending',
+          originalDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
+          deletedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() // 1 day ago
+        }
+      ]
+
+      const newTrashItems = demoTrashItems.filter(item => !existingTrashIds.has(item.id))
+
+      if (newTrashItems.length > 0) {
+        localStorage.setItem('todo_trash', JSON.stringify([...existingTrash, ...newTrashItems]))
+      }
     },
 
     shouldShowStatusDisplay(task) {
@@ -1753,6 +2438,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.normal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .status-actions,
@@ -1760,233 +2453,104 @@ export default {
 .reset-actions {
   display: flex;
   gap: 6px;
+  flex-shrink: 0;
 }
 
-/* Responsive breakpoints */
-
-/* Tablet (768px to 1024px) */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .header-controls {
-    gap: 12px;
-  }
-
-  .ranking-display {
-    max-width: 400px;
-  }
-
-  .form-row {
-    gap: 12px;
-  }
-
-  .filter-controls {
-    gap: 16px;
-  }
+.edit-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-/* Small tablet and large mobile (481px to 768px) */
-@media (max-width: 768px) and (min-width: 481px) {
-  .todo-gamification {
-    padding: 16px;
-  }
+.status-display {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
 
-  .header-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .import-export-controls {
-    order: 1;
-    justify-content: center;
-  }
-
-  .ranking-display {
-    order: 2;
-    max-width: none;
-  }
-
-  .total-points {
-    order: 3;
-    text-align: center;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .points-row,
-  .frequency-row {
-    flex-direction: row;
-    max-width: none;
-  }
-
-  .filter-controls {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
+/* Mobile optimizations for task actions */
+@media (max-width: 768px) {
   .task-content {
     flex-direction: column;
     gap: 12px;
-  }
-
-  .task-actions {
-    align-self: flex-end;
-  }
-}
-
-/* Mobile (320px to 480px) */
-@media (max-width: 480px) {
-  .todo-gamification {
-    padding: 12px;
-  }
-
-  .header-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .import-export-controls {
-    order: 1;
-    justify-content: center;
-  }
-
-  .ranking-display {
-    order: 2;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .rank-badge {
-    margin-right: 0;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    justify-content: center;
-  }
-
-  .rank-info {
-    align-items: center;
-  }
-
-  .rank-name {
-    text-align: center;
-  }
-
-  .rank-level {
-    text-align: center;
-  }
-
-  .rank-progress {
-    margin-right: 0;
-    width: 100%;
-  }
-
-  .total-points {
-    order: 3;
-    text-align: center;
-  }
-
-  .control-btn .btn-text {
-    display: none;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .points-row {
-    flex-direction: column;
-  }
-
-  .frequency-row {
-    flex-direction: column;
-  }
-
-  .filter-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .filter-group {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-  }
-
-  .filter-radio-group {
-    margin-left: 0;
-  }
-
-  .task-content {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .task-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
   }
 
   .task-actions {
     align-self: stretch;
-    justify-content: center;
-  }
-}
-
-/* Extra small screens (320px and below) */
-@media (max-width: 320px) {
-  .todo-gamification {
-    padding: 8px;
-  }
-
-  .header-controls {
+    justify-content: space-between;
+    flex-wrap: nowrap;
     gap: 6px;
   }
 
-  .rank-badge {
-    padding: 6px 10px;
-    font-size: 0.75rem;
+  .normal-actions {
+    flex: 1;
+    justify-content: space-between;
+    gap: 6px;
   }
 
-  .rank-icon {
-    font-size: 0.9rem;
-    margin-right: 4px;
+  .status-actions,
+  .manage-actions,
+  .reset-actions,
+  .edit-actions {
+    gap: 4px;
   }
 
-  .rank-name {
-    font-size: 0.8rem;
+  .status-display {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-actions {
+    gap: 4px;
+    padding: 0 4px;
   }
 
-  .rank-level {
-    font-size: 0.7rem;
+  .normal-actions {
+    gap: 4px;
   }
 
-  .progress-info {
-    font-size: 0.7rem;
+  .status-actions,
+  .manage-actions,
+  .reset-actions,
+  .edit-actions {
+    gap: 3px;
   }
 
-  .next-rank-text,
-  .max-rank-text {
-    font-size: 0.6rem;
+  /* Make action buttons slightly smaller on very small screens */
+  .task-actions .el-button--mini {
+    padding: 4px;
   }
 
-  .total-points {
-    font-size: 0.9rem;
+  .task-actions .el-button--small {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .task-actions {
+    gap: 2px;
+    padding: 0 2px;
   }
 
-  .points-badge {
-    padding: 3px 6px;
-    font-size: 0.8rem;
+  .normal-actions {
+    gap: 2px;
   }
 
-  .rank-progress-bar {
-    height: 4px;
+  .status-actions,
+  .manage-actions,
+  .reset-actions,
+  .edit-actions {
+    gap: 2px;
+  }
+
+  /* Further reduce button padding on extra small screens */
+  .task-actions .el-button--mini {
+    padding: 3px;
+  }
+
+  .task-actions .el-button--small {
+    padding: 5px;
   }
 }
 
