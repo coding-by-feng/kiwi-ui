@@ -556,13 +556,21 @@ export default {
         deleteHistoryRecord: 'Delete Historical Record',
         historyRecordDeleted: 'Historical record deleted successfully!',
         taskResetToPending: 'Task reset to pending status successfully!',
-        taskResetToPending: 'Task reset to pending status successfully!',
         editTask: 'Edit Task',
         deleteTask: 'Delete Task',
-        editTask: 'Edit Task',
-        deleteTask: 'Delete Task',
+        points: 'points',
 
         // Ranking system
+        rankingSystem: 'Ranking System',
+        currentRank: 'Current Rank',
+        nextRankTarget: 'Next Rank Target',
+        pointsNeeded: '{points} points needed',
+        congratulations: 'Congratulations!',
+        maxRankAchieved: 'You have reached the maximum rank!',
+        allRanks: 'All Ranks',
+        viewRankingDetails: 'View ranking details',
+        maxRankReached: 'Max rank reached!',
+
         ranks: {
             legendary: 'Legendary',
             mythic: 'Mythic',
@@ -587,6 +595,6 @@ export default {
         },
         rankLevel: 'Level {level}',
         nextRank: 'Next: {rank}',
-        maxRank: 'Max Rank Achieved!'
+        maxRank: 'Max Rank'
     }
 }
