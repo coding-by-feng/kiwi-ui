@@ -35,7 +35,7 @@
                 size="small"
                 icon="el-icon-magic-stick"
                 @click="createDemoTasks"
-                class="control-btn demo-btn"
+                class="control-btn"
             >
               <span class="btn-text">Demo</span>
             </el-button>
@@ -44,7 +44,7 @@
                 size="small"
                 icon="el-icon-delete"
                 @click="clearAllData"
-                class="control-btn clear-data-btn"
+                class="control-btn"
             >
               <span class="btn-text">Clear All</span>
             </el-button>
@@ -2529,8 +2529,7 @@ export default {
 
 .task-content {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 16px;
 }
 
@@ -2574,18 +2573,23 @@ export default {
 }
 
 .task-actions {
-  flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid #f0f2f5;
+  margin-top: 8px;
 }
 
 .normal-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 .status-actions,
@@ -2600,6 +2604,8 @@ export default {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 .status-display {
@@ -2668,7 +2674,82 @@ export default {
   height: 32px;
 }
 
-/* Mobile optimizations for history tasks */
+/* Mobile optimizations for task cards */
+@media (max-width: 768px) {
+  .task-content {
+    gap: 12px;
+  }
+
+  .task-actions {
+    padding-top: 10px;
+    margin-top: 6px;
+    gap: 6px;
+  }
+
+  .normal-actions {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .status-actions,
+  .manage-actions,
+  .reset-actions {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-content {
+    gap: 10px;
+  }
+
+  .task-actions {
+    padding-top: 8px;
+    margin-top: 4px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .normal-actions {
+    gap: 4px;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .status-actions,
+  .manage-actions,
+  .reset-actions {
+    gap: 3px;
+  }
+
+  .edit-actions {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .task-actions {
+    padding-top: 6px;
+    margin-top: 2px;
+    gap: 3px;
+  }
+
+  .normal-actions {
+    gap: 3px;
+  }
+
+  .status-actions,
+  .manage-actions,
+  .reset-actions {
+    gap: 2px;
+  }
+
+  .edit-actions {
+    gap: 3px;
+  }
+}
+
+/* History task specific mobile styles */
 @media (max-width: 768px) {
   .history-task-content {
     gap: 12px;
