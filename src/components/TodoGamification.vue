@@ -2377,280 +2377,73 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .header-controls {
-    gap: 12px;
+  /* Only show icons inside header buttons */
+  .header-controls .control-btn .btn-text {
+    display: none !important;
   }
 
-  .import-export-controls {
-    gap: 6px;
+  /* Unify header button sizes; works for import-export-controls and other header buttons */
+  .todo-gamification { --hdr-btn-size: 40px; }
+
+  .header-controls .control-btn {
+    width: var(--hdr-btn-size) !important;
+    min-width: var(--hdr-btn-size) !important;
+    max-width: var(--hdr-btn-size) !important;
+    height: var(--hdr-btn-size) !important;
+    padding: 0 !important;
+    justify-content: center;
   }
 
-  .control-btn {
-    padding: 8px 10px;
-    gap: 4px;
+  /* Ensure el-upload wrapped button matches the same size */
+  .header-controls .el-upload {
+    flex: 0 0 var(--hdr-btn-size);
+    max-width: var(--hdr-btn-size);
   }
-
-  .btn-text {
-    font-size: 12px;
-  }
-
-  .control-btn i {
-    font-size: 13px;
+  .header-controls .el-upload .control-btn {
+    width: var(--hdr-btn-size) !important;
+    height: var(--hdr-btn-size) !important;
+    min-width: var(--hdr-btn-size) !important;
+    max-width: var(--hdr-btn-size) !important;
   }
 }
 
 @media (max-width: 600px) {
-  .header-controls {
-    gap: 8px;
-    flex-direction: column;
-    align-items: center;
-  }
+  .todo-gamification { --hdr-btn-size: 36px; }
 
-  .import-export-controls {
-    gap: 4px;
-    width: 100%;
+  /* Apply to all header buttons, including upload's inner button */
+  .header-controls .control-btn {
+    width: var(--hdr-btn-size) !important;
+    min-width: var(--hdr-btn-size) !important;
+    max-width: var(--hdr-btn-size) !important;
+    height: var(--hdr-btn-size) !important;
+    padding: 0 !important;
     justify-content: center;
-    flex-wrap: wrap;
   }
 
-  .control-btn {
-    padding: 6px 8px;
-    min-width: 36px;
-    max-width: 80px;
-    height: 36px;
-    justify-content: center;
-    flex: 1;
+  /* Keep el-upload wrapper aligned to the same size */
+  .header-controls .el-upload {
+    flex: 0 0 var(--hdr-btn-size);
+    max-width: var(--hdr-btn-size);
   }
-
-  .btn-text {
-    display: none;
+  .header-controls .el-upload .control-btn {
+    width: var(--hdr-btn-size) !important;
+    height: var(--hdr-btn-size) !important;
+    min-width: var(--hdr-btn-size) !important;
+    max-width: var(--hdr-btn-size) !important;
   }
-
-  .control-btn i {
-    font-size: 14px;
-    margin: 0;
-  }
-
-  .import-export-controls .el-upload {
-    flex: 1;
-    max-width: 80px;
-  }
-
-  .import-export-controls .el-upload .control-btn {
-    width: 100%;
-    height: 36px;
-    min-width: 36px;
-    max-width: 80px;
-  }
-
-  .total-points {
-    margin-top: 4px;
-  }
-
-  .points-label {
-    font-size: 13px;
-  }
-
-  .points-badge {
-    font-size: 13px;
-    padding: 3px 10px;
-  }
+  /* Text is already hidden at <=600px in existing CSS */
 }
 
 @media (max-width: 480px) {
-  .header-controls {
-    gap: 6px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .import-export-controls {
-    gap: 3px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .control-btn {
-    padding: 5px 6px;
-    min-width: 32px;
-    max-width: 70px;
-    height: 32px;
-  }
-
-  .control-btn i {
-    font-size: 13px;
-  }
-
-  .import-export-controls .el-upload {
-    flex: 1;
-    max-width: 70px;
-  }
-
-  .import-export-controls .el-upload .control-btn {
-    width: 100%;
-    height: 32px;
-    min-width: 32px;
-    max-width: 70px;
-  }
-
-  .ranking-display {
-    order: -1;
-    max-width: 100%;
-    margin-bottom: 8px;
-  }
-
-  .total-points {
-    align-self: center;
-    margin-top: 8px;
-  }
-
-  .points-label {
-    font-size: 13px;
-  }
-
-  .points-badge {
-    font-size: 13px;
-    padding: 3px 10px;
-  }
-
-  .history-task-content {
-    gap: 8px;
-  }
-
-  .history-task-title {
-    font-size: 1rem;
-    margin-bottom: 6px;
-  }
-
-  .history-task-description {
-    font-size: 12px;
-  }
-
-  .task-meta-history {
-    gap: 6px;
-    margin-top: 6px;
-  }
-
-  .history-task-status {
-    gap: 12px;
-  }
-
-  .history-status-tag {
-    font-size: 11px;
-    padding: 3px 6px;
-  }
-
-  .history-delete-btn {
-    padding: 5px;
-    min-width: 26px;
-    height: 26px;
-  }
-
-  .history-delete-btn i {
-    font-size: 12px;
-  }
+  .todo-gamification { --hdr-btn-size: 32px; }
 }
 
 @media (max-width: 360px) {
-  .header-controls {
-    gap: 4px;
-  }
-
-  .import-export-controls {
-    gap: 2px;
-    max-width: 100%;
-  }
-
-  .control-btn {
-    padding: 4px 5px;
-    min-width: 28px;
-    max-width: 60px;
-    height: 30px;
-  }
-
-  .control-btn i {
-    font-size: 12px;
-  }
-
-  .import-export-controls .el-upload {
-    flex: 1;
-    max-width: 60px;
-  }
-
-  .import-export-controls .el-upload .control-btn {
-    width: 100%;
-    height: 30px;
-    min-width: 28px;
-    max-width: 60px;
-  }
-
-  .points-label {
-    font-size: 11px;
-  }
-
-  .points-badge {
-    font-size: 11px;
-    padding: 2px 6px;
-  }
-
-  .history-task-title {
-    font-size: 0.95rem;
-  }
-
-  .history-task-description {
-    font-size: 11px;
-  }
-
-  .history-task-status {
-    gap: 8px;
-  }
-
-  .history-status-tag {
-    font-size: 10px;
-    padding: 2px 4px;
-  }
-
-  .history-delete-btn {
-    padding: 4px;
-    min-width: 24px;
-    height: 24px;
-  }
-
-  .history-delete-btn i {
-    font-size: 11px;
-  }
+  .todo-gamification { --hdr-btn-size: 30px; }
 }
 
 @media (max-width: 320px) {
-  .import-export-controls {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 2px;
-  }
-
-  .control-btn {
-    flex: 1;
-    min-width: 26px;
-    max-width: 50px;
-    height: 28px;
-    padding: 3px 4px;
-  }
-
-  .control-btn i {
-    font-size: 11px;
-  }
-
-  .import-export-controls .el-upload {
-    flex: 1;
-    max-width: 50px;
-  }
-
-  .import-export-controls .el-upload .control-btn {
-    width: 100%;
-    height: 28px;
-    min-width: 26px;
-    max-width: 50px;
-  }
+  .todo-gamification { --hdr-btn-size: 28px; }
 }
 
 /* Task input and form styles */
@@ -3377,42 +3170,6 @@ export default {
     height: 30px;
     min-width: 28px;
     max-width: 60px;
-  }
-
-  .points-label {
-    font-size: 11px;
-  }
-
-  .points-badge {
-    font-size: 11px;
-    padding: 2px 6px;
-  }
-
-  .history-task-title {
-    font-size: 0.95rem;
-  }
-
-  .history-task-description {
-    font-size: 11px;
-  }
-
-  .history-task-status {
-    gap: 8px;
-  }
-
-  .history-status-tag {
-    font-size: 10px;
-    padding: 2px 4px;
-  }
-
-  .history-delete-btn {
-    padding: 4px;
-    min-width: 24px;
-    height: 24px;
-  }
-
-  .history-delete-btn i {
-    font-size: 11px;
   }
 }
 
