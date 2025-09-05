@@ -53,7 +53,7 @@
           <!-- Ranking Display -->
           <div class="ranking-display">
             <div class="rank-badge" :class="getRankClass(currentRank.name)">
-              <div class="rank-icon" @click="showFullScreenRanking = true" style="cursor: pointer;">
+              <div class="rank-icon" @click="openRankImagePreview" style="cursor: pointer;">
                 <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-image" />
               </div>
               <div class="rank-info">
@@ -746,7 +746,7 @@
 
         <div class="full-screen-ranks-grid">
           <div
-            v-for="rank in sortedRanksForDisplay"
+            v-for="rank in achievedRanksForDisplay"
             :key="`fullscreen-rank-${rank.key}-${rank.threshold}`"
             class="full-screen-rank-item"
             :class="{ 'current-rank': rank.threshold <= totalPoints }"
@@ -757,6 +757,28 @@
               <span class="full-screen-rank-threshold">{{ rank.threshold }}+ {{ $t('todo.points') }}</span>
             </div>
           </div>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- Fullscreen Current Rank Image Preview -->
+    <el-dialog
+      :visible.sync="showRankImagePreview"
+      fullscreen
+      :show-close="false"
+      custom-class="rank-image-preview-dialog"
+    >
+      <div class="rank-image-preview-container" @click="showRankImagePreview = false">
+        <img
+          :src="getRankImage(currentRank.name)"
+          :alt="currentRank.name"
+          class="rank-image-fullscreen"
+        />
+        <div class="rank-image-preview-meta">
+          <span class="name">{{ currentRank.name }}</span>
+          <span class="level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</span>
+          <span class="points">{{ totalPoints }} {{ $t('todo.points') }}</span>
+          <span class="hint">Tap anywhere to close</span>
         </div>
       </div>
     </el-dialog>
@@ -819,7 +841,8 @@ export default {
         { level: 2, key: 'trainee', threshold: 1600, color: '#722ED1', image: '/assets/rankings/trainee.png' },
         { level: 1, key: 'beginner', threshold: 0, color: '#595959', image: '/assets/rankings/beginner.png' }
       ],
-      showFullScreenRanking: false
+      showFullScreenRanking: false,
+      showRankImagePreview: false
     }
   },
   computed: {
@@ -950,7 +973,9 @@ export default {
     sortedRanksForDisplay() {
       return [...this.ranks].sort((a, b) => b.threshold - a.threshold)
     },
-
+    achievedRanksForDisplay() {
+      return this.sortedRanksForDisplay.filter(r => r.threshold <= this.totalPoints)
+    },
     rankProgress() {
       if (!this.currentRank.nextThreshold) return 100
 
@@ -1774,6 +1799,9 @@ export default {
     closeFullScreenRanking() {
       this.showFullScreenRanking = false
     },
+    openRankImagePreview() {
+      this.showRankImagePreview = true
+    },
 
     getRankName(rankKey) {
       return this.$t(`todo.ranks.${rankKey}`)
@@ -2322,6 +2350,23 @@ export default {
   border-radius: 12px;
   font-weight: 600;
   font-size: 14px;
+}
+
+/* Place ranking display on the left on large screens only */
+@media (min-width: 1200px) {
+  .header-controls {
+    display: flex;
+  }
+  .ranking-display {
+    order: -1;          /* move to the left */
+    margin-right: auto; /* push others to the right */
+  }
+  .import-export-controls {
+    order: 0;
+  }
+  .total-points {
+    order: 1;
+  }
 }
 
 /* Responsive header controls */
@@ -3403,6 +3448,210 @@ export default {
   }
 }
 
+/* Fullscreen Current Rank Image Preview */
+.rank-image-preview-dialog .el-dialog__body {
+  padding: 0;
+  background: rgba(10, 10, 10, 0.95);
+}
+
+.rank-image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  cursor: zoom-out;
+  padding: 16px 16px 96px; /* reserve space for meta */
+  box-sizing: border-box;
+}
+
+.rank-image-fullscreen {
+  /* Never scale up, only scale down; appear smaller for better suitability */
+  width: auto;
+  height: auto;
+  max-width: min(70vw, 900px);
+  max-height: min(70vh, 900px);
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-height: 520px) {
+  .rank-image-preview-container {
+    padding-bottom: 72px;
+  }
+  .rank-image-fullscreen {
+    max-width: min(80vw, 800px);
+    max-height: min(60vh, 600px);
+  }
+}
+
+.rank-image-preview-meta {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  font-size: 14px;
+}
+.rank-image-preview-meta .hint {
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* Monthly Summary layout and visuals */
+.monthly-summary {
+  margin-top: 24px;
+}
+
+.enhanced-summary {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.summary-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.summary-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.summary-stats.enhanced-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.enhanced-stat-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.stat-visual {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.enhanced-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 22px;
+}
+.points-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.completed-icon { background: linear-gradient(135deg, #10b981, #34d399); }
+.success-icon { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+
+.stat-circle {
+  width: 56px;
+  height: 56px;
+}
+
+.circular-chart {
+  width: 56px;
+  height: 56px;
+}
+.circular-chart .circle-bg {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 3.2;
+}
+.circular-chart .circle {
+  fill: none;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  animation: progress 1.2s ease-out;
+}
+.circular-chart.gold .circle { stroke: #f59e0b; }
+.circular-chart.green .circle { stroke: #10b981; }
+.circular-chart.blue .circle { stroke: #3b82f6; }
+
+@keyframes progress {
+  0% { stroke-dasharray: 0 100; }
+}
+
+.enhanced-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 12px;
+}
+
+.enhanced-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.stat-subtitle {
+  color: #909399;
+  font-size: 12px;
+}
+
+/* Chart container height for better balance with Monthly Summary */
+.chart-container {
+  width: 100%;
+  height: 360px;
+}
+@media (min-width: 1200px) {
+  .chart-container {
+    height: 420px;
+  }
+}
+@media (max-width: 768px) {
+  .summary-stats.enhanced-stats {
+    grid-template-columns: 1fr; /* keep small screens unchanged and readable */
+    gap: 12px;
+    padding: 12px;
+  }
+  .chart-container {
+    height: 280px;
+  }
+}
+
 /* Full Screen Ranking Modal */
 .full-screen-ranking-modal {
   margin-top: 5vh !important;
@@ -3459,7 +3708,7 @@ export default {
   gap: 30px;
   margin-bottom: 40px;
   padding: 30px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
   border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
@@ -3578,195 +3827,6 @@ export default {
   font-weight: 500;
 }
 
-/* Enhanced Monthly Summary */
-.enhanced-summary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.enhanced-summary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="10" cy="50" r="1" fill="white" opacity="0.05"/><circle cx="90" cy="30" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-  pointer-events: none;
-}
-
-.summary-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 30px;
-  position: relative;
-  z-index: 1;
-}
-
-.summary-header .summary-icon {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.summary-title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: white;
-}
-
-.enhanced-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 25px;
-  position: relative;
-  z-index: 1;
-}
-
-.enhanced-stat-item {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.enhanced-stat-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.6s ease;
-}
-
-.enhanced-stat-item:hover::before {
-  left: 100%;
-}
-
-.enhanced-stat-item:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.stat-visual {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.enhanced-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: white;
-  position: relative;
-  z-index: 2;
-}
-
-.points-icon {
-  background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
-  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);
-}
-
-.completed-icon {
-  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-  box-shadow: 0 4px 20px rgba(39, 174, 96, 0.4);
-}
-
-.success-icon {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  box-shadow: 0 4px 20px rgba(52, 152, 219, 0.4);
-}
-
-.stat-circle {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 60px;
-  height: 60px;
-}
-
-.circular-chart {
-  display: block;
-  width: 60px;
-  height: 60px;
-  transform: rotate(-90deg);
-}
-
-.circle-bg {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.2);
-  stroke-width: 2;
-}
-
-.circle {
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  transition: stroke-dasharray 0.6s ease-in-out;
-}
-
-.gold .circle {
-  stroke: #f39c12;
-}
-
-.green .circle {
-  stroke: #27ae60;
-}
-
-.blue .circle {
-  stroke: #3498db;
-}
-
-.enhanced-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-}
-
-.enhanced-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  line-height: 1;
-  margin: 4px 0;
-}
-
-.stat-subtitle {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 400;
-}
-
 /* Mobile responsive for full screen modal */
 @media (max-width: 768px) {
   .full-screen-ranking-modal {
@@ -3829,6 +3889,9 @@ export default {
     height: 50px;
     font-size: 20px;
   }
+  .points-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.completed-icon { background: linear-gradient(135deg, #10b981, #34d399); }
+.success-icon { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
 
   .stat-circle {
     width: 50px;
@@ -3838,10 +3901,6 @@ export default {
   .circular-chart {
     width: 50px;
     height: 50px;
-  }
-
-  .enhanced-value {
-    font-size: 1.6rem;
   }
 }
 </style>
