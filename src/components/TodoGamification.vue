@@ -53,7 +53,7 @@
           <!-- Ranking Display -->
           <div class="ranking-display">
             <div class="rank-badge" :class="getRankClass(currentRank.name)">
-              <div class="rank-icon">
+              <div class="rank-icon" @click="showFullScreenRanking = true" style="cursor: pointer;">
                 <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-image" />
               </div>
               <div class="rank-info">
@@ -629,34 +629,81 @@
           </div>
 
           <div class="monthly-summary">
-            <el-card class="summary-card responsive-summary-card">
-              <h3 class="summary-title">{{ $t('todo.monthlySummary') }}</h3>
-              <div class="summary-stats">
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <i class="el-icon-trophy"></i>
+            <el-card class="summary-card responsive-summary-card enhanced-summary">
+              <div class="summary-header">
+                <div class="summary-icon">
+                  <i class="el-icon-data-analysis"></i>
+                </div>
+                <h3 class="summary-title">{{ $t('todo.monthlySummary') }}</h3>
+              </div>
+              <div class="summary-stats enhanced-stats">
+                <div class="stat-item enhanced-stat-item">
+                  <div class="stat-visual">
+                    <div class="stat-icon enhanced-icon points-icon">
+                      <i class="el-icon-trophy"></i>
+                    </div>
+                    <div class="stat-circle">
+                      <svg viewBox="0 0 36 36" class="circular-chart gold">
+                        <path class="circle-bg"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <path class="circle"
+                              :stroke-dasharray="`${Math.min(currentMonthPoints / 100, 100)}, 100`"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <div class="stat-content">
+                  <div class="stat-content enhanced-content">
                     <span class="stat-label">{{ $t('todo.totalPoints') }}</span>
-                    <span class="stat-value">{{ currentMonthPoints }}</span>
+                    <span class="stat-value enhanced-value">{{ currentMonthPoints }}</span>
+                    <span class="stat-subtitle">this month</span>
                   </div>
                 </div>
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <i class="el-icon-check"></i>
+                <div class="stat-item enhanced-stat-item">
+                  <div class="stat-visual">
+                    <div class="stat-icon enhanced-icon completed-icon">
+                      <i class="el-icon-check"></i>
+                    </div>
+                    <div class="stat-circle">
+                      <svg viewBox="0 0 36 36" class="circular-chart green">
+                        <path class="circle-bg"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <path class="circle"
+                              :stroke-dasharray="`${Math.min(currentMonthCompleted / 10, 100)}, 100`"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <div class="stat-content">
+                  <div class="stat-content enhanced-content">
                     <span class="stat-label">{{ $t('todo.tasksCompleted') }}</span>
-                    <span class="stat-value">{{ currentMonthCompleted }}</span>
+                    <span class="stat-value enhanced-value">{{ currentMonthCompleted }}</span>
+                    <span class="stat-subtitle">tasks done</span>
                   </div>
                 </div>
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <i class="el-icon-data-analysis"></i>
+                <div class="stat-item enhanced-stat-item">
+                  <div class="stat-visual">
+                    <div class="stat-icon enhanced-icon success-icon">
+                      <i class="el-icon-data-analysis"></i>
+                    </div>
+                    <div class="stat-circle">
+                      <svg viewBox="0 0 36 36" class="circular-chart blue">
+                        <path class="circle-bg"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <path class="circle"
+                              :stroke-dasharray="`${successRate}, 100`"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <div class="stat-content">
+                  <div class="stat-content enhanced-content">
                     <span class="stat-label">{{ $t('todo.successRate') }}</span>
-                    <span class="stat-value">{{ successRate }}%</span>
+                    <span class="stat-value enhanced-value">{{ successRate }}%</span>
+                    <span class="stat-subtitle">success rate</span>
                   </div>
                 </div>
               </div>
@@ -665,6 +712,54 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+
+    <!-- Full Screen Ranking Modal -->
+    <el-dialog
+      :visible.sync="showFullScreenRanking"
+      width="90%"
+      :before-close="closeFullScreenRanking"
+      custom-class="full-screen-ranking-modal"
+      :show-close="false"
+    >
+      <div class="full-screen-ranking-header">
+        <h2 class="modal-title">{{ $t('todo.rankingSystem') }}</h2>
+        <el-button
+          type="primary"
+          icon="el-icon-close"
+          circle
+          @click="closeFullScreenRanking"
+          class="close-btn"
+        ></el-button>
+      </div>
+
+      <div class="full-screen-ranking-content">
+        <div class="current-rank-showcase">
+          <div class="showcase-rank-icon">
+            <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="showcase-rank-image" />
+          </div>
+          <div class="showcase-rank-info">
+            <h3 class="showcase-rank-name">{{ currentRank.name }}</h3>
+            <p class="showcase-rank-level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</p>
+            <p class="showcase-rank-points">{{ totalPoints }} {{ $t('todo.points') }}</p>
+          </div>
+        </div>
+
+        <div class="full-screen-ranks-grid">
+          <div
+            v-for="rank in sortedRanksForDisplay"
+            :key="`fullscreen-rank-${rank.key}-${rank.threshold}`"
+            class="full-screen-rank-item"
+            :class="{ 'current-rank': rank.threshold <= totalPoints }"
+          >
+            <img :src="rank.image" :alt="getRankName(rank.key)" class="full-screen-rank-image" />
+            <div class="full-screen-rank-details">
+              <span class="full-screen-rank-name">{{ getRankName(rank.key) }}</span>
+              <span class="full-screen-rank-threshold">{{ rank.threshold }}+ {{ $t('todo.points') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -723,7 +818,8 @@ export default {
         { level: 3, key: 'novice', threshold: 2400, color: '#13C2C2', image: '/assets/rankings/novice.png' },
         { level: 2, key: 'trainee', threshold: 1600, color: '#722ED1', image: '/assets/rankings/trainee.png' },
         { level: 1, key: 'beginner', threshold: 0, color: '#595959', image: '/assets/rankings/beginner.png' }
-      ]
+      ],
+      showFullScreenRanking: false
     }
   },
   computed: {
@@ -1675,6 +1771,10 @@ export default {
         reader.readAsText(fileToRead)
       })
     },
+    closeFullScreenRanking() {
+      this.showFullScreenRanking = false
+    },
+
     getRankName(rankKey) {
       return this.$t(`todo.ranks.${rankKey}`)
     },
@@ -3022,8 +3122,6 @@ export default {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
-/* ...existing code... */
-
 .rank-item {
   display: flex;
   align-items: center;
@@ -3203,6 +3301,548 @@ export default {
   }
 }
 
-/* ...existing code... */
+@media (max-width: 360px) {
+  .header-controls {
+    gap: 4px;
+  }
+
+  .import-export-controls {
+    gap: 2px;
+    max-width: 100%;
+  }
+
+  .control-btn {
+    padding: 4px 5px;
+    min-width: 28px;
+    max-width: 60px;
+    height: 30px;
+  }
+
+  .control-btn i {
+    font-size: 12px;
+  }
+
+  .import-export-controls .el-upload {
+    flex: 1;
+    max-width: 60px;
+  }
+
+  .import-export-controls .el-upload .control-btn {
+    width: 100%;
+    height: 30px;
+    min-width: 28px;
+    max-width: 60px;
+  }
+
+  .points-label {
+    font-size: 11px;
+  }
+
+  .points-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  .history-task-title {
+    font-size: 0.95rem;
+  }
+
+  .history-task-description {
+    font-size: 11px;
+  }
+
+  .history-task-status {
+    gap: 8px;
+  }
+
+  .history-status-tag {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+
+  .history-delete-btn {
+    padding: 4px;
+    min-width: 24px;
+    height: 24px;
+  }
+
+  .history-delete-btn i {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 320px) {
+  .import-export-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .control-btn {
+    flex: 1;
+    min-width: 26px;
+    max-width: 50px;
+    height: 28px;
+    padding: 3px 4px;
+  }
+
+  .control-btn i {
+    font-size: 11px;
+  }
+
+  .import-export-controls .el-upload {
+    flex: 1;
+    max-width: 50px;
+  }
+
+  .import-export-controls .el-upload .control-btn {
+    width: 100%;
+    height: 28px;
+    min-width: 26px;
+    max-width: 50px;
+  }
+}
+
+/* Full Screen Ranking Modal */
+.full-screen-ranking-modal {
+  margin-top: 5vh !important;
+  margin-bottom: 5vh !important;
+}
+
+.full-screen-ranking-modal .el-dialog {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-screen-ranking-modal .el-dialog__body {
+  flex: 1;
+  padding: 0;
+}
+
+.full-screen-ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin: -20px -20px 0 -20px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.full-screen-ranking-content {
+  padding: 30px;
+  min-height: 500px;
+}
+
+.current-rank-showcase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.showcase-rank-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+}
+
+.showcase-rank-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.showcase-rank-info {
+  text-align: center;
+}
+
+.showcase-rank-name {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.showcase-rank-level {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.showcase-rank-points {
+  font-size: 1.1rem;
+  color: #409eff;
+  font-weight: 600;
+  margin: 0;
+}
+
+.full-screen-ranks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.full-screen-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.full-screen-rank-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.full-screen-rank-item.current-rank {
+  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+  border-color: #4299e1;
+  box-shadow: 0 4px 20px rgba(66, 153, 225, 0.3);
+}
+
+.full-screen-rank-item.current-rank::before {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #2b6cb0;
+  font-weight: bold;
+  font-size: 16px;
+  background: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.full-screen-rank-image {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.full-screen-rank-details {
+  flex: 1;
+}
+
+.full-screen-rank-name {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.full-screen-rank-threshold {
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+/* Enhanced Monthly Summary */
+.enhanced-summary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.enhanced-summary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.05"/><circle cx="10" cy="50" r="1" fill="white" opacity="0.05"/><circle cx="90" cy="30" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.summary-header .summary-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.summary-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white;
+}
+
+.enhanced-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+  position: relative;
+  z-index: 1;
+}
+
+.enhanced-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.enhanced-stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.enhanced-stat-item:hover::before {
+  left: 100%;
+}
+
+.enhanced-stat-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.stat-visual {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.enhanced-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  position: relative;
+  z-index: 2;
+}
+
+.points-icon {
+  background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
+  box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);
+}
+
+.completed-icon {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  box-shadow: 0 4px 20px rgba(39, 174, 96, 0.4);
+}
+
+.success-icon {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  box-shadow: 0 4px 20px rgba(52, 152, 219, 0.4);
+}
+
+.stat-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 60px;
+}
+
+.circular-chart {
+  display: block;
+  width: 60px;
+  height: 60px;
+  transform: rotate(-90deg);
+}
+
+.circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 2;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s ease-in-out;
+}
+
+.gold .circle {
+  stroke: #f39c12;
+}
+
+.green .circle {
+  stroke: #27ae60;
+}
+
+.blue .circle {
+  stroke: #3498db;
+}
+
+.enhanced-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.enhanced-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.stat-subtitle {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+}
+
+/* Mobile responsive for full screen modal */
+@media (max-width: 768px) {
+  .full-screen-ranking-modal {
+    margin: 0 !important;
+  }
+
+  .full-screen-ranking-header {
+    padding: 15px 20px;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+  }
+
+  .full-screen-ranking-content {
+    padding: 20px;
+  }
+
+  .current-rank-showcase {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .showcase-rank-icon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .showcase-rank-name {
+    font-size: 1.6rem;
+  }
+
+  .full-screen-ranks-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .full-screen-rank-item {
+    padding: 15px;
+  }
+
+  .full-screen-rank-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .enhanced-stats {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .enhanced-stat-item {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .enhanced-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .stat-circle {
+    width: 50px;
+    height: 50px;
+  }
+
+  .circular-chart {
+    width: 50px;
+    height: 50px;
+  }
+
+  .enhanced-value {
+    font-size: 1.6rem;
+  }
+}
 </style>
 
