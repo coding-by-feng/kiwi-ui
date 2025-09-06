@@ -902,16 +902,15 @@ export default {
         })
       }
 
-      // Sort by creation date (newest first) and then by points (highest first)
+      // Sort by points (descending), then by creation date (newest first)
       return tasks.sort((a, b) => {
-        const aDate = new Date(a.date || 0)
-        const bDate = new Date(b.date || 0)
-        if (aDate.getTime() !== bDate.getTime()) {
-          return bDate.getTime() - aDate.getTime()
-        }
         const aPoints = a.successPoints || 0
         const bPoints = b.successPoints || 0
-        return bPoints - aPoints
+        if (aPoints !== bPoints) return bPoints - aPoints
+
+        const aDate = new Date(a.date || 0).getTime()
+        const bDate = new Date(b.date || 0).getTime()
+        return bDate - aDate
       })
     },
     totalPoints() {
