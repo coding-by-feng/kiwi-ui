@@ -159,7 +159,20 @@
         <!-- Task List Tab -->
         <el-tab-pane :label="$t('todo.taskList')" name="tasks">
           <div class="task-input-section">
-            <el-form :model="newTask" class="responsive-form">
+            <!-- Toggle header (collapsed by default) -->
+            <div
+              class="task-input-toggle"
+              @click="taskFormCollapsed = !taskFormCollapsed"
+              :aria-expanded="!taskFormCollapsed"
+              role="button"
+              tabindex="0"
+            >
+              <i :class="['el-icon-arrow-right', 'toggle-icon', { open: !taskFormCollapsed }]"></i>
+              <span class="toggle-text">{{ $t('todo.addTask') }}</span>
+            </div>
+
+            <!-- Show the form only when expanded -->
+            <el-form v-show="!taskFormCollapsed" :model="newTask" class="responsive-form">
               <div class="form-row">
                 <el-form-item :label="$t('todo.task')" class="form-item">
                   <el-input
@@ -832,6 +845,8 @@ export default {
         frequency: 'once',
         customDays: 7
       },
+      // Collapse the task input form by default
+      taskFormCollapsed: true,
 
       // Ranking system data - using images instead of icons
       ranks: [
@@ -2502,11 +2517,12 @@ export default {
   background-color: #fafbfc;
   border-radius: 8px;
   margin-bottom: 20px;
+  text-align: left; /* ensure left alignment on all screens */
 }
 
 .responsive-form {
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 0; /* was: margin: 0 auto; left-align on large screens too */
 }
 
 .form-row {
@@ -2552,6 +2568,51 @@ export default {
 
 .add-task-btn {
   padding: 10px 20px;
+}
+
+/* Toggle header for task input section */
+.task-input-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
+  color: #333;
+  font-weight: 600;
+  background: #f0f2f5;
+  border: 1px solid #e4e7ec;
+  border-radius: 6px;
+}
+.task-input-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.25);
+}
+.toggle-icon {
+  transition: transform 0.2s ease;
+}
+.toggle-icon.open {
+  transform: rotate(90deg);
+}
+
+/* Small screens: align everything left inside task-input-section */
+@media (max-width: 768px) {
+  .task-input-section {
+    text-align: left;
+  }
+  .task-input-section .responsive-form {
+    margin: 0;
+    max-width: 100%;
+  }
+  .task-input-section .form-row {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  .task-input-section .el-form-item__label {
+    text-align: left;
+    padding-right: 8px;
+  }
 }
 
 /* Task filter styles */
