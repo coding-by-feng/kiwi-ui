@@ -129,7 +129,7 @@
             <div class="rank-progress">
               <div class="progress-info">
                 <span class="progress-text">{{ totalPoints }} / {{ currentRank.nextThreshold || '∞' }}</span>
-                <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Math.round(rankProgress) }}%</span>
+                <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Math.round(rankProgress) }}</span>
                 <span class="progress-percentage max-rank" v-else>{{ $t('todo.maxRank') }}</span>
               </div>
               <el-progress
