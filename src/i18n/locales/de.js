@@ -162,6 +162,13 @@ export default {
         editTask: 'Aufgabe bearbeiten',
         deleteTask: 'Aufgabe löschen',
 
+        // Reset-all actions
+        resetAllToPending: 'Alle auf Ausstehend zurücksetzen',
+        resetAllConfirmTitle: 'Alle Aufgabenstatus zurücksetzen',
+        resetAllConfirmMessage: 'Es werden {count} Aufgabe(n) auf Ausstehend zurückgesetzt. Fortfahren?',
+        allAlreadyPending: 'Alle Aufgaben sind bereits ausstehend',
+        resetAllResult: '{count} Aufgabe(n) auf ausstehend zurückgesetzt',
+
         // Ranking system
         ranks: {
             legendary: 'Legendär',

@@ -557,9 +557,13 @@ export default {
         deleteHistoryRecord: 'Delete Historical Record',
         historyRecordDeleted: 'Historical record deleted successfully!',
         taskResetToPending: 'Task reset to pending status successfully!',
-        editTask: 'Edit Task',
-        deleteTask: 'Delete Task',
-        points: 'points',
+
+        // Reset-all actions
+        resetAllToPending: 'Reset All to Pending',
+        resetAllConfirmTitle: 'Reset All Task Status',
+        resetAllConfirmMessage: 'This will reset {count} task(s) to Pending. Continue?',
+        allAlreadyPending: 'All tasks are already pending',
+        resetAllResult: 'Reset {count} task(s) to pending',
 
         // Ranking system
         rankingSystem: 'Ranking System',

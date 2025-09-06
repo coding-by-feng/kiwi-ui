@@ -152,6 +152,13 @@ export default {
         taskTitleRequired: '任务标题不能为空',
         confirmDeleteTask: '确定要删除这个任务吗？',
         editTask: '编辑任务',
-        deleteTask: '删除任务'
+        deleteTask: '删除任务',
+
+        // 重置全部为待处理
+        resetAllToPending: '全部重置为待处理',
+        resetAllConfirmTitle: '重置所有任务状态',
+        resetAllConfirmMessage: '这将把{count}个任务重置为待处理，是否继续？',
+        allAlreadyPending: '所有任务均为待处理状态',
+        resetAllResult: '已重置{count}个任务为待处理'
     }
 }

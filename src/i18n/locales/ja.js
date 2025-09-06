@@ -147,6 +147,13 @@ export default {
         taskTitleRequired: 'タスクのタイトルは必須です',
         confirmDeleteTask: 'このタスクを削除してもよろしいですか？',
         editTask: 'タスクを編集',
-        deleteTask: 'タスクを削除'
+        deleteTask: 'タスクを削除',
+
+        // 一括リセット
+        resetAllToPending: 'すべてを未処理にリセット',
+        resetAllConfirmTitle: 'すべてのタスクステータスをリセット',
+        resetAllConfirmMessage: '{count}件のタスクを未処理にリセットします。続行しますか？',
+        allAlreadyPending: 'すべてのタスクは既に未処理です',
+        resetAllResult: '{count}件のタスクを未処理にリセットしました'
     }
 }

@@ -162,6 +162,13 @@ export default {
         editTask: 'Modifier la tâche',
         deleteTask: 'Supprimer la tâche',
 
+        // Réinitialisation globale
+        resetAllToPending: 'Tout réinitialiser en En attente',
+        resetAllConfirmTitle: 'Réinitialiser le statut de toutes les tâches',
+        resetAllConfirmMessage: 'Cela va réinitialiser {count} tâche(s) en En attente. Continuer ?',
+        allAlreadyPending: 'Toutes les tâches sont déjà en attente',
+        resetAllResult: '{count} tâche(s) réinitialisée(s) en attente',
+
         // Ranking system
         ranks: {
             legendary: 'Légendaire',
