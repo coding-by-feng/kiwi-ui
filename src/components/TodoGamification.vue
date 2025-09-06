@@ -71,7 +71,12 @@
                     <div class="current-rank-details">
                       <h4>{{ $t('todo.currentRank') }}</h4>
                       <div class="rank-item">
-                        <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-preview-image" />
+                        <img
+                          :src="getRankImage(currentRank.name)"
+                          :alt="currentRank.name"
+                          class="rank-preview-image"
+                          @error="onRankImageError"
+                        />
                         <span class="rank-name">{{ currentRank.name }}</span>
                         <span class="rank-points">{{ currentRank.threshold }}+ {{ $t('todo.points') }}</span>
                       </div>
@@ -79,7 +84,12 @@
                     <div class="next-rank-details" v-if="currentRank.nextRankName">
                       <h4>{{ $t('todo.nextRankTarget') }}</h4>
                       <div class="rank-item">
-                        <img :src="getNextRankImage()" :alt="currentRank.nextRankName" class="rank-preview-image" />
+                        <img
+                          :src="getNextRankImage()"
+                          :alt="currentRank.nextRankName"
+                          class="rank-preview-image"
+                          @error="onRankImageError"
+                        />
                         <span class="rank-name">{{ currentRank.nextRankName }}</span>
                         <span class="rank-points">{{ currentRank.nextThreshold }}+ {{ $t('todo.points') }}</span>
                       </div>
@@ -100,7 +110,12 @@
                           class="rank-preview-item"
                           :class="{ 'current-rank': rank.threshold <= totalPoints }"
                         >
-                          <img :src="rank.image" :alt="getRankName(rank.key)" class="rank-grid-image" />
+                          <img
+                            :src="rank.image"
+                            :alt="getRankName(rank.key)"
+                            class="rank-grid-image"
+                            @error="onRankImageError"
+                          />
                           <span class="rank-preview-name">{{ getRankName(rank.key) }}</span>
                           <span class="rank-preview-threshold">{{ rank.threshold }}+</span>
                         </div>
@@ -842,7 +857,16 @@ export default {
         { level: 1, key: 'beginner', threshold: 0, color: '#595959', image: '/assets/rankings/beginner.png' }
       ],
       showFullScreenRanking: false,
-      showRankImagePreview: false
+      showRankImagePreview: false,
+      fallbackRankImage:
+        'data:image/svg+xml;utf8,' +
+        encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+  <rect width="100%" height="100%" rx="8" fill="#f3f4f6"/>
+  <g fill="none" stroke="#cbd5e1" stroke-width="2">
+    <rect x="10" y="10" width="44" height="44" rx="6"/>
+    <path d="M16 44l10-12 8 8 6-8 8 12" fill="none"/>
+  </g>
+</svg>`)
     }
   },
   computed: {
@@ -870,6 +894,7 @@ export default {
             case 'completed':
               return task.status === 'success' || task.status === 'fail'
             case 'done':
+              // Show non-daily tasks that are completed (done for their cycle)
               return this.shouldShowDoneTag(task) && (task.status === 'success' || task.status === 'fail')
             default:
               return true
@@ -877,14 +902,16 @@ export default {
         })
       }
 
-      // Sort by points (desc), then by creation date (newest first) as tiebreaker
+      // Sort by creation date (newest first) and then by points (highest first)
       return tasks.sort((a, b) => {
+        const aDate = new Date(a.date || 0)
+        const bDate = new Date(b.date || 0)
+        if (aDate.getTime() !== bDate.getTime()) {
+          return bDate.getTime() - aDate.getTime()
+        }
         const aPoints = a.successPoints || 0
         const bPoints = b.successPoints || 0
-        if (bPoints !== aPoints) return bPoints - aPoints
-        const aDate = new Date(a.date || 0).getTime()
-        const bDate = new Date(b.date || 0).getTime()
-        return bDate - aDate
+        return bPoints - aPoints
       })
     },
     totalPoints() {
@@ -2264,7 +2291,14 @@ export default {
     shouldShowStatusDisplay(task) {
       // Show status display section for completed tasks (both daily and non-daily)
       return task.status !== 'pending'
-    }
+    },
+
+    onRankImageError(e) {
+      if (!e || !e.target) return
+      e.target.onerror = null
+      e.target.src = this.fallbackRankImage
+      if (!e.target.title) e.target.title = 'Placeholder'
+    },
   }
 }
 </script>
@@ -2390,12 +2424,13 @@ export default {
   .ranking-display { min-width: 0; }
 
   /* Small screens: only show icons for import-export-controls */
+  /* Replace the previous '.header-controls .control-btn .btn-text' rule with this narrower scope */
   .import-export-controls .control-btn .btn-text {
     display: none !important;
   }
 
-  /* Center icons inside import/export buttons */
-  .import-export-controls .control-btn i {
+  /* Center icons inside buttons */
+  .header-controls .control-btn i {
     margin: 0 !important;
   }
 
@@ -2411,6 +2446,7 @@ export default {
     justify-content: center;
   }
 
+  /* Ensure el-upload wrapped button matches the same size */
   .header-controls .el-upload {
     flex: 0 0 var(--hdr-btn-size);
     max-width: var(--hdr-btn-size);
@@ -3218,6 +3254,22 @@ export default {
     min-width: 26px;
     max-width: 50px;
   }
+}
+
+/* Task details and ranking details centering and scrollable */
+.ranking-details {
+  max-height: 60vh;
+  overflow: auto;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;    /* center content horizontally */
+  text-align: center;
+}
+
+/* Center grid items in the preview grid */
+.ranks-grid {
+  justify-items: center;
 }
 
 /* Fullscreen Current Rank Image Preview */
