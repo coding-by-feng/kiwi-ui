@@ -5,49 +5,49 @@
         <h2 class="header-title">{{ $t('todo.title') }}</h2>
         <div class="header-controls">
           <div class="import-export-controls">
-            <el-button
-                type="primary"
-                size="small"
-                icon="el-icon-download"
-                @click="exportTodoData"
-                class="control-btn"
+            <!-- Native buttons + hidden file input -->
+            <button
+              type="button"
+              class="control-btn btn-primary"
+              @click="exportTodoData"
             >
+              <i class="el-icon-download"></i>
               <span class="btn-text">Export</span>
-            </el-button>
-            <el-upload
-                ref="importUpload"
-                :show-file-list="false"
-                :before-upload="importTodoData"
-                accept=".json"
-                action=""
+            </button>
+
+            <input
+              ref="importInput"
+              type="file"
+              accept=".json"
+              class="visually-hidden"
+              @change="onImportFileChange"
+            />
+            <button
+              type="button"
+              class="control-btn btn-success"
+              @click="triggerImport"
             >
-              <el-button
-                  type="success"
-                  size="small"
-                  icon="el-icon-upload2"
-                  class="control-btn"
-              >
-                <span class="btn-text">Import</span>
-              </el-button>
-            </el-upload>
-            <el-button
-                type="info"
-                size="small"
-                icon="el-icon-magic-stick"
-                @click="createDemoTasks"
-                class="control-btn"
+              <i class="el-icon-upload2"></i>
+              <span class="btn-text">Import</span>
+            </button>
+
+            <button
+              type="button"
+              class="control-btn btn-info"
+              @click="createDemoTasks"
             >
+              <i class="el-icon-magic-stick"></i>
               <span class="btn-text">Demo</span>
-            </el-button>
-            <el-button
-                type="danger"
-                size="small"
-                icon="el-icon-delete"
-                @click="clearAllData"
-                class="control-btn"
+            </button>
+
+            <button
+              type="button"
+              class="control-btn btn-danger"
+              @click="clearAllData"
             >
+              <i class="el-icon-delete"></i>
               <span class="btn-text">Clear All</span>
-            </el-button>
+            </button>
           </div>
 
           <!-- Ranking Display -->
@@ -2313,6 +2313,21 @@ export default {
       e.target.src = this.fallbackRankImage
       if (!e.target.title) e.target.title = 'Placeholder'
     },
+    // Trigger hidden file input for import
+    triggerImport() {
+      if (this.$refs.importInput) this.$refs.importInput.click()
+    },
+    // Handle file selection and forward to existing import logic
+    async onImportFileChange(e) {
+      const file = e?.target?.files?.[0]
+      if (!file) return
+      try {
+        await this.importTodoData(file)
+      } finally {
+        // reset input so selecting the same file again still triggers change
+        e.target.value = ''
+      }
+    },
   }
 }
 </script>
@@ -2349,68 +2364,32 @@ export default {
   margin-top: 16px;
 }
 
-.import-export-controls {
+/* Center the ranking display on all screens */
+.ranking-display {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
-
-.control-btn {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  min-width: auto;
-}
-
-.control-btn i {
-  font-size: 14px;
+  min-width: 200px;
   flex-shrink: 0;
+  margin-left: auto;   /* added */
+  margin-right: auto;  /* added */
 }
 
-.btn-text {
-  white-space: nowrap;
-  font-size: 13px;
-}
-
-.total-points {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.points-label {
-  font-weight: 500;
-  color: #666;
-  font-size: 14px;
-}
-
-.points-badge {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* Place ranking display on the left on large screens only */
+/* Remove previous "left on large screens" behavior; keep centered */
 @media (min-width: 1200px) {
   .header-controls {
     display: flex;
   }
   .ranking-display {
-    order: -1;          /* move to the left */
-    margin-right: auto; /* push others to the right */
+    order: 0;                /* was: -1 */
+    margin-left: auto;       /* was: margin-right:auto pushing to left */
+    margin-right: auto;
   }
   .import-export-controls {
-    order: 0;
+    order: 0;                /* ensure default order */
   }
   .total-points {
-    order: 1;
+    order: 0;                /* ensure default order */
   }
 }
 
@@ -2509,6 +2488,102 @@ export default {
 
 @media (max-width: 320px) {
   .todo-gamification { --hdr-btn-size: 28px; }
+}
+
+/* Visually hide the native file input but keep it accessible and clickable */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Import/Export controls: flex with gaps and wrapping by default */
+.import-export-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Base control button styles (used by Export / Import / Demo / Clear All) */
+.control-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+}
+.control-btn i {
+  margin-right: 6px;
+}
+.control-btn:active {
+  transform: translateY(0);
+}
+
+/* Color variants */
+.control-btn.btn-primary {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+.control-btn.btn-primary:hover {
+  background-color: #337ecc;
+  border-color: #337ecc;
+}
+.control-btn.btn-primary:focus {
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2);
+}
+
+.control-btn.btn-success {
+  background-color: #67c23a;
+  border-color: #67c23a;
+}
+.control-btn.btn-success:hover {
+  background-color: #52a832;
+  border-color: #52a832;
+}
+.control-btn.btn-success:focus {
+  box-shadow: 0 0 0 3px rgba(103, 194, 58, 0.2);
+}
+
+.control-btn.btn-info {
+  background-color: #909399;
+  border-color: #909399;
+}
+.control-btn.btn-info:hover {
+  background-color: #767a80;
+  border-color: #767a80;
+}
+.control-btn.btn-info:focus {
+  box-shadow: 0 0 0 3px rgba(144, 147, 153, 0.2);
+}
+
+.control-btn.btn-danger {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+}
+.control-btn.btn-danger:hover {
+  background-color: #dd6161;
+  border-color: #dd6161;
+}
+.control-btn.btn-danger:focus {
+  box-shadow: 0 0 0 3px rgba(245, 108, 108, 0.2);
 }
 
 /* Task input and form styles */
@@ -2615,14 +2690,14 @@ export default {
   }
 }
 
-/* Task filter styles */
+/* Task filter styles (base) */
 .task-filter-section {
   margin-bottom: 20px;
 }
 
 .filter-controls {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -2631,6 +2706,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .filter-label {
@@ -2640,11 +2716,75 @@ export default {
 }
 
 .filter-radio-group {
-  margin-left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-radio-group .el-radio-button__inner {
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
 .frequency-filter-select {
   min-width: 140px;
+}
+
+/* Small screens: compact filters and enable horizontal scroll for buttons */
+@media (max-width: 768px) {
+  /* Existing header centering remains; improve buttons container usability */
+  .import-export-controls {
+    flex-wrap: nowrap;              /* keep in one line */
+    overflow-x: auto;               /* allow scroll if overflow */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;            /* space for hidden scrollbar */
+  }
+  .import-export-controls::-webkit-scrollbar { display: none; }
+
+  /* Stack filter groups vertically and make them compact */
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .filter-group {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .filter-radio-group {
+    gap: 4px;
+  }
+  .filter-radio-group .el-radio-button__inner {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .frequency-filter-select {
+    min-width: 0;
+    width: 100%;
+  }
+  .frequency-filter-select .el-input__inner {
+    height: 32px;
+    line-height: 32px;
+    font-size: 12px;
+  }
+}
+
+/* Very small screens: hide labels to save space, tighten controls further */
+@media (max-width: 480px) {
+  .filter-label {
+    display: none;
+  }
+  .filter-radio-group .el-radio-button__inner {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  .frequency-filter-select .el-input__inner {
+    height: 30px;
+    line-height: 30px;
+    font-size: 11px;
+  }
 }
 
 /* Task cards */
