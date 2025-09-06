@@ -100,6 +100,13 @@ export default {
         taskTitleRequired: '작업 제목이 필요합니다',
         confirmDeleteTask: '이 작업을 삭제하시겠습니까?',
         editTask: '작업 편집',
-        deleteTask: '작업 삭제'
+        deleteTask: '작업 삭제',
+
+        // 전체 초기화
+        resetAllToPending: '모두 미완료로 초기화',
+        resetAllConfirmTitle: '모든 작업 상태 초기화',
+        resetAllConfirmMessage: '{count}개의 작업을 미완료로 초기화합니다. 계속하시겠습니까?',
+        allAlreadyPending: '모든 작업이 이미 미완료 상태입니다',
+        resetAllResult: '{count}개의 작업을 미완료로 초기화했습니다',
     }
 }

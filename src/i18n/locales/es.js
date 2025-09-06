@@ -95,6 +95,13 @@ export default {
         taskTitleRequired: 'El título de la tarea es requerido',
         confirmDeleteTask: '¿Está seguro de que desea eliminar esta tarea?',
         editTask: 'Editar tarea',
-        deleteTask: 'Eliminar tarea'
+        deleteTask: 'Eliminar tarea',
+
+        // Restablecer todo
+        resetAllToPending: 'Restablecer todo a Pendiente',
+        resetAllConfirmTitle: 'Restablecer el estado de todas las tareas',
+        resetAllConfirmMessage: 'Esto restablecerá {count} tarea(s) a Pendiente. ¿Continuar?',
+        allAlreadyPending: 'Todas las tareas ya están en pendiente',
+        resetAllResult: 'Se restablecieron {count} tarea(s) a pendiente',
     }
 }

@@ -152,6 +152,13 @@ export default {
         taskTitleRequired: '任務標題必填',
         confirmDeleteTask: '確定要刪除此任務嗎？',
         editTask: '編輯任務',
-        deleteTask: '刪除任務'
+        deleteTask: '刪除任務',
+
+        // 重置全部為待處理
+        resetAllToPending: '全部重置為待處理',
+        resetAllConfirmTitle: '重置所有任務狀態',
+        resetAllConfirmMessage: '這將把{count}個任務重置為待處理，是否繼續？',
+        allAlreadyPending: '所有任務均為待處理狀態',
+        resetAllResult: '已重置{count}個任務為待處理'
     }
 }

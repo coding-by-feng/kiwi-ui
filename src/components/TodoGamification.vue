@@ -271,6 +271,17 @@
                   <el-option label="Custom" value="custom"></el-option>
                 </el-select>
               </div>
+              <!-- New: Reset all task statuses -->
+              <div class="filter-group">
+                <el-button
+                  type="warning"
+                  size="small"
+                  icon="el-icon-refresh-left"
+                  @click="resetAllTaskStatuses"
+                >
+                  Reset All to Pending
+                </el-button>
+              </div>
             </div>
           </div>
 
@@ -1881,7 +1892,7 @@ export default {
       // Only show status action buttons for pending tasks
       // Once a task is completed (success or fail), these buttons should be hidden
       return task.status === 'pending'
-    },
+       },
 
     shouldShowResetAction(task) {
       // Show reset action for any completed task (both daily and non-daily)
@@ -1938,6 +1949,57 @@ export default {
         this.refreshTrigger++
         this.$message.success('Task status reset to pending')
       }
+    },
+
+    // New: Reset all tasks’ status to pending across all active task lists
+    resetAllTaskStatuses() {
+      const allTasks = this.getAllTasks()
+      const toResetCount = allTasks.filter(t => t.status !== 'pending').length
+
+      if (toResetCount === 0) {
+        this.$message.info('All tasks are already pending')
+        return
+      }
+
+      this.$confirm(
+        `This will reset ${toResetCount} task(s) to Pending. Continue?`,
+        'Reset All Task Status',
+        {
+          confirmButtonText: 'Reset All',
+          cancelButtonText: 'Cancel',
+          type: 'warning'
+        }
+      ).then(() => {
+        // Collect unique date keys for efficient updates
+        const dateKeys = new Set()
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && key.startsWith('todo_') && key !== 'todo_trash') {
+            dateKeys.add(key.replace('todo_', ''))
+          }
+        }
+
+        let changed = 0
+        dateKeys.forEach(dateKey => {
+          const tasks = this.getTasksForDate(dateKey)
+          let touched = false
+          tasks.forEach(t => {
+            if (t.status !== 'pending') {
+              t.status = 'pending'
+              touched = true
+              changed++
+            }
+          })
+          if (touched) {
+            localStorage.setItem(`todo_${dateKey}`, JSON.stringify(tasks))
+          }
+        })
+
+        this.refreshTrigger++
+        this.$message.success(`Reset ${changed} task(s) to pending`)
+      }).catch(() => {
+        /* user cancelled */
+      })
     },
 
     restoreTask(taskId) {
