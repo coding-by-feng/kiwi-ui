@@ -154,11 +154,47 @@ export default {
         editTask: '編輯任務',
         deleteTask: '刪除任務',
 
-        // 重置全部為待處理
-        resetAllToPending: '全部重置為待處理',
-        resetAllConfirmTitle: '重置所有任務狀態',
-        resetAllConfirmMessage: '這將把{count}個任務重置為待處理，是否繼續？',
-        allAlreadyPending: '所有任務均為待處理狀態',
-        resetAllResult: '已重置{count}個任務為待處理'
+        // 歷史記錄操作
+        confirmDeleteHistoryRecord: '確定要刪除此歷史記錄嗎？',
+        deleteHistoryRecord: '刪除歷史記錄',
+        historyRecordDeleted: '歷史記錄刪除成功！',
+
+        // 排名/積分
+        points: '積分',
+        rankingSystem: '排名系統',
+        currentRank: '當前段位',
+        nextRankTarget: '下一級目標',
+        pointsNeeded: '還需 {points} 分',
+        congratulations: '恭喜！',
+        maxRankAchieved: '你已達到最高段位！',
+        allRanks: '全部段位',
+        viewRankingDetails: '查看段位詳情',
+        maxRankReached: '已達最高段位！',
+
+        // 段位名稱
+        ranks: {
+            legendary: '傳說',
+            mythic: '神話',
+            immortal: '不朽',
+            divine: '神聖',
+            celestial: '天界',
+            grandmaster: '宗師',
+            master: '大師',
+            diamond: '鑽石',
+            platinum: '白金',
+            gold: '黃金',
+            silver: '白銀',
+            bronze: '青銅',
+            iron: '鐵',
+            steel: '鋼鐵',
+            stone: '石頭',
+            wood: '木頭',
+            apprentice: '學徒',
+            novice: '新手',
+            trainee: '見習',
+            beginner: '初學者'
+        },
+        rankLevel: '等級 {level}',
+        nextRank: '下一級：{rank}',
     }
 }

@@ -129,6 +129,20 @@ export default {
         analytics: 'Analytik',
         task: 'Aufgabe',
         description: 'Beschreibung',
+        taskList: 'Aufgabenliste',
+
+        // Ranking metadata and points
+        points: 'Punkte',
+        rankingSystem: 'Rangsystem',
+        currentRank: 'Aktueller Rang',
+        nextRankTarget: 'Ziel für nächsten Rang',
+        pointsNeeded: '{points} Punkte erforderlich',
+        congratulations: 'Glückwunsch!',
+        maxRankAchieved: 'Du hast den maximalen Rang erreicht!',
+        allRanks: 'Alle Ränge',
+        viewRankingDetails: 'Rangdetails anzeigen',
+        maxRankReached: 'Maximaler Rang erreicht!',
+
         enterTaskTitle: 'Aufgabentitel eingeben',
         enterTaskDescription: 'Aufgabenbeschreibung eingeben',
         successPoints: 'Erfolgspunkte',

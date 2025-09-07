@@ -154,6 +154,58 @@ export default {
         resetAllConfirmTitle: 'すべてのタスクステータスをリセット',
         resetAllConfirmMessage: '{count}件のタスクを未処理にリセットします。続行しますか？',
         allAlreadyPending: 'すべてのタスクは既に未処理です',
-        resetAllResult: '{count}件のタスクを未処理にリセットしました'
+        resetAllResult: '{count}件のタスクを未処理にリセットしました',
+
+        // Tabs/labels
+        taskList: 'タスクリスト',
+
+        // Form placeholders and fields
+        enterTaskTitle: 'タスクのタイトルを入力',
+        frequency: '頻度',
+        selectFrequency: '頻度を選択',
+        everyNDays: 'N日ごと',
+
+        // History actions
+        confirmDeleteHistoryRecord: 'この履歴を削除してもよろしいですか？',
+        deleteHistoryRecord: '履歴を削除',
+        historyRecordDeleted: '履歴を削除しました！',
+
+        // Ranking metadata and points
+        points: 'ポイント',
+        rankingSystem: 'ランキングシステム',
+        currentRank: '現在のランク',
+        nextRankTarget: '次のランク目標',
+        pointsNeeded: '{points} ポイント必要',
+        congratulations: 'おめでとうございます！',
+        maxRankAchieved: '最高ランクに到達しました！',
+        allRanks: '全ランク',
+        viewRankingDetails: 'ランキングの詳細を見る',
+        maxRankReached: '最高ランクに到達！',
+
+        // ランク名
+        ranks: {
+            legendary: '伝説',
+            mythic: '神話',
+            immortal: '不滅',
+            divine: '神聖',
+            celestial: '天界',
+            grandmaster: 'グランドマスター',
+            master: 'マスター',
+            diamond: 'ダイヤモンド',
+            platinum: 'プラチナ',
+            gold: 'ゴールド',
+            silver: 'シルバー',
+            bronze: 'ブロンズ',
+            iron: 'アイアン',
+            steel: 'スチール',
+            stone: 'ストーン',
+            wood: 'ウッド',
+            apprentice: '見習い',
+            novice: '初心者',
+            trainee: '研修生',
+            beginner: 'ビギナー'
+        },
+        rankLevel: 'レベル {level}',
+        nextRank: '次: {rank}'
     }
 }
