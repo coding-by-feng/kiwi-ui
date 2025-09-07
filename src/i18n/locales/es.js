@@ -103,5 +103,51 @@ export default {
         resetAllConfirmMessage: 'Esto restablecerá {count} tarea(s) a Pendiente. ¿Continuar?',
         allAlreadyPending: 'Todas las tareas ya están en pendiente',
         resetAllResult: 'Se restablecieron {count} tarea(s) a pendiente',
+
+        // Tab label
+        taskList: 'Lista de tareas',
+
+        // History actions
+        confirmDeleteHistoryRecord: '¿Está seguro de que desea eliminar este registro histórico?',
+        deleteHistoryRecord: 'Eliminar registro histórico',
+        historyRecordDeleted: '¡Registro histórico eliminado con éxito!',
+
+        // Ranking metadata and points
+        points: 'Puntos',
+        rankingSystem: 'Sistema de clasificación',
+        currentRank: 'Rango actual',
+        nextRankTarget: 'Objetivo del siguiente rango',
+        pointsNeeded: 'Se necesitan {points} puntos',
+        congratulations: '¡Felicidades!',
+        maxRankAchieved: '¡Has alcanzado el rango máximo!',
+        allRanks: 'Todos los rangos',
+        viewRankingDetails: 'Ver detalles del ranking',
+        maxRankReached: '¡Rango máximo alcanzado!',
+
+        // Nombres de rangos
+        ranks: {
+            legendary: 'Legendario',
+            mythic: 'Mítico',
+            immortal: 'Inmortal',
+            divine: 'Divino',
+            celestial: 'Celestial',
+            grandmaster: 'Gran Maestro',
+            master: 'Maestro',
+            diamond: 'Diamante',
+            platinum: 'Platino',
+            gold: 'Oro',
+            silver: 'Plata',
+            bronze: 'Bronce',
+            iron: 'Hierro',
+            steel: 'Acero',
+            stone: 'Piedra',
+            wood: 'Madera',
+            apprentice: 'Aprendiz',
+            novice: 'Novato',
+            trainee: 'Practicante',
+            beginner: 'Principiante'
+        },
+        rankLevel: 'Nivel {level}',
+        nextRank: 'Siguiente: {rank}',
     }
 }

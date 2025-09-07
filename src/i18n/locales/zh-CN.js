@@ -154,11 +154,47 @@ export default {
         editTask: '编辑任务',
         deleteTask: '删除任务',
 
-        // 重置全部为待处理
-        resetAllToPending: '全部重置为待处理',
-        resetAllConfirmTitle: '重置所有任务状态',
-        resetAllConfirmMessage: '这将把{count}个任务重置为待处理，是否继续？',
-        allAlreadyPending: '所有任务均为待处理状态',
-        resetAllResult: '已重置{count}个任务为待处理'
+        // 历史记录操作
+        confirmDeleteHistoryRecord: '确定要删除这个历史记录吗？',
+        deleteHistoryRecord: '删除历史记录',
+        historyRecordDeleted: '历史记录删除成功！',
+
+        // 排名/积分
+        points: '积分',
+        rankingSystem: '排名系统',
+        currentRank: '当前段位',
+        nextRankTarget: '下一级目标',
+        pointsNeeded: '还需 {points} 分',
+        congratulations: '恭喜！',
+        maxRankAchieved: '你已达到最高段位！',
+        allRanks: '全部段位',
+        viewRankingDetails: '查看段位详情',
+        maxRankReached: '已达最高段位！',
+
+        // 段位名称
+        ranks: {
+            legendary: '传说',
+            mythic: '神话',
+            immortal: '不朽',
+            divine: '神圣',
+            celestial: '天界',
+            grandmaster: '宗师',
+            master: '大师',
+            diamond: '钻石',
+            platinum: '白金',
+            gold: '黄金',
+            silver: '白银',
+            bronze: '青铜',
+            iron: '铁',
+            steel: '钢铁',
+            stone: '石头',
+            wood: '木头',
+            apprentice: '学徒',
+            novice: '新手',
+            trainee: '见习',
+            beginner: '初学者'
+        },
+        rankLevel: '等级 {level}',
+        nextRank: '下一级：{rank}',
     }
 }

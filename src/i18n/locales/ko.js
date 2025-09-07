@@ -108,5 +108,51 @@ export default {
         resetAllConfirmMessage: '{count}개의 작업을 미완료로 초기화합니다. 계속하시겠습니까?',
         allAlreadyPending: '모든 작업이 이미 미완료 상태입니다',
         resetAllResult: '{count}개의 작업을 미완료로 초기화했습니다',
+
+        // Tab label
+        taskList: '작업 목록',
+
+        // History actions
+        confirmDeleteHistoryRecord: '이 기록을 삭제하시겠습니까?',
+        deleteHistoryRecord: '기록 삭제',
+        historyRecordDeleted: '기록이 삭제되었습니다!',
+
+        // Ranking metadata and points
+        points: '포인트',
+        rankingSystem: '랭킹 시스템',
+        currentRank: '현재 랭크',
+        nextRankTarget: '다음 랭크 목표',
+        pointsNeeded: '{points} 포인트 필요',
+        congratulations: '축하합니다!',
+        maxRankAchieved: '최고 랭크에 도달했습니다!',
+        allRanks: '전체 랭크',
+        viewRankingDetails: '랭킹 상세 보기',
+        maxRankReached: '최고 랭크 달성!',
+
+        // 랭크 이름
+        ranks: {
+            legendary: '전설',
+            mythic: '신화',
+            immortal: '불멸',
+            divine: '신성',
+            celestial: '천상',
+            grandmaster: '그랜드마스터',
+            master: '마스터',
+            diamond: '다이아몬드',
+            platinum: '플래티넘',
+            gold: '골드',
+            silver: '실버',
+            bronze: '브론즈',
+            iron: '아이언',
+            steel: '스틸',
+            stone: '스톤',
+            wood: '우드',
+            apprentice: '견습생',
+            novice: '초보자',
+            trainee: '수습생',
+            beginner: '비기너'
+        },
+        rankLevel: '레벨 {level}',
+        nextRank: '다음: {rank}',
     }
 }

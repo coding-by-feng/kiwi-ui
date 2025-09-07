@@ -573,6 +573,23 @@ export default {
         },
         rankLevel: 'ระดับ {level}',
         nextRank: 'ถัดไป: {rank}',
-        maxRank: 'ถึงระดับสูงสุดแล้ว!'
+        maxRank: 'ถึงระดับสูงสุดแล้ว!',
+
+        // ข้อความสำหรับประวัติ (History)
+        confirmDeleteHistoryRecord: 'แน่ใจว่าต้องการลบบันทึกประวัตินี้?',
+        deleteHistoryRecord: 'ลบบันทึกประวัติ',
+        historyRecordDeleted: 'ลบบันทึกประวัติสำเร็จ!',
+
+        // สำหรับการแสดงอันดับ/คะแนน
+        points: 'คะแนน',
+        rankingSystem: 'ระบบจัดอันดับ',
+        currentRank: 'อันดับปัจจุบัน',
+        nextRankTarget: 'เป้าหมายอันดับถัดไป',
+        pointsNeeded: 'ต้องการ {points} คะแนน',
+        congratulations: 'ขอแสดงความยินดี!',
+        maxRankAchieved: 'คุณถึงอันดับสูงสุดแล้ว!',
+        allRanks: 'อันดับทั้งหมด',
+        viewRankingDetails: 'ดูรายละเอียดอันดับ',
+        maxRankReached: 'ถึงอันดับสูงสุดแล้ว!',
     }
 }

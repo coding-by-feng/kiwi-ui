@@ -600,6 +600,13 @@ export default {
         },
         rankLevel: 'Level {level}',
         nextRank: 'Next: {rank}',
-        maxRank: 'Max Rank'
+        maxRank: 'Max Rank',
+
+        // add for UI labels parity
+        editTask: 'Edit Task',
+        deleteTask: 'Delete Task',
+
+        // add for ranking displays
+        points: 'Points',
     }
 }

@@ -194,6 +194,21 @@ export default {
         },
         rankLevel: 'Niveau {level}',
         nextRank: 'Suivant: {rank}',
-        maxRank: 'Rang maximum atteint!'
+        maxRank: 'Rang maximum atteint!',
+
+        // Tab label
+        taskList: 'Liste des tâches',
+
+        // Ranking metadata and points
+        points: 'Points',
+        rankingSystem: 'Système de classement',
+        currentRank: 'Rang actuel',
+        nextRankTarget: 'Objectif du rang suivant',
+        pointsNeeded: '{points} points requis',
+        congratulations: 'Félicitations !',
+        maxRankAchieved: 'Vous avez atteint le rang maximum !',
+        allRanks: 'Tous les rangs',
+        viewRankingDetails: 'Voir les détails du classement',
+        maxRankReached: 'Rang maximum atteint !'
     }
 }
