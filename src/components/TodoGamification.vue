@@ -54,7 +54,12 @@
           <div class="ranking-display">
             <div class="rank-badge" :class="getRankClass(currentRank.name)">
               <div class="rank-icon" @click="openRankImagePreview" style="cursor: pointer;">
-                <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-image" />
+                <img
+                  :src="getRankImage(currentRank.name)"
+                  :alt="currentRank.name"
+                  class="rank-image"
+                  @click.stop="openRankImagePreview"
+                />
               </div>
               <div class="rank-info">
                 <div class="rank-name">{{ currentRank.name }}</div>
@@ -687,7 +692,7 @@
                               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         />
                         <path class="circle"
-                              :stroke-dasharray="`${Math.min(currentMonthPoints / 100, 100)}, 100`"
+                              :stroke-dasharray="`${Math.max(0, Math.min(currentMonthPoints / 100, 100))}, 100`"
                               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         />
                       </svg>
@@ -710,7 +715,7 @@
                               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         />
                         <path class="circle"
-                              :stroke-dasharray="`${Math.min(currentMonthCompleted / 10, 100)}, 100`"
+                              :stroke-dasharray="`${Math.max(0, Math.min(currentMonthCompleted / 10, 100))}, 100`"
                               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         />
                       </svg>
@@ -813,12 +818,6 @@
           :alt="currentRank.name"
           class="rank-image-fullscreen"
         />
-        <div class="rank-image-preview-meta">
-          <span class="name">{{ currentRank.name }}</span>
-          <span class="level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</span>
-          <span class="points">{{ totalPoints }} {{ $t('todo.points') }}</span>
-          <span class="hint">Tap anywhere to close</span>
-        </div>
       </div>
     </el-dialog>
   </div>
@@ -3613,119 +3612,144 @@ export default {
   }
 }
 
-/* Total points: tidy and consistent */
-.total-points {
+/* Monthly Summary: responsive layout and circular charts */
+.summary-card.enhanced-summary {
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.summary-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.points-label {
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.points-badge {
+.summary-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #10b981, #34d399);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-}
-
-/* Rank progress: clearer layout without logic changes */
-.rank-progress {
-  width: 100%;
-  max-width: 420px;
-  margin-top: 10px;
-}
-
-.rank-progress .progress-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #4b5563;
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.rank-progress .progress-percentage {
-  font-weight: 700;
-  color: #111827;
-}
-.rank-progress .progress-percentage.max-rank {
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
   color: #2563eb;
 }
 
-.rank-progress-bar {
-  margin-bottom: 6px;
+.summary-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
-.next-rank-info .next-rank-text,
-.max-rank-info .max-rank-text {
-  font-size: 12px;
-  color: #6b7280;
+.summary-stats.enhanced-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  align-items: stretch;
 }
 
-/* Large screens: balanced 3-column header with centered ranking */
-@media (min-width: 1200px) {
-  .header-controls {
-    display: grid;                      /* switch to grid for robust layout */
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 24px;
-    max-width: 1400px;                  /* constrain width for beauty on big screens */
-    margin: 16px auto 0;
-  }
-
-  .import-export-controls {
-    justify-self: start;
-    flex-wrap: nowrap;
-    gap: 12px;
-  }
-
-  .ranking-display {
-    justify-self: center;
-    margin: 0;                          /* remove auto margins from flex solution */
-  }
-
-  .total-points {
-    justify-self: end;
-  }
-
-  /* Slight upscale for rank badge on big screens for clarity */
-  .rank-badge {
-    padding: 14px 18px;
-  }
-  .rank-icon {
-    width: 56px;
-    height: 56px;
-    padding: 6px;
-  }
-  .rank-info .rank-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1f2937;
-  }
-  .rank-info .rank-level {
-    font-size: 12px;
-    color: #6b7280;
-  }
-
-  /* Make header buttons a touch larger and consistent on big screens */
-  .control-btn {
-    padding: 10px 14px;
-    font-size: 14px;
-    border-radius: 10px;
-  }
+.stat-item.enhanced-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
 }
 
-/* ...existing code... */
+.stat-visual {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat-icon.enhanced-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  background: #f3f4f6;
+}
+.stat-icon.points-icon { color: #b45309; background: #fff7ed; }
+.stat-icon.completed-icon { color: #166534; background: #ecfdf5; }
+.stat-icon.success-icon { color: #1d4ed8; background: #eff6ff; }
+
+.stat-circle,
+.circular-chart {
+  width: 64px;
+  height: 64px;
+}
+
+.circular-chart .circle-bg {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 3.8;
+}
+
+.circular-chart .circle {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  animation: chart-progress 1s ease-out forwards;
+}
+.circular-chart.gold .circle { stroke: #f59e0b; }
+.circular-chart.green .circle { stroke: #10b981; }
+.circular-chart.blue .circle { stroke: #3b82f6; }
+
+@keyframes chart-progress {
+  from { stroke-dasharray: 0 100; }
+  to { /* final dasharray set via binding */ }
+}
+
+.stat-content.enhanced-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-label { font-size: 12px; color: #6b7280; }
+.stat-value.enhanced-value { font-size: 20px; font-weight: 800; color: #111827; line-height: 1.1; }
+.stat-subtitle { font-size: 11px; color: #9ca3af; }
+
+/* Small screen tweaks */
+@media (max-width: 480px) {
+  .stat-item.enhanced-stat-item { padding: 10px; }
+  .stat-circle, .circular-chart { width: 56px; height: 56px; }
+  .stat-value.enhanced-value { font-size: 18px; }
+}
+
+/* Fullscreen rank image preview: minimal, centered, and not oversized */
+:deep(.rank-image-preview-dialog.is-fullscreen) {
+  background: rgba(0, 0, 0, 0.9);
+  box-shadow: none;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+}
+
+:deep(.rank-image-preview-dialog .el-dialog__header) { display: none; }
+:deep(.rank-image-preview-dialog .el-dialog__body) { padding: 0 !important; height: 100vh; }
+
+.rank-image-preview-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.rank-image-fullscreen {
+  max-width: min(85vw, 560px);
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
 </style>
 
