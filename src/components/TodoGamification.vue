@@ -861,25 +861,25 @@ export default {
 
       // Ranking system data - using images instead of icons
       ranks: [
-        { level: 20, key: 'legendary', threshold: 100000, color: '#FFD700', image: '/assets/rankings/legendary.png' },
-        { level: 19, key: 'mythic', threshold: 80000, color: '#FF6B35', image: '/assets/rankings/mythic.png' },
-        { level: 18, key: 'immortal', threshold: 64000, color: '#E74C3C', image: '/assets/rankings/immortal.png' },
-        { level: 17, key: 'divine', threshold: 52000, color: '#9B59B6', image: '/assets/rankings/divine.png' },
-        { level: 16, key: 'celestial', threshold: 42000, color: '#3498DB', image: '/assets/rankings/celestial.png' },
-        { level: 15, key: 'grandmaster', threshold: 34000, color: '#1ABC9C', image: '/assets/rankings/grandmaster.png' },
-        { level: 14, key: 'master', threshold: 28000, color: '#2ECC71', image: '/assets/rankings/master.png' },
-        { level: 13, key: 'diamond', threshold: 23000, color: '#85C1E9', image: '/assets/rankings/diamond.png' },
-        { level: 12, key: 'platinum', threshold: 19000, color: '#AED6F1', image: '/assets/rankings/platinum.png' },
-        { level: 11, key: 'gold', threshold: 15600, color: '#F7DC6F', image: '/assets/rankings/gold.png' },
-        { level: 10, key: 'silver', threshold: 12800, color: '#D5DBDB', image: '/assets/rankings/silver.png' },
-        { level: 9, key: 'bronze', threshold: 10400, color: '#CD853F', image: '/assets/rankings/bronze.png' },
-        { level: 8, key: 'iron', threshold: 8400, color: '#2C3E50', image: '/assets/rankings/iron.png' },
-        { level: 7, key: 'steel', threshold: 6800, color: '#566573', image: '/assets/rankings/steel.png' },
-        { level: 6, key: 'stone', threshold: 5400, color: '#7D8B8C', image: '/assets/rankings/stone.png' },
-        { level: 5, key: 'wood', threshold: 4200, color: '#8B4513', image: '/assets/rankings/wood.png' },
-        { level: 4, key: 'apprentice', threshold: 3200, color: '#52C41A', image: '/assets/rankings/apprentice.png' },
-        { level: 3, key: 'novice', threshold: 2400, color: '#13C2C2', image: '/assets/rankings/novice.png' },
-        { level: 2, key: 'trainee', threshold: 1600, color: '#722ED1', image: '/assets/rankings/trainee.png' },
+        { level: 20, key: 'legendary', threshold: 200000, color: '#FFD700', image: '/assets/rankings/legendary.png' },
+        { level: 19, key: 'mythic', threshold: 160000, color: '#FF6B35', image: '/assets/rankings/mythic.png' },
+        { level: 18, key: 'immortal', threshold: 128000, color: '#E74C3C', image: '/assets/rankings/immortal.png' },
+        { level: 17, key: 'divine', threshold: 104000, color: '#9B59B6', image: '/assets/rankings/divine.png' },
+        { level: 16, key: 'celestial', threshold: 84000, color: '#3498DB', image: '/assets/rankings/celestial.png' },
+        { level: 15, key: 'grandmaster', threshold: 68000, color: '#1ABC9C', image: '/assets/rankings/grandmaster.png' },
+        { level: 14, key: 'master', threshold: 56000, color: '#2ECC71', image: '/assets/rankings/master.png' },
+        { level: 13, key: 'diamond', threshold: 46000, color: '#85C1E9', image: '/assets/rankings/diamond.png' },
+        { level: 12, key: 'platinum', threshold: 38000, color: '#AED6F1', image: '/assets/rankings/platinum.png' },
+        { level: 11, key: 'gold', threshold: 31200, color: '#F7DC6F', image: '/assets/rankings/gold.png' },
+        { level: 10, key: 'silver', threshold: 25600, color: '#D5DBDB', image: '/assets/rankings/silver.png' },
+        { level: 9, key: 'bronze', threshold: 20800, color: '#CD853F', image: '/assets/rankings/bronze.png' },
+        { level: 8, key: 'iron', threshold: 16800, color: '#2C3E50', image: '/assets/rankings/iron.png' },
+        { level: 7, key: 'steel', threshold: 13600, color: '#566573', image: '/assets/rankings/steel.png' },
+        { level: 6, key: 'stone', threshold: 10800, color: '#7D8B8C', image: '/assets/rankings/stone.png' },
+        { level: 5, key: 'wood', threshold: 8400, color: '#8B4513', image: '/assets/rankings/wood.png' },
+        { level: 4, key: 'apprentice', threshold: 6400, color: '#52C41A', image: '/assets/rankings/apprentice.png' },
+        { level: 3, key: 'novice', threshold: 4800, color: '#13C2C2', image: '/assets/rankings/novice.png' },
+        { level: 2, key: 'trainee', threshold: 3200, color: '#722ED1', image: '/assets/rankings/trainee.png' },
         { level: 1, key: 'beginner', threshold: 0, color: '#595959', image: '/assets/rankings/beginner.png' }
       ],
       showFullScreenRanking: false,
@@ -2440,19 +2440,114 @@ export default {
 /* Remove previous "left on large screens" behavior; keep centered */
 @media (min-width: 1200px) {
   .header-controls {
-    display: flex;
+    display: grid;                      /* switch to grid for robust layout */
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    max-width: 1400px;                  /* constrain width for beauty on big screens */
+    margin: 16px auto 0;
   }
-  .ranking-display {
-    order: 0;                /* was: -1 */
-    margin-left: auto;       /* was: margin-right:auto pushing to left */
-    margin-right: auto;
-  }
+
   .import-export-controls {
-    order: 0;                /* ensure default order */
+    justify-self: start;
+    flex-wrap: nowrap;
+    gap: 12px;
   }
+
+  .ranking-display {
+    justify-self: center;
+    margin: 0;                          /* remove auto margins from flex solution */
+  }
+
   .total-points {
-    order: 0;                /* ensure default order */
+    justify-self: end;
   }
+
+  /* Slight upscale for rank badge on big screens for clarity */
+  .rank-badge {
+    padding: 14px 18px;
+  }
+  .rank-icon {
+    width: 56px;
+    height: 56px;
+    padding: 6px;
+  }
+  .rank-info .rank-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  .rank-info .rank-level {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  /* Make header buttons a touch larger and consistent on big screens */
+  .control-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+}
+
+/* Total points: tidy and consistent */
+.total-points {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.points-label {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+/* Rank progress: clearer layout without logic changes */
+.rank-progress {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 10px;
+}
+
+.rank-progress .progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4b5563;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.rank-progress .progress-percentage {
+  font-weight: 700;
+  color: #111827;
+}
+.rank-progress .progress-percentage.max-rank {
+  color: #2563eb;
+}
+
+.rank-progress-bar {
+  margin-bottom: 6px;
+}
+
+.next-rank-info .next-rank-text,
+.max-rank-info .max-rank-text {
+  font-size: 12px;
+  color: #6b7280;
 }
 
 /* Responsive header controls */
@@ -3518,476 +3613,119 @@ export default {
   }
 }
 
-/* Task details and ranking details centering and scrollable */
-.ranking-details {
-  max-height: 60vh;
-  overflow: auto;
-  padding: 8px 6px;
+/* Total points: tidy and consistent */
+.total-points {
   display: flex;
-  flex-direction: column;
-  align-items: center;    /* center content horizontally */
-  text-align: center;
-}
-
-/* Center grid items in the preview grid */
-.ranks-grid {
-  justify-items: center;
-}
-
-/* Fullscreen Current Rank Image Preview */
-.rank-image-preview-dialog .el-dialog__body {
-  padding: 0;
-  background: rgba(10, 10, 10, 0.95);
-}
-
-.rank-image-preview-container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  display: grid;
-  place-items: center;
-  cursor: zoom-out;
-  padding: 16px 16px 96px; /* reserve space for meta */
-  box-sizing: border-box;
-}
-
-.rank-image-fullscreen {
-  /* Never scale up, only scale down; appear smaller for better suitability */
-  width: auto;
-  height: auto;
-  max-width: min(70vw, 900px);
-  max-height: min(70vh, 900px);
-  object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-}
-
-@media (max-height: 520px) {
-  .rank-image-preview-container {
-    padding-bottom: 72px;
-  }
-  .rank-image-fullscreen {
-    max-width: min(80vw, 800px);
-    max-height: min(60vh, 600px);
-  }
-}
-
-.rank-image-preview-meta {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
   align-items: center;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 8px;
+}
+
+.points-label {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: 999px;
+  background: linear-gradient(135deg, #10b981, #34d399);
   color: #fff;
-  font-weight: 600;
-  backdrop-filter: blur(6px);
-  font-size: 14px;
-}
-.rank-image-preview-meta .hint {
-  opacity: 0.7;
-  font-weight: 400;
-}
-
-/* Monthly Summary layout and visuals */
-.monthly-summary {
-  margin-top: 24px;
-}
-
-.enhanced-summary {
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.summary-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f2f5;
-}
-
-.summary-icon {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-}
-
-.summary-title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.summary-stats.enhanced-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(200px, 1fr));
-  gap: 16px;
-  padding: 16px;
-}
-
-.enhanced-stat-item {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 16px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-}
-
-.stat-visual {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.enhanced-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 22px;
-}
-.points-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-.completed-icon { background: linear-gradient(135deg, #10b981, #34d399); }
-.success-icon { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
-
-.stat-circle {
-  width: 56px;
-  height: 56px;
-}
-
-.circular-chart {
-  width: 56px;
-  height: 56px;
-}
-.circular-chart .circle-bg {
-  fill: none;
-  stroke: #eee;
-  stroke-width: 3.2;
-}
-.circular-chart .circle {
-  fill: none;
-  stroke-width: 3.2;
-  stroke-linecap: round;
-  animation: progress 1.2s ease-out;
-}
-.circular-chart.gold .circle { stroke: #f59e0b; }
-.circular-chart.green .circle { stroke: #10b981; }
-.circular-chart.blue .circle { stroke: #3b82f6; }
-
-@keyframes progress {
-  0% { stroke-dasharray: 0 100; }
-}
-
-.enhanced-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-label {
-  color: #666;
-  font-size: 12px;
-}
-
-.enhanced-value {
-  font-size: 1.8rem;
   font-weight: 700;
-  line-height: 1.1;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+/* Rank progress: clearer layout without logic changes */
+.rank-progress {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 10px;
+}
+
+.rank-progress .progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4b5563;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.rank-progress .progress-percentage {
+  font-weight: 700;
   color: #111827;
 }
+.rank-progress .progress-percentage.max-rank {
+  color: #2563eb;
+}
 
-.stat-subtitle {
-  color: #909399;
+.rank-progress-bar {
+  margin-bottom: 6px;
+}
+
+.next-rank-info .next-rank-text,
+.max-rank-info .max-rank-text {
   font-size: 12px;
+  color: #6b7280;
 }
 
-/* Chart container height for better balance with Monthly Summary */
-.chart-container {
-  width: 100%;
-  height: 360px;
-}
+/* Large screens: balanced 3-column header with centered ranking */
 @media (min-width: 1200px) {
-  .chart-container {
-    height: 420px;
+  .header-controls {
+    display: grid;                      /* switch to grid for robust layout */
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    max-width: 1400px;                  /* constrain width for beauty on big screens */
+    margin: 16px auto 0;
   }
-}
-@media (max-width: 768px) {
-  .summary-stats.enhanced-stats {
-    grid-template-columns: 1fr; /* keep small screens unchanged and readable */
+
+  .import-export-controls {
+    justify-self: start;
+    flex-wrap: nowrap;
     gap: 12px;
-    padding: 12px;
-  }
-  .chart-container {
-    height: 280px;
-  }
-}
-
-/* Full Screen Ranking Modal */
-.full-screen-ranking-modal {
-  margin-top: 5vh !important;
-  margin-bottom: 5vh !important;
-}
-
-.full-screen-ranking-modal .el-dialog {
-  min-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.full-screen-ranking-modal .el-dialog__body {
-  flex: 1;
-  padding: 0;
-}
-
-.full-screen-ranking-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin: -20px -20px 0 -20px;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.close-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
-}
-
-.full-screen-ranking-content {
-  padding: 30px;
-  min-height: 500px;
-}
-
-.current-rank-showcase {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 40px;
-  padding: 30px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.showcase-rank-icon {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 8px;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-}
-
-.showcase-rank-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 50%;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
-}
-
-.showcase-rank-info {
-  text-align: center;
-}
-
-.showcase-rank-name {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 8px 0;
-}
-
-.showcase-rank-level {
-  font-size: 1.2rem;
-  color: #666;
-  margin: 0 0 8px 0;
-}
-
-.showcase-rank-points {
-  font-size: 1.1rem;
-  color: #409eff;
-  font-weight: 600;
-  margin: 0;
-}
-
-.full-screen-ranks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.full-screen-rank-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.full-screen-rank-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.full-screen-rank-item.current-rank {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  border-color: #4299e1;
-  box-shadow: 0 4px 20px rgba(66, 153, 225, 0.3);
-}
-
-.full-screen-rank-item.current-rank::before {
-  content: '✓';
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: #2b6cb0;
-  font-weight: bold;
-  font-size: 16px;
-  background: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.full-screen-rank-image {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  border-radius: 8px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-.full-screen-rank-details {
-  flex: 1;
-}
-
-.full-screen-rank-name {
-  display: block;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 4px;
-}
-
-.full-screen-rank-threshold {
-  font-size: 0.9rem;
-  color: #718096;
-  font-weight: 500;
-}
-
-/* Mobile responsive for full screen modal */
-@media (max-width: 768px) {
-  .full-screen-ranking-modal {
-    margin: 0 !important;
   }
 
-  .full-screen-ranking-header {
-    padding: 15px 20px;
+  .ranking-display {
+    justify-self: center;
+    margin: 0;                          /* remove auto margins from flex solution */
   }
 
-  .modal-title {
-    font-size: 1.3rem;
+  .total-points {
+    justify-self: end;
   }
 
-  .full-screen-ranking-content {
-    padding: 20px;
+  /* Slight upscale for rank badge on big screens for clarity */
+  .rank-badge {
+    padding: 14px 18px;
+  }
+  .rank-icon {
+    width: 56px;
+    height: 56px;
+    padding: 6px;
+  }
+  .rank-info .rank-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  .rank-info .rank-level {
+    font-size: 12px;
+    color: #6b7280;
   }
 
-  .current-rank-showcase {
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px;
-  }
-
-  .showcase-rank-icon {
-    width: 100px;
-    height: 100px;
-  }
-
-  .showcase-rank-name {
-    font-size: 1.6rem;
-  }
-
-  .full-screen-ranks-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .full-screen-rank-item {
-    padding: 15px;
-  }
-
-  .full-screen-rank-image {
-    width: 50px;
-    height: 50px;
-  }
-
-  .enhanced-stats {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .enhanced-stat-item {
-    padding: 15px;
-    gap: 15px;
-  }
-
-  .enhanced-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
-  }
-  .points-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-.completed-icon { background: linear-gradient(135deg, #10b981, #34d399); }
-.success-icon { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
-
-  .stat-circle {
-    width: 50px;
-    height: 50px;
-  }
-
-  .circular-chart {
-    width: 50px;
-    height: 50px;
+  /* Make header buttons a touch larger and consistent on big screens */
+  .control-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 }
+
+/* ...existing code... */
 </style>
 

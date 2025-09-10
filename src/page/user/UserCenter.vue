@@ -73,7 +73,6 @@
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
-              <el-dropdown-item command="Local">Local</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </div>
@@ -270,12 +269,18 @@ export default {
 
   methods: {
     initializeSettings() {
-      if (util.isEmptyStr(this.user.pronunciationSource)) {
+      // migrate/remove Local pronunciation source, keep only Cambridge
+      if (
+        util.isEmptyStr(this.user.pronunciationSource) ||
+        this.user.pronunciationSource === (kiwiConst.PRONUNCIATION_SOURCE && kiwiConst.PRONUNCIATION_SOURCE.LOCAL) ||
+        this.user.pronunciationSource === 'Local'
+      ) {
         setStore({
           name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE,
-          content: kiwiConst.PRONUNCIATION_SOURCE.LOCAL,
+          content: 'Cambridge',
           type: 'local'
         })
+        this.user.pronunciationSource = 'Cambridge'
       }
       if (util.isEmptyStr(this.user.bgm)) {
         setStore({
