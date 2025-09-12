@@ -38,7 +38,7 @@
               <span class="contact-title">{{ $t('about.instagram') }}</span>
             </div>
             <div class="contact-content">
-              <a href="https://instagram.com/kiwivocabulary" target="_blank" class="social-link instagram-link">
+              <a href="https://www.instagram.com/coding_by_feng/" target="_blank" class="social-link instagram-link">
                 <div class="social-button">
                   <i class="el-icon-camera"></i>
                   <span class="social-text">{{ $t('about.followOnInstagram') }}</span>
@@ -54,26 +54,10 @@
               <span class="contact-title">{{ $t('about.facebook') }}</span>
             </div>
             <div class="contact-content">
-              <a href="https://facebook.com/kiwivocabulary" target="_blank" class="social-link facebook-link">
+              <a href="https://www.facebook.com/shifeng.zhan" target="_blank" class="social-link facebook-link">
                 <div class="social-button">
                   <i class="el-icon-share"></i>
                   <span class="social-text">{{ $t('about.followOnFacebook') }}</span>
-                </div>
-              </a>
-            </div>
-          </div>
-
-          <!-- X (Twitter) -->
-          <div class="contact-item twitter-item">
-            <div class="contact-header">
-              <i class="el-icon-message"></i>
-              <span class="contact-title">{{ $t('about.twitter') }}</span>
-            </div>
-            <div class="contact-content">
-              <a href="https://x.com/kiwivocabulary" target="_blank" class="social-link twitter-link">
-                <div class="social-button">
-                  <i class="el-icon-message"></i>
-                  <span class="social-text">{{ $t('about.followOnTwitter') }}</span>
                 </div>
               </a>
             </div>
@@ -86,7 +70,7 @@
               <span class="contact-title">{{ $t('about.linkedin') }}</span>
             </div>
             <div class="contact-content">
-              <a href="https://linkedin.com/company/kiwivocabulary" target="_blank" class="social-link linkedin-link">
+              <a href="https://www.linkedin.com/in/kason-zhan-b73237274/" target="_blank" class="social-link linkedin-link">
                 <div class="social-button">
                   <i class="el-icon-user"></i>
                   <span class="social-text">{{ $t('about.followOnLinkedIn') }}</span>
@@ -95,17 +79,17 @@
             </div>
           </div>
 
-          <!-- Discord -->
-          <div class="contact-item discord-item">
+          <!-- GitHub -->
+          <div class="contact-item github-item">
             <div class="contact-header">
-              <i class="el-icon-chat-dot-round"></i>
-              <span class="contact-title">{{ $t('about.discord') }}</span>
+              <i class="el-icon-link"></i>
+              <span class="contact-title">{{ $t('about.github') }}</span>
             </div>
             <div class="contact-content">
-              <a href="https://discord.gg/kiwivocabulary" target="_blank" class="social-link discord-link">
+              <a href="https://github.com/coding-by-feng" target="_blank" class="social-link github-link">
                 <div class="social-button">
-                  <i class="el-icon-chat-dot-round"></i>
-                  <span class="social-text">{{ $t('about.joinDiscord') }}</span>
+                  <i class="el-icon-link"></i>
+                  <span class="social-text">{{ $t('about.followOnGitHub') }}</span>
                 </div>
               </a>
             </div>
@@ -370,14 +354,6 @@ export default {
   }
 }
 
-.twitter-link .social-button {
-  background: linear-gradient(135deg, #000000 0%, #333333 100%);
-
-  &:hover {
-    background: linear-gradient(135deg, #1a1a1a 0%, #404040 100%);
-  }
-}
-
 .linkedin-link .social-button {
   background: linear-gradient(135deg, #0077b5 0%, #00a0dc 100%);
 
@@ -386,13 +362,14 @@ export default {
   }
 }
 
-.discord-link .social-button {
-  background: linear-gradient(135deg, #5865f2 0%, #7289da 100%);
+.github-link .social-button {
+  background: linear-gradient(135deg, #24292e 0%, #2f363d 100%);
 
   &:hover {
-    background: linear-gradient(135deg, #4752c4 0%, #677bc4 100%);
+    background: linear-gradient(135deg, #1f2328 0%, #24292e 100%);
   }
 }
+
 
 .wechat-qr-container {
   text-align: center;
