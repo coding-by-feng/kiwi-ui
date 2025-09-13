@@ -359,19 +359,17 @@ export default {
         followOnInstagram: 'ติดตามบน Instagram',
         facebook: 'Facebook',
         followOnFacebook: 'ติดตามบน Facebook',
-        twitter: 'X (Twitter)',
-        followOnTwitter: 'ติดตามบน X',
         linkedin: 'LinkedIn',
         followOnLinkedIn: 'ติดตามบน LinkedIn',
-        discord: 'Discord',
-        joinDiscord: 'เข้าร่วม Discord Server',
         wechatQR: 'QR Code WeChat ส่วนตัว',
         scanToAdd: 'สแกนเพื่อเพิ่ม WeChat',
         acknowledgments: 'ขอขอบคุณเป็นพิเศษ',
         voiceRSSAttribution: 'Voice RSS - บริการแปลงข้อความเป็นเสียงออนไลน์',
         voiceRSSDescription: 'ให้บริการแปลงข้อความเป็นเสียงคุณภาพสูงสำหรับฟีเจอร์การออกเสียงของเรา',
         visitWebsite: 'เยี่ยมชมเว็บไซต์ทางการ',
-        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason สงวนลิขสิทธิ์'
+        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason สงวนลิขสิทธิ์',
+        github: 'GitHub',
+        followOnGitHub: 'ติดตามบน GitHub',
     },
 
     // Messages and notifications

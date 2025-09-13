@@ -196,5 +196,29 @@ export default {
         },
         rankLevel: '等級 {level}',
         nextRank: '下一級：{rank}',
+    },
+
+    // About section
+    about: {
+        title: '關於 Kason Tools',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Tools 是一個智慧英語學習平台，透過間隔重複與 AI 協助幫助你掌握詞彙。',
+        version: '版本 2.0',
+        contact: '聯絡我們',
+        instagram: 'Instagram',
+        followOnInstagram: '在 Instagram 上關注',
+        facebook: 'Facebook',
+        followOnFacebook: '在 Facebook 上關注',
+        linkedin: 'LinkedIn',
+        followOnLinkedIn: '在 LinkedIn 上關注',
+        wechatQR: '個人 WeChat 二維碼',
+        scanToAdd: '掃碼添加 WeChat',
+        acknowledgments: '特別感謝',
+        voiceRSSAttribution: 'Voice RSS - 線上文字轉語音服務',
+        voiceRSSDescription: '為我們的發音功能提供高品質的文字轉語音服務。',
+        visitWebsite: '造訪官方網站',
+        copyright: '©2025 Kason 英語學習平台。保留所有權利。',
+        github: 'GitHub',
+        followOnGitHub: '在 GitHub 上關注',
     }
 }
