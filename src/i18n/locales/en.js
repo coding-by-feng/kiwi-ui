@@ -374,19 +374,17 @@ export default {
         followOnInstagram: 'Follow on Instagram',
         facebook: 'Facebook',
         followOnFacebook: 'Follow on Facebook',
-        twitter: 'X (Twitter)',
-        followOnTwitter: 'Follow on X',
         linkedin: 'LinkedIn',
         followOnLinkedIn: 'Follow on LinkedIn',
-        discord: 'Discord',
-        joinDiscord: 'Join Discord Server',
         wechatQR: 'WeChat Personal QR Code',
         scanToAdd: 'Scan to add WeChat',
         acknowledgments: 'Special Thanks',
         voiceRSSAttribution: 'Voice RSS - Online text-to-speech service',
         voiceRSSDescription: 'Providing high-quality text-to-speech services for our pronunciation features.',
         visitWebsite: 'Visit Official Website',
-        copyright: '©2025 Kason English Learning Platform. All rights reserved.'
+        copyright: '©2025 Kason English Learning Platform. All rights reserved.',
+        github: 'GitHub',
+        followOnGitHub: 'Follow on GitHub',
     },
 
     // Messages and notifications
