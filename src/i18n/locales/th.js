@@ -345,7 +345,8 @@ export default {
         cacheCleanedSuccess: 'ล้างแคชทั้งหมดสำเร็จ',
         playing: 'กำลังเล่น...',
         clickToPlay: 'คลิกเพื่อเล่น',
-        nowPlaying: 'กำลังเล่นอยู่'
+        nowPlaying: 'กำลังเล่นอยู่',
+        title: 'การตั้งค่าเสียง'
     },
 
     // About

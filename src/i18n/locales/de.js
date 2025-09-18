@@ -116,7 +116,87 @@ export default {
 
     // AI features
     ai: {
-        useClipboardContent: 'Möchten Sie nach "{text}" suchen? Klicken Sie zum Fortfahren.'
+        useClipboardContent: 'Möchten Sie nach "{text}" suchen? Klicken Sie zum Fortfahren.',
+        aiCallHistory: 'AI Call History',
+        noHistoryFound: 'No AI Call History Found',
+        historyDescription: 'Your AI conversation history will appear here once you start using the AI features.',
+        mode: 'Mode',
+        languages: 'Languages',
+        timestamp: 'Timestamp',
+        prompt: 'Prompt',
+        filterByMode: 'Filter by Mode',
+        filterByLanguage: 'Filter by Language',
+        allModes: 'All Modes',
+        allLanguages: 'All Languages',
+        clearFilters: 'Clear Filters',
+        review: 'Review',
+        copy: 'Copy',
+        details: 'Details',
+        searchAgain: 'Search Again',
+        aiCallDetails: 'AI Call Details',
+        promptCopied: 'Prompt copied to clipboard!',
+        failedToCopy: 'Failed to copy prompt',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        daysAgo: '{count} days ago',
+        invalidDate: 'Invalid Date',
+        unknown: 'Unknown',
+        explainSelectedText: 'Explain Selected Text',
+        selectedText: 'Selected Text',
+        explainSelection: 'Explain Selection',
+        searchOnDictionary: 'Search on Dictionary',
+        noTextSelected: 'No text selected',
+        originalText: 'Original Text',
+        selectTextToExplain: 'Select text to explain based on the sentences context',
+        expandExplanation: 'Expand explanation',
+        collapseExplanation: 'Collapse explanation',
+        closeExplanation: 'Close explanation',
+        explanationForSelectedText: 'Explanation for Selected Text',
+        generating: 'Generating explanation...',
+        streaming: 'Streaming response...',
+        copyResponseText: 'Copy response text',
+        textCopiedToClipboard: 'Text copied to clipboard!',
+        failedToCopyText: 'Failed to copy text'
+    },
+
+    // Login
+    login: {
+        welcomeBack: 'Welcome Back',
+        smartEnglishLearning: 'Smart English Learning Platform',
+        features: {
+            smartMemory: 'Smart Vocabulary Memory',
+            pronunciation: 'Authentic Pronunciation Practice',
+            personalizedPlan: 'Personalized Learning Plan'
+        },
+        copyright: '©2025 Kason English Learning Platform v2.0',
+        useGoogleLogin: 'Use Google Account to Login',
+        loginProcessing: 'Processing...',
+        connectingGoogle: 'Connecting to Google...',
+        loginFailed: 'Login failed, please try again',
+        accountNotFound: 'Account not found, please contact administrator',
+        clipboardAccess: 'Clipboard Access',
+        clipboardInstructions: {
+            title: 'To use clipboard content on mobile devices:',
+            step1: 'Copy the text you want to search',
+            step2: 'Return to this app',
+            step3: 'Tap the "Paste from Clipboard" button',
+            step4: 'Or manually paste into the search box'
+        },
+        gotIt: 'Got it'
+    },
+
+    // Audio settings
+    audio: {
+        title: 'Audio Settings',
+        management: 'Audio Management',
+        cleanAudioData: 'Clean audio data, totally {count}',
+        cleanAllCache: 'Clean all cache',
+        backgroundMusic: 'Background Music',
+        audioCleanedSuccess: 'Audio data cleaned successfully',
+        cacheCleanedSuccess: 'All cache cleaned successfully',
+        playing: 'Playing...',
+        clickToPlay: 'Click to play',
+        nowPlaying: 'Now Playing'
     },
 
     // Todo Gamification

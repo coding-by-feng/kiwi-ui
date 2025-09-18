@@ -149,5 +149,89 @@ export default {
         },
         rankLevel: 'Nivel {level}',
         nextRank: 'Siguiente: {rank}',
+    },
+
+    // New: complete login block
+    login: {
+        welcomeBack: 'Bienvenido de vuelta',
+        smartEnglishLearning: 'Plataforma de aprendizaje de inglés inteligente',
+        features: {
+            smartMemory: 'Memoria inteligente de vocabulario',
+            pronunciation: 'Práctica de pronunciación auténtica',
+            personalizedPlan: 'Plan de aprendizaje personalizado'
+        },
+        copyright: '©2025 Kason English Learning Platform v2.0',
+        useGoogleLogin: 'Usar cuenta de Google para iniciar sesión',
+        loginProcessing: 'Procesando...',
+        connectingGoogle: 'Conectando con Google...',
+        loginFailed: 'Error de inicio de sesión, inténtelo de nuevo',
+        accountNotFound: 'Cuenta no encontrada, contacte al administrador',
+        clipboardAccess: 'Acceso al portapapeles',
+        clipboardInstructions: {
+            title: 'Para usar el contenido del portapapeles en móviles:',
+            step1: 'Copia el texto que quieres buscar',
+            step2: 'Regresa a esta app',
+            step3: 'Toca el botón "Pegar desde portapapeles"',
+            step4: 'O pega manualmente en la caja de búsqueda'
+        },
+        gotIt: 'Entendido'
+    },
+
+    // New: full AI features
+    ai: {
+        aiCallHistory: 'Historial de llamadas IA',
+        noHistoryFound: 'No se encontró historial de IA',
+        historyDescription: 'Tu historial de conversación con IA aparecerá aquí cuando empieces a usar las funciones de IA.',
+        mode: 'Modo',
+        languages: 'Idiomas',
+        timestamp: 'Marca de tiempo',
+        prompt: 'Indicador',
+        filterByMode: 'Filtrar por modo',
+        filterByLanguage: 'Filtrar por idioma',
+        allModes: 'Todos los modos',
+        allLanguages: 'Todos los idiomas',
+        clearFilters: 'Limpiar filtros',
+        review: 'Revisión',
+        copy: 'Copiar',
+        details: 'Detalles',
+        searchAgain: 'Buscar de nuevo',
+        aiCallDetails: 'Detalles de llamada IA',
+        promptCopied: '¡Indicador copiado al portapapeles!',
+        failedToCopy: 'Error al copiar el indicador',
+        today: 'Hoy',
+        yesterday: 'Ayer',
+        daysAgo: 'Hace {count} días',
+        invalidDate: 'Fecha inválida',
+        unknown: 'Desconocido',
+        explainSelectedText: 'Explicar texto seleccionado',
+        selectedText: 'Texto seleccionado',
+        explainSelection: 'Explicar selección',
+        searchOnDictionary: 'Buscar en diccionario',
+        noTextSelected: 'No hay texto seleccionado',
+        originalText: 'Texto original',
+        selectTextToExplain: 'Selecciona texto a explicar según el contexto',
+        expandExplanation: 'Expandir explicación',
+        collapseExplanation: 'Contraer explicación',
+        closeExplanation: 'Cerrar explicación',
+        explanationForSelectedText: 'Explicación del texto seleccionado',
+        generating: 'Generando explicación...',
+        streaming: 'Transmitiendo respuesta...',
+        copyResponseText: 'Copiar texto de respuesta',
+        textCopiedToClipboard: '¡Texto copiado al portapapeles!',
+        failedToCopyText: 'Error al copiar el texto'
+    },
+
+    // New: audio settings parity
+    audio: {
+        title: 'Configuración de audio',
+        management: 'Gestión de audio',
+        cleanAudioData: 'Limpiar datos de audio, total {count}',
+        cleanAllCache: 'Limpiar toda la caché',
+        backgroundMusic: 'Música de fondo',
+        audioCleanedSuccess: 'Datos de audio limpiados correctamente',
+        cacheCleanedSuccess: 'Toda la caché limpiada correctamente',
+        playing: 'Reproduciendo...',
+        clickToPlay: 'Clic para reproducir',
+        nowPlaying: 'Reproduciendo ahora'
     }
 }
