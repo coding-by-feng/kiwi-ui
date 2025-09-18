@@ -99,6 +99,32 @@ export default {
         copyright: '©2025 Kason英語学習プラットフォーム v2.0'
     },
 
+    // New: complete login block
+    login: {
+        welcomeBack: 'おかえりなさい',
+        smartEnglishLearning: 'スマート英語学習プラットフォーム',
+        features: {
+            smartMemory: 'スマート語彙記憶',
+            pronunciation: '本格的発音練習',
+            personalizedPlan: '個人化学習プラン'
+        },
+        copyright: '©2025 Kason English Learning Platform v2.0',
+        useGoogleLogin: 'Googleアカウントでログイン',
+        loginProcessing: '処理中...',
+        connectingGoogle: 'Googleに接続中...',
+        loginFailed: 'ログインに失敗しました。もう一度お試しください',
+        accountNotFound: 'アカウントが見つかりません。管理者に連絡してください',
+        clipboardAccess: 'クリップボードへのアクセス',
+        clipboardInstructions: {
+            title: 'モバイルでクリップボードを使うには：',
+            step1: '検索したいテキストをコピー',
+            step2: 'このアプリに戻る',
+            step3: '「クリップボードから貼り付け」ボタンをタップ',
+            step4: 'または検索ボックスに手動で貼り付け'
+        },
+        gotIt: '了解'
+    },
+
     // Search modes
     searchModes: {
         dictionary: '辞書',
@@ -207,5 +233,63 @@ export default {
         },
         rankLevel: 'レベル {level}',
         nextRank: '次: {rank}'
+    },
+
+    // New: full AI features
+    ai: {
+        aiCallHistory: 'AI利用履歴',
+        noHistoryFound: 'AI利用履歴が見つかりません',
+        historyDescription: 'AI機能の利用を開始すると、会話履歴がここに表示されます。',
+        mode: 'モード',
+        languages: '言語',
+        timestamp: 'タイムスタンプ',
+        prompt: 'プロンプト',
+        filterByMode: 'モードで絞り込み',
+        filterByLanguage: '言語で絞り込み',
+        allModes: 'すべてのモード',
+        allLanguages: 'すべての言語',
+        clearFilters: 'フィルターをクリア',
+        review: '復習',
+        copy: 'コピー',
+        details: '詳細',
+        searchAgain: '再検索',
+        aiCallDetails: 'AI呼び出しの詳細',
+        promptCopied: 'プロンプトをクリップボードにコピーしました！',
+        failedToCopy: 'プロンプトのコピーに失敗しました',
+        today: '今日',
+        yesterday: '昨日',
+        daysAgo: '{count}日前',
+        invalidDate: '無効な日付',
+        unknown: '不明',
+        explainSelectedText: '選択したテキストを説明',
+        selectedText: '選択したテキスト',
+        explainSelection: '選択を説明',
+        searchOnDictionary: '辞書で検索',
+        noTextSelected: 'テキストが選択されていません',
+        originalText: '原文',
+        selectTextToExplain: '文脈に基づき説明するテキストを選択してください',
+        expandExplanation: '説明を展開',
+        collapseExplanation: '説明を折りたたむ',
+        closeExplanation: '説明を閉じる',
+        explanationForSelectedText: '選択テキストの説明',
+        generating: '説明を生成中...',
+        streaming: '応答をストリーミング中...',
+        copyResponseText: '応答テキストをコピー',
+        textCopiedToClipboard: 'テキストをクリップボードにコピーしました！',
+        failedToCopyText: 'テキストのコピーに失敗しました'
+    },
+
+    // New: audio settings parity
+    audio: {
+        title: 'オーディオ設定',
+        management: 'オーディオ管理',
+        cleanAudioData: '音声データを削除 合計 {count}',
+        cleanAllCache: 'すべてのキャッシュを削除',
+        backgroundMusic: 'バックグラウンドミュージック',
+        audioCleanedSuccess: '音声データの削除に成功しました',
+        cacheCleanedSuccess: 'すべてのキャッシュの削除に成功しました',
+        playing: '再生中...',
+        clickToPlay: 'クリックして再生',
+        nowPlaying: '再生中'
     }
 }

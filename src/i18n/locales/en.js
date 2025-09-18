@@ -367,7 +367,7 @@ export default {
     about: {
         title: 'About Kason Tools',
         kasonTools: 'Kason Tools',
-        description: 'Kason Tools is an intelligent English learning platform that helps you master vocabulary through spaced repetition and AI assistance.',
+        description: 'Kason Tools is a smart English learning platform that blends spaced repetition with AI to help you master vocabulary, phrases, and grammar. Review with flexible modes, practice authentic pronunciation, learn from YouTube subtitles with instant translation and explanations, organize collections, personalize your study flow, and stay motivated with progress stats and a gamified to-do ranking system.',
         version: 'Version 2.0',
         contact: 'Contact Us',
         instagram: 'Instagram',

@@ -116,7 +116,87 @@ export default {
 
     // AI features
     ai: {
-        useClipboardContent: 'Voulez-vous rechercher "{text}" ? Cliquez pour continuer.'
+        useClipboardContent: 'Voulez-vous rechercher "{text}" ? Cliquez pour continuer.',
+        aiCallHistory: 'Historique des appels IA',
+        noHistoryFound: 'Aucun historique des appels IA',
+        historyDescription: 'Votre historique de conversation IA apparaîtra ici lorsque vous commencerez à utiliser les fonctionnalités IA.',
+        mode: 'Mode',
+        languages: 'Langues',
+        timestamp: 'Horodatage',
+        prompt: 'Invite',
+        filterByMode: 'Filtrer par mode',
+        filterByLanguage: 'Filtrer par langue',
+        allModes: 'Tous les modes',
+        allLanguages: 'Toutes les langues',
+        clearFilters: 'Effacer les filtres',
+        review: 'Révision',
+        copy: 'Copier',
+        details: 'Détails',
+        searchAgain: 'Rechercher à nouveau',
+        aiCallDetails: 'Détails de l’appel IA',
+        promptCopied: 'Invite copiée dans le presse-papiers !',
+        failedToCopy: 'Échec de la copie de l’invite',
+        today: 'Aujourd’hui',
+        yesterday: 'Hier',
+        daysAgo: 'Il y a {count} jours',
+        invalidDate: 'Date invalide',
+        unknown: 'Inconnu',
+        explainSelectedText: 'Expliquer le texte sélectionné',
+        selectedText: 'Texte sélectionné',
+        explainSelection: 'Expliquer la sélection',
+        searchOnDictionary: 'Chercher dans le dictionnaire',
+        noTextSelected: 'Aucun texte sélectionné',
+        originalText: 'Texte original',
+        selectTextToExplain: 'Sélectionnez le texte à expliquer selon le contexte',
+        expandExplanation: 'Développer l’explication',
+        collapseExplanation: 'Réduire l’explication',
+        closeExplanation: 'Fermer l’explication',
+        explanationForSelectedText: 'Explication pour le texte sélectionné',
+        generating: 'Génération de l’explication...',
+        streaming: 'Réponse en cours de diffusion...',
+        copyResponseText: 'Copier le texte de réponse',
+        textCopiedToClipboard: 'Texte copié dans le presse-papiers !',
+        failedToCopyText: 'Échec de la copie du texte'
+    },
+
+    // Login section
+    login: {
+        welcomeBack: 'Bon retour',
+        smartEnglishLearning: 'Plateforme d’apprentissage anglais intelligente',
+        features: {
+            smartMemory: 'Mémorisation intelligente du vocabulaire',
+            pronunciation: 'Pratique de prononciation authentique',
+            personalizedPlan: 'Plan d’apprentissage personnalisé'
+        },
+        copyright: '©2025 Plateforme d’apprentissage anglais Kason v2.0',
+        useGoogleLogin: 'Se connecter avec un compte Google',
+        loginProcessing: 'Traitement...',
+        connectingGoogle: 'Connexion à Google...',
+        loginFailed: 'Échec de la connexion, veuillez réessayer',
+        accountNotFound: 'Compte introuvable, veuillez contacter l’administrateur',
+        clipboardAccess: 'Accès au presse-papiers',
+        clipboardInstructions: {
+            title: 'Pour utiliser le contenu du presse-papiers sur mobile :',
+            step1: 'Copiez le texte à rechercher',
+            step2: 'Revenez à cette application',
+            step3: 'Touchez le bouton « Coller depuis le presse-papiers »',
+            step4: 'Ou collez manuellement dans la barre de recherche'
+        },
+        gotIt: 'Compris'
+    },
+
+    // Audio settings
+    audio: {
+        title: 'Paramètres audio',
+        management: 'Gestion audio',
+        cleanAudioData: 'Nettoyer les données audio, total {count}',
+        cleanAllCache: 'Nettoyer tout le cache',
+        backgroundMusic: 'Musique de fond',
+        audioCleanedSuccess: 'Données audio nettoyées avec succès',
+        cacheCleanedSuccess: 'Tout le cache a été nettoyé',
+        playing: 'Lecture...',
+        clickToPlay: 'Cliquer pour lire',
+        nowPlaying: 'Lecture en cours'
     },
 
     // Todo Gamification

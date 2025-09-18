@@ -99,6 +99,32 @@ export default {
         copyright: '©2025 Kason英語學習平台 v2.0'
     },
 
+    // New: complete login block
+    login: {
+        welcomeBack: '歡迎回來',
+        smartEnglishLearning: '智慧英語學習平台',
+        features: {
+            smartMemory: '智能詞彙記憶',
+            pronunciation: '純正發音練習',
+            personalizedPlan: '個性化學習計劃'
+        },
+        copyright: '©2025 Kason英語學習平台 v2.0',
+        useGoogleLogin: '使用 Google 帳戶登入',
+        loginProcessing: '處理中...',
+        connectingGoogle: '正在連接 Google...',
+        loginFailed: '登入失敗，請重試',
+        accountNotFound: '找不到帳戶，請聯絡管理員',
+        clipboardAccess: '剪貼簿存取',
+        clipboardInstructions: {
+            title: '在行動裝置上使用剪貼簿內容：',
+            step1: '複製你想搜尋的文字',
+            step2: '返回此應用',
+            step3: '點擊「從剪貼簿貼上」按鈕',
+            step4: '或手動貼上到搜尋框'
+        },
+        gotIt: '知道了'
+    },
+
     // Search modes
     searchModes: {
         dictionary: '詞典',
@@ -196,6 +222,64 @@ export default {
         },
         rankLevel: '等級 {level}',
         nextRank: '下一級：{rank}',
+    },
+
+    // New: full AI features
+    ai: {
+        aiCallHistory: 'AI 呼叫歷史',
+        noHistoryFound: '未找到 AI 呼叫歷史',
+        historyDescription: '開始使用 AI 功能後，你的對話歷史將顯示在此處。',
+        mode: '模式',
+        languages: '語言',
+        timestamp: '時間戳記',
+        prompt: '提示詞',
+        filterByMode: '按模式篩選',
+        filterByLanguage: '按語言篩選',
+        allModes: '所有模式',
+        allLanguages: '所有語言',
+        clearFilters: '清除篩選',
+        review: '複習',
+        copy: '複製',
+        details: '詳細',
+        searchAgain: '再次搜尋',
+        aiCallDetails: 'AI 呼叫詳細',
+        promptCopied: '提示詞已複製到剪貼簿！',
+        failedToCopy: '複製提示詞失敗',
+        today: '今天',
+        yesterday: '昨天',
+        daysAgo: '{count} 天前',
+        invalidDate: '無效日期',
+        unknown: '未知',
+        explainSelectedText: '解釋所選文字',
+        selectedText: '所選文字',
+        explainSelection: '解釋選擇',
+        searchOnDictionary: '在字典中搜尋',
+        noTextSelected: '未選取文字',
+        originalText: '原文',
+        selectTextToExplain: '根據語境選擇要解釋的文字',
+        expandExplanation: '展開解釋',
+        collapseExplanation: '收合解釋',
+        closeExplanation: '關閉解釋',
+        explanationForSelectedText: '所選文字的解釋',
+        generating: '正在產生解釋...',
+        streaming: '正在串流回應...',
+        copyResponseText: '複製回應文字',
+        textCopiedToClipboard: '文字已複製到剪貼簿！',
+        failedToCopyText: '複製文字失敗'
+    },
+
+    // New: audio settings parity
+    audio: {
+        title: '音訊設定',
+        management: '音訊管理',
+        cleanAudioData: '清理音訊資料，共 {count}',
+        cleanAllCache: '清理所有快取',
+        backgroundMusic: '背景音樂',
+        audioCleanedSuccess: '音訊資料清理成功',
+        cacheCleanedSuccess: '所有快取清理成功',
+        playing: '播放中...',
+        clickToPlay: '點擊播放',
+        nowPlaying: '正在播放'
     },
 
     // About section

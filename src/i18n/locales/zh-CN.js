@@ -99,6 +99,32 @@ export default {
         copyright: '©2025 Kason英语学习平台 v2.0'
     },
 
+    // New: complete login block
+    login: {
+        welcomeBack: '欢迎回来',
+        smartEnglishLearning: '智能英语学习平台',
+        features: {
+            smartMemory: '智能词汇记忆',
+            pronunciation: '纯正发音练习',
+            personalizedPlan: '个性化学习计划'
+        },
+        copyright: '©2025 Kason英语学习平台 v2.0',
+        useGoogleLogin: '使用谷歌账户登录',
+        loginProcessing: '处理中...',
+        connectingGoogle: '正在连接谷歌...',
+        loginFailed: '登录失败，请重试',
+        accountNotFound: '账户未找到，请联系管理员',
+        clipboardAccess: '剪贴板访问',
+        clipboardInstructions: {
+            title: '在移动设备上使用剪贴板内容：',
+            step1: '复制你想搜索的文本',
+            step2: '返回此应用',
+            step3: '点击“从剪贴板粘贴”按钮',
+            step4: '或手动粘贴到搜索框'
+        },
+        gotIt: '知道了'
+    },
+
     // Search modes
     searchModes: {
         dictionary: '词典',
@@ -218,5 +244,63 @@ export default {
         copyright: '©2025 Kason 英语学习平台。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
+    },
+
+    // New: full AI features
+    ai: {
+        aiCallHistory: 'AI 调用历史',
+        noHistoryFound: '未找到 AI 调用历史',
+        historyDescription: '开始使用 AI 功能后，你的会话历史将显示在这里。',
+        mode: '模式',
+        languages: '语言',
+        timestamp: '时间戳',
+        prompt: '提示词',
+        filterByMode: '按模式筛选',
+        filterByLanguage: '按语言筛选',
+        allModes: '全部模式',
+        allLanguages: '全部语言',
+        clearFilters: '清除筛选',
+        review: '复习',
+        copy: '复制',
+        details: '详情',
+        searchAgain: '再次搜索',
+        aiCallDetails: 'AI 调用详情',
+        promptCopied: '提示词已复制到剪贴板！',
+        failedToCopy: '复制提示词失败',
+        today: '今天',
+        yesterday: '昨天',
+        daysAgo: '{count} 天前',
+        invalidDate: '无效日期',
+        unknown: '未知',
+        explainSelectedText: '解释所选文本',
+        selectedText: '所选文本',
+        explainSelection: '解释选择',
+        searchOnDictionary: '在词典中搜索',
+        noTextSelected: '未选择文本',
+        originalText: '原文',
+        selectTextToExplain: '基于语境选择要解释的文本',
+        expandExplanation: '展开解释',
+        collapseExplanation: '收起解释',
+        closeExplanation: '关闭解释',
+        explanationForSelectedText: '所选文本的解释',
+        generating: '正在生成解释...',
+        streaming: '正在流式响应...',
+        copyResponseText: '复制响应文本',
+        textCopiedToClipboard: '文本已复制到剪贴板！',
+        failedToCopyText: '复制文本失败'
+    },
+
+    // New: audio settings parity
+    audio: {
+        title: '音频设置',
+        management: '音频管理',
+        cleanAudioData: '清理音频数据，共 {count}',
+        cleanAllCache: '清理所有缓存',
+        backgroundMusic: '背景音乐',
+        audioCleanedSuccess: '音频数据清理成功',
+        cacheCleanedSuccess: '所有缓存清理成功',
+        playing: '播放中...',
+        clickToPlay: '点击播放',
+        nowPlaying: '正在播放'
     }
 }
