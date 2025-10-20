@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import TodoGamification from '@/components/TodoGamification.vue'
+import TodoGamification from '@/page/todo/TodoGamification.vue'
 
 export default {
   name: 'TodoView',

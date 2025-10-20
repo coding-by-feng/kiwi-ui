@@ -1,6 +1,27 @@
 # Kason Tools (Web + Electron)
 
-Kason Tools is a Vue 2.7 + Element UI application with an optional Electron shell. It provides fast vocabulary lookup, learning tools (YouTube assistant, grammar listening, BGM), user accounts, i18n, and AI-assisted features.
+Kason Tools is an integrated language learning and media-assisted study workstation. It combines rapid vocabulary lookup, contextual video (YouTube) learning, grammar/audio immersion, spaced review (starred items), background focus music, and AI-assisted exploration into a single, tab‑driven interface deployable on the web or as a desktop app via Electron.
+
+The goal is to reduce friction between looking up a word, seeing it used in authentic media, saving it for review, and generating AI clarifications (examples, paraphrases, grammar hints) without juggling multiple sites. Local grammar audio/text assets enable low‑latency offline-ish practice; Electron packaging adds a distraction‑reduced, native‑feeling environment.
+
+Primary users:
+- Learners who alternate between passive (listening/viewing) and active (lookup, note, review) stages.
+- Developers or power users wanting an extendable Vue 2.7 codebase that demonstrates modular feature tabs, i18n, and Electron coexistence.
+
+Key differentiators:
+- Unified lexical → context → retention loop in one UI.
+- AI response history to compare iterations (prompt refinement / reasoning).
+- Local asset strategy (grammar + BGM) for predictable performance.
+- Web + Electron build path without maintaining a forked codebase.
+- Mobile-friendly tab layout while still desktop-efficient.
+
+Typical use cases:
+- Watch a YouTube segment, pause, open immediate word detail, star for later review.
+- Generate AI examples or explanations for a newly encountered phrase and retain the chain.
+- Play grammar listening tracks while reviewing previously starred vocabulary.
+- Run as a desktop app for focused study sessions with offline-ready assets.
+
+Technology focus: pragmatic Vue 2.7 stack (incremental migration-friendly), Element UI for rapid form/table composition, Axios wrapper with environment awareness, scoped i18n, and a build strategy tuned for moderate bundle size and Electron reuse.
 
 
 - Word search and detail view

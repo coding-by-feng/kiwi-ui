@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { execSync } = require('child_process');
+// Add fallback optimizer
+const { optimizeImageFallback } = require('./image-optimizer');
 
 // Configuration
 const EXTERNAL_ASSETS_DIR = path.join(__dirname, '../public/assets/external');
@@ -79,7 +81,8 @@ const downloadFile = (url, filepath) => {
   });
 };
 
-const optimizeImage = (inputPath, outputPath = null) => {
+// Make optimizeImage async and truly await transformations
+const optimizeImage = async (inputPath, outputPath = null) => {
   if (!outputPath) outputPath = inputPath;
 
   const originalSize = fs.existsSync(inputPath) ? fs.statSync(inputPath).size : 0;
@@ -90,47 +93,52 @@ const optimizeImage = (inputPath, outputPath = null) => {
 
   console.log(`🖼️  Optimizing image: ${path.basename(inputPath)} (${(originalSize / 1024).toFixed(2)}KB)`);
 
+  const ext = path.extname(inputPath).toLowerCase();
+
   try {
-    // Check if imagemin is available, if not use built-in optimization
-    let optimized = false;
-
-    // Try sharp first (best quality)
+    // Prefer sharp when available
+    let usedSharp = false;
+    let sharp;
     try {
-      execSync('npm list sharp --depth=0', { stdio: 'ignore' });
-      const sharp = require('sharp');
-
-      if (inputPath.endsWith('.png')) {
-        sharp(inputPath)
-          .png({ quality: 80, compressionLevel: 8 })
-          .toFile(outputPath + '.tmp')
-          .then(() => {
-            fs.renameSync(outputPath + '.tmp', outputPath);
-            optimized = true;
-          });
-      } else if (inputPath.endsWith('.jpg') || inputPath.endsWith('.jpeg')) {
-        sharp(inputPath)
-          .jpeg({ quality: 85, progressive: true })
-          .toFile(outputPath + '.tmp')
-          .then(() => {
-            fs.renameSync(outputPath + '.tmp', outputPath);
-            optimized = true;
-          });
-      }
+      sharp = require('sharp');
+      usedSharp = true;
     } catch (e) {
-      // Sharp not available, try imagemin
-      try {
-        execSync('npm list imagemin --depth=0', { stdio: 'ignore' });
-        // Use imagemin if available
-        const command = `npx imagemin ${inputPath} --out-dir=${path.dirname(outputPath)} --plugin.pngquant --plugin.mozjpeg`;
-        execSync(command, { stdio: 'ignore' });
-        optimized = true;
-      } catch (e2) {
-        // Fallback: just copy the file
-        if (inputPath !== outputPath) {
-          fs.copyFileSync(inputPath, outputPath);
+      usedSharp = false;
+    }
+
+    if (usedSharp) {
+      const tmp = `${outputPath}.tmp`;
+      if (ext === '.png') {
+        await sharp(inputPath)
+          .png({ quality: 80, compressionLevel: 8 })
+          .toFile(tmp);
+        fs.renameSync(tmp, outputPath);
+      } else if (ext === '.jpg' || ext === '.jpeg') {
+        await sharp(inputPath)
+          .jpeg({ quality: 85, progressive: true })
+          .toFile(tmp);
+        fs.renameSync(tmp, outputPath);
+      } else if (ext === '.gif') {
+        // sharp may drop animation; use fallback for gifs
+        const res = optimizeImageFallback(inputPath, outputPath);
+        const newSize = fs.statSync(outputPath).size;
+        const savings = ((originalSize - newSize) / originalSize * 100);
+        if (savings > 0) {
+          console.log(`✅ Optimized: ${path.basename(outputPath)} - saved ${savings.toFixed(1)}% (${((originalSize - newSize) / 1024).toFixed(2)}KB)`);
+        } else {
+          console.log(`✅ Processed: ${path.basename(outputPath)} (${(newSize / 1024).toFixed(2)}KB)`);
         }
-        console.log(`ℹ️  No optimization tools available, using original image`);
+        return true;
+      } else if (ext === '.ico') {
+        // Keep as-is for ICO to avoid breaking multi-size icon
+        if (inputPath !== outputPath) fs.copyFileSync(inputPath, outputPath);
+      } else {
+        // Unknown types: copy
+        if (inputPath !== outputPath) fs.copyFileSync(inputPath, outputPath);
       }
+    } else {
+      // Fallback basic optimizer
+      optimizeImageFallback(inputPath, outputPath);
     }
 
     const newSize = fs.statSync(outputPath).size;
@@ -210,16 +218,16 @@ async function main() {
   ];
 
   for (const image of imagesToOptimize) {
-    optimizeImage(image.input, image.output);
+    await optimizeImage(image.input, image.output);
   }
 
   // Optimize external images
   const externalImages = fs.readdirSync(EXTERNAL_ASSETS_DIR)
-    .filter(file => /\.(png|jpg|jpeg|gif)$/i.test(file))
+    .filter(file => /(\.png|\.jpg|\.jpeg|\.gif)$/i.test(file))
     .map(file => path.join(EXTERNAL_ASSETS_DIR, file));
 
   for (const imagePath of externalImages) {
-    optimizeImage(imagePath);
+    await optimizeImage(imagePath);
   }
 
   console.log('\n✨ Pre-build optimization completed!');

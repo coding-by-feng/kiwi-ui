@@ -12,7 +12,7 @@ import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
 import AiCallHistory from '@/page/ai/AiCallHistory.vue' // Import the new AI call history component
 import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
-import TodoView from '@/views/TodoView.vue' // Import the TodoView component
+import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
 
 export default [{
     path: '/',

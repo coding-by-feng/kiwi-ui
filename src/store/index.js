@@ -4,6 +4,7 @@ import user from './modules/user'
 import common from "./modules/common";
 import tags from "./modules/tags";
 import getters from "./getters";
+import todo from './modules/todo'
 
 Vue.use(Vuex);
 
@@ -11,10 +12,10 @@ const store = new Vuex.Store({
     modules: {
         user,
         common,
-        tags
+        tags,
+        todo
     },
     getters
 })
 
 export default store
-
