@@ -1,0 +1,799 @@
+openapi: 3.0.3
+info:
+  title: Todo API
+  version: 1.0.0
+  description: |
+    Backend API for the Todo Gamification module.
+    - Versioned under /api/v1
+    - JWT Bearer authentication required for all endpoints unless noted
+    - Responses follow an envelope pattern: { data, meta? }
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production
+  - url: https://staging-api.example.com/api/v1
+    description: Staging
+  - url: http://localhost:3000/api/v1
+    description: Local Development
+security:
+  - bearerAuth: []
+tags:
+  - name: Tasks
+  - name: History
+  - name: Trash
+  - name: Analytics
+  - name: Ranking
+  - name: Import/Export
+paths:
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/TaskStatusFilter'
+        - $ref: '#/components/parameters/FrequencyFilter'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/TaskSort'
+        - $ref: '#/components/parameters/Date'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+    post:
+      tags: [Tasks]
+      summary: Create a task
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+      responses:
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleTaskResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /tasks/{id}:
+    get:
+      tags: [Tasks]
+      summary: Get a task
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleTaskResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Tasks]
+      summary: Update a task
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleTaskResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
+    delete:
+      tags: [Tasks]
+      summary: Move a task to trash
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteOkResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tasks/{id}/complete:
+    post:
+      tags: [Tasks]
+      summary: Complete a task with success or fail
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - $ref: '#/components/parameters/IdempotencyKeyRequired'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteTaskRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteTaskResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /tasks/{id}/reset-status:
+    post:
+      tags: [Tasks]
+      summary: Reset a single task status to pending
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleTaskResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tasks/reset-statuses:
+    post:
+      tags: [Tasks]
+      summary: Reset all tasks to pending
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetAllResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /tasks/demo:
+    post:
+      tags: [Tasks]
+      summary: Seed demo data for the current user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoSeedResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /trash:
+    get:
+      tags: [Trash]
+      summary: List trash items
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrashListResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Trash]
+      summary: Clear all trash
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearTrashResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /trash/{id}:
+    delete:
+      tags: [Trash]
+      summary: Permanently delete a trash item
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteOkResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /trash/{id}/restore:
+    post:
+      tags: [Trash]
+      summary: Restore a task from trash
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleTaskResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /history:
+    get:
+      tags: [History]
+      summary: Get history records for a date
+      parameters:
+        - $ref: '#/components/parameters/DateRequired'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryListResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /history/{id}:
+    delete:
+      tags: [History]
+      summary: Delete a history record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteOkWithRankingMetaResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /analytics/monthly:
+    get:
+      tags: [Analytics]
+      summary: Monthly points for last N months
+      parameters:
+        - $ref: '#/components/parameters/Months'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsMonthlyResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /analytics/summary:
+    get:
+      tags: [Analytics]
+      summary: Monthly summary for a given month
+      parameters:
+        - $ref: '#/components/parameters/Month'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSummaryResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /ranking/current:
+    get:
+      tags: [Ranking]
+      summary: Get current ranking and points
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankingResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /ranking/ranks:
+    get:
+      tags: [Ranking]
+      summary: List rank definitions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RankDefinition'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /export/todo:
+    get:
+      tags: ['Import/Export']
+      summary: Export all todo data for current user (v1.1 format)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoExportResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /import/todo:
+    post:
+      tags: ['Import/Export']
+      summary: Import todo data (supports v1.1 and legacy)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoImportRequest'
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoImportResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  headers:
+    ETag:
+      description: Entity tag for optimistic concurrency control
+      schema: { type: string }
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: Optional idempotency key; if supplied, repeat requests within 24h return the same result
+      required: false
+      schema: { type: string, maxLength: 128 }
+    IdempotencyKeyRequired:
+      name: Idempotency-Key
+      in: header
+      description: Required idempotency key to prevent duplicate actions
+      required: true
+      schema: { type: string, maxLength: 128 }
+    IfMatch:
+      name: If-Match
+      in: header
+      description: ETag value to enforce concurrency control
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Search:
+      name: search
+      in: query
+      required: false
+      schema: { type: string, maxLength: 200 }
+    TaskStatusFilter:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [pending, completed, done, all]
+        default: all
+    FrequencyFilter:
+      name: frequency
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [once, daily, weekly, monthly, custom, all]
+        default: all
+    TaskSort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [points_desc, created_desc, updated_desc]
+        default: points_desc
+    Date:
+      name: date
+      in: query
+      required: false
+      description: Date context (UTC) in YYYY-MM-DD
+      schema: { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' }
+    DateRequired:
+      name: date
+      in: query
+      required: true
+      description: Date context (UTC) in YYYY-MM-DD
+      schema: { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' }
+    Months:
+      name: months
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 24, default: 6 }
+    Month:
+      name: month
+      in: query
+      required: false
+      description: Month context (UTC) in YYYY-MM
+      schema: { type: string, pattern: '^[0-9]{4}-[0-9]{2}$' }
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    PreconditionFailed:
+      description: Precondition Failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimited:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Error:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+    MetaPagination:
+      type: object
+      properties:
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+    Task:
+      type: object
+      required: [id, title, successPoints, failPoints, frequency, status, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 2000, nullable: true }
+        successPoints: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        failPoints: { type: integer, minimum: -100, maximum: 0, default: -5 }
+        frequency:
+          type: string
+          enum: [once, daily, weekly, monthly, custom]
+          default: once
+        customDays: { type: integer, minimum: 2, maximum: 365, nullable: true }
+        status:
+          type: string
+          enum: [pending, success, fail]
+          default: pending
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        deletedAt: { type: string, format: date-time, nullable: true }
+        metadata:
+          type: object
+          additionalProperties: true
+    TaskCreateRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        successPoints: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        failPoints: { type: integer, minimum: -100, maximum: 0, default: -5 }
+        frequency: { type: string, enum: [once, daily, weekly, monthly, custom], default: once }
+        customDays: { type: integer, minimum: 2, maximum: 365 }
+    TaskUpdateRequest:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        successPoints: { type: integer, minimum: 1, maximum: 100 }
+        failPoints: { type: integer, minimum: -100, maximum: 0 }
+        frequency: { type: string, enum: [once, daily, weekly, monthly, custom] }
+        customDays: { type: integer, minimum: 2, maximum: 365 }
+    TaskListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        meta:
+          $ref: '#/components/schemas/MetaPagination'
+    SingleTaskResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Task'
+    DeleteOkResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ok: { type: boolean, example: true }
+    ResetAllResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            resetCount: { type: integer, minimum: 0 }
+    DemoSeedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            tasksCreated: { type: integer, minimum: 0 }
+            historyCreated: { type: integer, minimum: 0 }
+            trashCreated: { type: integer, minimum: 0 }
+    HistoryRecord:
+      type: object
+      required: [id, taskId, status, pointsApplied, completedAt]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        taskId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        successPoints: { type: integer }
+        failPoints: { type: integer }
+        status: { type: string, enum: [success, fail] }
+        pointsApplied: { type: integer }
+        completedAt: { type: string, format: date-time }
+    HistoryListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryRecord'
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/MetaPagination'
+            - type: object
+              properties:
+                date: { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' }
+    DeleteOkWithRankingMetaResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ok: { type: boolean, example: true }
+        meta:
+          type: object
+          properties:
+            ranking:
+              $ref: '#/components/schemas/Ranking'
+    TrashItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        successPoints: { type: integer }
+        failPoints: { type: integer }
+        frequency: { type: string, enum: [once, daily, weekly, monthly, custom] }
+        customDays: { type: integer, nullable: true }
+        status: { type: string, enum: [pending, success, fail] }
+        originalDate: { type: string, format: date-time }
+        deletedDate: { type: string, format: date-time }
+    TrashListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrashItem'
+        meta:
+          $ref: '#/components/schemas/MetaPagination'
+    ClearTrashResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            deletedCount: { type: integer, minimum: 0 }
+    Ranking:
+      type: object
+      properties:
+        totalPoints: { type: integer }
+        currentRank:
+          $ref: '#/components/schemas/RankDefinition'
+        nextRank:
+          allOf:
+            - $ref: '#/components/schemas/RankDefinition'
+            - nullable: true
+        progressPct: { type: number, minimum: 0, maximum: 100 }
+    RankDefinition:
+      type: object
+      properties:
+        key: { type: string }
+        threshold: { type: integer }
+        level: { type: integer }
+    RankingResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Ranking'
+    AnalyticsMonthlyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            labels:
+              type: array
+              items: { type: string }
+            points:
+              type: array
+              items: { type: integer }
+    AnalyticsSummaryResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            month: { type: string, pattern: '^[0-9]{4}-[0-9]{2}$' }
+            totalPoints: { type: integer }
+            completedCount: { type: integer }
+            successRatePct: { type: integer, minimum: 0, maximum: 100 }
+    CompleteTaskRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [success, fail] }
+    CompleteTaskResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            task:
+              $ref: '#/components/schemas/Task'
+            history:
+              $ref: '#/components/schemas/HistoryRecord'
+            ranking:
+              $ref: '#/components/schemas/Ranking'
+    TodoExportResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            version: { type: string, example: '1.1' }
+            exportDate: { type: string, format: date-time }
+            tasks:
+              type: object
+              description: Map of date keys (YYYY-MM-DD) to arrays of tasks
+              additionalProperties:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+            history:
+              type: object
+              description: Map of date keys (YYYY-MM-DD) to arrays of history records
+              additionalProperties:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistoryRecord'
+            trash:
+              type: array
+              items:
+                $ref: '#/components/schemas/TrashItem'
+            metadata:
+              type: object
+              properties:
+                totalTasks: { type: integer }
+                totalHistoryRecords: { type: integer }
+                totalTrashItems: { type: integer }
+                exportedDates:
+                  type: array
+                  items: { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' }
+    TodoImportRequest:
+      description: JSON import body; supports current v1.1 and legacy formats
+      type: object
+      additionalProperties: true
+    TodoImportResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            importedTasks: { type: integer }
+            importedHistory: { type: integer }
+            importedTrash: { type: integer }
+            skippedDuplicates: { type: integer }
+

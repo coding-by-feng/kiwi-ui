@@ -98,6 +98,24 @@
             <i class="el-icon-plus"></i>
           </span>
         </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="autoCenterEnabled"
+              :active-text="isSmallScreen ? '' : 'Auto-center Timeline'"
+              @change="onAutoCenterChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-location-outline"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-location-information"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-location-information"></i>
+          </span>
+        </div>
       </div>
     </div>
 
@@ -219,7 +237,7 @@
             <i :class="scrollingSubtitlesCollapsed ? 'el-icon-arrow-right' : 'el-icon-arrow-down'" class="toggle-arrow"></i>
           </div>
         </div>
-        <div class="subtitles-container" v-if="subtitles.length && !scrollingSubtitlesCollapsed">
+        <div class="subtitles-container" v-if="subtitles.length && !scrollingSubtitlesCollapsed" ref="subtitlesContainer">
           <div class="subtitles-wrapper"
                v-show="!scrollingSubtitlesCollapsed"
                @mouseup="handleTextSelection"
@@ -266,6 +284,7 @@
                ref="translatedSubtitlesWrapper"
                @mouseup="handleTextSelection"
                @touchend="handleTextSelection">
+            <!-- Restore streaming indicator while translation is loading -->
             <div v-if="isTranslationLoading" class="translation-streaming-indicator">
               <div class="streaming-message">
                 <i class="el-icon-loading spinning"></i>
@@ -301,10 +320,8 @@
 import {defineComponent} from 'vue';
 import {downloadVideoScrollingSubtitles, deleteVideoSubtitles} from '@/api/ai';
 import msgUtil from '@/util/msg';
-import util from '@/util/util';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
-import kiwiConst from "@/const/kiwiConsts";
 import MarkdownIt from 'markdown-it';
 
 const md = new MarkdownIt({
@@ -317,6 +334,7 @@ const md = new MarkdownIt({
 export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
   data() {
+    const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
     return {
       videoUrl: null,
       ifTranslation: getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) || false,
@@ -361,6 +379,8 @@ export default defineComponent({
       progressUpdateInterval: null,
       // New: downloading state
       isDownloading: false,
+      // New: auto-center toggle (default true if unset)
+      autoCenterEnabled: (persistedAutoCenter === undefined || persistedAutoCenter === null) ? true : !!persistedAutoCenter,
     };
   },
   computed: {
@@ -407,6 +427,11 @@ export default defineComponent({
           this.videoUrl = decodeURIComponent(newVideoUrl);
           this.loadContent();
         }
+      }
+    },
+    currentSubtitleIndex(newVal, oldVal) {
+      if (this.autoCenterEnabled && newVal !== oldVal) {
+        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
       }
     }
   },
@@ -948,6 +973,10 @@ export default defineComponent({
       if (this.player.getPlayerState() !== YT.PlayerState.PLAYING) {
         this.player.playVideo();
       }
+      if (this.autoCenterEnabled) {
+        this.currentSubtitleIndex = index;
+        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+      }
     },
 
     pauseVideo() {
@@ -1048,10 +1077,54 @@ export default defineComponent({
       };
     },
 
+    // Helper: find the appropriate scrollable container for subtitles
+    getScrollableSubtitlesContainer(activeEl) {
+      // Prefer the explicit ref if present
+      if (this.$refs.subtitlesContainer) return this.$refs.subtitlesContainer;
+      // Fallback: closest matching container
+      const closest = activeEl?.closest?.('.subtitles-container');
+      if (closest) return closest;
+      // Last resort: scroll the element's parent
+      return activeEl?.parentElement || null;
+    },
+
+    // Helper: compute element's offsetTop relative to a given ancestor
+    getOffsetTopRelativeTo(el, ancestor) {
+      let top = 0;
+      let node = el;
+      while (node && node !== ancestor) {
+        top += node.offsetTop || 0;
+        node = node.offsetParent;
+      }
+      return top;
+    },
+
+    scrollActiveSubtitleIntoView() {
+      if (this.currentSubtitleIndex == null || this.currentSubtitleIndex < 0) return;
+      if (this.scrollingSubtitlesCollapsed) return;
+
+      const activeEl = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
+      if (!activeEl) return;
+
+      const containerEl = this.getScrollableSubtitlesContainer(activeEl);
+      if (!containerEl) return;
+
+      try {
+        const relativeTop = this.getOffsetTopRelativeTo(activeEl, containerEl);
+        const target = Math.max(0, relativeTop - (containerEl.clientHeight / 2) + (activeEl.offsetHeight / 2));
+        containerEl.scrollTo({ top: target, behavior: 'smooth' });
+      } catch (e) {
+        activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    },
+
     toggleScrollingSubtitles() {
       this.scrollingSubtitlesCollapsed = !this.scrollingSubtitlesCollapsed;
       const action = this.scrollingSubtitlesCollapsed ? 'collapsed' : 'expanded';
       msgUtil.msgSuccess(this, `Subtitles timeline ${action}`, 1000);
+      if (!this.scrollingSubtitlesCollapsed) {
+        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+      }
     },
 
     toggleTranslatedSubtitles() {
@@ -1108,6 +1181,13 @@ export default defineComponent({
         content: true,
         type: 'local'
       });
+    },
+
+    onAutoCenterChange(enabled) {
+      setStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER, content: enabled, type: 'local' });
+      if (enabled) {
+        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+      }
     },
 
     // Modified: Download translated subtitles directly from UI content
@@ -2500,7 +2580,7 @@ export default defineComponent({
 }
 
 /* High contrast support */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   .main-title,
   .current-subtitle-display,
   .active-subtitle,

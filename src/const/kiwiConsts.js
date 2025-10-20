@@ -166,7 +166,8 @@ export default {
         IF_SUBTITLES_TRANSLATION: 'if_subtitles_translation',
         NATIVE_LANG: 'native_lang',
         UI_LANGUAGE: 'ui_language', // Add UI language key
-        CLIPBOARD_DETECTION: 'clipboard_detection'
+        CLIPBOARD_DETECTION: 'clipboard_detection',
+        SUBTITLES_AUTO_CENTER: 'subtitles_auto_center' // New: persist subtitles auto-center preference
     },
 
     DB_NAME: 'KIWI_VOCABULARY',
