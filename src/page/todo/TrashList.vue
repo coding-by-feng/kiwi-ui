@@ -35,7 +35,9 @@
             </el-tooltip>
             <el-tooltip content="Permanently delete" placement="top">
               <el-popconfirm title="Permanently delete this task? This cannot be undone." @confirm="onDelete(task.id)">
-                <el-button slot="reference" type="danger" size="mini" icon="el-icon-close" circle class="trash-action-btn"></el-button>
+                <template v-slot:reference>
+                  <el-button type="danger" size="mini" icon="el-icon-close" circle class="trash-action-btn"></el-button>
+                </template>
               </el-popconfirm>
             </el-tooltip>
           </div>
@@ -65,4 +67,3 @@ export default {
   }
 }
 </script>
-

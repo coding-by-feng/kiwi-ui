@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="ai-container">
     <h1>{{ getTitle }}</h1>
 
     <!-- Beautiful Original Text Display -->
@@ -87,22 +87,21 @@
       <div
           v-show="!selectionContentCollapsed"
           class="selection-response-content"
-          v-html="parsedSelectionResponse"
           v-loading="selectionApiLoading"
       >
         <div v-if="isSelectionStreaming" class="streaming-indicator">
           <i class="el-icon-loading"></i> Generating explanation...
         </div>
+        <div v-else v-html="parsedSelectionResponse"></div>
       </div>
     </div>
 
     <!-- Original Response Container -->
     <div class="response-container">
-      <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading">
-        <div v-if="isStreaming" class="streaming-indicator">
-          <i class="el-icon-loading"></i> Streaming response...
-        </div>
+      <div v-if="isStreaming" class="streaming-indicator">
+        <i class="el-icon-loading"></i> Streaming response...
       </div>
+      <div v-else v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading"></div>
       <el-button
           v-if="!apiLoading && parsedResponseText"
           class="copy-button"

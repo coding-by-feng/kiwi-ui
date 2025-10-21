@@ -6,7 +6,7 @@
 
     <div v-if="historyTasks.length > 0" class="history-tasks">
       <h3 class="history-date-title">{{ formatDate(innerDate) }}</h3>
-      <el-card v-for="task in historyTasks" :key="`history-${task.id}-${task.completedDate || task.date || Date.now()}`" class="task-card history-task-card responsive-history-card" :class="getTaskStatusClass(task.status)">
+      <el-card v-for="task in historyTasks" :key="`history-${task.id}-${task.completedAt || task.completedDate || task.date || Date.now()}`" class="task-card history-task-card responsive-history-card" :class="getTaskStatusClass(task.status)">
         <div class="task-content history-task-content">
           <div class="history-task-main">
             <div class="task-info history-task-info">
@@ -18,10 +18,10 @@
                 <el-tag size="mini" type="success">+{{ task.successPoints }}</el-tag>
                 <el-tag size="mini" type="danger">{{ task.failPoints }}</el-tag>
               </div>
-              <div class="completion-time" v-if="task.completedDate">
+              <div class="completion-time" v-if="task.completedAt || task.completedDate">
                 <el-tag size="mini" type="info" effect="plain">
                   <i class="el-icon-time"></i>
-                  <span class="time-text">{{ formatTime(task.completedDate) }}</span>
+                  <span class="time-text">{{ formatTime(task.completedAt || task.completedDate) }}</span>
                 </el-tag>
               </div>
             </div>
@@ -33,8 +33,10 @@
               </el-tag>
             </div>
             <div class="history-actions">
-              <el-popconfirm :title="$t('todo.confirmDeleteHistoryRecord')" @confirm="onDeleteHistory(task.id, task.completedDate || task.date)">
-                <el-button slot="reference" type="danger" size="mini" icon="el-icon-delete" circle :title="$t('todo.deleteHistoryRecord')" class="history-delete-btn"></el-button>
+              <el-popconfirm :title="$t('todo.confirmDeleteHistoryRecord')" @confirm="onDeleteHistory(task.id, task.completedAt || task.completedDate || task.date)">
+                <template v-slot:reference>
+                  <el-button type="danger" size="mini" icon="el-icon-delete" circle :title="$t('todo.deleteHistoryRecord')" class="history-delete-btn"></el-button>
+                </template>
               </el-popconfirm>
             </div>
           </div>
@@ -75,4 +77,3 @@ export default {
   }
 }
 </script>
-

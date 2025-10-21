@@ -4,15 +4,15 @@
       <div slot="header">
         <TodoHeader
           :total-points="totalPoints"
-          :current-rank="currentRank"
+          :current-rank="currentRankDisplay"
           :sorted-ranks-for-display="sortedRanksForDisplay"
           :rank-progress="rankProgress"
-          :get-rank-name="getRankName"
-          :get-rank-class="getRankClass"
-          :get-rank-image="getRankImage"
-          :get-rank-color="getRankColor"
-          :get-next-rank-image="getNextRankImage"
-          :on-rank-image-error="onRankImageError"
+          :get-rank-name="key => getRankName(key)"
+          :get-rank-class="name => getRankClass(name)"
+          :get-rank-image="name => getRankImage(name)"
+          :get-rank-color="name => getRankColor(name)"
+          :get-next-rank-image="() => getNextRankImage()"
+          :on-rank-image-error="e => onRankImageError(e)"
           @export="exportTodoData"
           @demo="createDemoTasks"
           @clear="clearAllData"
@@ -23,27 +23,27 @@
 
       <el-tabs v-model="activeTab" type="card" class="responsive-tabs">
         <el-tab-pane :label="$t('todo.taskList')" name="tasks">
-          <TaskInput :new-task="newTask" :on-add="addTask" />
+          <TaskInput :new-task="newTask" :on-add="() => addTask()" />
           <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
           <TaskList
             :tasks="filteredTasks"
             :editing-task-id="editingTaskId"
             :editing-task="editingTask"
-            :empty-description="getEmptyDescription()"
-            :get-task-status-class="getTaskStatusClass"
-            :get-frequency-text="getFrequencyText"
-            :should-show-done-tag="shouldShowDoneTag"
-            :should-show-status-display="shouldShowStatusDisplay"
-            :get-completion-tag-type="getCompletionTagType"
-            :get-completion-tag-text="getCompletionTagText"
-            :should-show-status-actions="shouldShowStatusActions"
-            :should-show-reset-action="shouldShowResetAction"
-            :on-complete="completeTask"
-            :on-start-edit="startTaskEdit"
-            :on-save-edit="saveTaskEdit"
-            :on-cancel-edit="cancelTaskEdit"
-            :on-delete="deleteTask"
-            :on-reset-status="resetTaskStatus"
+            :empty-description="emptyDescriptionText"
+            :get-task-status-class="s => getTaskStatusClass(s)"
+            :get-frequency-text="(f, d) => getFrequencyText(f, d)"
+            :should-show-done-tag="t => shouldShowDoneTag(t)"
+            :should-show-status-display="t => shouldShowStatusDisplay(t)"
+            :get-completion-tag-type="t => getCompletionTagType(t)"
+            :get-completion-tag-text="t => getCompletionTagText(t)"
+            :should-show-status-actions="t => shouldShowStatusActions(t)"
+            :should-show-reset-action="t => shouldShowResetAction(t)"
+            :on-complete="(id, status) => completeTask(id, status)"
+            :on-start-edit="t => startTaskEdit(t)"
+            :on-save-edit="id => saveTaskEdit(id)"
+            :on-cancel-edit="() => cancelTaskEdit()"
+            :on-delete="id => deleteTask(id)"
+            :on-reset-status="id => resetTaskStatus(id)"
           />
         </el-tab-pane>
 
@@ -51,21 +51,21 @@
           <HistoryPanel
             :selected-date="selectedDate"
             :history-tasks="historyTasks"
-            :format-date="formatDate"
-            :format-time="formatTime"
-            :get-task-status-class="getTaskStatusClass"
-            :on-date-changed="loadHistoryForDate"
-            :on-delete-history-record="deleteHistoryRecord"
+            :format-date="d => formatDate(d)"
+            :format-time="d => formatTime(d)"
+            :get-task-status-class="s => getTaskStatusClass(s)"
+            :on-date-changed="d => loadHistoryForDate(d)"
+            :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
           />
         </el-tab-pane>
 
         <el-tab-pane :label="$t('todo.trash')" name="trash">
           <TrashList
             :trashed-tasks="trashedTasks"
-            :format-date="formatDate"
-            :on-restore-task="restoreTask"
-            :on-permanently-delete-task="permanentlyDeleteTask"
-            :on-clear-trash-click="clearTrash"
+            :format-date="d => formatDate(d)"
+            :on-restore-task="id => restoreTask(id)"
+            :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
+            :on-clear-trash-click="() => clearTrash()"
           />
         </el-tab-pane>
 
@@ -91,11 +91,11 @@
       <div class="full-screen-ranking-content">
         <div class="current-rank-showcase">
           <div class="showcase-rank-icon">
-            <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="showcase-rank-image" />
+            <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="showcase-rank-image" />
           </div>
           <div class="showcase-rank-info">
-            <h3 class="showcase-rank-name">{{ currentRank.name }}</h3>
-            <p class="showcase-rank-level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</p>
+            <h3 class="showcase-rank-name">{{ currentRankDisplay.name }}</h3>
+            <p class="showcase-rank-level">{{ $t('todo.rankLevel', { level: currentRankDisplay.level }) }}</p>
             <p class="showcase-rank-points">{{ totalPoints }} {{ $t('todo.points') }}</p>
           </div>
         </div>
@@ -114,13 +114,14 @@
 
     <el-dialog :visible.sync="showRankImagePreview" fullscreen :show-close="false" custom-class="rank-image-preview-dialog">
       <div class="rank-image-preview-container" @click="showRankImagePreview = false">
-        <img :src="getRankImage(currentRank.name)" :alt="currentRank.name" class="rank-image-fullscreen" />
+        <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="rank-image-fullscreen" />
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import { mapActions, mapGetters, mapState } from 'vuex'
 import TodoHeader from '@/page/todo/TodoHeader.vue'
 import TaskInput from '@/page/todo/TaskInput.vue'
 import TaskFilters from '@/page/todo/TaskFilters.vue'
@@ -128,6 +129,30 @@ import TaskList from '@/page/todo/TaskList.vue'
 import HistoryPanel from '@/page/todo/HistoryPanel.vue'
 import TrashList from '@/page/todo/TrashList.vue'
 import AnalyticsPanel from '@/page/todo/AnalyticsPanel.vue'
+
+// Local mapping for rank assets (images/colors) keyed by rank key
+const RANK_ASSETS = {
+  legendary: { color: '#FFD700', image: '/assets/rankings/legendary.png' },
+  mythic: { color: '#FF6B35', image: '/assets/rankings/mythic.png' },
+  immortal: { color: '#E74C3C', image: '/assets/rankings/immortal.png' },
+  divine: { color: '#9B59B6', image: '/assets/rankings/divine.png' },
+  celestial: { color: '#3498DB', image: '/assets/rankings/celestial.png' },
+  grandmaster: { color: '#1ABC9C', image: '/assets/rankings/grandmaster.png' },
+  master: { color: '#2ECC71', image: '/assets/rankings/master.png' },
+  diamond: { color: '#85C1E9', image: '/assets/rankings/diamond.png' },
+  platinum: { color: '#AED6F1', image: '/assets/rankings/platinum.png' },
+  gold: { color: '#F7DC6F', image: '/assets/rankings/gold.png' },
+  silver: { color: '#D5DBDB', image: '/assets/rankings/silver.png' },
+  bronze: { color: '#CD853F', image: '/assets/rankings/bronze.png' },
+  iron: { color: '#2C3E50', image: '/assets/rankings/iron.png' },
+  steel: { color: '#566573', image: '/assets/rankings/steel.png' },
+  stone: { color: '#7D8B8C', image: '/assets/rankings/stone.png' },
+  wood: { color: '#8B4513', image: '/assets/rankings/wood.png' },
+  apprentice: { color: '#52C41A', image: '/assets/rankings/apprentice.png' },
+  novice: { color: '#13C2C2', image: '/assets/rankings/novice.png' },
+  trainee: { color: '#722ED1', image: '/assets/rankings/trainee.png' },
+  beginner: { color: '#595959', image: '/assets/rankings/beginner.png' }
+}
 
 export default {
   name: 'TodoGamification',
@@ -139,320 +164,369 @@ export default {
       frequencyFilter: 'all',
       newTask: { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 },
       selectedDate: new Date(),
-      historyTasks: [],
       chartType: 'bar',
-      chart: null,
-      refreshTrigger: 0,
       editingTaskId: null,
       editingTask: { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 },
-      taskFormCollapsed: true,
-      ranks: [
-        { level: 20, key: 'legendary', threshold: 200000, color: '#FFD700', image: '/assets/rankings/legendary.png' },
-        { level: 19, key: 'mythic', threshold: 160000, color: '#FF6B35', image: '/assets/rankings/mythic.png' },
-        { level: 18, key: 'immortal', threshold: 128000, color: '#E74C3C', image: '/assets/rankings/immortal.png' },
-        { level: 17, key: 'divine', threshold: 104000, color: '#9B59B6', image: '/assets/rankings/divine.png' },
-        { level: 16, key: 'celestial', threshold: 84000, color: '#3498DB', image: '/assets/rankings/celestial.png' },
-        { level: 15, key: 'grandmaster', threshold: 68000, color: '#1ABC9C', image: '/assets/rankings/grandmaster.png' },
-        { level: 14, key: 'master', threshold: 56000, color: '#2ECC71', image: '/assets/rankings/master.png' },
-        { level: 13, key: 'diamond', threshold: 46000, color: '#85C1E9', image: '/assets/rankings/diamond.png' },
-        { level: 12, key: 'platinum', threshold: 38000, color: '#AED6F1', image: '/assets/rankings/platinum.png' },
-        { level: 11, key: 'gold', threshold: 31200, color: '#F7DC6F', image: '/assets/rankings/gold.png' },
-        { level: 10, key: 'silver', threshold: 25600, color: '#D5DBDB', image: '/assets/rankings/silver.png' },
-        { level: 9, key: 'bronze', threshold: 20800, color: '#CD853F', image: '/assets/rankings/bronze.png' },
-        { level: 8, key: 'iron', threshold: 16800, color: '#2C3E50', image: '/assets/rankings/iron.png' },
-        { level: 7, key: 'steel', threshold: 13600, color: '#566573', image: '/assets/rankings/steel.png' },
-        { level: 6, key: 'stone', threshold: 10800, color: '#7D8B8C', image: '/assets/rankings/stone.png' },
-        { level: 5, key: 'wood', threshold: 8400, color: '#8B4513', image: '/assets/rankings/wood.png' },
-        { level: 4, key: 'apprentice', threshold: 6400, color: '#52C41A', image: '/assets/rankings/apprentice.png' },
-        { level: 3, key: 'novice', threshold: 4800, color: '#13C2C2', image: '/assets/rankings/novice.png' },
-        { level: 2, key: 'trainee', threshold: 3200, color: '#722ED1', image: '/assets/rankings/trainee.png' },
-        { level: 1, key: 'beginner', threshold: 0, color: '#595959', image: '/assets/rankings/beginner.png' }
-      ],
       showFullScreenRanking: false,
       showRankImagePreview: false,
-      fallbackRankImage: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" rx="8" fill="#f3f4f6"/><g fill="none" stroke="#cbd5e1" stroke-width="2"><rect x="10" y="10" width="44" height="44" rx="6"/><path d="M16 44l10-12 8 8 6-8 8 12" fill="none"/></g></svg>`)
+      fallbackRankImage: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" rx="8" fill="#f3f4f6"/><g fill="none" stroke="#cbd5e1" stroke-width="2"><rect x="10" y="10" width="44" height="44" rx="6"/><path d="M16 44l10-12 8 8 6-8 8 12" fill="none"/></g></svg>`),
+      // internal holder for analytics summary (reactive)
+      _analyticsSummary: { totalPoints: 0, completedCount: 0, successRatePct: 0 }
     }
   },
   computed: {
-    allTasks() { this.refreshTrigger; return this.getAllTasks() },
+    ...mapState('todo', ['tasks', 'tasksMeta', 'history', 'historyMeta', 'trash', 'trashMeta', 'ranking', 'ranks', 'analyticsMonthly']),
+    ...mapGetters('todo', ['todoTaskEtag']),
+
+    allTasks() {
+      // always use store tasks; server as source of truth
+      return this.tasks || []
+    },
     filteredTasks() {
-      let tasks = this.allTasks
-      if (this.frequencyFilter !== 'all') {
+      let tasks = [...this.allTasks]
+      // Apply server-supported frequency filter client-side too (we also request it in fetch)
+      if (this.frequencyFilter && this.frequencyFilter !== 'all') {
         tasks = tasks.filter(t => (t.frequency || 'once') === this.frequencyFilter)
       }
-      if (this.taskFilter !== 'all') {
-        tasks = tasks.filter(task => {
-          switch (this.taskFilter) {
-            case 'pending': return task.status === 'pending'
-            case 'completed': return task.status === 'success' || task.status === 'fail'
-            case 'done': return this.shouldShowDoneTag(task) && (task.status === 'success' || task.status === 'fail')
-            default: return true
-          }
-        })
+      // Map taskFilter to UI-specific concepts
+      if (this.taskFilter === 'pending') {
+        tasks = tasks.filter(t => t.status === 'pending')
+      } else if (this.taskFilter === 'completed') {
+        tasks = tasks.filter(t => t.status === 'success' || t.status === 'fail')
+      } else if (this.taskFilter === 'done') {
+        tasks = tasks.filter(t => this.shouldShowDoneTag(t) && (t.status === 'success' || t.status === 'fail'))
       }
-      return tasks.sort((a,b) => {
+      // default sort to points_desc then updatedAt/createdAt desc
+      return tasks.sort((a, b) => {
         const ap = a.successPoints || 0; const bp = b.successPoints || 0; if (ap !== bp) return bp - ap
-        const ad = new Date(a.date || 0).getTime(); const bd = new Date(b.date || 0).getTime(); return bd - ad
+        const ad = new Date(a.updatedAt || a.createdAt || 0).getTime(); const bd = new Date(b.updatedAt || b.createdAt || 0).getTime(); return bd - ad
       })
     },
-    totalPoints() {
-      this.refreshTrigger
-      return this.getAllHistoryRecords().reduce((total, r) => total + (r.status === 'success' ? r.successPoints : r.status === 'fail' ? r.failPoints : 0), 0)
+
+    // Provide empty description text for TaskList based on current filter
+    emptyDescriptionText() {
+      switch (this.taskFilter) {
+        case 'pending': return this.$t('todo.noPendingTasks') || 'No pending tasks'
+        case 'completed': return this.$t('todo.noCompletedTasks') || 'No completed tasks'
+        case 'done': return this.$t('todo.noDoneTasks') || 'No done tasks'
+        default: return this.$t('todo.noTasksAvailable') || 'No tasks available'
+      }
     },
+
+    // Ranking-related computed derived from API ranking + server ranks + local assets
+    totalPoints() { return (this.ranking && typeof this.ranking.totalPoints === 'number') ? this.ranking.totalPoints : 0 },
+    currentRankDisplay() {
+      const current = this.ranking && this.ranking.currentRank ? this.ranking.currentRank : { key: 'beginner', threshold: 0, level: 1 }
+      const next = this.ranking && this.ranking.nextRank ? this.ranking.nextRank : null
+      const name = this.getRankName(current.key)
+      return {
+        ...current,
+        name,
+        nextThreshold: next ? next.threshold : null,
+        nextRankName: next ? this.getRankName(next.key) : null
+      }
+    },
+    serverRanksForDisplay() {
+      // merge server ranks with local assets
+      const defs = Array.isArray(this.ranks) ? this.ranks : []
+      return defs.map(r => ({
+        ...r,
+        image: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].image) || '/assets/rankings/beginner.png',
+        color: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].color) || '#595959'
+      }))
+    },
+    sortedRanksForDisplay() { return [...this.serverRanksForDisplay].sort((a,b)=> b.threshold - a.threshold) },
+    achievedRanksForDisplay() { return this.sortedRanksForDisplay.filter(r=> r.threshold <= this.totalPoints) },
+    rankProgress() { return this.ranking && typeof this.ranking.progressPct === 'number' ? this.ranking.progressPct : 0 },
+
+    // History & Trash mapped to store
+    historyTasks() { return this.history || [] },
+    trashedTasks() { return this.trash || [] },
+
+    // Analytics summary for current month (defensive guards)
     currentMonthPoints() {
-      const m = new Date().getMonth(), y = new Date().getFullYear();
-      return this.getAllHistoryRecords().filter(r => { const d = new Date(r.completedDate); return d.getMonth() === m && d.getFullYear() === y }).reduce((t,r)=> t + (r.status==='success'?r.successPoints:r.failPoints), 0)
+      const s = this._analyticsSummary || {}
+      return typeof s.totalPoints === 'number' ? s.totalPoints : 0
     },
     currentMonthCompleted() {
-      const m = new Date().getMonth(), y = new Date().getFullYear();
-      return this.getAllHistoryRecords().filter(r => { const d = new Date(r.completedDate); return d.getMonth()===m && d.getFullYear()===y && r.status==='success' }).length
+      const s = this._analyticsSummary || {}
+      return typeof s.completedCount === 'number' ? s.completedCount : 0
     },
     successRate() {
-      const m = new Date().getMonth(), y = new Date().getFullYear();
-      const month = this.getAllHistoryRecords().filter(r => { const d = new Date(r.completedDate); return d.getMonth()===m && d.getFullYear()===y })
-      if (!month.length) return 0; const s = month.filter(r=>r.status==='success').length; return Math.round((s/month.length)*100)
+      const s = this._analyticsSummary || {}
+      return typeof s.successRatePct === 'number' ? s.successRatePct : 0
     },
-    trashedTasks() { this.refreshTrigger; const s = localStorage.getItem('todo_trash'); return s? JSON.parse(s): [] },
-    currentRank() {
-      const sorted = [...this.ranks].sort((a,b)=> a.threshold - b.threshold)
-      for (let i=sorted.length-1;i>=0;i--) { const rank = sorted[i]; if (this.totalPoints >= rank.threshold) { const next = i < sorted.length-1 ? sorted[i+1] : null; return { ...rank, name: this.getRankName(rank.key), nextThreshold: next ? next.threshold : null, nextRankName: next ? this.getRankName(next.key): null } } }
-      const beginner = sorted[0]; const next = sorted.length>1? sorted[1] : null; return { ...beginner, name: this.getRankName(beginner.key), nextThreshold: next? next.threshold: null, nextRankName: next? this.getRankName(next.key): null }
-    },
-    sortedRanksForDisplay() { return [...this.ranks].sort((a,b)=> b.threshold - a.threshold) },
-    achievedRanksForDisplay() { return this.sortedRanksForDisplay.filter(r=> r.threshold <= this.totalPoints) },
-    rankProgress() {
-      if (!this.currentRank.nextThreshold) return 100
-      const c = this.currentRank.threshold, n = this.currentRank.nextThreshold
-      return Math.min(Math.max(((this.totalPoints - c)/(n-c))*100, 0), 100)
-    }
   },
-  mounted() {
-    this.loadHistoryForDate()
+  created() {
+    // Initial loads
+    this.fetchAllInitial()
   },
   watch: {
-    activeTab(newTab) { if (newTab === 'history') { this.$nextTick(()=> this.loadHistoryForDate()) } }
+    activeTab(newTab) {
+      if (newTab === 'history') {
+        this.$nextTick(() => this.loadHistoryForDate(this.selectedDate))
+      } else if (newTab === 'trash') {
+        this.$nextTick(() => this.loadTrash())
+      } else if (newTab === 'analytics') {
+        this.$nextTick(() => this.loadAnalytics())
+      }
+    },
+    taskFilter() { this.fetchTasksWithFilters() },
+    frequencyFilter() { this.fetchTasksWithFilters() }
   },
   methods: {
-    addTask() {
-      if (!this.newTask.title.trim()) return
-      const task = { id: Date.now() + Math.floor(Math.random()*1000), title: this.newTask.title, description: this.newTask.description, successPoints: this.newTask.successPoints, failPoints: this.newTask.failPoints, frequency: this.newTask.frequency, customDays: this.newTask.customDays, status: 'pending', date: new Date().toISOString(), dateKey: 'general' }
-      this.saveTask(task)
-      this.newTask = { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 }
-      this.refreshTrigger++
-      this.$message.success(this.$t('todo.taskAddedSuccess'))
+    ...mapActions('todo', {
+      fetchTasksAction: 'fetchTasks',
+      createTaskAction: 'createTask',
+      fetchTaskAction: 'fetchTask',
+      updateTaskAction: 'updateTask',
+      deleteTaskAction: 'deleteTask',
+      completeTaskAction: 'completeTask',
+      resetTaskStatusAction: 'resetTaskStatus',
+      resetAllTaskStatusesAction: 'resetAllTaskStatuses',
+      demoSeedAction: 'demoSeed',
+      fetchTrashAction: 'fetchTrash',
+      clearTrashAction: 'clearTrash',
+      deleteTrashItemAction: 'deleteTrashItem',
+      restoreTrashItemAction: 'restoreTrashItem',
+      fetchHistoryAction: 'fetchHistory',
+      deleteHistoryAction: 'deleteHistory',
+      fetchRankingAction: 'fetchRanking',
+      fetchRanksAction: 'fetchRanks',
+      fetchAnalyticsMonthlyAction: 'fetchAnalyticsMonthly',
+      fetchAnalyticsSummaryAction: 'fetchAnalyticsSummary',
+      exportTodoAction: 'exportTodo',
+      importTodoAction: 'importTodo',
+    }),
+
+    // UI helpers
+    openRankImagePreview() { this.showRankImagePreview = true },
+    closeFullScreenRanking() { this.showFullScreenRanking = false },
+    getEmptyDescription() {
+      switch (this.taskFilter) {
+        case 'pending': return this.$t('todo.noPendingTasks') || 'No pending tasks'
+        case 'completed': return this.$t('todo.noCompletedTasks') || 'No completed tasks'
+        case 'done': return this.$t('todo.noDoneTasks') || 'No done tasks'
+        default: return this.$t('todo.noTasksAvailable') || 'No tasks available'
+      }
     },
-    completeTask(taskId, status) {
-      const tasks = this.getAllTasks(); const task = tasks.find(t=> t.id === taskId)
-      if (task) { task.status = status; this.updateTaskInStorage(task); this.createHistoryRecord(task, status); const points = status==='success'? task.successPoints : task.failPoints; this.refreshTrigger++; this.$message({ message: this.$t('todo.taskStatusUpdate', { status: this.$t(`todo.${status}`), points: points>0? '+'+points: points }), type: status==='success'? 'success':'warning' }) }
+    getFrequencyText(freq, days) {
+      switch (freq) {
+        case 'daily': return this.$t('todo.freqDaily') || 'Daily'
+        case 'weekly': return this.$t('todo.freqWeekly') || 'Weekly'
+        case 'monthly': return this.$t('todo.freqMonthly') || 'Monthly'
+        case 'custom': return (this.$t('todo.freqEveryNDays', { days }) || `Every ${days} days`)
+        default: return this.$t('todo.freqOnce') || 'One-time'
+      }
     },
-    saveTask(task) { const key = task.dateKey || 'general'; const list = this.getTasksForDate(key); list.push(task); localStorage.setItem(`todo_${key}`, JSON.stringify(list)) },
-    updateTaskInStorage(task) { const key = task.dateKey || 'general'; const list = this.getTasksForDate(key); const idx = list.findIndex(t=> t.id===task.id); if (idx!==-1) { list[idx] = task; localStorage.setItem(`todo_${key}`, JSON.stringify(list)) } },
-    getTasksForDate(key) { const s = localStorage.getItem(`todo_${key}`); return s? JSON.parse(s): [] },
-    getAllTasks() { const tasks = []; for (let i=0;i<localStorage.length;i++){ const key = localStorage.key(i); if (key && key.startsWith('todo_') && !key.startsWith('todo_trash')) { const t = JSON.parse(localStorage.getItem(key)); tasks.push(...t) } } return tasks },
-    loadHistoryForDate(date) { const d = date || this.selectedDate; this.selectedDate = d; const key = this.formatDateKey(d); this.historyTasks = this.getHistoryRecordsForDate(key) },
-    formatDateKey(date) { const d=new Date(date); const y=d.getFullYear(); const m=(d.getMonth()+1).toString().padStart(2,'0'); const day=d.getDate().toString().padStart(2,'0'); return `${y}-${m}-${day}` },
-    formatDate(date) { return new Date(date).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) },
-    getTaskStatusClass(status) { return { 'task-success': status==='success', 'task-fail': status==='fail', 'task-pending': status==='pending' } },
-    getMonthlyData() {
-      const monthlyPoints = {}; const all = this.getAllHistoryRecords(); const months=[]; for (let i=5;i>=0;i--){ const d=new Date(); d.setMonth(d.getMonth()-i); const k=`${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`; months.push(k); monthlyPoints[k]=0 }
-      all.forEach(r=> { const d=new Date(r.completedDate); const k=`${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`; if (monthlyPoints.hasOwnProperty(k)) monthlyPoints[k]+= r.status==='success'? r.successPoints: r.failPoints })
-      return { labels: months.map(m=>{ const [y,mm]=m.split('-'); return new Date(y,mm-1).toLocaleDateString('en-US',{month:'short',year:'numeric'}) }), data: months.map(m=> monthlyPoints[m]) }
+
+    async fetchAllInitial() {
+      await Promise.all([
+        this.fetchTasksWithFilters(),
+        this.fetchRankingAction(),
+        this.fetchRanksAction(),
+        this.loadHistoryForDate(this.selectedDate),
+        this.loadAnalytics()
+      ])
     },
-    startTaskEdit(task) { this.editingTaskId = task.id; this.editingTask = { title: task.title, description: task.description || '', successPoints: task.successPoints, failPoints: task.failPoints, frequency: task.frequency || 'once', customDays: task.customDays || 7 } },
-    saveTaskEdit(taskId) {
-      if (!this.editingTask.title.trim()) { this.$message.warning(this.$t('todo.taskTitleRequired')); return }
-      const tasks = this.getAllTasks(); const task = tasks.find(t=> t.id === taskId)
-      if (task) { Object.assign(task, { title: this.editingTask.title, description: this.editingTask.description, successPoints: this.editingTask.successPoints, failPoints: this.editingTask.failPoints, frequency: this.editingTask.frequency, customDays: this.editingTask.customDays }); this.updateTaskInStorage(task); this.editingTaskId = null; this.refreshTrigger++; this.$message.success(this.$t('todo.taskUpdatedSuccess')) }
+
+    // Map UI filters -> server query params, then fetch
+    async fetchTasksWithFilters() {
+      const params = { page: 1, pageSize: 100, sort: 'points_desc' }
+      if (this.taskFilter === 'pending') params.status = 'pending'
+      else if (this.taskFilter === 'completed' || this.taskFilter === 'done') params.status = 'all'
+      else params.status = 'all'
+      if (this.frequencyFilter && this.frequencyFilter !== 'all') params.frequency = this.frequencyFilter
+      else params.frequency = 'all'
+      try { await this.fetchTasksAction(params) } catch (_) { }
+    },
+
+    // Task CRUD
+    async addTask() {
+      if (!this.newTask.title || !this.newTask.title.trim()) return
+      try {
+        await this.createTaskAction({ body: {
+          title: this.newTask.title,
+          description: this.newTask.description || null,
+          successPoints: this.newTask.successPoints,
+          failPoints: this.newTask.failPoints,
+          frequency: this.newTask.frequency,
+          customDays: this.newTask.frequency === 'custom' ? this.newTask.customDays : null
+        } })
+        this.newTask = { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 }
+        await this.fetchTasksWithFilters()
+        this.$message.success(this.$t('todo.taskAddedSuccess'))
+      } catch (e) { }
+    },
+    async completeTask(taskId, status) {
+      try {
+        const res = await this.completeTaskAction({ id: taskId, status })
+        await this.fetchTasksWithFilters()
+        const points = res && res.history && typeof res.history.pointsApplied === 'number' ? res.history.pointsApplied : 0
+        this.$message({ message: this.$t('todo.taskStatusUpdate', { status: this.$t(`todo.${status}`), points: points > 0 ? ('+' + points) : points }), type: status === 'success' ? 'success' : 'warning' })
+      } catch (_) { }
+    },
+
+    async startTaskEdit(task) {
+      try {
+        const { task: latest } = await this.fetchTaskAction(task.id)
+        const t = latest || task
+        this.editingTaskId = t.id
+        this.editingTask = {
+          title: t.title || '',
+          description: t.description || '',
+          successPoints: t.successPoints,
+          failPoints: t.failPoints,
+          frequency: t.frequency || 'once',
+          customDays: t.customDays || 7
+        }
+      } catch (_) { }
+    },
+    async saveTaskEdit(taskId) {
+      if (!this.editingTask.title || !this.editingTask.title.trim()) { this.$message.warning(this.$t('todo.taskTitleRequired')); return }
+      try {
+        await this.updateTaskAction({ id: taskId, patch: {
+          title: this.editingTask.title,
+          description: this.editingTask.description || null,
+          successPoints: this.editingTask.successPoints,
+          failPoints: this.editingTask.failPoints,
+          frequency: this.editingTask.frequency,
+          customDays: this.editingTask.frequency === 'custom' ? this.editingTask.customDays : null
+        } })
+        this.editingTaskId = null
+        await this.fetchTasksWithFilters()
+        this.$message.success(this.$t('todo.taskUpdatedSuccess'))
+      } catch (err) {
+        const msg = (err && err.message) || ''
+        if (/etag mismatch/i.test(msg)) {
+          try {
+            await this.fetchTaskAction(taskId)
+            this.$alert(this.$t('todo.etagMismatchRefetched') || 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.', 'Edit Conflict', { type: 'warning' })
+          } catch (_) {}
+        }
+      }
     },
     cancelTaskEdit() { this.editingTaskId = null; this.editingTask = { title:'', description:'', successPoints:10, failPoints:-5, frequency:'once', customDays:7 } },
-    deleteTask(taskId) { const tasks = this.getAllTasks(); const task = tasks.find(t=> t.id===taskId); if (task) { const key = task.dateKey || 'general'; this.moveTaskToTrash(taskId, key) } },
-    moveTaskToTrash(taskId, key) {
-      const tasks = this.getTasksForDate(key); const toTrash = tasks.find(t=> t.id===taskId)
-      if (toTrash) { const trashedTask = { ...toTrash, originalDate: toTrash.date || new Date(key).toISOString(), deletedDate: new Date().toISOString() }; const trash = this.trashedTasks; trash.push(trashedTask); localStorage.setItem('todo_trash', JSON.stringify(trash)); const filtered = tasks.filter(t=> t.id !== taskId); localStorage.setItem(`todo_${key}`, JSON.stringify(filtered)); this.refreshTrigger++; this.loadHistoryForDate(); this.$message.success('Task moved to trash') }
-    },
-    formatTime(dateString) { if (!dateString) return ''; try { const date=new Date(dateString); if (isNaN(date.getTime())) return ''; return date.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}) } catch(e){ return '' } },
-    deleteHistoryRecord(id, originalDate) { if (!originalDate) { this.$message.error('Invalid date for historical record'); return } let d; try { d=new Date(originalDate); if (isNaN(d.getTime())) throw new Error('Invalid date') } catch(e){ d=new Date() } const key=this.formatDateKey(d); const list = this.getHistoryRecordsForDate(key); const filtered = list.filter(r=> r.id !== id); localStorage.setItem(`history_${key}`, JSON.stringify(filtered)); this.loadHistoryForDate(); this.refreshTrigger++; this.$message.success(this.$t('todo.historyRecordDeleted')) },
-    createHistoryRecord(task, status) { const key=this.formatDateKey(new Date()); const record={ id: task.id, title: task.title, description: task.description, successPoints: task.successPoints, failPoints: task.failPoints, status, completedDate: new Date().toISOString(), originalTaskId: task.id, historyId: `${task.id}-${Date.now()}` }; const existing=this.getHistoryRecordsForDate(key); existing.push(record); localStorage.setItem(`history_${key}`, JSON.stringify(existing)) },
-    getHistoryRecordsForDate(key) { const s = localStorage.getItem(`history_${key}`); return s? JSON.parse(s): [] },
-    getAllHistoryRecords() { const rec=[]; for (let i=0;i<localStorage.length;i++){ const key=localStorage.key(i); if (key && key.startsWith('history_')) { const r=JSON.parse(localStorage.getItem(key)||'[]'); rec.push(...r) } } return rec },
-    exportTodoData() {
+    async deleteTask(taskId) {
       try {
-        const todoData={ exportDate: new Date().toISOString(), version:'1.1', appVersion:'1.0', tasks:{}, history:{}, trash: JSON.parse(localStorage.getItem('todo_trash')||'[]'), metadata:{ totalTasks:0, totalHistoryRecords:0, exportedDates:[] } }
-        let taskCount=0, historyCount=0
-        for (let i=0;i<localStorage.length;i++){ const key=localStorage.key(i); if (key && key.startsWith('todo_') && key !== 'todo_trash'){ const dateKey=key.replace('todo_',''); try{ const tasks=JSON.parse(localStorage.getItem(key)||'[]'); if (Array.isArray(tasks) && tasks.length>0){ const valid=tasks.filter(t=> t && typeof t==='object' && t.id && t.title); if (valid.length>0){ todoData.tasks[dateKey]=valid; taskCount+=valid.length; todoData.metadata.exportedDates.push(dateKey) } } } catch(e){ /* ignore */ } } }
-        for (let i=0;i<localStorage.length;i++){ const key=localStorage.key(i); if (key && key.startsWith('history_')){ const dateKey=key.replace('history_',''); try{ const history=JSON.parse(localStorage.getItem(key)||'[]'); if (Array.isArray(history) && history.length>0){ const valid=history.filter(r=> r && typeof r==='object' && r.id && r.title && r.status && r.completedDate); if (valid.length>0){ todoData.history[dateKey]=valid; historyCount+=valid.length } } } catch(e){ /* ignore */ } } }
-        if (Array.isArray(todoData.trash)) { todoData.trash = todoData.trash.filter(t=> t && typeof t==='object' && t.id && t.title) } else { todoData.trash = [] }
-        todoData.metadata.totalTasks = taskCount; todoData.metadata.totalHistoryRecords = historyCount; todoData.metadata.totalTrashItems = todoData.trash.length
-        if (taskCount===0 && historyCount===0 && todoData.trash.length===0){ this.$message.warning('No data available to export'); return }
-        const dataStr = JSON.stringify(todoData, null, 2)
+        await this.deleteTaskAction(taskId)
+        await Promise.all([ this.fetchTasksWithFilters(), this.loadTrash() ])
+        this.$message.success(this.$t('todo.taskDeletedSuccess') || 'Task moved to trash')
+      } catch (_) { }
+    },
+
+    shouldShowDoneTag(task) { const isNonDaily = task.frequency && task.frequency !== 'daily'; return isNonDaily && (task.status === 'success' || task.status === 'fail') },
+    shouldShowStatusActions(task) { return task.status === 'pending' },
+    shouldShowResetAction(task) { return task.status === 'success' || task.status === 'fail' },
+
+    getCompletionTagType(task) { if (task.status==='success') return 'success'; if (task.status==='fail') return 'danger'; return 'info' },
+    getCompletionTagText(task) { if (task.status==='success') return this.$t('todo.completed'); if (task.status==='fail') return this.$t('todo.failed'); return 'Done' },
+
+    async resetTaskStatus(taskId) {
+      try { await this.resetTaskStatusAction(taskId); await this.fetchTasksWithFilters(); this.$message.success(this.$t('todo.taskStatusReset') || 'Task status reset to pending') } catch (_) {}
+    },
+    async resetAllTaskStatuses() {
+      try {
+        const toConfirm = await this.$confirm(this.$t('todo.resetAllConfirm') || 'This will reset all tasks to Pending. Continue?', 'Reset All Task Status', { confirmButtonText: this.$t('todo.resetAll') || 'Reset All', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(() => false)
+        if (!toConfirm) return
+        await this.resetAllTaskStatusesAction()
+        await this.fetchTasksWithFilters()
+        this.$message.success(this.$t('todo.resetAllDone') || 'All applicable tasks reset to pending')
+      } catch (_) {}
+    },
+
+    // Trash
+    async loadTrash() { try { await this.fetchTrashAction({ page: 1, pageSize: 50 }) } catch (_) {} },
+    async restoreTask(taskId) { try { await this.restoreTrashItemAction(taskId); await Promise.all([ this.loadTrash(), this.fetchTasksWithFilters() ]); this.$message.success(this.$t('todo.taskRestored') || 'Task restored successfully') } catch (_) {} },
+    async permanentlyDeleteTask(taskId) { try { await this.deleteTrashItemAction(taskId); await this.loadTrash(); this.$message.success(this.$t('todo.trashDeleted') || 'Task permanently deleted') } catch (_) {} },
+    async clearTrash() {
+      const ok = await this.$confirm(this.$t('todo.clearTrashConfirm') || 'This will permanently delete all items in trash. This cannot be undone.', 'Clear Trash', { confirmButtonText: this.$t('todo.clearAll') || 'Clear All', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(()=>false)
+      if (!ok) return
+      try { await this.clearTrashAction(); await this.loadTrash(); this.$message.success(this.$t('todo.trashCleared') || 'Trash cleared') } catch (_) {}
+    },
+
+    // History
+    async loadHistoryForDate(date) {
+      const d = date || this.selectedDate
+      this.selectedDate = d
+      const dateStr = this.formatDateKey(d)
+      try { await this.fetchHistoryAction({ date: dateStr, page: 1, pageSize: 200 }) } catch (_) {}
+    },
+    async deleteHistoryRecord(id, originalDate) {
+      try { await this.deleteHistoryAction(id); await this.loadHistoryForDate(originalDate || this.selectedDate); this.$message.success(this.$t('todo.historyRecordDeleted')) } catch (_) {}
+    },
+
+    // Analytics
+    async loadAnalytics() {
+      try {
+        await this.fetchAnalyticsMonthlyAction(6)
+        const month = this.formatMonthKey(new Date())
+        const summary = await this.fetchAnalyticsSummaryAction(month)
+        const normalized = summary && typeof summary === 'object' ? {
+          totalPoints: typeof summary.totalPoints === 'number' ? summary.totalPoints : 0,
+          completedCount: typeof summary.completedCount === 'number' ? summary.completedCount : 0,
+          successRatePct: typeof summary.successRatePct === 'number' ? summary.successRatePct : 0,
+        } : { totalPoints: 0, completedCount: 0, successRatePct: 0 }
+        this._analyticsSummary = normalized
+      } catch (_) { this._analyticsSummary = { totalPoints: 0, completedCount: 0, successRatePct: 0 } }
+    },
+    getMonthlyData() {
+      const payload = this.analyticsMonthly || { labels: [], points: [] }
+      return { labels: payload.labels || [], data: payload.points || [] }
+    },
+
+    // Import / Export / Demo / Clear All
+    async exportTodoData() {
+      try {
+        const data = await this.exportTodoAction()
+        const dataStr = JSON.stringify(data, null, 2)
         const blob = new Blob([dataStr], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `todo-data-${new Date().toISOString().split('T')[0]}.json`
+        a.download = `todo-export-${new Date().toISOString().split('T')[0]}.json`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        this.$message.success(`Data exported successfully! (${taskCount} tasks, ${historyCount} history records, ${todoData.trash.length} trash items)`)
-      } catch (e) {
-        console.error('Export failed:', e)
-        this.$message.error('Failed to export todo data: ' + e.message)
-      }
+        this.$message.success(this.$t('todo.exportSuccess') || 'Exported successfully')
+      } catch (e) { }
     },
-    importTodoData(file) {
-      return new Promise((resolve, reject) => {
-        const fileToRead = file.raw || file
-        if (!fileToRead) { this.$message.error('Invalid file selected'); return reject(new Error('Invalid file')) }
-        if (fileToRead.type !== 'application/json' && !fileToRead.name.toLowerCase().endsWith('.json')) { this.$message.error('Please select a valid JSON file'); return reject(new Error('Invalid file type')) }
-        const reader = new FileReader()
-        reader.onerror = () => { this.$message.error('Failed to read file'); reject(new Error('File read error')) }
-        reader.onload = (e) => {
-          try {
-            let importedData
-            try { importedData = JSON.parse(e.target.result) } catch (parseError) { throw new Error('Invalid JSON format - please check your file content') }
-            const isCurrentFormat = importedData && importedData.version === '1.1' && importedData.exportDate && typeof importedData.tasks==='object' && typeof importedData.history==='object' && Array.isArray(importedData.trash)
-            const isLegacyFormat = importedData && importedData.data && typeof importedData.data==='object' && !importedData.version
-            if (!isCurrentFormat && !isLegacyFormat) { throw new Error('Unsupported file format. Please make sure you are importing a valid todo data export file (version 1.1 or legacy format).') }
-            let previewMessage = 'Import Preview:\n'; let tasksToImport=0, historyToImport=0, trashToImport=0
-            if (isCurrentFormat) {
-              if (importedData.tasks && typeof importedData.tasks==='object') { tasksToImport = Object.values(importedData.tasks).filter(a=> Array.isArray(a)).reduce((t,a)=> t+a.length, 0) }
-              if (importedData.history && typeof importedData.history==='object') { historyToImport = Object.values(importedData.history).filter(a=> Array.isArray(a)).reduce((t,a)=> t+a.length, 0) }
-              if (importedData.trash && Array.isArray(importedData.trash)) { trashToImport = importedData.trash.length }
-              if (importedData.metadata && importedData.exportDate) { previewMessage += `Export Date: ${new Date(importedData.exportDate).toLocaleDateString()}\n`; previewMessage += `Exported Dates: ${importedData.metadata.exportedDates?.length || 0} dates\n` }
-            } else {
-              if (importedData.data && typeof importedData.data==='object') { tasksToImport = Object.values(importedData.data).filter(a=> Array.isArray(a)).reduce((t,a)=> t+a.length, 0) }
-            }
-            previewMessage += `Tasks: ${tasksToImport}\nHistory Records: ${historyToImport}\nTrash Items: ${trashToImport}\n\nThis will merge with your existing data. Continue?`
-            this.$confirm(previewMessage, 'Import Confirmation', { confirmButtonText:'Import', cancelButtonText:'Cancel', type:'info' }).then(() => {
-              let importedTaskCount=0, importedHistoryCount=0, importedTrashCount=0, skippedDuplicates=0
-              try {
-                if (isCurrentFormat) {
-                  if (importedData.tasks && typeof importedData.tasks==='object') { Object.keys(importedData.tasks).forEach(dateKey => { const arr = importedData.tasks[dateKey]; if (Array.isArray(arr) && arr.length>0) { const existing = this.getTasksForDate(dateKey); const ids = new Set(existing.map(t=> t.id)); const newTasks = arr.filter(task => task && typeof task==='object' && task.id && task.title && !ids.has(task.id)); if (newTasks.length>0) { const validated = newTasks.map(task => ({ id: task.id, title: task.title, description: task.description || '', successPoints: task.successPoints || 10, failPoints: task.failPoints || -5, frequency: task.frequency || 'once', customDays: task.customDays || 7, status: task.status || 'pending', date: task.date || new Date().toISOString(), dateKey: task.dateKey || dateKey })); const merged = [...existing, ...validated]; localStorage.setItem(`todo_${dateKey}`, JSON.stringify(merged)); importedTaskCount += validated.length } else { skippedDuplicates += arr.length - newTasks.length } } }) }
-                  if (importedData.history && typeof importedData.history==='object') { Object.keys(importedData.history).forEach(dateKey => { const arr = importedData.history[dateKey]; if (Array.isArray(arr) && arr.length>0) { const existing = this.getHistoryRecordsForDate(dateKey); const ids = new Set(existing.map(h=> `${h.id}_${h.completedDate}`)); const newHist = arr.filter(r => r && typeof r==='object' && r.id && r.completedDate && !ids.has(`${r.id}_${r.completedDate}`)); if (newHist.length>0) { const validated = newHist.map(r => ({ id: r.id, title: r.title, description: r.description || '', successPoints: r.successPoints || 10, failPoints: r.failPoints || -5, status: r.status, completedDate: r.completedDate, originalTaskId: r.originalTaskId || r.id })); const merged = [...existing, ...validated]; localStorage.setItem(`history_${dateKey}`, JSON.stringify(merged)); importedHistoryCount += validated.length } else { skippedDuplicates += arr.length - newHist.length } } }) }
-                  if (importedData.trash && Array.isArray(importedData.trash)) { const existingTrash = JSON.parse(localStorage.getItem('todo_trash')||'[]'); const ids = new Set(existingTrash.map(t=> t.id)); const newTrash = importedData.trash.filter(item => item && typeof item==='object' && item.id && item.title && !ids.has(item.id)); if (newTrash.length>0) { const validated = newTrash.map(item => ({ ...item, description: item.description || '', successPoints: item.successPoints || 10, failPoints: item.failPoints || -5, originalDate: item.originalDate || item.date || new Date().toISOString(), deletedDate: item.deletedDate || new Date().toISOString() })); localStorage.setItem('todo_trash', JSON.stringify([...existingTrash, ...validated])); importedTrashCount = validated.length } else { skippedDuplicates += importedData.trash.length - newTrash.length } }
-                } else {
-                  if (importedData.data && typeof importedData.data==='object') { Object.keys(importedData.data).forEach(dateKey => { const arr = importedData.data[dateKey]; if (Array.isArray(arr) && arr.length>0) { const existing = this.getTasksForDate(dateKey); const ids = new Set(existing.map(t=> t.id)); const newTasks = arr.filter(task => task && typeof task==='object' && task.id && task.title && !ids.has(task.id)); if (newTasks.length>0) { const validated = newTasks.map(task => ({ id: task.id, title: task.title, description: task.description || '', successPoints: task.successPoints || 10, failPoints: task.failPoints || -5, frequency: task.frequency || 'once', customDays: task.customDays || 7, status: task.status || 'pending', date: task.date || new Date().toISOString(), dateKey: task.dateKey || dateKey })); const merged = [...existing, ...validated]; localStorage.setItem(`todo_${dateKey}`, JSON.stringify(merged)); importedTaskCount += validated.length } else { skippedDuplicates += arr.length - newTasks.length } } }) }
-                }
-                this.refreshTrigger++; this.loadHistoryForDate()
-                let msg = `Import completed successfully!\nTasks: ${importedTaskCount} imported\n`; if (importedHistoryCount>0) msg += `History: ${importedHistoryCount} imported\n`; if (importedTrashCount>0) msg += `Trash: ${importedTrashCount} imported\n`; if (skippedDuplicates>0) msg += `Skipped: ${skippedDuplicates} duplicates`
-                this.$message.success(msg); resolve()
-              } catch (err) { console.error('Import processing error:', err); this.$message.error('Import failed during data processing: ' + err.message); reject(err) }
-            }).catch(() => reject(new Error('Import cancelled')))
-          } catch (error) { console.error('Import error:', error); this.$message.error('Failed to import todo data: ' + error.message); reject(error) }
-        }
-        reader.readAsText(fileToRead)
-      })
+    async importTodoData(file) {
+      const fileToSend = file && (file.raw || file)
+      if (!fileToSend) { this.$message.error(this.$t('todo.invalidFile') || 'Invalid file selected'); return }
+      try {
+        const res = await this.importTodoAction(fileToSend)
+        await Promise.all([ this.fetchTasksWithFilters(), this.loadTrash(), this.loadHistoryForDate(this.selectedDate) ])
+        const msg = `Imported: tasks=${res.importedTasks || 0}, history=${res.importedHistory || 0}, trash=${res.importedTrash || 0}${res.skippedDuplicates ? ', skipped=' + res.skippedDuplicates : ''}`
+        this.$message.success(msg)
+      } catch (_) {}
     },
-    closeFullScreenRanking() { this.showFullScreenRanking = false },
-    openRankImagePreview() { this.showRankImagePreview = true },
+    async createDemoTasks() {
+      try { await this.demoSeedAction(); await Promise.all([ this.fetchTasksWithFilters(), this.loadHistoryForDate(this.selectedDate) ]); this.$message.success(this.$t('todo.demoCreated') || 'Demo tasks created') } catch (_) {}
+    },
+    async clearAllData() {
+      const ok = await this.$confirm(this.$t('todo.clearAllServerNote') || 'Server does not support clearing all data. This will clear trash only. Continue?', 'Clear Data', { confirmButtonText: this.$t('todo.clearAll') || 'Clear', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(()=>false)
+      if (!ok) return
+      await this.clearTrash()
+    },
+
+    // Utils
+    formatDateKey(date) { const d=new Date(date); const y=d.getFullYear(); const m=(d.getMonth()+1).toString().padStart(2,'0'); const day=d.getDate().toString().padStart(2,'0'); return `${y}-${m}-${day}` },
+    formatMonthKey(date) { const d=new Date(date); const y=d.getFullYear(); const m=(d.getMonth()+1).toString().padStart(2,'0'); return `${y}-${m}` },
+    formatDate(date) { try { return new Date(date).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) } catch(_) { return '' } },
+    formatTime(dateString) { if (!dateString) return ''; try { const date=new Date(dateString); if (isNaN(date.getTime())) return ''; return date.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}) } catch(e){ return '' } },
+    getTaskStatusClass(status) { return { 'task-success': status==='success', 'task-fail': status==='fail', 'task-pending': status==='pending' } },
+
     getRankName(key) { return this.$t(`todo.ranks.${key}`) },
-    getRankClass(name) { const rank = this.ranks.find(r=> this.getRankName(r.key) === name); const key = rank? rank.key: 'beginner'; return `rank-${key}` },
-    getRankImage(name) { const rank = this.ranks.find(r=> this.getRankName(r.key) === name); return rank? rank.image: '/assets/rankings/beginner.png' },
-    getRankColor(name) { const rank = this.ranks.find(r=> this.getRankName(r.key) === name); return rank? rank.color : '#595959' },
-    getNextRankImage() { if (!this.currentRank.nextThreshold) return '/assets/rankings/legendary.png'; const sorted=[...this.ranks].sort((a,b)=> a.threshold - b.threshold); const next = sorted.find(r=> r.threshold === this.currentRank.nextThreshold); return next? next.image: '/assets/rankings/legendary.png' },
-    shouldShowDoneTag(task) { const isNonDaily = task.frequency && task.frequency !== 'daily'; return isNonDaily && (task.status === 'success' || task.status === 'fail') },
-    shouldShowStatusActions(task) { return task.status === 'pending' },
-    shouldShowResetAction(task) { return task.status === 'success' || task.status === 'fail' },
-    getCompletionTagType(task) { if (task.status==='success') return 'success'; if (task.status==='fail') return 'danger'; return 'info' },
-    getCompletionTagText(task) { if (task.status==='success') return this.$t('todo.completed'); if (task.status==='fail') return this.$t('todo.failed'); return 'Done' },
-    getFrequencyText(freq, days) { switch(freq){ case 'daily': return 'Daily'; case 'weekly': return 'Weekly'; case 'monthly': return 'Monthly'; case 'custom': return `Every ${days} days`; default: return 'One-time' } },
-    getEmptyDescription() { switch(this.taskFilter){ case 'pending': return 'No pending tasks'; case 'completed': return 'No completed tasks'; case 'done': return 'No done tasks'; default: return 'No tasks available' } },
-    resetTaskStatus(taskId) { const tasks = this.getAllTasks(); const task = tasks.find(t=> t.id===taskId); if (task){ task.status='pending'; this.updateTaskInStorage(task); this.refreshTrigger++; this.$message.success('Task status reset to pending') } },
-    resetAllTaskStatuses() {
-      const all = this.getAllTasks(); const toReset = all.filter(t=> t.status !== 'pending').length
-      if (toReset===0) { this.$message.info('All tasks are already pending'); return }
-      this.$confirm(`This will reset ${toReset} task(s) to Pending. Continue?`, 'Reset All Task Status', { confirmButtonText: 'Reset All', cancelButtonText: 'Cancel', type:'warning' }).then(() => {
-        const dateKeys = new Set(); for (let i=0;i<localStorage.length;i++){ const key=localStorage.key(i); if (key && key.startsWith('todo_') && key !== 'todo_trash'){ dateKeys.add(key.replace('todo_','')) } }
-        let changed=0; dateKeys.forEach(k=> { const tasks = this.getTasksForDate(k); let touched=false; tasks.forEach(t=> { if (t.status !== 'pending'){ t.status='pending'; touched=true; changed++ } }); if (touched){ localStorage.setItem(`todo_${k}`, JSON.stringify(tasks)) } })
-        this.refreshTrigger++; this.$message.success(`Reset ${changed} task(s) to pending`)
-      }).catch(()=>{})
-    },
-    restoreTask(taskId) { const trash = this.trashedTasks; const idx = trash.findIndex(t=> t.id===taskId); if (idx!==-1){ const t = trash[idx]; const originalDate = new Date(t.originalDate); const key = this.formatDateKey(originalDate); trash.splice(idx,1); localStorage.setItem('todo_trash', JSON.stringify(trash)); const existing = this.getTasksForDate(key); const restored = { ...t, status: 'pending' }; delete restored.originalDate; delete restored.deletedDate; existing.push(restored); localStorage.setItem(`todo_${key}`, JSON.stringify(existing)); this.refreshTrigger++; this.$message.success('Task restored successfully') } },
-    permanentlyDeleteTask(taskId) { const trash = this.trashedTasks; const filtered = trash.filter(t=> t.id!==taskId); localStorage.setItem('todo_trash', JSON.stringify(filtered)); this.refreshTrigger++; this.$message.success('Task permanently deleted') },
-    clearTrash() { this.$confirm('This will permanently delete all items in trash. This cannot be undone.', 'Clear Trash', { confirmButtonText: 'Clear All', cancelButtonText: 'Cancel', type:'warning' }).then(()=>{ localStorage.removeItem('todo_trash'); this.refreshTrigger++; this.$message.success('Trash cleared') }) },
-    clearAllData() {
-      this.$confirm('This will permanently delete all your todo data including tasks, history, and trash. This action cannot be undone.\n\nAre you sure you want to continue?', 'Clear All Data', { confirmButtonText: 'Yes, Clear All Data', cancelButtonText: 'Cancel', type:'error', customClass:'clear-data-confirm-dialog', dangerouslyUseHTMLString:false }).then(()=>{
-        this.$confirm('Last confirmation: This will delete ALL your todo data permanently. This cannot be undone.', 'Final Confirmation', { confirmButtonText:'DELETE ALL DATA', cancelButtonText:'Cancel', type:'error', customClass:'clear-data-final-confirm' }).then(()=>{
-          try {
-            let deletedItems=0; const keys=[]
-            for (let i=0;i<localStorage.length;i++){ const key=localStorage.key(i); if (key && (key.startsWith('todo_') || key.startsWith('history_') || key==='todo_trash')) keys.push(key) }
-            keys.forEach(key=> { try { const data = localStorage.getItem(key); if (data){ if (key==='todo_trash'){ const t = JSON.parse(data); deletedItems += Array.isArray(t)? t.length: 0 } else { const parsed = JSON.parse(data); deletedItems += Array.isArray(parsed)? parsed.length: 0 } } localStorage.removeItem(key) } catch(e){ localStorage.removeItem(key) } })
-            this.refreshTrigger++; this.historyTasks = []; this.selectedDate = new Date(); this.taskFilter='all'; this.frequencyFilter='all'; this.activeTab='tasks'; this.newTask={ title:'', description:'', successPoints:10, failPoints:-5, frequency:'once', customDays:7 }; this.loadHistoryForDate(); this.$message({ message: `All data cleared successfully! Removed ${keys.length} storage entries containing ${deletedItems} items.`, type:'success', duration:5000, showClose:true })
-          } catch (e){ console.error('Error during data clearing:', e); this.$message.error('Failed to clear all data: ' + e.message) }
-        }).catch(()=>{ this.$message.info('Data clearing cancelled') })
-      }).catch(()=>{ this.$message.info('Data clearing cancelled') })
-    },
+    getRankClass(name) { const rank = this.serverRanksForDisplay.find(r=> this.getRankName(r.key) === name) || this.serverRanksForDisplay.find(r=> r.key==='beginner'); const key = rank? rank.key: 'beginner'; return `rank-${key}` },
+    getRankImage(name) { const item = this.serverRanksForDisplay.find(r=> this.getRankName(r.key) === name) || { key: 'beginner' }; const assets = RANK_ASSETS[item.key] || RANK_ASSETS.beginner; return assets.image },
+    getRankColor(name) { const item = this.serverRanksForDisplay.find(r=> this.getRankName(r.key) === name) || { key: 'beginner' }; const assets = RANK_ASSETS[item.key] || RANK_ASSETS.beginner; return assets.color },
+    getNextRankImage() { if (!this.currentRankDisplay.nextThreshold) return (RANK_ASSETS.legendary && RANK_ASSETS.legendary.image) || '/assets/rankings/legendary.png'; const next = this.serverRanksForDisplay.find(r=> this.getRankName(r.key) === this.currentRankDisplay.nextRankName); return next? next.image: ((RANK_ASSETS.legendary && RANK_ASSETS.legendary.image) || '/assets/rankings/legendary.png') },
+
     shouldShowStatusDisplay(task) { return task.status !== 'pending' },
     onRankImageError(e) { if (!e || !e.target) return; e.target.onerror=null; e.target.src=this.fallbackRankImage; if (!e.target.title) e.target.title='Placeholder' },
-    createDemoTasks() {
-      this.$confirm(
-        'This will create sample tasks to demonstrate the app features. The demo includes:\n\n' +
-        '• Various task types (daily, weekly, monthly, one-time, custom)\n' +
-        '• Different point values and descriptions\n' +
-        '• Some completed tasks with history records\n' +
-        '• Tasks across multiple dates\n\n' +
-        'Continue?',
-        'Create Demo Tasks',
-        { confirmButtonText: 'Create Demo', cancelButtonText: 'Cancel', type: 'info', customClass: 'demo-confirm-dialog' }
-      ).then(() => {
-        try {
-          this.generateDemoTasks()
-          this.$message({ message: 'Demo tasks created successfully! Explore different tabs to see all features.', type: 'success', duration: 5000, showClose: true })
-        } catch (error) {
-          console.error('Failed to create demo tasks:', error)
-          this.$message.error('Failed to create demo tasks: ' + error.message)
-        }
-      }).catch(() => { this.$message.info('Demo creation cancelled') })
-    },
-    generateDemoTasks() {
-      const today = new Date()
-      const demoTasks = [
-        { id: Date.now() + Math.floor(Math.random()*10000) + 1, title: 'Morning Exercise', description: 'Do 30 minutes of cardio or strength training', successPoints: 20, failPoints: -10, frequency: 'daily', customDays: 7, status: 'pending', date: today.toISOString(), dateKey: 'general' },
-        { id: Date.now() + Math.floor(Math.random()*10000) + 2, title: 'Read for 20 minutes', description: 'Read a book, article, or educational material', successPoints: 15, failPoints: -5, frequency: 'daily', customDays: 7, status: 'success', date: today.toISOString(), dateKey: 'general' },
-        { id: Date.now() + Math.floor(Math.random()*10000) + 3, title: 'Weekly Team Meeting', description: 'Attend the weekly team sync meeting', successPoints: 25, failPoints: -15, frequency: 'weekly', customDays: 7, status: 'pending', date: today.toISOString(), dateKey: 'general' },
-        { id: Date.now() + Math.floor(Math.random()*10000) + 4, title: 'Learn Something New', description: 'Spend time learning a new skill or technology', successPoints: 30, failPoints: -10, frequency: 'custom', customDays: 3, status: 'pending', date: today.toISOString(), dateKey: 'general' },
-        { id: Date.now() + Math.floor(Math.random()*10000) + 5, title: 'Complete Project Report', description: 'Finish and submit the quarterly project report', successPoints: 50, failPoints: -25, frequency: 'once', customDays: 7, status: 'pending', date: today.toISOString(), dateKey: 'general' }
-      ]
-      this.saveDemoTasksForDate(demoTasks, 'general')
-      this.createDemoHistoryRecords(demoTasks, today)
-      this.createDemoTrashItems()
-      this.refreshTrigger++
-      this.loadHistoryForDate()
-    },
-    saveDemoTasksForDate(tasks, dateKey) {
-      const existingTasks = this.getTasksForDate(dateKey)
-      const existingIds = new Set(existingTasks.map(t => t.id))
-      const newTasks = tasks.filter(task => !existingIds.has(task.id))
-      if (newTasks.length > 0) { const merged = [...existingTasks, ...newTasks]; localStorage.setItem(`todo_${dateKey}`, JSON.stringify(merged)) }
-    },
-    createDemoHistoryRecords(tasks, date) {
-      const dateKey = this.formatDateKey(date)
-      const completedTasks = tasks.filter(task => task.status !== 'pending')
-      if (!completedTasks.length) return
-      const existingHistory = this.getHistoryRecordsForDate(dateKey)
-      const existingIds = new Set(existingHistory.map(h => h.id))
-      const newHistory = []
-      completedTasks.forEach(task => {
-        if (!existingIds.has(task.id)) {
-          const completionDate = new Date(date)
-          completionDate.setHours(Math.floor(Math.random()*16)+6, Math.floor(Math.random()*60), 0, 0)
-          newHistory.push({ id: task.id, title: task.title, description: task.description, successPoints: task.successPoints, failPoints: task.failPoints, status: task.status, completedDate: completionDate.toISOString(), originalTaskId: task.id })
-        }
-      })
-      if (newHistory.length > 0) { const merged = [...existingHistory, ...newHistory]; localStorage.setItem(`history_${dateKey}`, JSON.stringify(merged)) }
-    },
-    createDemoTrashItems() {
-      const existingTrash = JSON.parse(localStorage.getItem('todo_trash') || '[]')
-      const existingIds = new Set(existingTrash.map(t => t.id))
-      const items = [
-        { id: Date.now() + Math.floor(Math.random()*10000) + 100, title: 'Old Task Example', description: 'This is an example of a deleted task', successPoints: 15, failPoints: -5, frequency: 'daily', customDays: 7, status: 'pending', originalDate: new Date(Date.now() - 5*24*60*60*1000).toISOString(), deletedDate: new Date(Date.now() - 2*24*60*60*1000).toISOString() },
-        { id: Date.now() + Math.floor(Math.random()*10000) + 101, title: 'Cancelled Project', description: 'A project that was cancelled and moved to trash', successPoints: 40, failPoints: -20, frequency: 'once', customDays: 7, status: 'pending', originalDate: new Date(Date.now() - 7*24*60*60*1000).toISOString(), deletedDate: new Date(Date.now() - 1*24*60*60*1000).toISOString() }
-      ]
-      const newItems = items.filter(it => !existingIds.has(it.id))
-      if (newItems.length > 0) { localStorage.setItem('todo_trash', JSON.stringify([...existingTrash, ...newItems])) }
-    },
-    // ...existing code...
+
   }
 }
 </script>
@@ -846,10 +920,6 @@ export default {
 
 .frequency-row {
   max-width: 500px;
-}
-
-.frequency-item {
-  min-width: 150px;
 }
 
 .custom-days-item {
@@ -1815,4 +1885,3 @@ export default {
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
 }
 </style>
-
