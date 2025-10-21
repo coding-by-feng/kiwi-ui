@@ -217,11 +217,11 @@ export default {
         </span>
         <router-view name="starList" v-if="isAdmin"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="todo">
+      <el-tab-pane name="todo" lazy>
         <span slot="label">
           <i class="el-icon-check"></i>
         </span>
-        <router-view name="todo"></router-view>
+        <router-view name="todo" v-if="activeName === 'todo'"></router-view>
       </el-tab-pane>
       <el-tab-pane name="youtube" v-if="isLogin">
         <span slot="label">

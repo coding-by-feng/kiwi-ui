@@ -2,19 +2,26 @@ const path = require('path');
 const webpack = require('webpack')
 const CompressionWebpackPlugin = require('compression-webpack-plugin')
 
-// Determine if running in Electron
-const isElectron = process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-dev';
+// Detect if running via webpack dev server (vue-cli-service serve)
+const isDevServer = (
+    process.env.WEBPACK_DEV_SERVER === 'true' ||
+    process.env.npm_lifecycle_event === 'serve' ||
+    (process.argv && process.argv.join(' ').includes('serve'))
+)
+
+// Determine if running packaged Electron (not dev server)
+const isElectron = !isDevServer && (process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-prod')
 const isProduction = process.env.NODE_ENV === 'production'
 
 // Backend URL
 const url = process.env.VUE_APP_API_URL || 'http://localhost:9991'
 
-console.log(`Building for ${isElectron ? 'Electron' : 'Web'} in ${isProduction ? 'Production' : 'Development'} mode.`);
+console.log(`Building for ${isElectron ? 'Electron' : 'Web'} in ${isProduction ? 'Production' : 'Development'} mode.${isDevServer ? ' (Dev Server)' : ''}`);
 console.log(`API URL set to: ${url}`);
-console.log(`Public path set to: ${isElectron ? './' : '/'}`);
+console.log(`Public path set to: ${isElectron ? './' : '/'} (devServer=${isDevServer})`);
 
-// CRITICAL: Use absolute path for web deployment
-let publicPath = isElectron ? './' : '/'
+// Use absolute path for web/dev-server, relative for packaged Electron
+let publicPath = isDevServer ? '/' : (isElectron ? './' : '/')
 
 module.exports = {
     publicPath: publicPath,
@@ -300,15 +307,15 @@ module.exports = {
         port: 8080,
         hot: true,
         compress: true,
-        ...((!isElectron) ? {
-            proxy: {
-                '/auth': { target: url, ws: true },
-                '/wordBiz': { target: url, ws: true },
-                '/ai-biz': { target: url, ws: true },
-                '/code': { target: url, ws: true },
-                '/admin': { target: url, ws: true }
-            }
-        } : {})
+        // Always enable proxy during dev-server to avoid hitting the dev server with API paths directly
+        proxy: {
+            '/auth': { target: url, ws: true, changeOrigin: true, secure: false },
+            '/wordBiz': { target: url, ws: true, changeOrigin: true, secure: false },
+            '/ai-biz': { target: url, ws: true, changeOrigin: true, secure: false },
+            '/code': { target: url, ws: true, changeOrigin: true, secure: false },
+            '/admin': { target: url, ws: true, changeOrigin: true, secure: false },
+            '/tools': { target: url, ws: true, changeOrigin: true, secure: false }
+        }
     },
 
     parallel: require('os').cpus().length > 1

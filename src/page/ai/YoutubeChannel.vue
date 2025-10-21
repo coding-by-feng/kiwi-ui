@@ -12,7 +12,6 @@
       >
         <el-button slot="append" icon="el-icon-plus" @click="submitChannel" :loading="submitting">
         </el-button>
-        <el-button slot="prepend" icon="el-icon-video-camera-solid" @click="backToPlayer"></el-button>
       </el-input>
     </el-card>
 
@@ -130,7 +129,6 @@
 </template>
 
 <script>
-import request from '@/router/axios' // Using your existing axios setup
 import {getChannelList, getChannelVideos, submitChannel} from '@/api/ai'
 
 export default {
@@ -164,17 +162,6 @@ export default {
     this.fetchChannels()
   },
   methods: {
-    backToPlayer() {
-      // Navigate back to the channel list view
-      this.$router.push({
-        path: '/index/tools/detail',
-        query: {
-          active: 'youtube',
-          ytbMode: 'player',
-          now: new Date().getTime()
-        }
-      });
-    },
     // Channel methods
     async fetchChannels() {
       this.loading = true

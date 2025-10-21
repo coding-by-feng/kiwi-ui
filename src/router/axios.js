@@ -20,10 +20,22 @@ if (!isElectron) {
   axios.defaults.withCredentials = true
 }
 
-// Set base URL for Electron to your local server
-if (isElectron && baseUrl) {
+// If running via Vue dev-server (localhost:8080), force no baseURL so proxy handles API
+try {
+  if (typeof window !== 'undefined' && /localhost:8080$/.test(window.location.host)) {
+    axios.defaults.baseURL = ''
+    console.log('Detected dev-server origin; forcing relative API paths (proxy).')
+  }
+} catch (e) {
+  // no-op
+}
+
+// Set base URL if provided (e.g., packaged Electron or explicit KIWI_SERVER_URL)
+if (baseUrl) {
   axios.defaults.baseURL = baseUrl
-  console.log('Axios configured for Electron with baseURL:', baseUrl)
+  console.log('Axios baseURL:', baseUrl, 'isElectron:', isElectron)
+} else {
+  console.log('Axios baseURL not set; using relative paths (dev proxy expected).')
 }
 
 NProgress.configure({
@@ -40,26 +52,25 @@ axios.interceptors.request.use(config => {
     config.headers['Authorization'] = 'Bearer ' + token
   }
 
-  // Add CORS headers for Electron
-  if (isElectron) {
-    // Only set Content-Type if not sending FormData; let browser set proper boundary for multipart
-    const isFormData = (typeof FormData !== 'undefined') && (config.data instanceof FormData)
-    if (!isFormData && !config.headers['Content-Type']) {
-      config.headers['Content-Type'] = 'application/json'
+  // Force proxy usage on dev-server by removing any baseURL
+  try {
+    if (typeof window !== 'undefined' && /localhost:8080$/.test(window.location.host)) {
+      config.baseURL = ''
     }
-    config.headers['Access-Control-Allow-Origin'] = '*'
-    config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-    config.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  } catch (e) { /* ignore */ }
 
-    // Log the full URL being requested
-    const fullUrl = config.baseURL ? config.baseURL + config.url : config.url
+  // Log the full URL being requested (helpful in Electron dev)
+  try {
+    const fullUrl = (config.baseURL || axios.defaults.baseURL || '') + (config.url || '')
     console.log('Making request to:', fullUrl)
+  } catch (e) {
+    // ignore
   }
 
   // headers中配置serialize为true开启序列化
-  if (config.methods === 'post' && config.headers.serialize) {
+  if (config.method === 'post' && config.headers && config.headers.serialize) {
     config.data = serialize(config.data)
-    delete config.data.serialize
+    delete config.headers.serialize
   }
 
   return config
@@ -95,7 +106,7 @@ axios.interceptors.response.use(res => {
     }
   }
 
-  if (status.indexOf('2') !== 0 || res.data.code === responseCode.ERROR) {
+  if (status.indexOf('2') !== 0 || (res.data && res.data.code === responseCode.ERROR)) {
     Message({
       message: message,
       type: 'error',
@@ -110,7 +121,7 @@ axios.interceptors.response.use(res => {
   NProgress.done()
 
   // Handle network errors in Electron
-  if (isElectron && (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND')) {
+  if (isElectron && (error && (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND'))) {
     Message({
       message: `Unable to connect to server at ${baseUrl}. Please check if your server is running and accessible.`,
       type: 'error',
@@ -118,7 +129,7 @@ axios.interceptors.response.use(res => {
       showClose: true,
       duration: 5000
     })
-    console.error('Connection error:', error.message, 'Server URL:', baseUrl)
+    console.error('Connection error:', error && error.message, 'Server URL:', baseUrl)
   } else {
     Message({
       message: responseCode['default'],
@@ -128,7 +139,7 @@ axios.interceptors.response.use(res => {
     })
   }
 
-  return Promise.reject(new Error(error))
+  return Promise.reject(error)
 })
 
 export default axios

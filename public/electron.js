@@ -60,6 +60,52 @@ function createWindow() {
     // Configure session for persistence
     const session = mainWindow.webContents.session;
 
+    // In development, neutralize CORS for local backend to prevent strict-origin errors if proxy is bypassed
+    if (isDev) {
+        try {
+            const TARGET_ORIGIN = 'http://localhost:9991'
+            let lastRequestOrigin = null
+            session.webRequest.onBeforeSendHeaders((details, callback) => {
+                try {
+                    const url = new URL(details.url)
+                    if (url.origin === TARGET_ORIGIN) {
+                        details.requestHeaders = details.requestHeaders || {}
+                        const reqOrigin = details.requestHeaders['Origin'] || details.requestHeaders['origin']
+                        if (reqOrigin) lastRequestOrigin = reqOrigin
+                        // Force Origin to target if not present
+                        if (!reqOrigin) {
+                            details.requestHeaders['Origin'] = TARGET_ORIGIN
+                            lastRequestOrigin = TARGET_ORIGIN
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+                callback({ requestHeaders: details.requestHeaders })
+            })
+
+            session.webRequest.onHeadersReceived((details, callback) => {
+                const responseHeaders = details.responseHeaders || {}
+                try {
+                    const url = new URL(details.url)
+                    if (url.origin === TARGET_ORIGIN) {
+                        const allowOrigin = lastRequestOrigin || 'http://localhost:8080'
+                        const setHeader = (key, value) => {
+                            responseHeaders[key] = [value]
+                            responseHeaders[key.toLowerCase()] = [value]
+                        }
+                        setHeader('Access-Control-Allow-Origin', allowOrigin)
+                        setHeader('Vary', 'Origin')
+                        setHeader('Access-Control-Allow-Headers', details.requestHeaders['Access-Control-Request-Headers'] || '*')
+                        setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+                        setHeader('Access-Control-Allow-Credentials', 'true')
+                    }
+                } catch (e) { /* ignore */ }
+                callback({ responseHeaders })
+            })
+        } catch (e) {
+            console.warn('CORS helper setup failed:', e)
+        }
+    }
+
     // Set up session to persist cookies and local storage
     session.setPermissionRequestHandler((webContents, permission, callback) => {
         // Grant permissions for storage-related requests
@@ -157,7 +203,10 @@ function createWindow() {
         // Allow navigation within your app
         const allowedOrigins = [
             'http://localhost:8080',
+            'http://localhost:9991',
             'http://kason-server.local',
+            'http://kason-server.local:9991',
+            'http://kason-pi.local',
             'file://'
         ];
 
@@ -479,3 +528,4 @@ function showConnectionError(env) {
 
 // Export for testing
 module.exports = { createWindow };
+
