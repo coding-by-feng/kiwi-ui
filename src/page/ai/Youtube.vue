@@ -1,5 +1,13 @@
 <template>
   <div class="youtube-page">
+    <!-- Mode toggle control -->
+    <div class="ytb-mode-switch">
+      <el-radio-group v-model="currentMode" size="mini" @change="handleModeChange">
+        <el-radio-button :label="modes.CHANNEL">Channel</el-radio-button>
+        <el-radio-button :label="modes.PLAYER">Player</el-radio-button>
+      </el-radio-group>
+    </div>
+
     <!-- Conditionally render Channel manager or Player based on route ytbMode -->
     <youtube-channel v-if="currentMode === modes.CHANNEL" />
     <youtube-player v-else :video-url="selectedVideoUrl" />
@@ -63,6 +71,20 @@ export default {
           try { this.selectedVideoUrl = decodeURIComponent(videoUrl) } catch (_) { this.selectedVideoUrl = videoUrl }
         }
       }
+    },
+
+    // Handle UI toggle to switch modes and persist to URL
+    handleModeChange(val) {
+      const q = { ...(this.$route.query || {}) }
+      // Preserve existing params (like videoUrl) and only change ytbMode
+      if (val !== this.modes.PLAYER) {
+        // Keep videoUrl in query so user can switch back without retyping
+        // Do nothing special here, just switch mode
+      }
+      this.$router.replace({
+        path: this.$route.path,
+        query: { ...q, ytbMode: val }
+      })
     }
   }
 }
@@ -72,5 +94,11 @@ export default {
 .youtube-page {
   width: 100%;
   min-height: 400px;
+}
+
+.ytb-mode-switch {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
 }
 </style>

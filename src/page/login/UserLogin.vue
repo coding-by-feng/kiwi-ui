@@ -56,6 +56,30 @@
               </div>
             </div>
           </div>
+
+          <!-- Dev-only: Manual Token Input -->
+          <div v-if="isDevEnvironment" class="manual-token-card">
+            <div class="manual-token-header">
+              <i class="el-icon-key"></i>
+              <span>Manual Token (Dev)</span>
+            </div>
+            <div class="manual-token-body">
+              <p class="manual-token-tip">
+                Paste your token JSON. Example:
+                { "dataType": "string", "content": "YOUR_TOKEN", "type": "local", "datatime": 1761035999863 }
+              </p>
+              <el-input
+                type="textarea"
+                :autosize="{ minRows: 3, maxRows: 8 }"
+                placeholder='{"dataType":"string","content":"<token>","type":"local","datatime":<ts>}'
+                v-model="manualTokenJson"
+              />
+              <div class="manual-token-actions">
+                <el-button type="primary" size="mini" @click="applyManualToken">Use token</el-button>
+                <el-button size="mini" @click="clearManualToken">Clear</el-button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -72,6 +96,7 @@
 
 <script>
 import {mapGetters} from 'vuex'
+import { setStore } from '@/util/store'
 
 export default {
   name: 'GoogleLogin',
@@ -82,7 +107,10 @@ export default {
       loadingText: this.$t('auth.processing'),
 
       // Store Google user info for potential account linking
-      pendingGoogleUser: null
+      pendingGoogleUser: null,
+
+      // Dev manual token
+      manualTokenJson: ''
     }
   },
 
@@ -94,7 +122,18 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['website'])
+    ...mapGetters(['website']),
+    isDevEnvironment() {
+      // Shown on: NODE_ENV=development or when served from localhost/127.* with a port
+      try {
+        if (process && process.env && process.env.NODE_ENV === 'development') return true
+      } catch (e) {}
+      try {
+        const { hostname, port } = window.location || {}
+        if ((hostname === 'localhost' || hostname === '127.0.0.1') && !!port) return true
+      } catch (e) {}
+      return false
+    }
   },
 
   methods: {
@@ -230,6 +269,53 @@ export default {
 
       console.log('🔄 [REDIRECT] Reloading page')
       window.location.reload()
+    },
+
+    // Dev-only: apply manual token
+    applyManualToken() {
+      try {
+        let token = ''
+        let refresh = ''
+        const raw = (this.manualTokenJson || '').trim()
+        if (!raw) {
+          this.$message.error('Please paste a token JSON or token string.')
+          return
+        }
+        if (raw.startsWith('{')) {
+          // Try to parse as JSON
+          const obj = JSON.parse(raw)
+          // Accept various shapes
+          token = obj.content || obj.token || obj.access_token || obj.accessToken || ''
+          refresh = obj.refresh_token || obj.refreshToken || ''
+          // If user pasted full setStore payload, use that content
+        } else {
+          token = raw
+        }
+        token = (token || '').toString().trim()
+        if (!token) {
+          this.$message.error('Token not found in JSON. Expected key: content')
+          return
+        }
+
+        // Persist via setStore (prefix-aware) to match axios/getStore consumers
+        setStore({ name: 'access_token', content: token, type: 'local' })
+        if (refresh) setStore({ name: 'refresh_token', content: refresh, type: 'local' })
+        // Also set raw keys for any direct access sites
+        try {
+          localStorage.setItem('access_token', token)
+          if (refresh) localStorage.setItem('refresh_token', refresh)
+        } catch (e) {}
+
+        this.$message.success('Token applied. Redirecting...')
+        this.redirectAfterLogin()
+      } catch (e) {
+        console.error('Failed to apply manual token:', e)
+        this.$message.error('Invalid JSON/token. Please check the format.')
+      }
+    },
+
+    clearManualToken() {
+      this.manualTokenJson = ''
     }
   }
 }
@@ -540,6 +626,34 @@ export default {
     margin: 0;
     font-size: 16px;
     font-weight: 500;
+  }
+}
+
+/* Dev-only manual token styles */
+.manual-token-card {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px dashed #c0c4cc;
+  border-radius: 8px;
+  background: #fafafa;
+}
+.manual-token-header {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 8px;
+  i { margin-right: 6px; }
+}
+.manual-token-body {
+  .manual-token-tip {
+    font-size: 12px;
+    color: #909399;
+    margin: 0 0 8px 0;
+    word-break: break-all;
+  }
+  .manual-token-actions {
+    margin-top: 8px;
   }
 }
 
