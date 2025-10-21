@@ -76,7 +76,9 @@
                   </div>
                 </div>
               </div>
-              <i slot="reference" class="el-icon-info rank-info-icon" :title="$t('todo.viewRankingDetails')"></i>
+              <template v-slot:reference>
+                <i class="el-icon-info rank-info-icon" :title="$t('todo.viewRankingDetails')"></i>
+              </template>
             </el-popover>
           </div>
         </div>
@@ -134,4 +136,3 @@ export default {
   }
 }
 </script>
-

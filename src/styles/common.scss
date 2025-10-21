@@ -24,3 +24,10 @@ a{
 *{
   outline: none;
 }
+
+// AI-aligned shared container for consistent centered layout
+.ai-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 12px;
+}

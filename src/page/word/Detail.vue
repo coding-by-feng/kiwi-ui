@@ -251,47 +251,6 @@ export default {
       this.defaultHint = null
       this.showWordSelect = false
     },
-    async playDetail2Audio() {
-      try {
-        let audioList = []
-        let autoWordList = []
-        if (this.wordInfo.characterVOList) {
-          let characterVOList = this.wordInfo.characterVOList
-          for (let i = 0; i < characterVOList.length; i++) {
-            let pronunciationVOList = characterVOList[i].pronunciationVOList
-            for (let j = 0; j < pronunciationVOList.length; j++) {
-              try {
-                let audio = new Audio()
-                audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
-                
-                // Add error handling for audio creation
-                audio.addEventListener('error', (e) => {
-                  console.warn('Audio creation failed:', e)
-                })
-                
-                audioList.push(audio)
-                autoWordList.push(this.wordInfo)
-              } catch (audioError) {
-                console.warn('Failed to create audio for playback:', audioError)
-                // Continue with other audio files instead of crashing
-              }
-            }
-          }
-        }
-        this.audioList = audioList
-        this.autoWordList = autoWordList
-        
-        // iOS warning for auto-play limitations
-        if (this.isIOS && audioList.length > 0) {
-          console.info('iOS detected: Audio auto-play may require user interaction')
-        }
-      } catch (e) {
-        console.warn('Audio preparation failed:', e)
-        // Don't crash the app, just continue without audio
-        this.audioList = []
-        this.autoWordList = []
-      }
-    },
     async initPronunciation() {
       try {
         if (this.wordInfo.characterVOList) {
@@ -348,7 +307,7 @@ export default {
     async oneWordPlay() {
       // tts.setAudioText('詹士锋个人测试')
       // tts.playTTS()
-      await this.playDetail2Audio()
+      this.playDetail2Audio()
       await this.stockReviewStart()
     },
     stockReviewStart() {
@@ -662,197 +621,136 @@ export default {
 
 </script>
 
-<style>
-.row-bg {
-  width: 88%;
-  padding-top: 10px;
-  background-color: #DCDFE6;
-  margin: 0 auto;
-}
-
-.box-card {
-  width: 100%;
-}
-
-.outline_fix {
-  position: absolute;
-  right: 5px;
-  bottom: 5px;
-}
-
-.outline_fix_top_right {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-}
-
-.outline_fix_top_left {
-  position: absolute;
-  text-align: left;
-  top: 5px;
-  left: 5px;
-  width: 90%;
-}
-
-.outline_fix_bottom_left {
-  position: absolute;
-  bottom: 5px;
-  left: 5px;
-}
-
-.outline_fix_bottom_left_2 {
-  position: absolute;
-  bottom: 5px;
-  left: 25px;
-}
-</style>
-
 <template>
   <el-container>
     <el-header>
-      <div v-if="isTabActivate">
-        <div style="position: fixed; top: 5px; right: 15px; z-index: 999;">
-          <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true" circle>
-            <i class="el-icon-s-unfold"
-               style="color: #76838f;"></i>
-          </el-button>
-        </div>
-        <div style="position: fixed; bottom: 5px; right: 30px; z-index: 999;">
-          <el-button @click="dialogHelpVisible = !dialogHelpVisible" size="mini">
-            <i class="el-icon-warning"
-               style="color: #76838f;"></i>
-          </el-button>
-          &nbsp;
-          <el-dropdown size="mini" @command="selectShowCharacter" placement="top">
-            <el-button size="mini" class="el-icon-s-operation"></el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="0">All</el-dropdown-item>
-              <div v-for="wordCharacterVO in wordInfo.characterVOList">
-                <el-dropdown-item :command="wordCharacterVO.characterId">
-                  {{ wordCharacterVO.characterCode }}&nbsp;{{ wordCharacterVO.tag }}
-                </el-dropdown-item>
-              </div>
-            </el-dropdown-menu>
-          </el-dropdown>
-          &nbsp;
-          <el-button style="color: #909399" size="mini"
-                     @click="isShowExample = !isShowExample">
-            <i class="el-icon-sell"
-               style="color: #76838f"></i>
-          </el-button>
-          <el-button size="mini" style="color: #909399"
-                     v-if="wordInfo.wordName.length>0"
-                     @click="wordCollectClickFun()">
-            <i class="el-icon-circle-plus-outline"
-               style="color: #76838f"></i>
-          </el-button>
-        </div>
-        <el-dialog
-            v-loading="loading"
-            :title="decodeURIComponent($route.query.originalText)"
-            :visible.sync="showWordSelect">
-          <el-collapse>
-            <el-collapse-item v-for="word in wordInfoList">
-              <template slot="title">
-                <el-button type="info" size="mini" @click="agileShowDetail(word)">{{ word.wordName }}</el-button>
-                &nbsp;
-              </template>
-              <div v-for="characterVO in word.characterVOList" style="margin-bottom: -10px;">
-                <p v-for="paraphraseVO in characterVO.paraphraseVOList">
-                  <i class="el-icon-caret-right"></i>
-                  {{ paraphraseVO.meaningChinese }}
-                </p>
-              </div>
-            </el-collapse-item>
-          </el-collapse>
-          <el-pagination
-              style="margin-top: 10px"
-              small
-              :page-size.sync="size"
-              :current-page.sync="current"
-              :page-count="pages"
-              :pager-count="5"
-              :page-sizes="[10,20,50,100]"
-              layout="prev,pager,next"
-              @size-change="pageChange"
-              @current-change="pageChange"
-              :total="total">
-          </el-pagination>
-        </el-dialog>
-      </div>
-      <div>
-        <p v-if="defaultHint && defaultHint.length>0" style="color: #ed3f14">{{ defaultHint }}</p>
-        <el-alert
-            v-if="''!==wordInfo.wordName"
-            type="info"
-            effect="dark"
-            :closable="false"
-            center>
-          <div slot="title">
-            <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
+      <div class="ai-container">
+        <div v-if="isTabActivate">
+          <div style="position: fixed; top: 5px; right: 15px; z-index: 999;">
+            <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true" circle>
+              <i class="el-icon-s-unfold"
+                 style="color: #76838f;"></i>
+            </el-button>
           </div>
-        </el-alert>
+          <div style="position: fixed; bottom: 5px; right: 30px; z-index: 999;">
+            <el-button @click="dialogHelpVisible = !dialogHelpVisible" size="mini">
+              <i class="el-icon-warning"
+                 style="color: #76838f;"></i>
+            </el-button>
+            &nbsp;
+            <el-dropdown size="mini" @command="selectShowCharacter" placement="top">
+              <el-button size="mini" class="el-icon-s-operation"></el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item command="0">All</el-dropdown-item>
+                <div v-for="wordCharacterVO in wordInfo.characterVOList">
+                  <el-dropdown-item :command="wordCharacterVO.characterId">
+                    {{ wordCharacterVO.characterCode }}&nbsp;{{ wordCharacterVO.tag }}
+                  </el-dropdown-item>
+                </div>
+              </el-dropdown-menu>
+            </el-dropdown>
+            &nbsp;
+            <el-button style="color: #909399" size="mini"
+                       @click="isShowExample = !isShowExample">
+              <i class="el-icon-sell"
+                 style="color: #76838f"></i>
+            </el-button>
+            <el-button size="mini" style="color: #909399"
+                       v-if="wordInfo.wordName.length>0"
+                       @click="wordCollectClickFun()">
+              <i class="el-icon-circle-plus-outline"
+                 style="color: #76838f"></i>
+            </el-button>
+          </div>
+          <el-dialog
+              v-loading="loading"
+              :title="decodeURIComponent($route.query.originalText)"
+              :visible.sync="showWordSelect"
+              custom-class="word-select-dialog">
+            <el-collapse>
+              <el-collapse-item v-for="word in wordInfoList">
+                <template slot="title">
+                  <el-button type="info" size="mini" @click="agileShowDetail(word)">{{ word.wordName }}</el-button>
+                  &nbsp;
+                </template>
+                <div v-for="characterVO in word.characterVOList" style="margin-bottom: -10px;">
+                  <p v-for="paraphraseVO in characterVO.paraphraseVOList">
+                    <i class="el-icon-caret-right"></i>
+                    {{ paraphraseVO.meaningChinese }}
+                  </p>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+            <el-pagination
+                style="margin-top: 10px"
+                small
+                background
+                :page-size.sync="size"
+                :current-page.sync="current"
+                :page-count="pages"
+                :pager-count="5"
+                :page-sizes="[10,20,50,100]"
+                layout="prev,pager,next"
+                @size-change="pageChange"
+                @current-change="pageChange"
+                :total="total">
+            </el-pagination>
+          </el-dialog>
+        </div>
+        <div>
+          <p v-if="defaultHint && defaultHint.length>0" style="color: #ed3f14">{{ defaultHint }}</p>
+          <el-alert
+              v-if="''!==wordInfo.wordName"
+              type="info"
+              effect="dark"
+              :closable="false"
+              center
+              class="header-title-alert">
+            <div slot="title">
+              <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
+            </div>
+          </el-alert>
+        </div>
       </div>
     </el-header>
     <el-main>
-      <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
-        <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
-          <el-row type="flex" class="row-bg" justify="end">
-            <el-col>
-              <el-tag type="info" effect="dark"
-                      v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
-                {{ wordCharacterVO.characterCode }}
-              </el-tag>
-              <el-tag type="info" effect="dark" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">
-                {{ wordCharacterVO.tag }}
-              </el-tag>
-              &nbsp;
-              <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
+      <div class="ai-container word-detail">
+        <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
+          <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
+            <el-row type="flex" class="row-bg" justify="end">
+              <el-col>
                 <el-tag type="info" effect="dark"
-                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
-                  {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                     v-show="!isUKPronunciationPlaying"
-                     class="el-icon-video-play"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                     v-show="!isUSPronunciationPlaying"
-                     class="el-icon-video-play"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                     v-show="isUKPronunciationPlaying"
-                     class="el-icon-loading"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                     v-show="isUSPronunciationPlaying"
-                     class="el-icon-loading"></i>
+                        v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
+                  {{ wordCharacterVO.characterCode }}
+                </el-tag>
+                <el-tag type="info" effect="dark" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">
+                  {{ wordCharacterVO.tag }}
                 </el-tag>
                 &nbsp;
-              </span>
-            </el-col>
-          </el-row>
-          <el-row v-if="!isSmallWindow && !isLargeWindow"
-                  type="flex" class="row-bg" justify="end">
-            <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-              <el-tag type="info" effect="dark"
-                      @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
-                {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                   v-show="!isUKPronunciationPlaying"
-                   class="el-icon-video-play"></i>
-                <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                   v-show="!isUSPronunciationPlaying"
-                   class="el-icon-video-play"></i>
-                <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                   v-show="isUKPronunciationPlaying"
-                   class="el-icon-loading"></i>
-                <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                   v-show="isUSPronunciationPlaying"
-                   class="el-icon-loading"></i>
-              </el-tag>
-            </el-col>
-          </el-row>
-          <div v-if="isSmallWindow"
-               v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-            <el-row type="flex" justify="end" class="row-bg">
-              <el-col>
+                <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
+                  <el-tag type="info" effect="dark"
+                          @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                    {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                       v-show="!isUKPronunciationPlaying"
+                       class="el-icon-video-play"></i>
+                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                       v-show="!isUSPronunciationPlaying"
+                       class="el-icon-video-play"></i>
+                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                       v-show="isUKPronunciationPlaying"
+                       class="el-icon-loading"></i>
+                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                       v-show="isUSPronunciationPlaying"
+                       class="el-icon-loading"></i>
+                  </el-tag>
+                  &nbsp;
+                </span>
+              </el-col>
+            </el-row>
+            <el-row v-if="!isSmallWindow && !isLargeWindow"
+                    type="flex" class="row-bg" justify="end">
+              <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
                 <el-tag type="info" effect="dark"
                         @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                   {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
@@ -871,74 +769,97 @@ export default {
                 </el-tag>
               </el-col>
             </el-row>
-          </div>
-          <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList">
-            <el-card class="box-card">
-              <div slot="header" @click="isShowParaphrase = !isShowParaphrase">
-                <el-alert
-                    type="info"
-                    :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击灰暗区域隐藏/显示'"
-                    :closable="false"
-                    effect="dark"
-                    center>
-                  <div slot="title">
-                    <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
-                         v-for="phraseVO in wordParaphraseVO.phraseList">
-                      <p>[ {{ phraseVO }} ]</p>
-                    </div>
-                    <p style="margin-top: 50px;">
-                      {{ wordParaphraseVO.paraphraseEnglish }}
-                    </p>
-                    <el-button type="text" style="color: #909399">
-                      <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
-                         style="color: #FFFFFF;"
-                         @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
-                    </el-button>
-                    <div v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
-                         class="outline_fix_top_left">
-                      {{ wordParaphraseVO.codes }}
-                    </div>
-                  </div>
-                </el-alert>
-              </div>
-              <el-alert
-                  v-if="!isShowExample"
-                  type="info"
-                  title="例句已隐藏"
-                  center
-                  effect="light"
-                  :closable="false">
-              </el-alert>
-              <div v-if="isShowExample">
-                <div v-if="wordParaphraseVO.exampleVOList == null">
+            <div v-if="isSmallWindow"
+                 v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
+              <el-row type="flex" justify="end" class="row-bg">
+                <el-col>
+                  <el-tag type="info" effect="dark"
+                          @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                    {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                       v-show="!isUKPronunciationPlaying"
+                       class="el-icon-video-play"></i>
+                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                       v-show="!isUSPronunciationPlaying"
+                       class="el-icon-video-play"></i>
+                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
+                       v-show="isUKPronunciationPlaying"
+                       class="el-icon-loading"></i>
+                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
+                       v-show="isUSPronunciationPlaying"
+                       class="el-icon-loading"></i>
+                  </el-tag>
+                </el-col>
+              </el-row>
+            </div>
+            <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList">
+              <el-card class="box-card">
+                <div slot="header" @click="isShowParaphrase = !isShowParaphrase">
                   <el-alert
                       type="info"
-                      title="该释义暂时没有例句"
-                      center
-                      effect="light"
-                      :closable="false">
-                  </el-alert>
-                </div>
-                <div v-for="wordParaphraseExampleVO in wordParaphraseVO.exampleVOList">
-                  <el-alert
-                      type="info"
-                      center
-                      effect="light"
-                      :description="wordParaphraseExampleVO.exampleTranslate"
-                      :closable="false">
+                      :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击灰暗区域隐藏/显示'"
+                      :closable="false"
+                      effect="dark"
+                      center>
                     <div slot="title">
-                      {{ wordParaphraseExampleVO.exampleSentence }}
-                      <el-button type="text" style="color: #909399"><i
-                          class="el-icon-circle-plus-outline outline_fix"
-                          style="color: #76838f"
-                          @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
+                      <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
+                           v-for="phraseVO in wordParaphraseVO.phraseList">
+                        <p>[ {{ phraseVO }} ]</p>
+                      </div>
+                      <p style="margin-top: 50px;">
+                        {{ wordParaphraseVO.paraphraseEnglish }}
+                      </p>
+                      <el-button type="text" style="color: #909399">
+                        <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
+                           style="color: #FFFFFF;"
+                           @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
                       </el-button>
+                      <div v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
+                           class="outline_fix_top_left">
+                        {{ wordParaphraseVO.codes }}
+                      </div>
                     </div>
                   </el-alert>
                 </div>
-              </div>
-            </el-card>
-            <el-divider></el-divider>
+                <el-alert
+                    v-if="!isShowExample"
+                    type="info"
+                    title="例句已隐藏"
+                    center
+                    effect="light"
+                    :closable="false">
+                </el-alert>
+                <div v-if="isShowExample">
+                  <div v-if="wordParaphraseVO.exampleVOList == null">
+                    <el-alert
+                        type="info"
+                        title="该释义暂时没有例句"
+                        center
+                        effect="light"
+                        :closable="false">
+                    </el-alert>
+                  </div>
+                  <div v-for="wordParaphraseExampleVO in wordParaphraseVO.exampleVOList">
+                    <el-alert
+                        type="info"
+                        center
+                        effect="light"
+                        :description="wordParaphraseExampleVO.exampleTranslate"
+                        :closable="false">
+                      <div slot="title">
+                        {{ wordParaphraseExampleVO.exampleSentence }}
+                        <el-button type="text" style="color: #909399"><i
+                            class="el-icon-circle-plus-outline outline_fix"
+                            style="color: #76838f"
+                            @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
+                        </el-button>
+                      </div>
+                    </el-alert>
+                  </div>
+                </div>
+              </el-card>
+              <el-divider></el-divider>
+            </div>
           </div>
         </div>
       </div>
@@ -946,6 +867,7 @@ export default {
           center
           :title="collect.dialogTitle"
           :visible.sync="collect.listSelectDialogVisible"
+          custom-class="star-list-dialog"
           :before-close="listSelectDialogHandleClose">
         <el-table
             :data="collect.starListData"
@@ -966,7 +888,8 @@ export default {
     <el-dialog
         title="提示"
         :visible.sync="autoPlayDialogVisible"
-        width="300px">
+        width="300px"
+        custom-class="confirm-dialog">
       <span>自动复习即将开始，请确认。</span>
       <span slot="footer" class="dialog-footer">
     <el-button @click="autoPlayDialogVisible = false">取消</el-button>
@@ -974,17 +897,202 @@ export default {
   </span>
     </el-dialog>
 
-    <el-dialog :visible.sync="dialogHelpVisible">
+    <el-dialog :visible.sync="dialogHelpVisible" custom-class="help-dialog">
       <div>
-        <img width="100%" src="wordCharacter1.png"/>
-        <img width="100%" src="wordCharacter2.png"/>
-        <img width="100%" src="wordCharacter3.png"/>
-        <img width="100%" src="wordCharacter4.png"/>
-        <img width="100%" src="wordCharacter5.png"/>
-        <img width="100%" src="wordCharacter6.png"/>
-        <img width="100%" src="wordCharacter7.png"/>
+        <img width="100%" src="/wordCharacter1.png" alt="Word character legend 1"/>
+        <img width="100%" src="/wordCharacter2.png" alt="Word character legend 2"/>
+        <img width="100%" src="/wordCharacter3.png" alt="Word character legend 3"/>
+        <img width="100%" src="/wordCharacter4.png" alt="Word character legend 4"/>
+        <img width="100%" src="/wordCharacter5.png" alt="Word character legend 5"/>
+        <img width="100%" src="/wordCharacter6.png" alt="Word character legend 6"/>
+        <img width="100%" src="/wordCharacter7.png" alt="Word character legend 7"/>
       </div>
     </el-dialog>
 
   </el-container>
 </template>
+
+<style scoped>
+/* Align with AIResponse page look & feel */
+/* Subtle row background similar to AI blocks, less heavy than solid gray */
+.row-bg {
+  width: 100%;
+  padding: 6px 0;
+  background-color: transparent;
+  margin: 0 auto 6px auto;
+  border-bottom: 1px dashed #e9ecef;
+}
+
+/* Card styling to match AIResponse containers */
+.box-card {
+  width: 100%;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+/* Make the card header visually consistent */
+.box-card >>> .el-card__header { padding: 0; }
+/* Use the existing alert as header, but flatten its spacing */
+.box-card >>> .el-card__header .el-alert { border-radius: 0; }
+
+.outline_fix { position: absolute; right: 5px; bottom: 5px; }
+.outline_fix_top_right { position: absolute; top: 5px; right: 5px; }
+.outline_fix_top_left { position: absolute; text-align: left; top: 5px; left: 5px; width: 90%; }
+.outline_fix_bottom_left { position: absolute; bottom: 5px; left: 5px; }
+.outline_fix_bottom_left_2 { position: absolute; bottom: 5px; left: 25px; }
+
+/* Align top title alert with consistent spacing */
+.header-title-alert { margin: 10px 0 0 0; }
+
+/* Responsive tweaks to mirror AI page */
+@media (max-width: 768px) {
+  .box-card { border-radius: 8px; margin: 12px 0; }
+  .row-bg { margin-bottom: 4px; }
+}
+
+/* ================= Additional polish to match AiResponseDetail ================= */
+/* Gradient title like AiResponse */
+.header-title-alert >>> .el-alert {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+}
+.header-title-alert >>> .el-alert__title,
+.header-title-alert >>> .el-alert__description { color: #ffffff; }
+.header-title-alert >>> .el-alert__content { padding: 12px 16px; }
+
+/* Paraphrase card header uses a vibrant gradient like selection title in AiResponse */
+.box-card >>> .el-card__header { cursor: pointer; }
+.box-card >>> .el-card__header .el-alert {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+.box-card >>> .el-card__header .el-alert:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+.box-card >>> .el-card__header .el-alert .el-alert__title,
+.box-card >>> .el-card__header .el-alert .el-alert__description { color: #ffffff; }
+
+/* Pronunciation tags hover/interaction to feel clickable */
+.word-detail >>> .el-tag {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.word-detail >>> .el-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Dialog footer/button styles copied from AiResponse for consistency */
+.dialog-footer { text-align: center; padding: 16px 20px; }
+.dialog-footer .el-button {
+  margin: 0 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  min-width: 120px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.dialog-footer .el-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.dialog-footer .el-button--info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  border: none !important;
+  color: white !important;
+}
+.dialog-footer .el-button--primary {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  border: none !important;
+  color: white !important;
+}
+.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  color: #6c757d !important;
+}
+
+/* Subtle row line to match AiResponse neutrality */
+.row-bg { border-bottom-color: #eef2f5; }
+
+/* Mobile radius alignment */
+@media (max-width: 768px) {
+  .header-title-alert >>> .el-alert { border-radius: 8px; }
+}
+
+/* ============== Word Select Dialog polish ============== */
+.word-select-dialog >>> .el-dialog__header {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+  border-bottom: none;
+  padding: 14px 16px;
+}
+.word-select-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
+.word-select-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
+.word-select-dialog >>> .el-dialog__body { padding-top: 10px; }
+
+/* Collapse items inside dialog */
+.word-select-dialog >>> .el-collapse-item__header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 10px 12px;
+  font-weight: 500;
+}
+.word-select-dialog >>> .el-collapse-item__wrap {
+  background: #ffffff;
+  border-bottom: 1px solid #f1f3f5;
+}
+.word-select-dialog >>> .el-collapse-item__content {
+  padding: 10px 16px 6px 16px;
+  color: #495057;
+}
+.word-select-dialog >>> .el-collapse-item__header:hover { background: #eef2f7; }
+
+/* Pagination styling */
+.word-select-dialog >>> .el-pagination.is-background .btn-prev,
+.word-select-dialog >>> .el-pagination.is-background .btn-next,
+.word-select-dialog >>> .el-pagination.is-background .el-pager li {
+  border-radius: 8px;
+}
+.word-select-dialog >>> .el-pagination.is-background .el-pager li.active {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+}
+.word-select-dialog >>> .el-pagination.is-background .el-pager li:not(.active):hover { filter: brightness(0.97); }
+
+/* Additional dialogs (collect list, confirm, help) */
+.star-list-dialog >>> .el-dialog__header,
+.confirm-dialog >>> .el-dialog__header,
+.help-dialog >>> .el-dialog__header {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+  border-bottom: none;
+}
+.star-list-dialog >>> .el-dialog__title,
+.confirm-dialog >>> .el-dialog__title,
+.help-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
+.star-list-dialog >>> .el-dialog__headerbtn .el-dialog__close,
+.confirm-dialog >>> .el-dialog__headerbtn .el-dialog__close,
+.help-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
+
+/* Table buttons inside star list dialog */
+.star-list-dialog >>> .el-button.el-button--info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+</style>

@@ -42,7 +42,11 @@ axios.interceptors.request.use(config => {
 
   // Add CORS headers for Electron
   if (isElectron) {
-    config.headers['Content-Type'] = 'application/json'
+    // Only set Content-Type if not sending FormData; let browser set proper boundary for multipart
+    const isFormData = (typeof FormData !== 'undefined') && (config.data instanceof FormData)
+    if (!isFormData && !config.headers['Content-Type']) {
+      config.headers['Content-Type'] = 'application/json'
+    }
     config.headers['Access-Control-Allow-Origin'] = '*'
     config.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     config.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
@@ -64,10 +68,12 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(res => {
   NProgress.done()
   const status = String(res.status) || '200'
-  const message = responseCode[status] || responseCode['default'] || res.data.msg
+  // Prefer backend-provided message if available (e.g., "ETag mismatch"), then fallback to mapped/default
+  const serverMsg = res && res.data && (res.data.msg || res.data.message)
+  const message = serverMsg || responseCode[status] || responseCode['default']
   let refreshToken = getStore({ name: 'refresh_token' })
 
-  if (responseCode.UNAUTHORIZED == status) {
+  if (String(responseCode.UNAUTHORIZED) === status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
         Message({

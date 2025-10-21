@@ -1,6 +1,23 @@
 // filepath: /src/store/modules/todo.js
 import Vue from 'vue'
-import * as api from '@/api/todo'
+import * as serverApi from '@/api/todo'
+import * as localApi from '@/api/todo.local'
+// Use centralized auth helper
+import {isLoggedIn} from '@/util/auth'
+
+function getApi() { return isLoggedIn() ? serverApi : localApi }
+
+// Helpers to normalize server (axios) vs local API responses
+function isAxiosResponse(obj) { return !!(obj && obj.config && Object.prototype.hasOwnProperty.call(obj, 'status') && obj.headers) }
+function ensureServerSuccess(res) {
+  const r = res && res.data ? res.data : null
+  if (!r || typeof r.code === 'undefined') throw new Error('Invalid API response')
+  if (r.code !== 1) throw new Error(r.msg || 'Request failed')
+  return r.data
+}
+function headerETag(res) {
+  try { const h = res.headers || {}; return h.etag || h.ETag || h.Etag } catch (_) { return undefined }
+}
 
 const state = {
   tasks: [],
@@ -55,12 +72,20 @@ const mutations = {
 
 const actions = {
   async fetchTasks({ commit }, params = {}) {
-    const res = await api.listTasks(params)
+    const api = getApi()
+    const raw = await api.listTasks(params)
+    const res = isAxiosResponse(raw)
+      ? (() => { const inner = ensureServerSuccess(raw) || {}; return { tasks: inner.data || [], meta: inner.meta || { page: 1, pageSize: (params.pageSize || 20), total: (inner.data || []).length } } })()
+      : raw
     commit('SET_TASKS', res)
     return res
   },
   async createTask({ commit }, { body, idempotencyKey }) {
-    const { task, etag } = await api.createTask(body, { idempotencyKey })
+    const api = getApi()
+    const raw = await api.createTask(body, { idempotencyKey })
+    const { task, etag } = isAxiosResponse(raw)
+      ? (() => { const inner = ensureServerSuccess(raw); return { task: (inner && inner.data) || null, etag: headerETag(raw) } })()
+      : raw
     if (task) {
       commit('UPSERT_TASK', task)
       commit('SET_TASK_ETAG', { id: task.id, etag })
@@ -68,7 +93,11 @@ const actions = {
     return { task, etag }
   },
   async fetchTask({ commit }, id) {
-    const { task, etag } = await api.getTask(id)
+    const api = getApi()
+    const raw = await api.getTask(id)
+    const { task, etag } = isAxiosResponse(raw)
+      ? (() => { const inner = ensureServerSuccess(raw); return { task: (inner && inner.data) || null, etag: headerETag(raw) } })()
+      : raw
     if (task) {
       commit('UPSERT_TASK', task)
       commit('SET_TASK_ETAG', { id: task.id, etag })
@@ -76,8 +105,12 @@ const actions = {
     return { task, etag }
   },
   async updateTask({ commit, getters }, { id, patch }) {
+    const api = getApi()
     const ifMatch = getters.todoTaskEtag(id)
-    const { task, etag } = await api.updateTask(id, patch, { ifMatch })
+    const raw = await api.updateTask(id, patch, { ifMatch })
+    const { task, etag } = isAxiosResponse(raw)
+      ? (() => { const inner = ensureServerSuccess(raw); return { task: (inner && inner.data) || null, etag: headerETag(raw) } })()
+      : raw
     if (task) {
       commit('UPSERT_TASK', task)
       commit('SET_TASK_ETAG', { id: task.id, etag })
@@ -85,62 +118,91 @@ const actions = {
     return { task, etag }
   },
   async deleteTask({ commit }, id) {
-    await api.deleteTask(id)
+    const api = getApi()
+    const raw = await api.deleteTask(id)
+    if (isAxiosResponse(raw)) { ensureServerSuccess(raw) }
     commit('REMOVE_TASK', id)
     return true
   },
   async completeTask({ commit }, { id, status, idempotencyKey }) {
-    const res = await api.completeTask(id, status, { idempotencyKey })
+    const api = getApi()
+    const raw = await api.completeTask(id, status, { idempotencyKey })
+    const res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
     if (res && res.task) commit('UPSERT_TASK', res.task)
     if (res && res.ranking) commit('SET_RANKING', res.ranking)
     return res
   },
   async resetTaskStatus({ commit }, id) {
-    const task = await api.resetTaskStatus(id)
-    if (task) commit('UPSERT_TASK', task)
-    return task
+    const api = getApi()
+    const raw = await api.resetTaskStatus(id)
+    const task = isAxiosResponse(raw) ? ensureServerSuccess(raw) && (ensureServerSuccess(raw).data || ensureServerSuccess(raw)) : raw
+    // normalize: local returns task object; server likely returns { data: task }
+    const normalizedTask = task && task.id ? task : (task && task.data ? task.data : task)
+    if (normalizedTask) commit('UPSERT_TASK', normalizedTask)
+    return normalizedTask
   },
   async resetAllTaskStatuses({ dispatch }) {
-    const res = await api.resetAllTaskStatuses()
+    const api = getApi()
+    const raw = await api.resetAllTaskStatuses()
+    const res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
     // Refresh first page after reset
     await dispatch('fetchTasks', { page: 1, pageSize: 100 })
     return res
   },
   async demoSeed({ dispatch }) {
-    const res = await api.demoSeed()
+    const api = getApi()
+    const raw = await api.demoSeed()
+    const res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
     await dispatch('fetchTasks', { page: 1, pageSize: 100 })
     return res
   },
 
   async fetchTrash({ commit }, params = {}) {
-    const res = await api.listTrash(params)
+    const api = getApi()
+    const raw = await api.listTrash(params)
+    const res = isAxiosResponse(raw)
+      ? (() => { const inner = ensureServerSuccess(raw) || {}; return { items: inner.data || [], meta: inner.meta || { page: 1, pageSize: (params.pageSize || 20), total: (inner.data || []).length } } })()
+      : raw
     commit('SET_TRASH', res)
     return res
   },
   async clearTrash({ dispatch }) {
-    const res = await api.clearTrash()
+    const api = getApi()
+    const raw = await api.clearTrash()
+    const res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
     await dispatch('fetchTrash', { page: 1, pageSize: 50 })
     return res
   },
   async deleteTrashItem({ dispatch }, id) {
-    await api.deleteTrashItem(id)
+    const api = getApi()
+    const raw = await api.deleteTrashItem(id)
+    if (isAxiosResponse(raw)) { ensureServerSuccess(raw) }
     await dispatch('fetchTrash', { page: 1, pageSize: 50 })
     return true
   },
   async restoreTrashItem({ dispatch }, id) {
-    const task = await api.restoreTrashItem(id)
+    const api = getApi()
+    const raw = await api.restoreTrashItem(id)
+    const task = isAxiosResponse(raw) ? ensureServerSuccess(raw) && (ensureServerSuccess(raw).data || ensureServerSuccess(raw)) : raw
+    const normalizedTask = task && task.id ? task : (task && task.data ? task.data : task)
     await dispatch('fetchTrash', { page: 1, pageSize: 50 })
     await dispatch('fetchTasks', { page: 1, pageSize: 100 })
-    return task
+    return normalizedTask
   },
 
   async fetchHistory({ commit }, { date, page = 1, pageSize = 100 }) {
-    const res = await api.getHistory(date, { page, pageSize })
+    const api = getApi()
+    const raw = await api.getHistory(date, { page, pageSize })
+    const res = isAxiosResponse(raw)
+      ? (() => { const inner = ensureServerSuccess(raw) || {}; return { records: inner.data || [], meta: inner.meta || {} } })()
+      : raw
     commit('SET_HISTORY', { records: res.records, meta: res.meta })
     return res
   },
   async deleteHistory({ dispatch, commit, state }, id) {
-    const res = await api.deleteHistory(id)
+    const api = getApi()
+    const raw = await api.deleteHistory(id)
+    const res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
     if (res && res.meta && res.meta.ranking) commit('SET_RANKING', res.meta.ranking)
     // refresh history list for currently loaded date if exists
     const date = state.historyMeta && state.historyMeta.date
@@ -148,14 +210,55 @@ const actions = {
     return true
   },
 
-  async fetchRanking({ commit }) { const r = await api.getRankingCurrent(); commit('SET_RANKING', r); return r },
-  async fetchRanks({ commit }) { const r = await api.getRankingDefinitions(); commit('SET_RANKS', r); return r },
+  async fetchRanking({ commit }) {
+    const api = getApi()
+    const raw = await api.getRankingCurrent()
+    const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+    commit('SET_RANKING', r)
+    return r
+  },
+  async fetchRanks({ commit }) {
+    const api = getApi()
+    const raw = await api.getRankingDefinitions()
+    const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+    commit('SET_RANKS', r)
+    return r
+  },
 
-  async fetchAnalyticsMonthly({ commit }, months = 6) { const r = await api.getAnalyticsMonthly(months); commit('SET_ANALYTICS_MONTHLY', r); return r },
-  async fetchAnalyticsSummary(_, month) { return api.getAnalyticsSummary(month) },
+  async fetchAnalyticsMonthly({ commit }, months = 6) {
+    const api = getApi()
+    const raw = await api.getAnalyticsMonthly(months)
+    const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+    commit('SET_ANALYTICS_MONTHLY', r)
+    return r
+  },
+  async fetchAnalyticsSummary(_, month) {
+    const api = getApi()
+    const raw = await api.getAnalyticsSummary(month)
+    return isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+  },
 
-  async exportTodo() { return api.exportTodo() },
-  async importTodo({ dispatch }, payload) { const r = await api.importTodo(payload); await dispatch('fetchTasks', { page: 1, pageSize: 100 }); await dispatch('fetchTrash', { page: 1, pageSize: 50 }); return r },
+  async exportTodo() {
+    const api = getApi()
+    const raw = await api.exportTodo()
+    return isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+  },
+  async importTodo({ dispatch }, payload) {
+    const api = getApi()
+    let res
+    const isFile = (typeof File !== 'undefined' && payload instanceof File) || (typeof Blob !== 'undefined' && payload instanceof Blob)
+    if (api === localApi && isFile) {
+      const text = await new Promise((resolve, reject) => { try { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsText(payload) } catch (e) { reject(e) } })
+      const json = JSON.parse(text)
+      res = await localApi.importTodo(json)
+    } else {
+      const raw = await api.importTodo(payload)
+      res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+    }
+    await dispatch('fetchTasks', { page: 1, pageSize: 100 })
+    await dispatch('fetchTrash', { page: 1, pageSize: 50 })
+    return res
+  },
 }
 
 export default {
@@ -165,4 +268,3 @@ export default {
   mutations,
   actions,
 }
-

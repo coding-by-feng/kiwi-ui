@@ -9,6 +9,10 @@ const isProduction = process.env.NODE_ENV === 'production'
 // Backend URL
 const url = process.env.VUE_APP_API_URL || 'http://localhost:9991'
 
+console.log(`Building for ${isElectron ? 'Electron' : 'Web'} in ${isProduction ? 'Production' : 'Development'} mode.`);
+console.log(`API URL set to: ${url}`);
+console.log(`Public path set to: ${isElectron ? './' : '/'}`);
+
 // CRITICAL: Use absolute path for web deployment
 let publicPath = isElectron ? './' : '/'
 

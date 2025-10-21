@@ -16,7 +16,10 @@ export default {
   },
   watch: {
     $route: function () {
-      this.activeName = this.$route.query.active
+      // Keep a safe fallback so the tab content never disappears
+      this.activeName = this.$route.query.active || 'search'
+      // Keep local snapshot in sync so comparisons in tabClick remain accurate
+      this.query = { ...this.$route.query }
       // Also check for OAuth callback when route changes
       this.checkOAuthCallback()
     }

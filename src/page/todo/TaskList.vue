@@ -88,7 +88,9 @@
             <div class="manage-actions">
               <el-button type="primary" size="mini" icon="el-icon-edit" circle @click="onStartEdit(task)" class="manage-btn"></el-button>
               <el-popconfirm :title="$t('todo.confirmDeleteTask')" @confirm="onDelete(task.id)">
-                <el-button slot="reference" type="danger" size="mini" icon="el-icon-delete" circle class="manage-btn"></el-button>
+                <template v-slot:reference>
+                  <el-button type="danger" size="mini" icon="el-icon-delete" circle class="manage-btn"></el-button>
+                </template>
               </el-popconfirm>
             </div>
           </div>
@@ -127,4 +129,3 @@ export default {
   }
 }
 </script>
-

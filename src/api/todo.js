@@ -1,205 +1,135 @@
 // filepath: /src/api/todo.js
 import request from '@/router/axios'
 
-// Helpers
-function ensureSuccess(res) {
-  const r = res && res.data ? res.data : null
-  if (!r || typeof r.code === 'undefined') {
-    throw new Error('Invalid API response')
-  }
-  if (r.code !== 1) {
-    const msg = r.msg || 'Request failed'
-    const err = new Error(msg)
-    err.response = res
-    throw err
-  }
-  return r.data
-}
-
-function headerETag(res) {
-  try { return res.headers && (res.headers['etag'] || res.headers['ETag'] || res.headers['Etag']) } catch (_) { return undefined }
-}
-
-function withAuthHeaders(extra = {}) {
-  return { isToken: true, ...(extra || {}) }
-}
-
-function genIdempotencyKey() {
-  // Simple UUIDv4 generator
-  const rnd = (len = 8) => Math.random().toString(16).slice(2, 2 + len)
-  return `${rnd(8)}-${rnd(4)}-${rnd(4)}-${rnd(4)}-${rnd(12)}`
-}
-
 const BASE = '/tools/todo'
 
 // Tasks
-export async function listTasks(params = {}) {
-  const res = await request({ url: `${BASE}/tasks`, method: 'get', headers: withAuthHeaders(), params })
-  const data = ensureSuccess(res)
-  const inner = data || {}
-  return { tasks: inner.data || [], meta: inner.meta || { page: 1, pageSize: (params.pageSize || 20), total: (inner.data || []).length } }
+export function listTasks(params = {}) {
+    return request({url: `${BASE}/tasks`, method: 'get', params, headers: {isToken: true}})
 }
 
-export async function createTask(body, { idempotencyKey } = {}) {
-  const headers = withAuthHeaders(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {})
-  const res = await request({ url: `${BASE}/tasks`, method: 'post', headers, data: body })
-  const data = ensureSuccess(res)
-  return { task: (data && data.data) || null, etag: headerETag(res) }
+export function createTask(body, {idempotencyKey} = {}) {
+    const headers = {isToken: true}
+    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
+    return request({url: `${BASE}/tasks`, method: 'post', data: body, headers})
 }
 
-export async function getTask(id) {
-  const res = await request({ url: `${BASE}/tasks/${id}`, method: 'get', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return { task: (data && data.data) || null, etag: headerETag(res) }
+export function getTask(id) {
+    return request({url: `${BASE}/tasks/${id}`, method: 'get', headers: {isToken: true}})
 }
 
-export async function updateTask(id, patch, { ifMatch } = {}) {
-  const headers = withAuthHeaders(ifMatch ? { 'If-Match': ifMatch } : {})
-  const res = await request({ url: `${BASE}/tasks/${id}`, method: 'patch', headers, data: patch })
-  const data = ensureSuccess(res)
-  return { task: (data && data.data) || null, etag: headerETag(res) }
+export function updateTask(id, patch, {ifMatch} = {}) {
+    const headers = {isToken: true}
+    if (ifMatch) headers['If-Match'] = ifMatch
+    return request({url: `${BASE}/tasks/${id}`, method: 'patch', data: patch, headers})
 }
 
-export async function deleteTask(id) {
-  const res = await request({ url: `${BASE}/tasks/${id}`, method: 'delete', headers: withAuthHeaders() })
-  ensureSuccess(res)
-  return true
+export function deleteTask(id) {
+    return request({url: `${BASE}/tasks/${id}`, method: 'delete', headers: {isToken: true}})
 }
 
-export async function completeTask(id, status, { idempotencyKey } = {}) {
-  const headers = withAuthHeaders({ 'Idempotency-Key': idempotencyKey || genIdempotencyKey() })
-  const res = await request({ url: `${BASE}/tasks/${id}/complete`, method: 'post', headers, data: { status } })
-  const data = ensureSuccess(res)
-  return { task: data.task, history: data.history, ranking: data.ranking }
+export function completeTask(id, status, {idempotencyKey} = {}) {
+    const headers = {isToken: true}
+    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
+    return request({url: `${BASE}/tasks/${id}/complete`, method: 'post', data: {status}, headers})
 }
 
-export async function resetTaskStatus(id) {
-  const res = await request({ url: `${BASE}/tasks/${id}/reset-status`, method: 'post', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data.data
+export function resetTaskStatus(id) {
+    return request({url: `${BASE}/tasks/${id}/reset-status`, method: 'post', headers: {isToken: true}})
 }
 
-export async function resetAllTaskStatuses() {
-  const res = await request({ url: `${BASE}/tasks/reset-statuses`, method: 'post', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function resetAllTaskStatuses() {
+    return request({url: `${BASE}/tasks/reset-statuses`, method: 'post', headers: {isToken: true}})
 }
 
-export async function demoSeed() {
-  const res = await request({ url: `${BASE}/tasks/demo`, method: 'post', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function demoSeed() {
+    return request({url: `${BASE}/tasks/demo`, method: 'post', headers: {isToken: true}})
 }
 
 // Trash
-export async function listTrash(params = {}) {
-  const res = await request({ url: `${BASE}/trash`, method: 'get', headers: withAuthHeaders(), params })
-  const data = ensureSuccess(res)
-  const inner = data || {}
-  return { items: inner.data || [], meta: inner.meta || { page: 1, pageSize: (params.pageSize || 20), total: (inner.data || []).length } }
+export function listTrash(params = {}) {
+    return request({url: `${BASE}/trash`, method: 'get', params, headers: {isToken: true}})
 }
 
-export async function clearTrash() {
-  const res = await request({ url: `${BASE}/trash`, method: 'delete', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function clearTrash() {
+    return request({url: `${BASE}/trash`, method: 'delete', headers: {isToken: true}})
 }
 
-export async function deleteTrashItem(id) {
-  const res = await request({ url: `${BASE}/trash/${id}`, method: 'delete', headers: withAuthHeaders() })
-  ensureSuccess(res)
-  return true
+export function deleteTrashItem(id) {
+    return request({url: `${BASE}/trash/${id}`, method: 'delete', headers: {isToken: true}})
 }
 
-export async function restoreTrashItem(id) {
-  const res = await request({ url: `${BASE}/trash/${id}/restore`, method: 'post', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data.data
+export function restoreTrashItem(id) {
+    return request({url: `${BASE}/trash/${id}/restore`, method: 'post', headers: {isToken: true}})
 }
 
 // History
-export async function getHistory(date, params = {}) {
-  const res = await request({ url: `${BASE}/history`, method: 'get', headers: withAuthHeaders(), params: { date, ...params } })
-  const data = ensureSuccess(res)
-  const inner = data || {}
-  return { records: inner.data || [], meta: inner.meta || {} }
+export function getHistory(date, params = {}) {
+    return request({url: `${BASE}/history`, method: 'get', params: {date, ...params}, headers: {isToken: true}})
 }
 
-export async function deleteHistory(id) {
-  const res = await request({ url: `${BASE}/history/${id}`, method: 'delete', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function deleteHistory(id) {
+    return request({url: `${BASE}/history/${id}`, method: 'delete', headers: {isToken: true}})
 }
 
 // Analytics
-export async function getAnalyticsMonthly(months = 6) {
-  const res = await request({ url: `${BASE}/analytics/monthly`, method: 'get', headers: withAuthHeaders(), params: { months } })
-  const data = ensureSuccess(res)
-  return data
+export function getAnalyticsMonthly(months = 6) {
+    return request({url: `${BASE}/analytics/monthly`, method: 'get', params: {months}, headers: {isToken: true}})
 }
 
-export async function getAnalyticsSummary(month /* YYYY-MM */) {
-  const res = await request({ url: `${BASE}/analytics/summary`, method: 'get', headers: withAuthHeaders(), params: { month } })
-  const data = ensureSuccess(res)
-  return data
+export function getAnalyticsSummary(month /* YYYY-MM */) {
+    return request({url: `${BASE}/analytics/summary`, method: 'get', params: {month}, headers: {isToken: true}})
 }
 
 // Ranking
-export async function getRankingCurrent() {
-  const res = await request({ url: `${BASE}/ranking/current`, method: 'get', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function getRankingCurrent() {
+    return request({url: `${BASE}/ranking/current`, method: 'get', headers: {isToken: true}})
 }
 
-export async function getRankingDefinitions() {
-  const res = await request({ url: `${BASE}/ranking/ranks`, method: 'get', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function getRankingDefinitions() {
+    return request({url: `${BASE}/ranking/ranks`, method: 'get', headers: {isToken: true}})
 }
 
 // Import/Export
-export async function exportTodo() {
-  const res = await request({ url: `${BASE}/export/todo`, method: 'get', headers: withAuthHeaders() })
-  const data = ensureSuccess(res)
-  return data
+export function exportTodo() {
+    return request({url: `${BASE}/export/todo`, method: 'get', headers: {isToken: true}})
 }
 
-export async function importTodo(payload) {
-  // payload can be a JS object (JSON) or a File/Blob
-  if (payload instanceof File || payload instanceof Blob) {
-    const form = new FormData()
-    form.append('file', payload)
-    const res = await request({ url: `${BASE}/import/todo`, method: 'post', headers: withAuthHeaders({}), data: form })
-    const data = ensureSuccess(res)
-    return data
-  } else {
-    const res = await request({ url: `${BASE}/import/todo`, method: 'post', headers: withAuthHeaders({ 'Content-Type': 'application/json' }), data: payload })
-    const data = ensureSuccess(res)
-    return data
-  }
+export function importTodo(payload) {
+    if (typeof File !== 'undefined' && payload instanceof File || typeof Blob !== 'undefined' && payload instanceof Blob) {
+        const form = new FormData()
+        form.append('file', payload)
+        return request({url: `${BASE}/import/todo`, method: 'post', data: form, headers: {isToken: true}})
+    } else {
+        return request({
+            url: `${BASE}/import/todo`,
+            method: 'post',
+            data: payload,
+            headers: {isToken: true, 'Content-Type': 'application/json'}
+        })
+    }
 }
 
 export default {
-  listTasks,
-  createTask,
-  getTask,
-  updateTask,
-  deleteTask,
-  completeTask,
-  resetTaskStatus,
-  resetAllTaskStatuses,
-  demoSeed,
-  listTrash,
-  clearTrash,
-  deleteTrashItem,
-  restoreTrashItem,
-  getHistory,
-  deleteHistory,
-  getAnalyticsMonthly,
-  getAnalyticsSummary,
-  getRankingCurrent,
-  getRankingDefinitions,
-  exportTodo,
-  importTodo,
+    listTasks,
+    createTask,
+    getTask,
+    updateTask,
+    deleteTask,
+    completeTask,
+    resetTaskStatus,
+    resetAllTaskStatuses,
+    demoSeed,
+    listTrash,
+    clearTrash,
+    deleteTrashItem,
+    restoreTrashItem,
+    getHistory,
+    deleteHistory,
+    getAnalyticsMonthly,
+    getAnalyticsSummary,
+    getRankingCurrent,
+    getRankingDefinitions,
+    exportTodo,
+    importTodo,
 }
-
