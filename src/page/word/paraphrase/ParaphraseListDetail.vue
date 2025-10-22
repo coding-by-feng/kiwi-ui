@@ -516,9 +516,6 @@ export default {
       }
       await this.initDefaultListFun()
     },
-    goBack() {
-      this.$emit('tableVisibleToggle')
-    },
     isLastReviewWordSame() {
       console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
       console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
@@ -628,9 +625,6 @@ export default {
               that.msgError(that, '删除单词收藏操作异常')
             })
       })
-    },
-    handleDetailClose() {
-      this.detail.dialogVisible = false
     },
     handleShowDetail() {
       this.detail.dialogVisible = false
@@ -1142,21 +1136,23 @@ export default {
 </script>
 
 <template>
-  <div style="margin-top: 30px" v-loading="loading">
+  <div class="list-container" v-loading="loading">
     <div style="z-index: 1;">
-      <el-card v-if="isReview" class="box-card" style="background-color: #DCDFE6;">
+      <el-card v-if="isReview" class="box-card timer-card">
         <div>
           <el-dropdown
               size="mini"
               split-button type="info" @command="countdownSelectHandle">
             <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
-              <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
-              <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
-              <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
-              <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
-            </el-dropdown-menu>
+            <template v-slot:dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
+                <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
+                <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
+                <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
+                <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
         </div>
         <div v-if="countdownMode">
@@ -1165,30 +1161,37 @@ export default {
                      @endFun="countdownEndFun"></Countdown>
         </div>
       </el-card>
-      <el-collapse v-for="(item, index) in listItems" accordion>
+      <el-collapse v-for="(item, index) in listItems" :key="item.paraphraseId || index" accordion class="kiwi-collapse">
         <el-collapse-item :title="item.wordName" :name="item.wordId">
-          <div>
-            <p>
+          <div class="collapse-content">
+            <p class="paraphrase-english">
               {{ item.paraphraseEnglish }}
             </p>
-            <div>
+            <div class="paraphrase-translation">
               {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏' }}
             </div>
+            <div class="collapse-actions">
+              <el-button class="collapse-action-button info"
+                         type="text"
+                         size="mini"
+                         @click="showDetail(item.paraphraseId, index)"
+                         title="查看详情">
+                <i class="el-icon-more-outline"></i>
+              </el-button>
+              <el-button class="collapse-action-button danger"
+                         type="text"
+                         size="mini"
+                         @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"
+                         title="从收藏移除">
+                <i class="el-icon-remove-outline"></i>
+              </el-button>
+            </div>
           </div>
-          <el-button type="text" style="color: #909399"
-                     size="mini"
-                     @click="showDetail(item.paraphraseId, index)"><i class="el-icon-more-outline"></i>
-          </el-button>
-          <el-button type="text" style="color: #909399"
-                     size="mini"
-                     @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"><i
-              class="el-icon-remove-outline"></i>
-          </el-button>
         </el-collapse-item>
       </el-collapse>
       <el-pagination
           v-if="isShowPagination"
-          style="margin-top: 10px"
+          class="list-pagination"
           small
           :page-size.sync="page.size"
           :current-page.sync="page.current"
@@ -1207,7 +1210,7 @@ export default {
           :visible.sync="detail.dialogVisible"
           fullscreen
           width="100%">
-        <div slot="title" style="margin-bottom: -35px">
+        <div slot="title" class="dialog-title-bar">
           <v-touch
               @click.stop="autoPlayDialogVisible++"
               @swipeup="stopPlaying"
@@ -1218,26 +1221,25 @@ export default {
                  @click="refreshReviseDetail"
                  :style="{height: innerHeightSleepModePx, background: '#909399'}">
               <br/>
-              <el-tag type="info" effect="dark"><i class="el-icon-right"/>&nbsp;右滑跳过</el-tag>
+              <span class="sleep-tip-badge"><i class="el-icon-right"/>&nbsp;右滑跳过</span>
               <br/>
-              <el-tag type="info" effect="dark"><i class="el-icon-back"/>&nbsp;左滑记住</el-tag>
+              <span class="sleep-tip-badge"><i class="el-icon-back"/>&nbsp;左滑记住</span>
               <br/>
-              <el-tag type="info" effect="dark"><i class="el-icon-thumb"/>&nbsp;单击从头开始听当前单词/当音频卡住时也可用
-              </el-tag>
+              <span class="sleep-tip-badge"><i class="el-icon-thumb"/>&nbsp;单击从头开始听当前单词/当音频卡住时也可用
+              </span>
               <br/>
-              <el-tag type="info" effect="dark"><i class="el-icon-top"/>&nbsp;上滑暂停当前播放单词</el-tag>
+              <span class="sleep-tip-badge"><i class="el-icon-top"/>&nbsp;上滑暂停当前播放单词</span>
               <br/>
-              <el-tag type="info" effect="dark"><i class="el-icon-bottom"/>&nbsp;下滑跳过spelling</el-tag>
+              <span class="sleep-tip-badge"><i class="el-icon-bottom"/>&nbsp;下滑跳过spelling</span>
               <br/>
-              <el-tag type="info" effect="dark"><i class="el-icon-document-copy"/>&nbsp;滑动两边或者底部白色区域可以下拉或者上拉
-              </el-tag>
+              <span class="sleep-tip-badge"><i class="el-icon-document-copy"/>&nbsp;滑动两边或者底部白色区域可以下拉或者上拉
+              </span>
             </div>
           </v-touch>
           <el-divider v-if="detail.isSleepMode"></el-divider>
-          <el-tag type="info" :hit="true" style="font-size: larger; font-weight: bolder; font-family: sans-serif;"
-                  @click="detail.showWord = !detail.showWord">
+          <span class="word-spelling" @click="detail.showWord = !detail.showWord">
             {{ showWordSpelling }}
-          </el-tag>
+          </span>
           &nbsp
           <el-button type="info"
                      v-if="isReview && detail.isSleepMode"
@@ -1246,107 +1248,72 @@ export default {
             <i class="el-icon-thumb"></i>
           </el-button>
         </div>
-        <el-card class="box-card">
-          <div slot="header">
-            <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
-              <el-col>
-                <el-tag type="info">{{ detail.paraphraseVO.wordCharacter }}</el-tag>
-                <el-tag type="info" v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
-                  {{ detail.paraphraseVO.wordLabel }}
-                </el-tag>
-              </el-col>
-            </el-row>
-            <el-row v-if="!detail.paraphraseVO.isOverlength" type="flex" justify="end"
-                    style="background-color: #8c939d;padding-top: 5px;">
-              <el-col v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
-                <el-tag type="info"
-                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
-                  {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                     v-show="!isUKPronunciationPlaying"
-                     class="el-icon-video-play"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                     v-show="!isUSPronunciationPlaying"
-                     class="el-icon-video-play"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                     v-show="isUKPronunciationPlaying"
-                     class="el-icon-loading"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                     v-show="isUSPronunciationPlaying"
-                     class="el-icon-loading"></i>
-                </el-tag>
-              </el-col>
-            </el-row>
-            <div v-if="detail.paraphraseVO.isOverlength"
-                 v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList">
-              <el-row type="flex" justify="end" style="background-color: #8c939d;padding-top: 5px;">
-                <el-col>
-                  <el-tag type="info"
-                          @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
-                    {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                       v-show="!isUKPronunciationPlaying"
-                       class="el-icon-video-play"></i>
-                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                       v-show="!isUSPronunciationPlaying"
-                       class="el-icon-video-play"></i>
-                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                       v-show="isUKPronunciationPlaying"
-                       class="el-icon-loading"></i>
-                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                       v-show="isUSPronunciationPlaying"
-                       class="el-icon-loading"></i>
-                  </el-tag>
-                </el-col>
-              </el-row>
-            </div>
-            <div @click="detail.showTranslation = !detail.showTranslation">
-              <el-alert
-                  ref="paraphraseDetail"
-                  type="info"
-                  :description="detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt"
-                  :closable="false"
-                  effect="dark"
-                  style="margin-top: 5px;"
-                  center>
-                <div slot="title">
-                  <div v-for="phrase in detail.paraphraseVO.phraseList">
-                    <el-tag type="info">{{ phrase }}</el-tag>
-                  </div>
-                  <br v-if="detail.paraphraseVO.phraseList"/>
-                  <p>{{ this.detail.paraphraseVO.codes }}</p>
-                  <div style="word-wrap:break-word; overflow:hidden;">
-                    {{ this.detail.paraphraseVO.paraphraseEnglish }}
-                  </div>
-                </div>
-              </el-alert>
+
+        <!-- Detail content card (lightweight, custom styled) -->
+        <div class="detail-card">
+          <!-- Meta tags row -->
+          <div class="detail-meta" v-if="detail.paraphraseVO.paraphraseId">
+            <span class="meta-tag" v-if="detail.paraphraseVO.wordCharacter">{{ detail.paraphraseVO.wordCharacter }}</span>
+            <span class="meta-tag" v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
+              {{ detail.paraphraseVO.wordLabel }}
+            </span>
+          </div>
+
+          <!-- Pronunciations -->
+          <div class="pronunciations" v-if="!detail.paraphraseVO.isOverlength && detail.paraphraseVO.pronunciationVOList">
+            <span class="pronunciation-badge"
+                  v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList"
+                  :key="wordPronunciationVO.pronunciationId"
+                  @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+              {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+              <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="!isUKPronunciationPlaying" class="el-icon-video-play"></i>
+              <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="!isUSPronunciationPlaying" class="el-icon-video-play"></i>
+              <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="isUKPronunciationPlaying" class="el-icon-loading"></i>
+              <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="isUSPronunciationPlaying" class="el-icon-loading"></i>
+            </span>
+          </div>
+          <div v-if="detail.paraphraseVO.isOverlength && detail.paraphraseVO.pronunciationVOList">
+            <div class="pronunciations" v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList" :key="wordPronunciationVO.pronunciationId">
+              <span class="pronunciation-badge"
+                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="!isUKPronunciationPlaying" class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="!isUSPronunciationPlaying" class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="isUKPronunciationPlaying" class="el-icon-loading"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="isUSPronunciationPlaying" class="el-icon-loading"></i>
+              </span>
             </div>
           </div>
-          <div
-              v-if="enableParaphraseExamples">
-            <el-alert
-                type="info"
-                title="该释义暂时没有例句"
-                center
-                effect="light"
-                :closable="false">
-            </el-alert>
+
+          <!-- Paraphrase main content & translation (click to toggle) -->
+          <div class="paraphrase-content" @click="detail.showTranslation = !detail.showTranslation">
+            <div class="phrase-list" v-if="detail.paraphraseVO.phraseList && detail.paraphraseVO.phraseList.length">
+              <span v-for="(phrase, idx) in detail.paraphraseVO.phraseList" :key="idx" class="phrase-chip">{{ phrase }}</span>
+            </div>
+            <p class="paraphrase-codes" v-if="detail.paraphraseVO.codes">{{ this.detail.paraphraseVO.codes }}</p>
+            <div class="paraphrase-english-text">
+              {{ this.detail.paraphraseVO.paraphraseEnglish }}
+            </div>
+            <div class="translation-box">
+              {{ detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt }}
+            </div>
           </div>
+
+          <!-- Examples -->
+          <div v-if="enableParaphraseExamples" class="info-notice">该释义暂时没有例句</div>
+
           <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.exampleVOList"
+               :key="wordParaphraseExampleVO.exampleId || wordParaphraseExampleVO.exampleSentence"
+               class="example-item"
                @click="detail.showTranslation = !detail.showTranslation">
-            <el-alert
-                type="info"
-                center
-                effect="light"
-                :description="detail.showTranslation ? wordParaphraseExampleVO.exampleTranslate : '释义已经隐藏，点击该区域显示/隐藏'"
-                :closable="false">
-              <div slot="title">
-                {{ wordParaphraseExampleVO.exampleSentence }}
-              </div>
-            </el-alert>
+            <div class="example-title">{{ wordParaphraseExampleVO.exampleSentence }}</div>
+            <div class="example-translation">
+              {{ detail.showTranslation ? wordParaphraseExampleVO.exampleTranslate : '释义已经隐藏，点击该区域显示/隐藏' }}
+            </div>
           </div>
+
           <div style="margin-top: 100px"></div>
-        </el-card>
+        </div>
       </el-dialog>
       <el-dialog
           :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
@@ -1441,3 +1408,284 @@ export default {
     </div>
   </div>
 </template>
+
+<style scoped>
+.list-container {
+  margin: 20px 0 10px;
+}
+
+/* Ensure any top buttons/toolbar doesn't overlap the list */
+.list-container .kiwi-collapse:first-of-type {
+  margin-top: 6px;
+}
+
+/* Dialog title bar spacing to avoid overlap with content */
+.dialog-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Timer card aligned with AiResponseDetail aesthetic */
+.timer-card {
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 14px;
+}
+
+/* Collapse card styling aligned with AiResponseDetail */
+::v-deep .kiwi-collapse .el-collapse-item {
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__header {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__header:hover {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+}
+
+::v-deep .kiwi-collapse .el-collapse-item.is-active > .el-collapse-item__header {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__wrap {
+  background: #fff;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__content {
+  padding: 18px 20px;
+  color: #2c3e50;
+}
+
+.collapse-content {
+  line-height: 1.7;
+}
+
+.paraphrase-english {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  color: #2c3e50;
+}
+
+.paraphrase-translation {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  color: #495057;
+}
+
+.collapse-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.collapse-action-button {
+  color: #fff !important;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  transition: all 0.3s ease;
+}
+
+.collapse-action-button.info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+}
+
+.collapse-action-button.danger {
+  background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%) !important;
+}
+
+.collapse-action-button:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.list-pagination {
+  margin-top: 16px;
+}
+
+/* Detail dialog content styles (aligned with AiResponseDetail) */
+.detail-card {
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 16px 16px 40px 16px;
+}
+
+.detail-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  background: #8c939d;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.meta-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.pronunciations {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  background: #8c939d;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.pronunciation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef5ff;
+  color: #2c3e50;
+  border: 1px solid #d6e4ff;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.paraphrase-content {
+  margin-top: 6px;
+}
+
+.phrase-list {
+  margin-bottom: 8px;
+}
+
+.phrase-chip {
+  display: inline-block;
+  background: #eef2f7;
+  border: 1px solid #e1e5ea;
+  color: #4a5568;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin: 0 6px 6px 0;
+}
+
+.paraphrase-codes {
+  color: #6c757d;
+  font-size: 13px;
+  margin: 4px 0 6px 0;
+}
+
+.paraphrase-english-text {
+  word-wrap: break-word;
+  overflow: hidden;
+  color: #2c3e50;
+  line-height: 1.7;
+}
+
+.translation-box {
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  color: #495057;
+}
+
+.info-notice {
+  margin-top: 12px;
+  background: #f8f9fa;
+  border: 1px dashed #d4edda;
+  color: #2f855a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.example-item {
+  margin-top: 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.example-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.example-translation {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 10px;
+  color: #495057;
+}
+
+.word-spelling {
+  font-size: larger;
+  font-weight: bolder;
+  font-family: sans-serif;
+  color: #606266;
+  cursor: pointer;
+}
+
+.sleep-tip-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+@media (max-width: 768px) {
+  ::v-deep .kiwi-collapse .el-collapse-item__header {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  ::v-deep .kiwi-collapse .el-collapse-item__content {
+    padding: 14px 16px;
+  }
+
+  .paraphrase-english {
+    font-size: 14px;
+  }
+
+  .detail-card {
+    padding: 12px 12px 24px 12px;
+  }
+}
+</style>

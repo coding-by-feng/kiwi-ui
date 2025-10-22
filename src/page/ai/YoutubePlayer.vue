@@ -1273,11 +1273,18 @@ export default defineComponent({
       const encodedText = encodeURIComponent(cleanedText);
 
       this.player.pauseVideo();
+
+      // Decide mode: single vocabulary -> Vocabulary Explanation; otherwise keep Direct Translation
+      const isSingle = this.isSingleWord(cleanedText);
+      const selectedMode = isSingle
+          ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value
+          : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value;
+
       this.$router.push({
         path: '/index/tools/aiResponseDetail',
         query: {
           active: 'search',
-          selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
+          selectedMode: selectedMode,
           language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
           originalText: encodedText,
           ytbMode: 'player',
@@ -1564,6 +1571,15 @@ export default defineComponent({
       } catch (_) {}
       return null;
     },
+
+    // New helper: detect if selection is a single word (keeps apostrophes and hyphens)
+    isSingleWord(text) {
+      if (!text) return false;
+      const s = String(text).trim();
+      // Extract word-like tokens (letters incl. accents, numbers, apostrophes, hyphens)
+      const tokens = s.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9'’-]+/g);
+      return Array.isArray(tokens) && tokens.length === 1;
+    }
   }
 });
 </script>
