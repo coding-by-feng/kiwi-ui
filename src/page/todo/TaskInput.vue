@@ -78,22 +78,86 @@ export default {
 
 <style scoped>
 .task-input {
-  padding: 8px 0;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
-.task-form {
-  width: 100%;
-}
+.task-form { width: 100%; }
 .w-100 { width: 100%; }
-.mr-8 { margin-right: 8px; }
-.form-row { margin-bottom: 8px; }
-.form-row-inline { display: flex; flex-wrap: wrap; align-items: flex-end; }
+.mr-8 { margin-right: 12px; }
+.form-row { margin-bottom: 12px; }
+.form-row-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .align-end { align-items: flex-end; }
-.flex-1 { flex: 1 1 auto; min-width: 220px; }
-.add-btn-container { align-self: flex-end; }
+.flex-1 { flex: 1 1 auto; min-width: 260px; }
+.add-btn-container { align-self: flex-end; display: flex; align-items: flex-end; }
+
+/* Tighter spacing between form items */
+::v-deep .el-form-item { margin-bottom: 8px; }
+
+/* Label styling (label-position=top) */
+::v-deep .el-form-item__label {
+  font-weight: 600;
+  color: #606266;
+  padding: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+/* Inputs and selects */
+::v-deep .el-input__inner,
+::v-deep .el-select .el-input__inner {
+  height: 36px;
+  border-radius: 8px;
+  border-color: #e4e7ed;
+  padding: 8px 12px;
+  transition: all .2s ease;
+}
+::v-deep .el-input__inner:focus,
+::v-deep .el-select .el-input.is-focus .el-input__inner,
+::v-deep .el-select .el-input__inner:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
+}
+
+/* Textarea */
+::v-deep .el-textarea__inner {
+  border-radius: 10px;
+  border-color: #e4e7ed;
+  padding: 10px 12px;
+  line-height: 1.5;
+  transition: all .2s ease;
+}
+::v-deep .el-textarea__inner:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
+}
+
+/* Number inputs - consistent width and style */
+::v-deep .el-input-number { width: 140px; }
+::v-deep .el-input-number .el-input__inner { text-align: center; }
+::v-deep .el-input-number__decrease,
+::v-deep .el-input-number__increase {
+  background: #f5f7fa;
+  border-color: #e4e7ed;
+}
+
+/* Primary button alignment and style */
+::v-deep .el-button--primary {
+  border-radius: 8px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Make inline form items align neatly at the bottom */
+.form-row-inline ::v-deep .el-form-item { margin-bottom: 0; }
 
 /* Responsive: stack button under input on narrow screens */
 @media (max-width: 600px) {
-  .form-row-inline { flex-direction: column; align-items: stretch; }
+  .form-row-inline { flex-direction: column; align-items: stretch; gap: 8px; }
   .add-btn-container { margin-top: 8px; }
+  .flex-1 { min-width: 100%; }
+  ::v-deep .el-input-number { width: 100%; }
 }
 </style>

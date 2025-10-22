@@ -1,12 +1,12 @@
 <script>
 import kiwiConsts from "@/const/kiwiConsts"
-import {readFile, escapeHTML} from '@/util/fileUtil'
+import {readFile} from '@/util/fileUtil'
 import NoSleep from 'nosleep.js'
 import msgUtil from '@/util/msg'
 import {isEmptyStr, isNotEmptyStr, removeBlankLines} from '@/util/util'
 import {Howl, Howler} from 'howler'
 import {toFixedNum} from '@/util/mathUtil'
-import {countSectionSyllables, getStrCount} from '@/util/wordUtil'
+import {getStrCount} from '@/util/wordUtil'
 import {secToMicroTime} from "@/util/dateUtil"
 
 const PER_SHOW_LINES_SIZE = 3
@@ -72,7 +72,9 @@ export default {
       loading: false,
       canAdjustCurrentItem: false,
       thisStopDuration: 0,
-      thisStopStartTime: null
+      thisStopStartTime: null,
+      playbackRate: 1.0,
+      volume: 0.5,
     }
   },
   beforeCreate: function () {
@@ -81,9 +83,19 @@ export default {
     Howler.html5PoolSize = 10
     // Howler.autoSuspend = false
   },
+  mounted() {
+    // Add listeners for better UX
+    window.addEventListener('resize', this.handleResize)
+    document.addEventListener('visibilitychange', this.handleVisibilityChange)
+    window.addEventListener('keydown', this.handleKeydown)
+  },
   destroyed() {
     this.cleaningAll()
     noSleep.disable()
+    window.removeEventListener('resize', this.handleResize)
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange)
+    window.removeEventListener('keydown', this.handleKeydown)
+    try { noSleep.disable() } catch (e) {}
   },
   computed: {},
   methods: {
@@ -127,8 +139,6 @@ export default {
         }
       })
       grammarTxt = removeBlankLines(grammarTxt)
-      console.log('grammarTxt:')
-      console.log(grammarTxt)
       let grammarTxtLines = grammarTxt.split('\n')
       for (let i = 0; i < grammarTxtLines.length; i += PER_SHOW_LINES_SIZE) {
         let item = ''
@@ -144,21 +154,18 @@ export default {
       this.loading = false
     },
     nextItem: function () {
-      console.log('nextItem this.currentItemsIndex = ' + this.currentItemsIndex)
-      if (this.currentItemsIndex >= this.currentGrammarItems.length) {
+      if (this.currentItemsIndex >= this.currentGrammarItems.length - 1) {
         msgUtil.msgSuccess(this, '已经到底部啦')
         return
       }
       this.currentItemsIndex++
-      this.$refs.grammarPlane.next()
     },
     prevItem: function () {
-      if (this.currentItemsIndex < 1) {
+      if (this.currentItemsIndex <= 0) {
         msgUtil.msgSuccess(this, '已经到顶部啦')
         return
       }
       this.currentItemsIndex--
-      this.$refs.grammarPlane.prev()
     },
     increaseStopDuration() {
       if (this.thisStopStartTime) {
@@ -166,16 +173,44 @@ export default {
         console.log('that.thisStopDuration = ' + that.thisStopDuration)
       }
     },
+    handleResize() {
+      this.innerHeightPx = Math.round(window.innerHeight * 0.7) + 'px'
+    },
+    handleVisibilityChange() {
+      if (document.hidden && this.isPlaying) {
+        this.stopPlay()
+      }
+    },
+    handleKeydown(e) {
+      if (!this.currentGrammar) return
+      // Space toggles play/pause
+      if (e.code === 'Space') {
+        e.preventDefault()
+        if (this.isPlaying) {
+          this.stopPlay()
+        } else {
+          this.resumePlay()
+        }
+      }
+      // Up/Down navigate when unlocked
+      if (this.canAdjustCurrentItem) {
+        if (e.code === 'ArrowUp') { e.preventDefault(); this.prevItem() }
+        if (e.code === 'ArrowDown') { e.preventDefault(); this.nextItem() }
+      }
+    },
+    // Prevent duplicate SRT processing; selectGrammar prepares remainingSrt once
     prepareCurrentGrammarItemsShowTime() {
       if (this.currentGrammarItemPlayDuration && this.currentGrammarItemPlayDuration.length) {
         return
       }
-
-      this.currentGrammarSrt.split('\n').forEach(line => {
-        if (isNotEmptyStr(line)) {
-          this.currentGrammarRemainingSrt.push(line)
-        }
-      })
+      if (!this.currentGrammarRemainingSrt || this.currentGrammarRemainingSrt.length < 1) {
+        // Fallback populate if not initialized (should usually be done in selectGrammar)
+        this.currentGrammarSrt.split('\n').forEach(line => {
+          if (isNotEmptyStr(line)) {
+            this.currentGrammarRemainingSrt.push(line)
+          }
+        })
+      }
 
       for (let i = 1; i < this.currentGrammarItems.length; i++) {
         let currentGrammarItem = this.currentGrammarItems[i]
@@ -266,32 +301,26 @@ export default {
       }, 200)
     },
     startPlay() {
-      console.log('startPlay')
       this.loading = true
       if (this.isEnd) {
         this.isEnd = false
         this.selectGrammar(this.currentGrammar)
-        this.$refs.grammarPlane.setActiveItem(0)
+        // removed: this.$refs.grammarPlane.setActiveItem(0)
       }
       if (!this.currentGrammarHowl) {
         this.currentGrammarHowl = new Howl({
               src: ['grammar/mp3/' + this.currentGrammar + '.mp3'],
               autoplay: false,
               loop: false,
-              volume: 0.5,
+              volume: this.volume,
               html5: true,
               format: ['mp3'],
               onplay: async function () {
-                console.log('onplay this._duration = ' + this._duration)
                 that.currentGrammarPlayDuration = this._duration * 1000
-
                 try {
                   that.cleaning(false, true, false, true)
-
                   that.prepareCurrentGrammarItemsShowTime()
-
                   that.increaseStopDuration()
-
                   that.setupCountdownFun()
                 } catch (e) {
                   console.error(e)
@@ -309,11 +338,13 @@ export default {
                 that.isEnd = true
                 that.currentGrammarPlayPercentage = 100
                 that.cleaning(true, true, false, true)
+                try { noSleep.disable() } catch (e) {}
               }
               ,
               onpause: function () {
                 that.isPlaying = false
                 that.cleaning(false, true, false, true)
+                try { noSleep.disable() } catch (e) {}
               }
             }
         )
@@ -321,6 +352,7 @@ export default {
 
       this.currentGrammarHowl.play()
       noSleep.enable()
+      try { this.currentGrammarHowl.rate(this.playbackRate) } catch (e) {}
     },
     stopPlay() {
       if (this.countdownFun) {
@@ -332,6 +364,7 @@ export default {
       this.isPlaying = false
       this.isStopped = true
       this.thisStopStartTime = new Date()
+      try { noSleep.disable() } catch (e) {}
     },
     rePlay() {
       this.stopPlay()
@@ -381,63 +414,272 @@ export default {
       }
       this.canAdjustCurrentItem = !this.canAdjustCurrentItem
     },
+    changeRate() {
+      if (this.currentGrammarHowl) {
+        try { this.currentGrammarHowl.rate(this.playbackRate) } catch (e) {}
+      }
+    },
+    changeVolume() {
+      if (this.currentGrammarHowl) {
+        try { this.currentGrammarHowl.volume(this.volume) } catch (e) {}
+      }
+    },
   }
 }
 </script>
 
 <template>
-  <div class="text item">
-    <div>
-      <div style="position: fixed; top: 60px; left: 35px; z-index: 99;">
-        <el-dropdown size="mini" plain
-                     split-button @command="selectGrammar">
-          {{ this.currentGrammarHint }}
-          <el-dropdown-menu slot="dropdown">
-            <div v-for="(value, key) in GRAMMAR_EN_TO_CH_HINT" :key="key">
-              <el-dropdown-item :command="value[0]">{{ value[1] }}</el-dropdown-item>
-            </div>
-          </el-dropdown-menu>
-        </el-dropdown>
+  <div class="grammar-container">
+    <!-- Top control bar with native select and controls -->
+    <div class="control-bar">
+      <select class="grammar-select" :disabled="loading" v-model="currentGrammar" @change="selectGrammar(currentGrammar)">
+        <option disabled value="">{{ currentGrammar ? (currentGrammarHint && currentGrammarHint[1]) || currentGrammar : '请选择当前的语法篇章' }}</option>
+        <option v-for="(value, key) in GRAMMAR_EN_TO_CH_HINT" :key="key" :value="value[0]">
+          {{ value[1] }}
+        </option>
+      </select>
+      <select class="rate-select" :disabled="loading || !currentGrammar" v-model.number="playbackRate" @change="changeRate" title="播放速度">
+        <option :value="0.75">0.75x</option>
+        <option :value="1">1.0x</option>
+        <option :value="1.25">1.25x</option>
+        <option :value="1.5">1.5x</option>
+        <option :value="2">2.0x</option>
+      </select>
+      <label class="volume-control" :title="'音量: ' + Math.round(volume*100) + '%'">
+        <input type="range" min="0" max="1" step="0.05" v-model.number="volume" @input="changeVolume" :disabled="loading || !currentGrammar" />
+      </label>
+    </div>
+
+    <!-- Progress bar -->
+    <div v-if="currentGrammar" class="progress-container">
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="currentGrammarPlayPercentage">
+        <div class="progress-fill" :style="{ width: currentGrammarPlayPercentage + '%' }"></div>
+        <div class="progress-text">{{ currentGrammarPlayPercentage }}%</div>
       </div>
-      <div style="margin-top: 36px">
-        <el-progress v-loading="loading" v-if="currentGrammar" :text-inside="true" :stroke-width="20"
-                     :percentage="currentGrammarPlayPercentage"
-                     color="#C0C0C0"></el-progress>
-        <el-carousel ref="grammarPlane" v-if="currentGrammar" :height="innerHeightPx"
-                     direction="vertical" :loop="false" :autoplay="false">
-          <el-carousel-item v-for="(item, index) in currentGrammarItems" :key="index">
-            <p style="white-space: pre-line; text-align: left; font-size: smaller; color: #ABABAB;">
-              {{ showPrevItemAgain(index) }}
-            </p>
-            <p style="white-space: pre-line; text-align: left; font-size: small;">{{ item }}</p>
-            <p style="white-space: pre-line; text-align: left; font-size: smaller; color: #ABABAB;">
-              {{ showNextItemInAdvance(index) }}
-            </p>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-      <div
-          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
-        <el-button v-loading="loading" v-if="!isPlaying && !isStopped && currentGrammar" icon="el-icon-video-play"
-                   size="mini"
-                   @click="startPlay"></el-button>
-        <el-button v-if="isPlaying && currentGrammar" icon="el-icon-video-pause" size="mini"
-                   @click="stopPlay"></el-button>
-        <el-button v-loading="loading" v-if="currentGrammar && isStopped" icon="el-icon-refresh-right" size="mini"
-                   @click="rePlay"></el-button>
-        <el-button v-loading="loading" v-if="!isPlaying && currentGrammar && isStopped" icon="el-icon-video-play"
-                   size="mini"
-                   @click="resumePlay"></el-button>
-        <el-button v-if="currentGrammar" :icon="canAdjustCurrentItem ? 'el-icon-lock' : 'el-icon-unlock'" size="mini"
-                   @click="adjustCurrentItem"></el-button>
-        <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-top" size="mini"
-                   @click="prevItem"></el-button>
-        <el-button v-if="currentGrammar && canAdjustCurrentItem" icon="el-icon-bottom" size="mini"
-                   @click="nextItem"></el-button>
-      </div>
+    </div>
+
+    <!-- Text content panel -->
+    <div v-if="currentGrammar" class="content-panel" :style="{height: innerHeightPx}">
+      <p class="prev-text">{{ showPrevItemAgain(currentItemsIndex) }}</p>
+      <p class="current-text">{{ currentGrammarItems[currentItemsIndex] }}</p>
+      <p class="next-text">{{ showNextItemInAdvance(currentItemsIndex) }}</p>
+    </div>
+
+    <!-- Floating controls -->
+    <div class="floating-controls">
+      <button class="ctrl-btn primary" :disabled="loading || isPlaying || !currentGrammar" v-if="!isPlaying && !isStopped && currentGrammar" @click="startPlay">播放</button>
+      <button class="ctrl-btn warning" :disabled="loading || !currentGrammar" v-if="isPlaying && currentGrammar" @click="stopPlay">暂停</button>
+      <button class="ctrl-btn info" :disabled="loading || !currentGrammar" v-if="currentGrammar && isStopped" @click="rePlay">重放</button>
+      <button class="ctrl-btn primary" :disabled="loading || !currentGrammar" v-if="!isPlaying && currentGrammar && isStopped" @click="resumePlay">继续</button>
+      <button class="ctrl-btn secondary" :disabled="loading || !currentGrammar" v-if="currentGrammar" @click="adjustCurrentItem">{{ canAdjustCurrentItem ? '解锁滚动' : '锁定滚动' }}</button>
+      <button class="ctrl-btn secondary" :disabled="loading || !currentGrammar || !canAdjustCurrentItem" v-if="currentGrammar && canAdjustCurrentItem" @click="prevItem">上一段</button>
+      <button class="ctrl-btn secondary" :disabled="loading || !currentGrammar || !canAdjustCurrentItem" v-if="currentGrammar && canAdjustCurrentItem" @click="nextItem">下一段</button>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" v-if="loading">
+      <div class="spinner"></div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Container */
+.grammar-container {
+  position: relative;
+  padding-top: 80px; /* space for control bar */
+}
+
+/* Control bar */
+.control-bar {
+  position: fixed;
+  top: 60px;
+  left: 35px;
+  z-index: 99;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.grammar-select, .rate-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.grammar-select:disabled, .rate-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Progress bar */
+.progress-container {
+  margin: 10px 20px;
+}
+
+.progress-bar {
+  position: relative;
+  height: 20px;
+  background: #f0f2f5;
+  border: 1px solid #e4e7ed;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #333;
+  line-height: 20px;
+}
+
+/* Content panel */
+.content-panel {
+  margin: 10px 20px;
+  padding: 16px;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.prev-text, .next-text {
+  white-space: pre-line;
+  text-align: left;
+  font-size: 13px;
+  color: #ABABAB;
+  margin: 0 0 8px;
+}
+
+.current-text {
+  white-space: pre-line;
+  text-align: left;
+  font-size: 15px;
+  color: #2c3e50;
+  margin: 0 0 8px;
+}
+
+/* Floating controls */
+.floating-controls {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  z-index: 2147483646;
+  text-align: right;
+  line-height: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ctrl-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #fff;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.ctrl-btn:hover { transform: translateY(-1px); filter: brightness(0.95); }
+.ctrl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ctrl-btn.primary { background: linear-gradient(135deg, #409eff 0%, #67c23a 100%); }
+.ctrl-btn.info { background: linear-gradient(135deg, #909399 0%, #606266 100%); }
+.ctrl-btn.warning { background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%); }
+.ctrl-btn.secondary { background: linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%); color: #2c3e50; }
+
+/* Volume control */
+.volume-control {
+  display: inline-block;
+  position: relative;
+  width: 120px;
+  height: 24px;
+}
+
+.volume-control input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #409eff;
+  cursor: pointer;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #409eff;
+  cursor: pointer;
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #409eff;
+  cursor: pointer;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e4e7ed;
+  border-top-color: #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .control-bar { top: 56px; left: 12px; padding: 6px 10px; }
+  .progress-container { margin: 8px 12px; }
+  .content-panel { margin: 8px 12px; padding: 12px; }
+  .current-text { font-size: 14px; }
+  .rate-select { font-size: 13px; padding: 4px 8px; }
+  .volume-control input[type="range"] { width: 90px; }
+}
 </style>

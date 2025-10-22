@@ -475,107 +475,66 @@ export default {
 
 <template>
 
-  <div class="text item" v-loading="loading">
-    <div style="position: fixed; top: 60px; left: 35px; z-index: 99;">
-      <el-dropdown size="mini" plain
-                   split-button @command="listTypeClick">
-        {{ this.list.listName }}
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="paraphrase">释义本</el-dropdown-item>
-          <el-dropdown-item command="word">单词本</el-dropdown-item>
-          <el-dropdown-item command="example">例句本</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
-      &nbsp;
-      <el-dropdown
-          v-if="list.listType === 'paraphrase' && list.status === 'list'"
-          size="mini"
-          plain
-          split-button @command="selectReviewMode">
-        <i class="el-icon-video-camera"></i>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: 0}">存量复习(汉英)
-          </el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: 0}">全量复习(汉英)
-          </el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'stockReview', id: 0}">存量复习</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'enhanceReview', id: 0}">强化复习</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalReview', id: 0}">全量复习</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'stockRead', id: 0}">存量阅读</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'enhanceRead', id: 0}">强化阅读</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'totalRead', id: 0}">全量阅读</el-dropdown-item>
-          <el-dropdown-item :command="{mode: 'downloadReviewAudio', id: 0}">下载资源</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
-      &nbsp;
-      <el-dropdown size="mini" plain
-                   :split-button="true" @command="operationClick"
-                   @click="goBack">
-        <i class="el-icon-back"></i>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="refresh">刷新</el-dropdown-item>
-          <el-dropdown-item command="add">新建</el-dropdown-item>
-          <el-dropdown-item command="switch">切换</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
+  <div class="text item starlist-container" v-loading="loading">
+    <!-- Native control bar -->
+    <div class="control-bar">
+      <!-- List type selector -->
+      <select class="ctrl-select" v-model="list.listType" @change="listTypeClick(list.listType)" :disabled="loading || list.status !== 'list'">
+        <option value="paraphrase">释义本</option>
+        <option value="word">单词本</option>
+        <option value="example">例句本</option>
+      </select>
+
+      <!-- Global review mode selector (paraphrase list only) -->
+      <select class="ctrl-select" v-if="list.listType === 'paraphrase' && list.status === 'list'" @change="selectReviewMode({mode: $event.target.value, id: 0})" :disabled="loading">
+        <option value="" disabled selected>选择复习/阅读模式</option>
+        <option value="stockReviewChToEn">存量复习(汉英)</option>
+        <option value="totalReviewChToEn">全量复习(汉英)</option>
+        <option value="stockReview">存量复习</option>
+        <option value="enhanceReview">强化复习</option>
+        <option value="totalReview">全量复习</option>
+        <option value="stockRead">存量阅读</option>
+        <option value="enhanceRead">强化阅读</option>
+        <option value="totalRead">全量阅读</option>
+        <option value="downloadReviewAudio">下载资源</option>
+      </select>
+
+      <!-- Actions -->
+      <button class="ctrl-btn info" @click="goBack" :disabled="loading">返回</button>
+      <button class="ctrl-btn primary" @click="refresh" :disabled="loading">刷新</button>
+      <button class="ctrl-btn primary" @click="handleOperate" :disabled="loading || list.status !== 'list'">新建</button>
+      <button class="ctrl-btn secondary" @click="operationClick('switch')" :disabled="loading || list.status !== 'list'">{{ list.editMode ? '完成' : '编辑' }}</button>
     </div>
-    <el-table
-        v-show="tableVisible"
-        :data="list.starListData"
-        style="width: 100%">
-      <el-table-column>
-        <template slot-scope="scope">
-          <div slot="reference" class="name-wrapper">
-            <el-button type="info"
-                       size="mini"
-                       @click="selectOneList(scope.row.id, false)">
-              {{ scope.row.listName }}
-            </el-button>
+
+    <!-- Simple list instead of el-table -->
+    <div v-show="tableVisible" class="starlist-table">
+      <ul class="starlist-list">
+        <li v-for="row in list.starListData" :key="row.id" class="starlist-item">
+          <button class="list-name-button" @click="selectOneList(row.id, false)" :disabled="loading">{{ row.listName }}</button>
+
+          <!-- Per-row review mode (paraphrase list only, not in edit mode) -->
+          <select class="row-select" v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode" @change="selectReviewMode({mode: $event.target.value, id: row.id})" :disabled="loading">
+            <option value="" disabled selected>选择模式</option>
+            <option value="stockReviewChToEn">存量复习(汉英)</option>
+            <option value="totalReviewChToEn">全量复习(汉英)</option>
+            <option value="stockReview">存量复习</option>
+            <option value="enhanceReview">强化复习</option>
+            <option value="totalReview">全量复习</option>
+            <option value="stockRead">存量阅读</option>
+            <option value="enhanceRead">强化阅读</option>
+            <option value="totalRead">全量阅读</option>
+          </select>
+
+          <!-- Edit actions -->
+          <div v-if="list.editMode" class="row-actions">
+            <button class="icon-btn" title="修改" @click="handleEdit(null, row)">✎</button>
+            <button class="icon-btn danger" title="删除" :disabled="loading" @click="handleDelete(null, row)">🗑️</button>
           </div>
-        </template>
-      </el-table-column>
-      <el-table-column>
-        <template slot-scope="scope">
-          <span v-if="!isSmallWindow">
-            &nbsp;
-          </span>
-          <el-dropdown
-              v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode"
-              size="mini"
-              split-button type="info" @command="selectReviewMode">
-            <i class="el-icon-headset"></i>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item :command="{mode: 'stockReviewChToEn', id: scope.row.id}">存量复习(汉英模式)
-              </el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'totalReviewChToEn', id: scope.row.id}">全量复习(汉英模式)
-              </el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'stockReview', id: scope.row.id}">存量复习</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'enhanceReview', id: scope.row.id}">强化复习</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'totalReview', id: scope.row.id}">全量复习</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'stockRead', id: scope.row.id}">存量阅读</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'enhanceRead', id: scope.row.id}">强化阅读</el-dropdown-item>
-              <el-dropdown-item :command="{mode: 'totalRead', id: scope.row.id}">全量阅读</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-          &nbsp;
-          <el-button
-              v-if="list.editMode"
-              type="text" style="color: #909399"
-              size="mini"
-              @click="handleEdit(scope.$index, scope.row)">
-            <i class="el-icon-edit-outline"></i>
-          </el-button>
-          <el-button
-              v-if="list.editMode"
-              size="mini"
-              type="text" style="color: #909399"
-              :loading="loading"
-              @click="handleDelete(scope.$index, scope.row)">
-            <i class="el-icon-delete"></i>
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Detail views -->
     <WordListDetail
         ref="wordDetail"
         v-if="detail.wordDetailVisible && list.listType === 'word' && list.status === 'detail'"
@@ -597,23 +556,142 @@ export default {
         :listId="detail.listId"
         :isShowParaphrase.sync="detail.isShowParaphrase"
         @tableVisibleToggle="visibleToggle"></ExampleListDetail>
-    <el-dialog
-        :title="edit.title"
-        :visible.sync="edit.dialogVisible"
-        width="30%"
-        :before-close="handleEditClose">
-      <el-form ref="form" :model="edit.form" label-width="80px">
-        <el-form-item label="名字">
-          <el-input v-model="edit.form.listName"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-                <el-button type="info"
-                           :loading="loading"
-                           @click="handleEditSubmit">确定</el-button>
-            </span>
-    </el-dialog>
+
+    <!-- Custom Modal for Add/Edit -->
+    <div v-if="edit.dialogVisible" class="modal-overlay" @click.self="handleEditClose">
+      <div class="modal">
+        <div class="modal-header">{{ edit.title }}</div>
+        <div class="modal-body">
+          <label class="modal-label">名字</label>
+          <input class="modal-input" v-model="edit.form.listName" :disabled="loading" />
+        </div>
+        <div class="modal-footer">
+          <button class="ctrl-btn secondary" @click="handleEditClose" :disabled="loading">取消</button>
+          <button class="ctrl-btn primary" @click="handleEditSubmit" :disabled="loading">确定</button>
+        </div>
+      </div>
+    </div>
 
   </div>
 
 </template>
+
+<style scoped>
+.starlist-container {
+  padding-top: 8px;
+}
+
+.control-bar {
+  position: fixed;
+  top: 60px;
+  left: 35px;
+  z-index: 99;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  color: #fff;
+}
+
+.ctrl-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.ctrl-select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ctrl-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #fff;
+}
+.ctrl-btn.primary { background: linear-gradient(135deg, #409eff 0%, #67c23a 100%); }
+.ctrl-btn.info { background: linear-gradient(135deg, #909399 0%, #606266 100%); }
+.ctrl-btn.secondary { background: linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%); color: #2c3e50; }
+.ctrl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* List styling */
+.starlist-table { margin-top: 100px; }
+.starlist-list { list-style: none; padding: 0; margin: 0; }
+.starlist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.list-name-button {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.row-select {
+  margin-left: auto;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fff;
+  color: #2c3e50;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.row-actions { margin-left: auto; display: inline-flex; gap: 8px; }
+.icon-btn { background: #fff; color: #606266; border: 1px solid #e4e7ed; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.icon-btn.danger { color: #f56c6c; border-color: #f56c6c; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal {
+  width: 90%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+.modal-header {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+  padding: 12px 16px;
+  font-weight: 600;
+}
+.modal-body { padding: 16px; }
+.modal-label { display: block; font-size: 14px; margin-bottom: 8px; color: #606266; }
+.modal-input { width: 100%; padding: 8px 10px; border: 1px solid #e4e7ed; border-radius: 6px; }
+.modal-footer { padding: 12px 16px; display: flex; justify-content: flex-end; gap: 10px; }
+
+@media (max-width: 768px) {
+  .control-bar { top: 56px; left: 12px; padding: 6px 10px; gap: 6px; }
+  .starlist-table { margin-top: 90px; }
+}
+</style>
