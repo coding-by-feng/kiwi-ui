@@ -119,18 +119,41 @@ export default {
     console.log('📊 [LOGIN] Initial state:', {
       website: this.website
     })
+    // Remove any previously stored empty token envelope to avoid confusion
+    this.sanitizeStoredToken()
   },
 
   computed: {
     ...mapGetters(['website']),
     isDevEnvironment() {
-      // Shown on: NODE_ENV=development or when served from localhost/127.* with a port
+      // Visible when:
+      // 1) Build env is development or VUE_APP_ENABLE_MANUAL_TOKEN=true
+      // 2) Host is localhost/127.0.0.1 OR a private LAN IP OR *.local
+      // 3) Running in Electron
+      // 4) URL has ?enableManualToken=1 (one-time) or localStorage has 'enable_manual_token'
       try {
-        if (process && process.env && process.env.NODE_ENV === 'development') return true
+        if (process && process.env) {
+          if (process.env.NODE_ENV === 'development') return true
+          if (String(process.env.VUE_APP_ENABLE_MANUAL_TOKEN || '') === 'true') return true
+        }
       } catch (e) {}
       try {
-        const { hostname, port } = window.location || {}
-        if ((hostname === 'localhost' || hostname === '127.0.0.1') && !!port) return true
+        const loc = window.location || {}
+        const { hostname = '', port = '', search = '' } = loc
+        const params = new URLSearchParams(search || '')
+        if (params.get('enableManualToken') === '1' || params.get('debug') === '1') return true
+
+        const ua = (navigator && navigator.userAgent) || ''
+        const isElectron = (window && window.process && window.process.type) || ua.includes('Electron')
+        if (isElectron) return true
+
+        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
+        const isPrivateIp = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)
+        const isDotLocal = /\.local$/.test(hostname)
+        if ((isLocalhost || isPrivateIp || isDotLocal) && (port || isElectron)) return true
+      } catch (e) {}
+      try {
+        if (localStorage.getItem('enable_manual_token') === '1' || localStorage.getItem('enable_manual_token') === 'true') return true
       } catch (e) {}
       return false
     }
@@ -226,17 +249,28 @@ export default {
         hasUserInfo: !!tokenData.userInfo
       })
 
-      // Store authentication tokens
-      localStorage.setItem('access_token', tokenData.accessToken)
+      // Store authentication tokens in both prefixed storage (kason-tools-access_token)
+      // and raw keys (fallback) for backward compatibility
+      if (tokenData.accessToken) {
+        // Prefixed app storage (kason-tools-access_token)
+        setStore({ name: 'access_token', content: tokenData.accessToken, type: 'local' })
+        // Raw fallback
+        try { localStorage.setItem('access_token', tokenData.accessToken) } catch (e) {}
+      }
 
       if (tokenData.refreshToken) {
-        localStorage.setItem('refresh_token', tokenData.refreshToken)
+        setStore({ name: 'refresh_token', content: tokenData.refreshToken, type: 'local' })
+        try { localStorage.setItem('refresh_token', tokenData.refreshToken) } catch (e) {}
       }
 
-      // Store user info
-      if (tokenData.userInfo) {
-        localStorage.setItem('user_info', JSON.stringify(tokenData.userInfo))
-      }
+      // Store user info / name if provided
+      try {
+        const userName = tokenData.userInfo && (tokenData.userInfo.name || tokenData.userInfo.username || tokenData.userInfo.email)
+        if (userName) {
+          setStore({ name: 'user_name', content: userName, type: 'local' })
+          localStorage.setItem('user_info', JSON.stringify(tokenData.userInfo))
+        }
+      } catch (e) {}
 
       console.log('✅ [AUTH] Tokens stored successfully')
     },
@@ -276,30 +310,55 @@ export default {
       try {
         let token = ''
         let refresh = ''
+        let expiresIn = ''
         const raw = (this.manualTokenJson || '').trim()
         if (!raw) {
           this.$message.error('Please paste a token JSON or token string.')
           return
         }
+
         if (raw.startsWith('{')) {
           // Try to parse as JSON
           const obj = JSON.parse(raw)
-          // Accept various shapes
-          token = obj.content || obj.token || obj.access_token || obj.accessToken || ''
-          refresh = obj.refresh_token || obj.refreshToken || ''
-          // If user pasted full setStore payload, use that content
+
+          // Case A: User pasted a full storage envelope {dataType, content, type, datatime}
+          const looksLikeEnvelope = obj && typeof obj === 'object' && 'dataType' in obj && 'content' in obj && 'datatime' in obj
+          if (looksLikeEnvelope) {
+            const contentStr = (obj.content || '').toString().trim()
+            if (!contentStr) {
+              // Ensure any existing empty envelope is removed right away
+              this.sanitizeStoredToken()
+              this.$message.error("The 'content' field is empty. Please paste a token value in 'content'.")
+              return
+            }
+
+            token = contentStr
+            // Also read optional fields if present beside the envelope
+            refresh = obj.refresh_token || obj.refreshToken || ''
+            expiresIn = obj.expires_in || obj.expiresIn || ''
+          } else {
+            // Case B: Plain token JSON with common fields
+            token = obj.content || obj.token || obj.access_token || obj.accessToken || ''
+            refresh = obj.refresh_token || obj.refreshToken || ''
+            expiresIn = obj.expires_in || obj.expiresIn || ''
+          }
         } else {
+          // Case C: Raw token string
           token = raw
         }
+
         token = (token || '').toString().trim()
         if (!token) {
-          this.$message.error('Token not found in JSON. Expected key: content')
+          // Ensure any existing empty envelope is removed right away
+          this.sanitizeStoredToken()
+          this.$message.error('Token not found. Provide a token string or JSON with a non-empty "content".')
           return
         }
 
         // Persist via setStore (prefix-aware) to match axios/getStore consumers
         setStore({ name: 'access_token', content: token, type: 'local' })
         if (refresh) setStore({ name: 'refresh_token', content: refresh, type: 'local' })
+        if (expiresIn) setStore({ name: 'expires_in', content: expiresIn, type: 'local' })
         // Also set raw keys for any direct access sites
         try {
           localStorage.setItem('access_token', token)
@@ -316,6 +375,31 @@ export default {
 
     clearManualToken() {
       this.manualTokenJson = ''
+    },
+
+    sanitizeStoredToken() {
+      try {
+        const prefix = (this.website && this.website.key) ? this.website.key : 'kason-tools'
+        const realKey = `${prefix}-access_token`
+        const raw = localStorage.getItem(realKey)
+        if (!raw) return
+        try {
+          const obj = JSON.parse(raw)
+          const looksLikeEnvelope = obj && typeof obj === 'object' && 'dataType' in obj && 'content' in obj && 'datatime' in obj
+          if (looksLikeEnvelope) {
+            const contentStr = (obj.content || '').toString().trim()
+            if (!contentStr) {
+              console.warn(`[AUTH] Removing empty token envelope at ${realKey}`)
+              localStorage.removeItem(realKey)
+              try { localStorage.removeItem('access_token') } catch (e) {}
+            }
+          }
+        } catch (e) {
+          // not JSON; ignore
+        }
+      } catch (e) {
+        // ignore
+      }
     }
   }
 }

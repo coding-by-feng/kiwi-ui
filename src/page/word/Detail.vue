@@ -626,16 +626,14 @@ export default {
     <el-header>
       <div class="ai-container">
         <div v-if="isTabActivate">
-          <div style="position: fixed; top: 5px; right: 15px; z-index: 999;">
+          <div class="floating-controls floating-controls-top">
             <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true" circle>
-              <i class="el-icon-s-unfold"
-                 style="color: #76838f;"></i>
+              <i class="el-icon-s-unfold"></i>
             </el-button>
           </div>
-          <div style="position: fixed; bottom: 5px; right: 30px; z-index: 999;">
+          <div class="floating-controls floating-controls-bottom">
             <el-button @click="dialogHelpVisible = !dialogHelpVisible" size="mini">
-              <i class="el-icon-warning"
-                 style="color: #76838f;"></i>
+              <i class="el-icon-warning"></i>
             </el-button>
             &nbsp;
             <el-dropdown size="mini" @command="selectShowCharacter" placement="top">
@@ -650,16 +648,13 @@ export default {
               </el-dropdown-menu>
             </el-dropdown>
             &nbsp;
-            <el-button style="color: #909399" size="mini"
-                       @click="isShowExample = !isShowExample">
-              <i class="el-icon-sell"
-                 style="color: #76838f"></i>
+            <el-button size="mini" @click="isShowExample = !isShowExample">
+              <i class="el-icon-sell"></i>
             </el-button>
-            <el-button size="mini" style="color: #909399"
+            <el-button size="mini"
                        v-if="wordInfo.wordName.length>0"
                        @click="wordCollectClickFun()">
-              <i class="el-icon-circle-plus-outline"
-                 style="color: #76838f"></i>
+              <i class="el-icon-circle-plus-outline"></i>
             </el-button>
           </div>
           <el-dialog
@@ -717,7 +712,7 @@ export default {
       <div class="ai-container word-detail">
         <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
           <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
-            <el-row type="flex" class="row-bg" justify="end">
+            <el-row type="flex" class="row-bg" justify="right">
               <el-col>
                 <el-tag type="info" effect="dark"
                         v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
@@ -749,7 +744,7 @@ export default {
               </el-col>
             </el-row>
             <el-row v-if="!isSmallWindow && !isLargeWindow"
-                    type="flex" class="row-bg" justify="end">
+                    type="flex" class="row-bg" justify="right">
               <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
                 <el-tag type="info" effect="dark"
                         @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
@@ -771,7 +766,7 @@ export default {
             </el-row>
             <div v-if="isSmallWindow"
                  v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-              <el-row type="flex" justify="end" class="row-bg">
+              <el-row type="flex" justify="right" class="row-bg">
                 <el-col>
                   <el-tag type="info" effect="dark"
                           @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
@@ -809,7 +804,7 @@ export default {
                       <p style="margin-top: 50px;">
                         {{ wordParaphraseVO.paraphraseEnglish }}
                       </p>
-                      <el-button type="text" style="color: #909399">
+                      <el-button type="text">
                         <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
                            style="color: #FFFFFF;"
                            @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
@@ -848,9 +843,8 @@ export default {
                         :closable="false">
                       <div slot="title">
                         {{ wordParaphraseExampleVO.exampleSentence }}
-                        <el-button type="text" style="color: #909399"><i
+                        <el-button type="text"><i
                             class="el-icon-circle-plus-outline outline_fix"
-                            style="color: #76838f"
                             @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
                         </el-button>
                       </div>
@@ -923,6 +917,31 @@ export default {
   border-bottom: 1px dashed #e9ecef;
 }
 
+/* Container width and padding, following AI pages */
+.ai-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 8px 12px;
+}
+
+/* Floating controls to unify quick actions look */
+.floating-controls { position: fixed; z-index: 999; display: flex; align-items: center; gap: 8px; }
+.floating-controls-top { top: 8px; right: 16px; }
+.floating-controls-bottom { bottom: 8px; right: 24px; }
+.floating-controls .el-button {
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  color: #606266;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+.floating-controls .el-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.floating-controls .el-button i[class^='el-icon-'] { color: #76838f; }
+
 /* Card styling to match AIResponse containers */
 .box-card {
   width: 100%;
@@ -941,7 +960,14 @@ export default {
 
 .outline_fix { position: absolute; right: 5px; bottom: 5px; }
 .outline_fix_top_right { position: absolute; top: 5px; right: 5px; }
-.outline_fix_top_left { position: absolute; text-align: left; top: 5px; left: 5px; width: 90%; }
+.outline_fix_top_left {
+  position: absolute; text-align: left; top: 8px; left: 8px; width: auto;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
 .outline_fix_bottom_left { position: absolute; bottom: 5px; left: 5px; }
 .outline_fix_bottom_left_2 { position: absolute; bottom: 5px; left: 25px; }
 
@@ -992,6 +1018,16 @@ export default {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
+
+/* Example alerts polish */
+.word-detail >>> .el-alert.is-light {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+}
+.word-detail >>> .el-alert .el-alert__content { line-height: 1.7; }
+
+/* Improve divider spacing */
+.word-detail >>> .el-divider { margin: 14px 0; }
 
 /* Dialog footer/button styles copied from AiResponse for consistency */
 .dialog-footer { text-align: center; padding: 16px 20px; }
@@ -1094,5 +1130,9 @@ export default {
   border: none !important;
   color: #fff !important;
 }
+
+/* Selection highlight consistent with AiResponse */
+.word-detail ::selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
+.word-detail ::-moz-selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
 
 </style>
