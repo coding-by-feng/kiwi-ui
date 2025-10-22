@@ -40,6 +40,8 @@ function normalize(db) {
   if (!db.etags) db.etags = {}
   if (!db.nextId || typeof db.nextId !== 'number') db.nextId = 1
   if (!Array.isArray(db.ranks)) db.ranks = defaultRanks()
+  // Upgrade existing ranks to the calibrated scheme if outdated
+  db.ranks = ensureRanksCalibrated(db.ranks)
   return db
 }
 
@@ -49,28 +51,55 @@ function newEtag() { return `${Date.now().toString(16)}-${Math.random().toString
 
 // Ranking helpers
 function defaultRanks() {
+  // Calibrated thresholds:
+  // - Tasks: 50–100 pts each
+  // - Daily: 5–15 tasks (~250–1500 pts), avg ~750 pts/day
+  // Early levels: ~1–7 days to progress; later levels grow ~1.3x per level; Legendary ~495k
   return [
-    { key: 'beginner', threshold: 0, level: 1 },
-    { key: 'trainee', threshold: 50, level: 2 },
-    { key: 'novice', threshold: 100, level: 3 },
-    { key: 'apprentice', threshold: 200, level: 4 },
-    { key: 'wood', threshold: 300, level: 5 },
-    { key: 'stone', threshold: 450, level: 6 },
-    { key: 'steel', threshold: 600, level: 7 },
-    { key: 'iron', threshold: 800, level: 8 },
-    { key: 'bronze', threshold: 1000, level: 9 },
-    { key: 'silver', threshold: 1300, level: 10 },
-    { key: 'gold', threshold: 1700, level: 11 },
-    { key: 'platinum', threshold: 2200, level: 12 },
-    { key: 'diamond', threshold: 2800, level: 13 },
-    { key: 'master', threshold: 3500, level: 14 },
-    { key: 'grandmaster', threshold: 4300, level: 15 },
-    { key: 'celestial', threshold: 5200, level: 16 },
-    { key: 'divine', threshold: 6200, level: 17 },
-    { key: 'immortal', threshold: 7300, level: 18 },
-    { key: 'mythic', threshold: 8500, level: 19 },
-    { key: 'legendary', threshold: 10000, level: 20 },
+    {key: 'beginner', threshold: 0, level: 1},
+    {key: 'trainee', threshold: 1000, level: 2}, // ~1–2 days
+    {key: 'novice', threshold: 3000, level: 3}, // ~3–5 days
+    {key: 'apprentice', threshold: 6000, level: 4}, // ~1 week
+    {key: 'wood', threshold: 10000, level: 5},
+    {key: 'stone', threshold: 13000, level: 6},
+    {key: 'steel', threshold: 17000, level: 7},
+    {key: 'iron', threshold: 22000, level: 8},
+    {key: 'bronze', threshold: 28500, level: 9},
+    {key: 'silver', threshold: 37000, level: 10},
+    {key: 'gold', threshold: 48000, level: 11},
+    {key: 'platinum', threshold: 62000, level: 12},
+    {key: 'diamond', threshold: 80000, level: 13},
+    {key: 'master', threshold: 104000, level: 14},
+    {key: 'grandmaster', threshold: 135000, level: 15},
+    {key: 'celestial', threshold: 175000, level: 16},
+    {key: 'divine', threshold: 227000, level: 17},
+    {key: 'immortal', threshold: 295000, level: 18},
+    {key: 'mythic', threshold: 382000, level: 19},
+    {key: 'legendary', threshold: 495000, level: 20},
   ]
+}
+
+function ensureRanksCalibrated(ranks) {
+  // Validate structure and ensure thresholds are at least the calibrated minimums and strictly increasing
+  try {
+    const expectedKeys = [
+      'beginner','trainee','novice','apprentice','wood','stone','steel','iron','bronze','silver','gold','platinum','diamond','master','grandmaster','celestial','divine','immortal','mythic','legendary'
+    ]
+    const minThresholds = [
+      0, 1000, 3000, 6000, 10000, 13000, 17000, 22000, 28500, 37000,
+      48000, 62000, 80000, 104000, 135000, 175000, 227000, 295000, 382000, 495000
+    ]
+    if (!Array.isArray(ranks) || ranks.length !== expectedKeys.length) return defaultRanks()
+    for (let i = 0; i < ranks.length; i++) {
+      const r = ranks[i]
+      if (!r || r.key !== expectedKeys[i]) return defaultRanks()
+      if (typeof r.threshold !== 'number') return defaultRanks()
+      if (typeof r.level !== 'number' || r.level !== (i + 1)) return defaultRanks()
+      if (r.threshold < minThresholds[i]) return defaultRanks()
+      if (i > 0 && !(r.threshold > ranks[i-1].threshold)) return defaultRanks()
+    }
+    return ranks
+  } catch (_) { return defaultRanks() }
 }
 
 function computeTotalPoints(db) {
@@ -470,4 +499,3 @@ export default {
   exportTodo,
   importTodo,
 }
-
