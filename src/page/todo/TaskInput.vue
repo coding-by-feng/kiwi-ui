@@ -53,11 +53,11 @@
       <div class="form-row form-row-inline">
         <el-form-item class="mr-8">
           <el-select v-model="newTask.frequency" class="w-100" size="small" :placeholder="$t('todo.frequency')">
-            <el-option label="One-time" value="once" />
-            <el-option label="Daily" value="daily" />
-            <el-option label="Weekly" value="weekly" />
-            <el-option label="Monthly" value="monthly" />
-            <el-option label="Custom Days" value="custom" />
+            <el-option :label="$t('todo.freqOnce')" value="once" />
+            <el-option :label="$t('todo.freqDaily')" value="daily" />
+            <el-option :label="$t('todo.freqWeekly')" value="weekly" />
+            <el-option :label="$t('todo.freqMonthly')" value="monthly" />
+            <el-option :label="$t('todo.customDays')" value="custom" />
           </el-select>
         </el-form-item>
         <el-form-item v-if="newTask.frequency === 'custom'">

@@ -13,10 +13,8 @@
           :get-rank-color="name => getRankColor(name)"
           :get-next-rank-image="() => getNextRankImage()"
           :on-rank-image-error="e => onRankImageError(e)"
-          @export="exportTodoData"
           @demo="createDemoTasks"
           @clear="clearAllData"
-          @import-file-selected="importTodoData"
           @open-rank-image="openRankImagePreview"
         />
       </div>
@@ -294,9 +292,7 @@ export default {
       fetchRankingAction: 'fetchRanking',
       fetchRanksAction: 'fetchRanks',
       fetchAnalyticsMonthlyAction: 'fetchAnalyticsMonthly',
-      fetchAnalyticsSummaryAction: 'fetchAnalyticsSummary',
-      exportTodoAction: 'exportTodo',
-      importTodoAction: 'importTodo',
+      fetchAnalyticsSummaryAction: 'fetchAnalyticsSummary'
     }),
 
     // UI helpers
@@ -475,33 +471,7 @@ export default {
       return { labels: payload.labels || [], data: payload.points || [] }
     },
 
-    // Import / Export / Demo / Clear All
-    async exportTodoData() {
-      try {
-        const data = await this.exportTodoAction()
-        const dataStr = JSON.stringify(data, null, 2)
-        const blob = new Blob([dataStr], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `todo-export-${new Date().toISOString().split('T')[0]}.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        this.$message.success(this.$t('todo.exportSuccess') || 'Exported successfully')
-      } catch (e) { }
-    },
-    async importTodoData(file) {
-      const fileToSend = file && (file.raw || file)
-      if (!fileToSend) { this.$message.error(this.$t('todo.invalidFile') || 'Invalid file selected'); return }
-      try {
-        const res = await this.importTodoAction(fileToSend)
-        await Promise.all([ this.fetchTasksWithFilters(), this.loadTrash(), this.loadHistoryForDate(this.selectedDate) ])
-        const msg = `Imported: tasks=${res.importedTasks || 0}, history=${res.importedHistory || 0}, trash=${res.importedTrash || 0}${res.skippedDuplicates ? ', skipped=' + res.skippedDuplicates : ''}`
-        this.$message.success(msg)
-      } catch (_) {}
-    },
+    // Demo / Clear All
     async createDemoTasks() {
       try { await this.demoSeedAction(); await Promise.all([ this.fetchTasksWithFilters(), this.loadHistoryForDate(this.selectedDate) ]); this.$message.success(this.$t('todo.demoCreated') || 'Demo tasks created') } catch (_) {}
     },

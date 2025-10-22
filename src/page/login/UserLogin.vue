@@ -10,16 +10,20 @@
           <p class="brand-subtitle">{{ $t('auth.brand.subtitle') }}</p>
           <div class="feature-list">
             <div class="feature-item">
-              <i class="el-icon-star-on"></i>
-              <span>{{ $t('auth.features.intelligentMemory') }}</span>
+              <i class="el-icon-s-opportunity"></i>
+              <span>{{ $t('auth.features.aiAssistantModes') }}</span>
             </div>
             <div class="feature-item">
-              <i class="el-icon-headset"></i>
-              <span>{{ $t('auth.features.pronunciation') }}</span>
+              <i class="el-icon-collection"></i>
+              <span>{{ $t('auth.features.bilingualEnEn') }}</span>
             </div>
             <div class="feature-item">
-              <i class="el-icon-trophy"></i>
-              <span>{{ $t('auth.features.personalizedPlan') }}</span>
+              <i class="el-icon-video-camera"></i>
+              <span>{{ $t('auth.features.youtubePlayer') }}</span>
+            </div>
+            <div class="feature-item">
+              <i class="el-icon-date"></i>
+              <span>{{ $t('auth.features.todoGamified') }}</span>
             </div>
           </div>
         </div>
@@ -37,7 +41,14 @@
           <!-- Google Login Only -->
           <div class="social-login-container">
             <!-- Google Login -->
-            <div class="social-login-button google-login" @click="handleGoogleLogin">
+            <div
+              class="social-login-button google-login"
+              :class="{ disabled: googleLoading }"
+              @click="!googleLoading && handleGoogleLogin"
+              role="button"
+              tabindex="0"
+              @keyup.enter.space="!googleLoading && handleGoogleLogin"
+            >
               <div class="social-icon">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path fill="#4285F4"
@@ -160,6 +171,83 @@ export default {
   },
 
   methods: {
+    // Resolve env var possibly from build-time or Electron preload
+    getEnvVar(key) {
+      try {
+        if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.getEnvVar === 'function') {
+          const v = window.electronAPI.getEnvVar(key)
+          if (v !== undefined && v !== null && v !== '') return v
+        }
+      } catch (_) {}
+      try {
+        if (process && process.env && process.env[key] !== undefined) return process.env[key]
+      } catch (_) {}
+      try {
+        if (typeof window !== 'undefined' && window[key] !== undefined) return window[key]
+      } catch (_) {}
+      return undefined
+    },
+
+    // Dynamically ensure gapi.auth2 is available; fallback gracefully
+    async ensureGapiAuth2() {
+      // Already initialized
+      if (window.gapi && window.gapi.auth2) {
+        let inst = window.gapi.auth2.getAuthInstance()
+        if (inst) return inst
+      }
+
+      // Try to load the platform.js script
+      const loadScript = () => new Promise((resolve, reject) => {
+        try {
+          // Prevent duplicate script insertion
+          if (document.getElementById('gapi-platform')) {
+            return resolve()
+          }
+          const s = document.createElement('script')
+          s.src = 'https://apis.google.com/js/platform.js'
+          s.async = true
+          s.defer = true
+          s.id = 'gapi-platform'
+          s.onload = () => resolve()
+          s.onerror = () => reject(new Error('Failed to load Google Platform JS'))
+          document.head.appendChild(s)
+        } catch (e) { reject(e) }
+      })
+
+      try {
+        await loadScript()
+      } catch (e) {
+        console.warn('⚠️ [GOOGLE] Could not load gapi script:', e && e.message)
+        return null
+      }
+
+      // Wait for gapi to be ready and initialize auth2
+      const waitForGapi = () => new Promise((resolve) => {
+        try {
+          window.gapi.load('auth2', () => {
+            try {
+              const clientId = this.getEnvVar('VUE_APP_GOOGLE_CLIENT_ID') || this.getEnvVar('GOOGLE_CLIENT_ID') || this.getEnvVar('GOOGLE_OAUTH_CLIENT_ID')
+              if (!clientId) {
+                console.warn('⚠️ [GOOGLE] No Google Client ID configured; skipping gapi auth2 init')
+                resolve(null)
+                return
+              }
+              const inst = window.gapi.auth2.init({ client_id: String(clientId) })
+              resolve(inst)
+            } catch (e) {
+              console.error('❌ [GOOGLE] Failed to init gapi auth2:', e)
+              resolve(null)
+            }
+          })
+        } catch (e) {
+          console.error('❌ [GOOGLE] gapi.load failed:', e)
+          resolve(null)
+        }
+      })
+
+      return await waitForGapi()
+    },
+
     // Google OAuth methods
     async handleGoogleLogin() {
       console.log('🔵 [GOOGLE] Google login initiated')
@@ -171,29 +259,44 @@ export default {
 
         console.log('⏳ [GOOGLE] Setting loading states')
 
-        // Method 1: Using Google API directly
-        if (window.gapi && window.gapi.auth2) {
+        // Prefer direct Google API if possible; otherwise use backend auth URL
+        let authInstance = await this.ensureGapiAuth2()
+        if (authInstance) {
           console.log('📱 [GOOGLE] Using Google API directly')
-          const authInstance = window.gapi.auth2.getAuthInstance()
           const googleUser = await authInstance.signIn()
-
+          console.log('✅ [GOOGLE] Google sign-in successful:', googleUser)
+          await this.processGoogleUser(googleUser)
+        } else if (window.gapi && window.gapi.auth2) {
+          console.log('📱 [GOOGLE] Using existing Google API instance')
+          const inst = window.gapi.auth2.getAuthInstance()
+          const googleUser = await (inst ? inst.signIn() : Promise.reject(new Error('No Auth Instance')))
           console.log('✅ [GOOGLE] Google sign-in successful:', googleUser)
           await this.processGoogleUser(googleUser)
         } else {
           console.log('🌐 [GOOGLE] Using backend authorization URL')
           // Method 2: Get authorization URL from backend
-          const response = await this.$http.get('/auth/oauth/google/authorize')
+          const response = await this.$http.get('/auth/oauth/google/authorize', { headers: { isToken: false } })
+          console.log('📡 [GOOGLE] Backend response:', response && response.data)
 
-          console.log('📡 [GOOGLE] Backend response:', response.data)
-
-          if (response.data.code === 1) {
-            console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', response.data.data.authorizationUrl)
-            window.location.href = response.data.data.authorizationUrl
+          const data = response && response.data
+          // Treat both numeric success codes and boolean success flags
+          const code = data && (data.code !== undefined ? data.code : data.status)
+          if (code === 1 || code === 200 || code === true) {
+            const url = data.data && (data.data.authorizationUrl || data.data.url)
+            if (url) {
+              console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', url)
+              window.location.href = url
+            } else {
+              throw new Error('Authorization URL missing in response')
+            }
+          } else {
+            const msg = (data && (data.msg || data.message)) || this.$t('auth.loginFailed')
+            throw new Error(msg)
           }
         }
       } catch (error) {
         console.error('❌ [GOOGLE] Google login error:', error)
-        this.$message.error(this.$t('auth.loginFailed'))
+        this.$message.error((error && error.message) || this.$t('auth.loginFailed'))
       } finally {
         this.googleLoading = false
         this.pageLoading = false
@@ -209,11 +312,11 @@ export default {
         const authResponse = googleUser.getAuthResponse()
 
         const userData = {
-          id: profile.getId(),
-          name: profile.getName(),
-          email: profile.getEmail(),
-          imageUrl: profile.getImageUrl(),
-          accessToken: authResponse.access_token
+          id: profile && profile.getId && profile.getId(),
+          name: profile && profile.getName && profile.getName(),
+          email: profile && profile.getEmail && profile.getEmail(),
+          imageUrl: profile && profile.getImageUrl && profile.getImageUrl(),
+          accessToken: authResponse && (authResponse.access_token || authResponse.accessToken)
         }
 
         console.log('📊 [GOOGLE] Extracted user data:', userData)
@@ -221,18 +324,24 @@ export default {
         // Attempt to login with Google
         const loginResponse = await this.$http.post('/auth/oauth/google/login', {
           accessToken: userData.accessToken
-        })
+        }, { headers: { isToken: false } })
 
-        console.log('📡 [GOOGLE] Login response:', loginResponse.data)
+        console.log('📡 [GOOGLE] Login response:', loginResponse && loginResponse.data)
+        const res = loginResponse && loginResponse.data
+        const code = res && res.code
 
-        if (loginResponse.data.code === 200) {
+        if (code === 1 || code === 200) {
           console.log('✅ [GOOGLE] Google login successful')
           this.$message.success(this.$t('auth.loginSuccess'))
-          this.storeAuthTokens(loginResponse.data.data)
+          // Support multiple token field names from backend
+          this.storeAuthTokens(res && (res.data || res.result || res))
           this.redirectAfterLogin()
-        } else if (loginResponse.data.code === 404) {
+        } else if (code === 404) {
           console.log('🔗 [GOOGLE] Account not found')
           this.$message.error(this.$t('auth.accountNotFound'))
+        } else {
+          const msg = (res && (res.msg || res.message)) || this.$t('auth.loginFailed')
+          this.$message.error(msg)
         }
       } catch (error) {
         console.error('❌ [GOOGLE] Error processing Google user:', error)
@@ -243,32 +352,38 @@ export default {
     // Utility methods
     storeAuthTokens(tokenData) {
       console.log('💾 [AUTH] Storing authentication tokens')
+      const norm = tokenData || {}
+      const accessToken = norm.accessToken || norm.access_token || norm.token || ''
+      const refreshToken = norm.refreshToken || norm.refresh_token || ''
+      const userInfo = norm.userInfo || norm.user || {}
+      const expiresIn = norm.expiresIn || norm.expires_in || ''
+
       console.log('📊 [AUTH] Token data:', {
-        hasAccessToken: !!tokenData.accessToken,
-        hasRefreshToken: !!tokenData.refreshToken,
-        hasUserInfo: !!tokenData.userInfo
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        hasUserInfo: !!userInfo
       })
 
-      // Store authentication tokens in both prefixed storage (kason-tools-access_token)
-      // and raw keys (fallback) for backward compatibility
-      if (tokenData.accessToken) {
-        // Prefixed app storage (kason-tools-access_token)
-        setStore({ name: 'access_token', content: tokenData.accessToken, type: 'local' })
-        // Raw fallback
-        try { localStorage.setItem('access_token', tokenData.accessToken) } catch (e) {}
+      if (accessToken) {
+        setStore({ name: 'access_token', content: accessToken, type: 'local' })
+        try { localStorage.setItem('access_token', accessToken) } catch (e) {}
       }
 
-      if (tokenData.refreshToken) {
-        setStore({ name: 'refresh_token', content: tokenData.refreshToken, type: 'local' })
-        try { localStorage.setItem('refresh_token', tokenData.refreshToken) } catch (e) {}
+      if (refreshToken) {
+        setStore({ name: 'refresh_token', content: refreshToken, type: 'local' })
+        try { localStorage.setItem('refresh_token', refreshToken) } catch (e) {}
+      }
+
+      if (expiresIn) {
+        setStore({ name: 'expires_in', content: expiresIn, type: 'local' })
       }
 
       // Store user info / name if provided
       try {
-        const userName = tokenData.userInfo && (tokenData.userInfo.name || tokenData.userInfo.username || tokenData.userInfo.email)
+        const userName = userInfo && (userInfo.name || userInfo.username || userInfo.email)
         if (userName) {
           setStore({ name: 'user_name', content: userName, type: 'local' })
-          localStorage.setItem('user_info', JSON.stringify(tokenData.userInfo))
+          localStorage.setItem('user_info', JSON.stringify(userInfo))
         }
       } catch (e) {}
 
@@ -278,31 +393,29 @@ export default {
     redirectAfterLogin() {
       console.log('🔀 [REDIRECT] Preparing post-login redirect')
 
-      const word = this.$route.query.word
+      const currentQuery = { ...this.$route.query }
+      const word = currentQuery.word
       console.log('📊 [REDIRECT] Route query word:', word)
 
-      let redirectPath, redirectQuery
-
-      if (word) {
-        redirectPath = '/index/tools/detail'
-        redirectQuery = {active: 'search', word: word}
-      } else {
-        redirectPath = '/index/tools/detail'
-        redirectQuery = {active: 'search'}
-      }
+      // Build destination and preserve all current query params, forcing active=search
+      const redirectPath = '/index/tools/detail'
+      const redirectQuery = { ...currentQuery, active: 'search' }
 
       console.log('🎯 [REDIRECT] Redirect destination:', {
         path: redirectPath,
         query: redirectQuery
       })
 
-      this.$router.push({
+      // Use replace to avoid extra history entries, and avoid full reload
+      this.$router.replace({
         path: redirectPath,
         query: redirectQuery
       })
 
-      console.log('🔄 [REDIRECT] Reloading page')
-      window.location.reload()
+      // Let Index.vue pick up the new token via getStore without a hard reload
+      this.$nextTick(() => {
+        try { this.$forceUpdate() } catch (_) {}
+      })
     },
 
     // Dev-only: apply manual token
@@ -408,14 +521,17 @@ export default {
 <style lang="scss" scoped>
 // Google-Only Login Component - Grey Theme Styles
 .login-container {
-  min-height: 100vh;
+  // Offset below the global header/tabs bar (approx 60px); tweak if header height differs
+  --header-height: 60px;
+  position: relative;
+  margin-top: var(--header-height);
+  min-height: calc(100vh - var(--header-height));
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
-  position: relative;
-  overflow: hidden;
+  overflow: hidden; // avoid page scroll within this section
 
   &::before {
     content: '';
@@ -435,7 +551,8 @@ export default {
   display: flex;
   width: 100%;
   max-width: 1200px;
-  min-height: 600px;
+  height: 100%; // fill available content height (below header)
+  max-height: 100%;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
@@ -455,7 +572,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 60px 50px 40px;
+  padding: 40px 36px 28px; // tighten paddings to reduce height
   color: white;
   position: relative;
   overflow: hidden;
@@ -474,7 +591,7 @@ export default {
 
 @keyframes gradientShift {
   0%, 100% {
-    background-position: 0% 50%;
+    background-position: 0 50%;
   }
   50% {
     background-position: 100% 50%;
@@ -487,8 +604,8 @@ export default {
 }
 
 .brand-logo {
-  font-size: 48px;
-  margin-bottom: 30px;
+  font-size: 44px; // slightly smaller
+  margin-bottom: 20px;
   opacity: 0;
   animation: fadeInUp 1s ease 0.2s forwards;
 
@@ -499,18 +616,17 @@ export default {
 }
 
 .brand-title {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   opacity: 0;
   animation: fadeInUp 1s ease 0.4s forwards;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .brand-subtitle {
-  font-size: 18px;
-  opacity: 0.9;
-  margin-bottom: 40px;
+  font-size: 16px;
+  margin-bottom: 24px;
   font-weight: 300;
   opacity: 0;
   animation: fadeInUp 1s ease 0.6s forwards;
@@ -524,8 +640,8 @@ export default {
 .feature-item {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  font-size: 16px;
+  margin-bottom: 14px;
+  font-size: 15px;
   opacity: 0.95;
   transition: all 0.3s ease;
 
@@ -535,8 +651,8 @@ export default {
   }
 
   i {
-    font-size: 20px;
-    margin-right: 15px;
+    font-size: 18px;
+    margin-right: 12px;
     color: rgba(255, 255, 255, 0.8);
   }
 }
@@ -544,13 +660,13 @@ export default {
 .copyright {
   position: relative;
   z-index: 1;
-  opacity: 0.7;
-  font-size: 14px;
+  font-size: 12px; // smaller to fit
   opacity: 0;
   animation: fadeInUp 1s ease 1s forwards;
 
   p {
     margin: 0;
+    opacity: 0.7;
   }
 }
 
@@ -571,16 +687,16 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 24px; // tighten
   background: rgba(249, 250, 251, 0.5);
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: white;
   border-radius: 16px;
-  padding: 40px 30px;
+  padding: 28px 22px; // tighten
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
   0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(229, 231, 235, 0.8);
@@ -601,18 +717,18 @@ export default {
 
 .login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px; // tighter
 
   h2 {
-    font-size: 24px;
+    font-size: 22px;
     color: #374151;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: 600;
   }
 
   p {
     color: #6b7280;
-    font-size: 16px;
+    font-size: 14px;
     margin: 0;
   }
 }
@@ -623,14 +739,20 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px 20px;
+    padding: 14px 18px;
     border: 2px solid #d1d5db;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
     background: white;
     position: relative;
-    min-height: 56px;
+    min-height: 52px;
+
+    &.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
 
     &:hover {
       border-color: #4285f4;
@@ -643,7 +765,7 @@ export default {
     }
 
     .social-icon {
-      margin-right: 12px;
+      margin-right: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -652,15 +774,15 @@ export default {
     span {
       flex: 1;
       text-align: center;
-      color: #374151;
-      font-size: 16px;
+      color: #ffffff;
+      font-size: 15px;
       font-weight: 600;
     }
 
     .loading-spinner {
       position: absolute;
-      right: 20px;
-      color: #4285f4;
+      right: 16px;
+      color: #ffffff;
       font-size: 18px;
     }
 
@@ -715,8 +837,8 @@ export default {
 
 /* Dev-only manual token styles */
 .manual-token-card {
-  margin-top: 20px;
-  padding: 12px;
+  margin-top: 16px;
+  padding: 10px;
   border: 1px dashed #c0c4cc;
   border-radius: 8px;
   background: #fafafa;
@@ -726,72 +848,67 @@ export default {
   align-items: center;
   font-weight: 600;
   color: #606266;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   i { margin-right: 6px; }
 }
 .manual-token-body {
   .manual-token-tip {
     font-size: 12px;
     color: #909399;
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
     word-break: break-all;
   }
   .manual-token-actions {
-    margin-top: 8px;
+    margin-top: 6px;
   }
 }
 
-// Responsive Design
+// Responsive Design - Small width: hide brand panel to avoid scroll
 @media (max-width: 968px) {
+  .login-container {
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
+  }
   .login-wrapper {
     flex-direction: column;
-    max-width: 500px;
-    margin: 20px;
+    max-width: 520px;
+    height: 100%;
   }
 
   .login-left {
-    padding: 40px 30px 30px;
-    text-align: center;
-
-    .brand-title {
-      font-size: 28px;
-    }
-
-    .feature-list {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .feature-item {
-      margin-bottom: 0;
-      flex-direction: column;
-      text-align: center;
-
-      i {
-        margin-right: 0;
-        margin-bottom: 5px;
-      }
-
-      span {
-        font-size: 12px;
-      }
-    }
+    display: none; // hide to keep page compact
   }
 
   .login-right {
-    padding: 30px 20px;
+    flex: 1;
+    padding: 20px;
   }
 
   .login-card {
-    padding: 30px 25px;
+    padding: 24px 18px;
+    max-width: 460px;
   }
+}
+
+// Responsive Design - Short viewport height: hide brand panel and tighten spacings
+@media (max-height: 760px) {
+  .login-container {
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
+  }
+  .login-left { display: none; }
+  .login-right { padding: 16px; }
+  .brand-title { font-size: 24px; }
+  .brand-subtitle { font-size: 14px; margin-bottom: 16px; }
+  .feature-item { margin-bottom: 10px; font-size: 14px; }
+  .login-card { padding: 20px 16px; }
 }
 
 @media (max-width: 480px) {
   .login-container {
-    padding: 10px;
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
+    padding: 0; // full-bleed
   }
 
   .login-wrapper {
@@ -800,7 +917,7 @@ export default {
   }
 
   .login-card {
-    padding: 25px 20px;
+    padding: 18px 14px;
   }
 
   .social-login-button {

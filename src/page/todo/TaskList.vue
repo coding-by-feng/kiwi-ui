@@ -49,11 +49,11 @@
             <div class="edit-form-row">
               <label class="edit-label">{{ $t('todo.frequency') }}:</label>
               <el-select v-model="editingTask.frequency" class="edit-select">
-                <el-option label="One-time" value="once"></el-option>
-                <el-option label="Daily" value="daily"></el-option>
-                <el-option label="Weekly" value="weekly"></el-option>
-                <el-option label="Monthly" value="monthly"></el-option>
-                <el-option label="Custom Days" value="custom"></el-option>
+                <el-option :label="$t('todo.freqOnce')" value="once"></el-option>
+                <el-option :label="$t('todo.freqDaily')" value="daily"></el-option>
+                <el-option :label="$t('todo.freqWeekly')" value="weekly"></el-option>
+                <el-option :label="$t('todo.freqMonthly')" value="monthly"></el-option>
+                <el-option :label="$t('todo.customDays')" value="custom"></el-option>
               </el-select>
             </div>
             <div class="edit-form-row" v-if="editingTask.frequency === 'custom'">
@@ -82,7 +82,7 @@
             </div>
 
             <div v-if="shouldShowResetAction(task)" class="reset-actions">
-              <el-button type="warning" size="mini" icon="el-icon-refresh" circle @click="onResetStatus(task.id)" :title="'Reset to pending'" class="reset-btn"></el-button>
+              <el-button type="warning" size="mini" icon="el-icon-refresh" circle @click="onResetStatus(task.id)" :title="$t('todo.taskStatusReset')" class="reset-btn"></el-button>
             </div>
 
             <div class="manage-actions">

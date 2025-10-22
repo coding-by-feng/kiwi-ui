@@ -83,6 +83,7 @@
             <div class="mode-info">
               <el-tag
                   :type="getModeTagType(record.promptMode)"
+                  :class="getModeClass(record.promptMode)"
                   size="small">
                 {{ getModeLabel(record.promptMode) }}
               </el-tag>
@@ -189,7 +190,7 @@
       <div v-if="selectedRecord" class="detail-content">
         <el-form label-position="left" label-width="120px">
           <el-form-item label="Mode:">
-            <el-tag :type="getModeTagType(selectedRecord.promptMode)">
+            <el-tag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass(selectedRecord.promptMode)">
               {{ getModeLabel(selectedRecord.promptMode) }}
             </el-tag>
           </el-form-item>
@@ -368,7 +369,7 @@ export default {
         'directly-translation': 'primary',
         'translation-and-explanation': 'success',
         'grammar-explanation': 'warning',
-        'grammar-correction': 'danger',
+        'grammar-correction': '', // remove bright type to rely on subtle custom class
         'vocabulary-explanation': 'info',
         'synonym': 'primary',
         'antonym': 'warning',
@@ -377,6 +378,12 @@ export default {
         'selection-explanation': 'warning'
       };
       return tagTypes[modeValue] || '';
+    },
+
+    // Add a custom class to fine-tune Grammar Correction styling
+    getModeClass(modeValue) {
+      if (modeValue === 'grammar-correction') return 'tag-grammar-correction';
+      return '';
     },
 
     getLanguageLabel(languageCode) {
@@ -474,19 +481,6 @@ export default {
       console.log('Viewing details for record:', record);
       this.selectedRecord = record;
       this.detailDialogVisible = true;
-    },
-
-    goBack() {
-      console.log('Going back to search page');
-      // Navigate back to search page
-      this.$router.push({
-        path: '/index/tools/detail',
-        query: {
-          active: 'search',
-          ytbMode: this.$route.query.ytbMode || kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime()
-        }
-      });
     },
 
     async archiveItem(id) {
@@ -875,13 +869,13 @@ export default {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 20px;
   border-radius: 8px;
-  border-left: 3px solid #409eff;
+  border: 1px solid #e4e7ed; /* place base border first */
+  border-left: 3px solid #409eff; /* then accent left border so it's not overwritten */
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 300px;
   overflow-y: auto;
-  border: 1px solid #e4e7ed;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
   color: #2c3e50;
 }
@@ -929,6 +923,14 @@ export default {
 .el-tag--info {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
   color: white;
+}
+
+/* Subtle style specifically for Grammar Correction */
+.el-tag.tag-grammar-correction {
+  background: #f5f7fa !important; /* neutral light gray */
+  color: #606266 !important;       /* standard Element text gray */
+  border: 1px solid #e4e7ed !important; /* subtle border */
+  box-shadow: none !important;
 }
 
 /* Responsive Design */

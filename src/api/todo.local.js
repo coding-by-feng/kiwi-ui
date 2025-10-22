@@ -410,72 +410,6 @@ export async function getRankingDefinitions() {
   return db.ranks
 }
 
-// Import/Export
-export async function exportTodo() {
-  const db = load()
-  const version = '1.1'
-  const exportDate = nowIso()
-  const tasksByDate = {}
-  ;(db.tasks || []).forEach(t => {
-    const key = (t.createdAt||'').slice(0,10)
-    if (!tasksByDate[key]) tasksByDate[key] = []
-    tasksByDate[key].push(t)
-  })
-  const historyByDate = {}
-  ;(db.history || []).forEach(h => {
-    const key = (h.completedAt||'').slice(0,10)
-    if (!historyByDate[key]) historyByDate[key] = []
-    historyByDate[key].push(h)
-  })
-  const exportedDates = Array.from(new Set([
-    ...Object.keys(tasksByDate),
-    ...Object.keys(historyByDate),
-  ])).sort()
-  const metadata = {
-    totalTasks: (db.tasks || []).length,
-    totalHistoryRecords: (db.history || []).length,
-    totalTrashItems: (db.trash || []).length,
-    exportedDates
-  }
-  return { version, exportDate, tasks: tasksByDate, history: historyByDate, trash: db.trash || [], metadata }
-}
-
-export async function importTodo(payload) {
-  const db = load()
-  const input = payload && payload.version ? payload : null
-  if (!input) throw new Error('Invalid import payload in local mode')
-  let importedTasks = 0, importedHistory = 0, importedTrash = 0, skippedDuplicates = 0
-
-  if (input.tasks && typeof input.tasks === 'object') {
-    for (const dateKey of Object.keys(input.tasks)) {
-      for (const t of input.tasks[dateKey]) {
-        if (db.tasks.find(x => x.id === t.id)) { skippedDuplicates++; continue }
-        db.tasks.push({ ...t })
-        db.etags[t.id] = newEtag()
-        importedTasks++
-      }
-    }
-  }
-  if (input.history && typeof input.history === 'object') {
-    for (const dateKey of Object.keys(input.history)) {
-      for (const h of input.history[dateKey]) {
-        if (db.history.find(x => x.id === h.id)) { skippedDuplicates++; continue }
-        db.history.push({ ...h })
-        importedHistory++
-      }
-    }
-  }
-  if (Array.isArray(input.trash)) {
-    for (const tr of input.trash) {
-      if (db.trash.find(x => x.id === tr.id)) { skippedDuplicates++; continue }
-      db.trash.push({ ...tr })
-      importedTrash++
-    }
-  }
-  save(db)
-  return { importedTasks, importedHistory, importedTrash, skippedDuplicates }
-}
-
 export default {
   listTasks,
   createTask,
@@ -496,6 +430,4 @@ export default {
   getAnalyticsSummary,
   getRankingCurrent,
   getRankingDefinitions,
-  exportTodo,
-  importTodo,
 }
