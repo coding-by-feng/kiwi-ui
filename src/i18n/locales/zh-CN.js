@@ -226,7 +226,7 @@ export default {
     about: {
         title: '关于 Kason Tools',
         kasonTools: 'Kason Tools',
-        description: 'Kason Tools 是一个智能英语学习平台，通过间隔重复和 AI 辅助帮助你掌握词汇。',
+        description: 'Kason Tools 是一款由 AI 辅助的英语学习工作台，融合了间隔重复复习、地道发音练习、基于 YouTube 字幕的即时翻译与讲解、智能收藏夹、个性化学习流程、进度统计以及带有排行榜的待办打卡系统。',
         version: '版本 2.0',
         contact: '联系我们',
         instagram: 'Instagram',
