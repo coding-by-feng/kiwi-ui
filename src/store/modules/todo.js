@@ -203,7 +203,12 @@ const actions = {
     const api = getApi()
     const raw = await api.deleteHistory(id)
     const res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-    if (res && res.meta && res.meta.ranking) commit('SET_RANKING', res.meta.ranking)
+    // normalize ranking possibly nested under meta.ranking.data
+    if (res && res.meta && res.meta.ranking) {
+      const rk = res.meta.ranking
+      const normalizedRank = rk && rk.data ? rk.data : rk
+      commit('SET_RANKING', normalizedRank)
+    }
     // refresh history list for currently loaded date if exists
     const date = state.historyMeta && state.historyMeta.date
     if (date) await dispatch('fetchHistory', { date, page: state.historyMeta.page || 1, pageSize: state.historyMeta.pageSize || 100 })
@@ -214,15 +219,17 @@ const actions = {
     const api = getApi()
     const raw = await api.getRankingCurrent()
     const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-    commit('SET_RANKING', r)
-    return r
+    const normalized = r && r.data ? r.data : r
+    commit('SET_RANKING', normalized)
+    return normalized
   },
   async fetchRanks({ commit }) {
     const api = getApi()
     const raw = await api.getRankingDefinitions()
     const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-    commit('SET_RANKS', r)
-    return r
+    const normalized = Array.isArray(r) ? r : (Array.isArray(r && r.data) ? r.data : r)
+    commit('SET_RANKS', normalized)
+    return normalized
   },
 
   async fetchAnalyticsMonthly({ commit }, months = 6) {
@@ -236,28 +243,6 @@ const actions = {
     const api = getApi()
     const raw = await api.getAnalyticsSummary(month)
     return isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-  },
-
-  async exportTodo() {
-    const api = getApi()
-    const raw = await api.exportTodo()
-    return isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-  },
-  async importTodo({ dispatch }, payload) {
-    const api = getApi()
-    let res
-    const isFile = (typeof File !== 'undefined' && payload instanceof File) || (typeof Blob !== 'undefined' && payload instanceof Blob)
-    if (api === localApi && isFile) {
-      const text = await new Promise((resolve, reject) => { try { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsText(payload) } catch (e) { reject(e) } })
-      const json = JSON.parse(text)
-      res = await localApi.importTodo(json)
-    } else {
-      const raw = await api.importTodo(payload)
-      res = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-    }
-    await dispatch('fetchTasks', { page: 1, pageSize: 100 })
-    await dispatch('fetchTrash', { page: 1, pageSize: 50 })
-    return res
   },
 }
 

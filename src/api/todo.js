@@ -90,26 +90,6 @@ export function getRankingDefinitions() {
     return request({url: `${BASE}/ranking/ranks`, method: 'get', headers: {isToken: true}})
 }
 
-// Import/Export
-export function exportTodo() {
-    return request({url: `${BASE}/export/todo`, method: 'get', headers: {isToken: true}})
-}
-
-export function importTodo(payload) {
-    if (typeof File !== 'undefined' && payload instanceof File || typeof Blob !== 'undefined' && payload instanceof Blob) {
-        const form = new FormData()
-        form.append('file', payload)
-        return request({url: `${BASE}/import/todo`, method: 'post', data: form, headers: {isToken: true}})
-    } else {
-        return request({
-            url: `${BASE}/import/todo`,
-            method: 'post',
-            data: payload,
-            headers: {isToken: true, 'Content-Type': 'application/json'}
-        })
-    }
-}
-
 export default {
     listTasks,
     createTask,
@@ -130,6 +110,4 @@ export default {
     getAnalyticsSummary,
     getRankingCurrent,
     getRankingDefinitions,
-    exportTodo,
-    importTodo,
 }

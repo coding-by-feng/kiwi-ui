@@ -180,48 +180,49 @@ export default {
         editTask: '编辑任务',
         deleteTask: '删除任务',
 
-        // 历史记录操作
-        confirmDeleteHistoryRecord: '确定要删除这个历史记录吗？',
-        deleteHistoryRecord: '删除历史记录',
-        historyRecordDeleted: '历史记录删除成功！',
+        // 过滤空状态
+        noPendingTasks: '没有待处理任务',
+        noCompletedTasks: '没有已完成任务',
+        noDoneTasks: '没有已完成标记的任务',
+        noTasksAvailable: '暂无可用任务',
 
-        // 排名/积分
-        points: '积分',
-        rankingSystem: '排名系统',
-        currentRank: '当前段位',
-        nextRankTarget: '下一级目标',
-        pointsNeeded: '还需 {points} 分',
-        congratulations: '恭喜！',
-        maxRankAchieved: '你已达到最高段位！',
-        allRanks: '全部段位',
-        viewRankingDetails: '查看段位详情',
-        maxRankReached: '已达最高段位！',
+        // 频率标签
+        freqDaily: '每日',
+        freqWeekly: '每周',
+        freqMonthly: '每月',
+        freqEveryNDays: '每 {days} 天',
+        freqOnce: '一次性',
 
-        // 段位名称
-        ranks: {
-            legendary: '传说',
-            mythic: '神话',
-            immortal: '不朽',
-            divine: '神圣',
-            celestial: '天界',
-            grandmaster: '宗师',
-            master: '大师',
-            diamond: '钻石',
-            platinum: '白金',
-            gold: '黄金',
-            silver: '白银',
-            bronze: '青铜',
-            iron: '铁',
-            steel: '钢铁',
-            stone: '石头',
-            wood: '木头',
-            apprentice: '学徒',
-            novice: '新手',
-            trainee: '见习',
-            beginner: '初学者'
-        },
-        rankLevel: '等级 {level}',
-        nextRank: '下一级：{rank}',
+        // 重置单个任务状态
+        taskStatusReset: '任务状态已重置为待处理',
+
+        // 重置全部
+        resetAllConfirm: '这将把所有任务重置为“待处理”。是否继续？',
+        resetAll: '全部重置',
+        resetAllDone: '已将所有适用任务重置为待处理',
+
+        // 垃圾箱相关
+        clearTrashConfirm: '这将永久删除垃圾箱中的所有项目，且无法恢复。是否继续？',
+        clearAll: '清空',
+        trashCleared: '垃圾箱已清空',
+        taskRestored: '任务已成功恢复',
+        trashDeleted: '任务已被永久删除',
+
+        // Demo/清理
+        demoCreated: '示例任务已创建',
+        clearAllServerNote: '服务器暂不支持清空全部数据。此操作仅会清空垃圾箱，是否继续？',
+
+        // 编辑冲突提示
+        etagMismatchRefetched: '该任务已在其他地方更新，我们已为你重新加载最新版本，请重新应用你的更改。',
+
+        // 额外字段供 TrashList 使用
+        originalDate: '原始日期',
+        deletedDate: '删除日期',
+        restore: '恢复',
+        restoreToOriginal: '恢复至原日期',
+        permanentlyDelete: '永久删除',
+        permanentlyDeleteConfirm: '确定永久删除此任务？该操作不可撤销。',
+        noTrashItems: '垃圾箱中暂无内容'
     },
     about: {
         title: '关于 Kason Tools',

@@ -3,25 +3,14 @@
     <h2 class="header-title">{{ $t('todo.title') }}</h2>
     <div class="header-controls">
       <div class="import-export-controls">
-        <button type="button" class="control-btn btn-primary" @click="$emit('export')">
-          <i class="el-icon-download"></i>
-          <span class="btn-text">Export</span>
-        </button>
-
-        <input ref="importInput" type="file" accept=".json" class="visually-hidden" @change="onImportChange" />
-        <button type="button" class="control-btn btn-success" @click="triggerImport">
-          <i class="el-icon-upload2"></i>
-          <span class="btn-text">Import</span>
-        </button>
-
         <button type="button" class="control-btn btn-info" @click="$emit('demo')">
           <i class="el-icon-magic-stick"></i>
-          <span class="btn-text">Demo</span>
+          <span class="btn-text">{{ $t('todo.demo') }}</span>
         </button>
 
         <button type="button" class="control-btn btn-danger" @click="$emit('clear')">
           <i class="el-icon-delete"></i>
-          <span class="btn-text">Clear All</span>
+          <span class="btn-text">{{ $t('todo.clearAll') }}</span>
         </button>
       </div>
 
@@ -85,7 +74,7 @@
         <div class="rank-progress">
           <div class="progress-info">
             <span class="progress-text">{{ totalPoints }} / {{ currentRank.nextThreshold || '∞' }}</span>
-            <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Math.round(rankProgress) }}%</span>
+            <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Number(rankProgress).toFixed(1) }}%</span>
             <span class="progress-percentage max-rank" v-else>{{ $t('todo.maxRank') }}</span>
           </div>
           <el-progress :percentage="rankProgress" :show-text="false" :stroke-width="6" :color="getRankColor(currentRank.name)" class="rank-progress-bar" />
@@ -120,19 +109,6 @@ export default {
     getRankColor: { type: Function, required: true },
     getNextRankImage: { type: Function, required: true },
     onRankImageError: { type: Function, required: true }
-  },
-  methods: {
-    triggerImport() {
-      this.$refs.importInput && this.$refs.importInput.click()
-    },
-    onImportChange(e) {
-      const file = e && e.target && e.target.files && e.target.files[0]
-      if (file) {
-        this.$emit('import-file-selected', file)
-      }
-      // reset input so selecting the same file again triggers change
-      if (e && e.target) e.target.value = ''
-    }
   }
 }
 </script>

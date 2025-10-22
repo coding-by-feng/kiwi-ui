@@ -2,7 +2,7 @@
   <div class="trash-tab">
     <div class="trash-controls">
       <el-button v-if="trashedTasks.length > 0" type="danger" size="small" icon="el-icon-delete" @click="onClearTrash" class="clear-trash-btn">
-        <span class="btn-text">Clear All</span>
+        <span class="btn-text">{{ $t('todo.clearAll') }}</span>
       </el-button>
     </div>
 
@@ -19,22 +19,22 @@
               </div>
               <div class="task-dates">
                 <el-tag size="mini" type="info" class="date-tag">
-                  <span class="date-label">Original:</span>
+                  <span class="date-label">{{ $t('todo.originalDate') }}:</span>
                   <span class="date-value">{{ formatDate(task.originalDate) }}</span>
                 </el-tag>
                 <el-tag size="mini" type="warning" class="date-tag">
-                  <span class="date-label">Deleted:</span>
+                  <span class="date-label">{{ $t('todo.deletedDate') }}:</span>
                   <span class="date-value">{{ formatDate(task.deletedDate) }}</span>
                 </el-tag>
               </div>
             </div>
           </div>
           <div class="trash-actions">
-            <el-tooltip content="Restore to original date" placement="top">
+            <el-tooltip :content="$t('todo.restoreToOriginal')" placement="top">
               <el-button type="success" size="mini" icon="el-icon-refresh-right" circle @click="onRestore(task.id)" class="trash-action-btn"></el-button>
             </el-tooltip>
-            <el-tooltip content="Permanently delete" placement="top">
-              <el-popconfirm title="Permanently delete this task? This cannot be undone." @confirm="onDelete(task.id)">
+            <el-tooltip :content="$t('todo.permanentlyDelete')" placement="top">
+              <el-popconfirm :title="$t('todo.permanentlyDeleteConfirm')" @confirm="onDelete(task.id)">
                 <template v-slot:reference>
                   <el-button type="danger" size="mini" icon="el-icon-close" circle class="trash-action-btn"></el-button>
                 </template>
@@ -45,7 +45,7 @@
       </el-card>
     </div>
     <div v-else class="no-data">
-      <el-empty description="No items in trash" />
+      <el-empty :description="$t('todo.noTrashItems')" />
     </div>
   </div>
 </template>

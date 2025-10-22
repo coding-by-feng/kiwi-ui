@@ -59,7 +59,8 @@ export default {
         open: 'Open',
         download: 'Download',
         upload: 'Upload',
-        default: 'Default'
+        default: 'Default',
+        all: 'All'
     },
 
     // Navigation
@@ -88,12 +89,16 @@ export default {
         autoLoginSuccess: 'Automatic login successful!',
         guestLogin: 'Guest user please login!',
         features: {
-            intelligentMemory: 'Smart Vocabulary Memory',
-            pronunciation: 'Authentic Pronunciation Practice',
-            personalizedPlan: 'Personalized Learning Plan'
+            intelligentMemory: 'Smart Vocabulary Retention',
+            pronunciation: 'Real‑voice Pronunciation Practice',
+            personalizedPlan: 'Personalized Study Plans',
+            aiAssistantModes: 'AI assistant with multiple powerful modes',
+            bilingualEnEn: 'English‑to‑English with Chinese explanations',
+            youtubePlayer: 'YouTube player learning',
+            todoGamified: 'To‑do and gamified study'
         },
         brand: {
-            title: 'Kason English Learning Platform',
+            title: 'Kason English Tools',
             subtitle: 'Smart English Learning Platform'
         },
         copyright: '©2025 Kason English Learning Platform v2.0'
@@ -284,9 +289,13 @@ export default {
         welcomeBack: 'Welcome Back',
         smartEnglishLearning: 'Smart English Learning Platform',
         features: {
-            smartMemory: 'Smart Vocabulary Memory',
-            pronunciation: 'Authentic Pronunciation Practice',
-            personalizedPlan: 'Personalized Learning Plan'
+            smartMemory: 'Smart Vocabulary Retention',
+            pronunciation: 'Real‑voice Pronunciation Practice',
+            personalizedPlan: 'Personalized Study Plans',
+            aiAssistantModes: 'AI assistant with multiple powerful modes',
+            bilingualEnEn: 'English‑to‑English with Chinese explanations',
+            youtubePlayer: 'YouTube player learning',
+            todoGamified: 'To‑do and gamified study'
         },
         copyright: '©2025 Kason English Learning Platform v2.0',
         useGoogleLogin: 'Use Google Account to Login',
@@ -606,5 +615,56 @@ export default {
 
         // add for ranking displays
         points: 'Points',
+
+        // Empty states for filters
+        noPendingTasks: 'No pending tasks',
+        noCompletedTasks: 'No completed tasks',
+        noDoneTasks: 'No done tasks',
+        noTasksAvailable: 'No tasks available',
+
+        // Frequency labels used in UI helpers
+        freqDaily: 'Daily',
+        freqWeekly: 'Weekly',
+        freqMonthly: 'Monthly',
+        freqEveryNDays: 'Every {days} days',
+        freqOnce: 'One-time',
+
+        // Reset single task status message
+        taskStatusReset: 'Task status reset to pending',
+
+        // Reset all statuses
+        resetAllConfirm: 'This will reset all tasks to Pending. Continue?',
+        resetAll: 'Reset All',
+        resetAllDone: 'All applicable tasks reset to pending',
+
+        // Trash actions
+        clearTrashConfirm: 'This will permanently delete all items in trash. This cannot be undone.',
+        clearAll: 'Clear All',
+        trashCleared: 'Trash cleared',
+        taskRestored: 'Task restored successfully',
+        trashDeleted: 'Task permanently deleted',
+
+        // Demo/clear all
+        demoCreated: 'Demo tasks created',
+        clearAllServerNote: 'Server does not support clearing all data. This will clear trash only. Continue?',
+
+        // ETag mismatch notice during edit
+        etagMismatchRefetched: 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.',
+
+        // Additional filters and trash UI labels
+        statusFilter: 'Status Filter:',
+        frequencyFilter: 'Frequency Filter:',
+        allFrequencies: 'All Frequencies',
+        doneNonDaily: 'Done (Non-Daily)',
+        pendingLabel: 'Pending',
+        customDays: 'Custom Days',
+
+        // Trash UI labels
+        originalDate: 'Original',
+        deletedDate: 'Deleted',
+        restoreToOriginal: 'Restore to original date',
+        permanentlyDelete: 'Permanently delete',
+        permanentlyDeleteConfirm: 'Permanently delete this task? This cannot be undone.',
+        noTrashItems: 'No items in trash'
     }
 }
