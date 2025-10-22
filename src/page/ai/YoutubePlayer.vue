@@ -136,30 +136,15 @@
 
     <!-- Enhanced Status Message with Loading Animation -->
     <div class="status-container" v-show="!isPlaying && !forceHideInput && statusMessage !== ''">
-      <div v-if="isLoading" class="loading-container">
-        <div class="loading-animation">
-          <div class="loading-spinner">
-            <div class="loading-spinner-ring"></div>
-            <div class="loading-spinner-ring"></div>
-            <div class="loading-spinner-ring"></div>
-          </div>
-          <div class="loading-text">
-            <span class="loading-message">{{ statusMessage || 'Loading video...' }}</span>
-            <div class="loading-dots">
-              <span class="dot dot-1">.</span>
-              <span class="dot dot-2">.</span>
-              <span class="dot dot-3">.</span>
-            </div>
-          </div>
-        </div>
-        <div class="loading-progress">
-          <div class="progress-bar">
-            <div class="progress-fill"></div>
-          </div>
-          <div class="progress-text">Preparing video player...</div>
+      <!-- Compact inline loading chip instead of large panel -->
+      <div v-if="isLoading" class="compact-status">
+        <i class="el-icon-loading spinning"></i>
+        <span class="compact-status-text">{{ statusMessage || 'Loading video...' }}</span>
+        <div class="compact-progress" aria-hidden="true">
+          <div class="compact-progress-fill" :style="{ width: (miniLoaderPercent || 5) + '%' }"></div>
         </div>
       </div>
-      <p v-else class="status-message">{{ statusMessage }}</p>
+      <p v-else class="status-message compact">{{ statusMessage }}</p>
     </div>
 
     <!-- Enhanced Subtitles Loading Indicator -->
@@ -213,13 +198,22 @@
     </div>
 
     <!-- Enhanced Content Container -->
-    <div class="content-container" v-if="videoUrl && videoUrl !== ''">
+    <div class="content-container" v-if="(videoUrl && videoUrl !== '') || (playerVideoId && playerVideoId !== '')">
       <!-- Left Panel (video and controls) -->
       <div class="left-panel">
         <!-- Video Player Section -->
         <div class="video-section">
           <div class="video-container">
             <div id="youtube-player-container"></div>
+            <!-- Mini unobtrusive initialization/buffering indicator -->
+            <div v-if="showMiniLoader" class="video-mini-loader">
+              <i class="el-icon-video-play mini-loader-icon" v-if="!videoReady"></i>
+              <i class="el-icon-loading mini-loader-icon" v-else></i>
+              <div class="mini-loader-text">
+                {{ miniLoaderText }}
+                <span v-if="miniLoaderPercent > 0">{{ Math.round(miniLoaderPercent) }}%</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -333,7 +327,7 @@
 
 <script>
 import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, deleteVideoSubtitles, favoriteVideo, unfavoriteVideo} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, favoriteVideo, unfavoriteVideo} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
@@ -366,8 +360,9 @@ export default defineComponent({
       ifTranslation: normalizedIfTranslation,
       selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) || null,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
-      // Use existing videoId field to store current video ID from route
-      videoId: null,
+      // Split IDs: backend internal DB id vs YouTube 11-char id
+      backendVideoId: null,
+      playerVideoId: null,
       // New: single favorite state for player view
       isFavorited: false,
       pendingFavorite: false,
@@ -414,6 +409,11 @@ export default defineComponent({
       isDownloading: false,
       // New: auto-center toggle (default true if unset)
       autoCenterEnabled: (persistedAutoCenter === undefined || persistedAutoCenter === null) ? true : !!persistedAutoCenter,
+
+      // Mini loader state
+      isBuffering: false,
+      miniLoaderPercent: 0,
+      miniLoaderInterval: null,
     };
   },
   computed: {
@@ -445,31 +445,55 @@ export default defineComponent({
     currentProgress() {
       return this.isTranslationLoading ? this.translationProgress : this.subtitlesLoadingProgress;
     },
-    // New: whether a single video can be favorited (requires a valid videoId)
+    // Whether a video can be favorited (requires a valid backend internal id)
     canFavorite() {
-      return !!this.videoId;
+      return !!this.backendVideoId;
+    },
+    showMiniLoader() {
+      return this.isLoading || !this.videoReady || this.isBuffering;
+    },
+    miniLoaderText() {
+      if (this.isLoading && !this.videoReady) return 'Initializing...';
+      if (this.isBuffering) return 'Buffering...';
+      if (!this.videoReady) return 'Preparing...';
+      return 'Loading...';
     }
   },
   watch: {
-    videoId: {
-      handler(newVideoId, oldVideoId) {
-        if (newVideoId && oldVideoId && newVideoId !== oldVideoId) {
-          this.reinitializePlayer();
-        }
+    // When player video id changes, re-init the iframe
+    playerVideoId(newVideoId, oldVideoId) {
+      if (newVideoId && oldVideoId && newVideoId !== oldVideoId) {
+        this.reinitializePlayer();
       }
     },
     '$route.query.videoUrl': {
       handler(newVideoUrl) {
-        if (newVideoUrl && newVideoUrl !== encodeURIComponent(this.videoUrl)) {
-          this.videoUrl = decodeURIComponent(newVideoUrl);
+        if (!newVideoUrl) return;
+        const normalized = this.normalizeVideoUrl(newVideoUrl);
+        if (normalized && normalized !== this.videoUrl) {
+          this.videoUrl = normalized;
           this.loadContent();
         }
       }
     },
-    // New: keep id and favorited in sync with query
+    // Accept internal DB id and optional raw YT id via query
     '$route.query.videoId': {
       handler(val) {
-        this.videoId = val ? String(val) : null;
+        if (val === undefined || val === null) return;
+        const s = String(val);
+        if (this.isLikelyYoutubeId(s)) {
+          // In case deep-link sends a raw YouTube id
+          this.playerVideoId = s;
+        } else {
+          this.backendVideoId = s;
+        }
+      },
+      immediate: true
+    },
+    '$route.query.dbId': {
+      handler(val) {
+        if (val === undefined || val === null) return;
+        this.backendVideoId = String(val);
       },
       immediate: true
     },
@@ -490,15 +514,23 @@ export default defineComponent({
   mounted() {
     this.initializeComponent();
 
-    const videoUrl = this.$route.query.videoUrl;
-    if (videoUrl) {
-      this.videoUrl = decodeURIComponent(videoUrl);
+    const q = this.$route.query || {};
+    const normalized = this.normalizeVideoUrl(q.videoUrl);
+    if (normalized) {
+      this.videoUrl = normalized;
+      this.loadContent();
+    } else if (q.videoId && this.isLikelyYoutubeId(String(q.videoId))) {
+      // Fallback only if a raw YouTube id is provided
+      this.playerVideoId = String(q.videoId);
+      this.videoUrl = `https://www.youtube.com/watch?v=${this.playerVideoId}`;
       this.loadContent();
     }
 
-    // Initialize id and favorited from route once on mount
-    const q = this.$route.query || {};
-    this.videoId = q.videoId ? String(q.videoId) : this.videoId;
+    // Initialize backend id and favorited from route once on mount
+    if (q.videoId && !this.isLikelyYoutubeId(String(q.videoId))) {
+      this.backendVideoId = String(q.videoId);
+    }
+    if (q.dbId) this.backendVideoId = String(q.dbId);
     if (q.favorited !== undefined) {
       const v = String(q.favorited).toLowerCase();
       this.isFavorited = v === 'true' || v === '1';
@@ -511,7 +543,7 @@ export default defineComponent({
     // Favorite toggle for player
     async toggleFavoriteOnPlayer() {
       if (!this.canFavorite || this.pendingFavorite) return;
-      const id = this.videoId;
+      const id = this.backendVideoId;
       const prev = !!this.isFavorited;
       // optimistic update
       this.pendingFavorite = true;
@@ -561,6 +593,11 @@ export default defineComponent({
         this.player = null;
       }
 
+      if (this.miniLoaderInterval) {
+        clearInterval(this.miniLoaderInterval);
+        this.miniLoaderInterval = null;
+      }
+
       document.removeEventListener('click', this.handleClickOutside);
       window.removeEventListener('resize', this.checkScreenSize);
       window.removeEventListener('resize', this.updateDisplayStyle);
@@ -575,6 +612,40 @@ export default defineComponent({
         clearInterval(this.progressUpdateInterval);
         this.progressUpdateInterval = null;
       }
+    },
+
+    // Simple debounce helper
+    debounce(fn, wait = 200) {
+      let t = null;
+      return (...args) => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+      };
+    },
+
+    checkScreenSize() {
+      try {
+        this.isSmallScreen = window.innerWidth <= 767;
+      } catch (_) { /* no-op */ }
+    },
+
+    updateDisplayStyle() {
+      // Hook to adjust responsive styles; kept as no-op for now
+    },
+
+    applyTouchPreventions() {
+      // Hook to adjust touch behaviors on iOS/Safari; kept lightweight
+    },
+
+    isSafariOrIOS() {
+      if (typeof navigator === 'undefined') return false;
+      const ua = navigator.userAgent || '';
+      return /Safari\//.test(ua) && !/Chrome\//.test(ua) || /iPhone|iPad|iPod/i.test(ua);
+    },
+
+    isMobileDevice() {
+      if (typeof navigator === 'undefined') return false;
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
     },
 
     // WebSocket optimized streaming
@@ -847,7 +918,7 @@ export default defineComponent({
         this.player = new YT.Player('youtube-player-container', {
           height: '100%',
           width: '100%',
-          videoId: this.videoId,
+          videoId: this.playerVideoId,
           playerVars: {
             playsinline: 1,
             rel: 0,
@@ -866,12 +937,23 @@ export default defineComponent({
 
     onPlayerReady(event) {
       this.videoReady = true;
+      this.isBuffering = false;
+      this.stopMiniLoaderPoll();
       msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
     },
 
     onPlayerStateChange(event) {
       const isPlaying = event.data === YT.PlayerState.PLAYING;
       this.isPlaying = isPlaying;
+
+      if (event.data === YT.PlayerState.BUFFERING) {
+        this.isBuffering = true;
+        this.startMiniLoaderPoll();
+      } else if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+        this.isBuffering = false;
+        // keep poll running only if not fully loaded
+        if (this.getLoadedFraction() >= 1) this.stopMiniLoaderPoll();
+      }
 
       if (isPlaying) {
         this.startSubtitleSync();
@@ -886,15 +968,22 @@ export default defineComponent({
       this.resetStates();
 
       try {
-        const videoId = this.extractVideoId(this.videoUrl);
-        if (!videoId) {
+        // Normalize current videoUrl again in case it's still encoded
+        const normalizedUrl = this.normalizeVideoUrl(this.videoUrl) || null;
+        if (normalizedUrl) this.videoUrl = normalizedUrl;
+
+        // Extract YouTube ID strictly from URL or allow raw 11-char id
+        const extractedId = this.videoUrl ? this.extractVideoId(this.videoUrl) : (this.isLikelyYoutubeId(this.videoUrl) ? this.videoUrl : null);
+        this.playerVideoId = extractedId || this.playerVideoId;
+
+        if (!this.playerVideoId) {
           this.statusMessage = 'Invalid YouTube URL';
           this.isLoading = false;
           return;
         }
 
-        this.videoId = videoId;
         this.statusMessage = 'Initializing player...';
+        this.startMiniLoaderPoll();
 
         // Ensure the YouTube IFrame API is ready before creating the player
         await this.ensureYouTubeAPIReady();
@@ -904,8 +993,10 @@ export default defineComponent({
         this.isLoading = false;
         this.statusMessage = '';
 
-        // Load subtitles in background
-        this.loadSubtitlesInBackground();
+        // Load subtitles in background if we have a usable URL
+        if (this.videoUrl) {
+          this.loadSubtitlesInBackground();
+        }
 
       } catch (error) {
         console.error('Error loading content:', error);
@@ -918,7 +1009,8 @@ export default defineComponent({
       this.cleanup();
       this.isLoading = true;
       this.videoReady = false;
-      this.videoId = null;
+      // Do NOT clear backendVideoId
+      // this.backendVideoId = null;
       this.subtitles = [];
       this.translatedSubtitles = '';
       this.scrollingSubtitles = '';
@@ -931,6 +1023,8 @@ export default defineComponent({
       this.translationChunks = [];
       this.shouldShowTranslationContainer = false;
       this.statusMessage = 'Loading video...';
+      this.miniLoaderPercent = 0;
+      this.isBuffering = false;
     },
 
     async loadSubtitlesInBackground() {
@@ -1107,6 +1201,20 @@ export default defineComponent({
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
       }
+    },
+
+    // Clear subtitles and translation content
+    cleanSubtitles() {
+      this.subtitles = [];
+      this.translatedSubtitles = '';
+      this.scrollingSubtitles = '';
+      this.currentSubtitleIndex = -1;
+      this.subtitlesLoadingComplete = false;
+      this.isSubtitlesLoading = false;
+      this.isTranslationLoading = false;
+      this.translationProgress = 0;
+      this.translationChunks = [];
+      msgUtil.msgSuccess(this, 'Cleared subtitles', 1200);
     },
 
     // Text selection and vocabulary
@@ -1342,10 +1450,10 @@ export default defineComponent({
         const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
 
         // Generate filename based on video info
-        const videoId = this.extractVideoId(this.videoUrl);
+        const videoIdFromUrl = this.extractVideoId(this.videoUrl);
         const languageCode = this.selectedLanguage || 'translated';
         const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
-        const filename = `youtube_${videoId}_${languageCode}_subtitles_${timestamp}.txt`;
+        const filename = `youtube_${videoIdFromUrl || this.playerVideoId || 'video'}_${languageCode}_subtitles_${timestamp}.txt`;
 
         // Create download link and trigger download
         const url = URL.createObjectURL(blob);
@@ -1380,9 +1488,11 @@ export default defineComponent({
     // Utilities
     extractVideoId(url) {
       try {
+        if (!url) return null;
+        // Accept raw 11-char video IDs
+        if (this.isLikelyYoutubeId(url)) return url;
         const urlObj = new URL(url);
         let videoId;
-
         if (urlObj.hostname.includes('youtube.com')) {
           if (urlObj.pathname === '/watch') {
             videoId = urlObj.searchParams.get('v');
@@ -1394,7 +1504,6 @@ export default defineComponent({
         } else if (urlObj.hostname === 'youtu.be') {
           videoId = urlObj.pathname.split('/')[1];
         }
-
         return videoId ? videoId.split('?')[0].split('&')[0] : null;
       } catch (e) {
         console.error('Invalid URL:', e);
@@ -1402,75 +1511,59 @@ export default defineComponent({
       }
     },
 
-    isSafariOrIOS() {
-      const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      return isSafariBrowser || isIOS;
-    },
-
-    isMobileDevice() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-          (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
-    },
-
-    checkScreenSize() {
-      this.isSmallScreen = window.innerWidth < 768;
-    },
-
-    updateDisplayStyle() {
-      const container = document.getElementById('responsiveContainer');
-      if (container) {
-        container.style.display = this.isMobileDevice() || this.isSmallScreen ? 'inline' : 'flex';
-        if (!this.isMobileDevice() && !this.isSmallScreen) {
-          container.style.justifyContent = 'center';
-          container.style.alignItems = 'center';
-        }
+    // Robustly normalize incoming videoUrl from route (handles double-encoding and raw IDs)
+    normalizeVideoUrl(raw) {
+      if (!raw) return null;
+      let s = String(raw);
+      // If it's a plain video ID, convert to a full watch URL
+      if (this.isLikelyYoutubeId(s)) return `https://www.youtube.com/watch?v=${s}`;
+      const tryDecode = (v) => { try { return decodeURIComponent(v); } catch { return v; } };
+      // Attempt to decode up to 2 times to handle double-encoding
+      for (let i = 0; i < 2; i++) {
+        if (/^https?:\/\//i.test(s)) break;
+        const dec = tryDecode(s);
+        if (dec === s) break;
+        s = dec;
       }
-    },
-
-    applyTouchPreventions() {
-      this.$nextTick(() => {
-        const elements = document.querySelectorAll(
-            '.current-subtitle-display, .previous-subtitle, .next-subtitle, .subtitles-wrapper p, .translation-content'
-        );
-
-        elements.forEach(el => {
-          if (el) {
-            Object.assign(el.style, {
-              webkitTouchCallout: 'none',
-              webkitUserSelect: 'text',
-              userSelect: 'text'
-            });
-
-            el.addEventListener('contextmenu', (e) => {
-              if (this.isMobileDevice()) e.preventDefault();
-            });
-          }
-        });
-      });
-    },
-
-    debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    },
-
-    async cleanSubtitles() {
+      // Validate URL
       try {
-        await deleteVideoSubtitles(this.videoUrl, this.selectedLanguage);
-        msgUtil.msgSuccess(this, 'Subtitles cleaned successfully!', 2000);
-      } catch (error) {
-        msgUtil.msgError(this, 'Failed to clean subtitles', 2000);
+        const u = new URL(s);
+        if (!/^https?:$/i.test(u.protocol)) return null;
+        return u.toString();
+      } catch {
+        return null;
       }
-    }
+    },
+    isLikelyYoutubeId(str) {
+      return typeof str === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(str);
+    },
+
+    // Mini loader helpers
+    startMiniLoaderPoll() {
+      if (this.miniLoaderInterval) return;
+      this.miniLoaderInterval = setInterval(() => {
+        const frac = this.getLoadedFraction();
+        if (frac != null) this.miniLoaderPercent = Math.max(this.miniLoaderPercent, frac * 100);
+        // Stop when fully loaded and ready
+        if (this.videoReady && frac >= 1) {
+          this.stopMiniLoaderPoll();
+        }
+      }, 300);
+    },
+    stopMiniLoaderPoll() {
+      if (this.miniLoaderInterval) {
+        clearInterval(this.miniLoaderInterval);
+        this.miniLoaderInterval = null;
+      }
+    },
+    getLoadedFraction() {
+      try {
+        if (this.player && typeof this.player.getVideoLoadedFraction === 'function') {
+          return this.player.getVideoLoadedFraction();
+        }
+      } catch (_) {}
+      return null;
+    },
   }
 });
 </script>
@@ -1700,159 +1793,55 @@ export default defineComponent({
 
 /* Status Container */
 .status-container {
-  padding: 20px;
+  padding: 8px 20px;
   margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100px;
+  min-height: 40px;
 }
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
+/* Compact status chip */
+.compact-status {
+  display: inline-flex;
   align-items: center;
-  gap: 20px;
-  padding: 30px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  gap: 8px;
+  background: #fff;
   border: 1px solid #e4e7ed;
-  max-width: 400px;
-  width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  color: #606266;
+  border-radius: 999px;
+  padding: 6px 10px;
 }
-
-.loading-animation {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.loading-spinner {
-  position: relative;
-  width: 60px;
-  height: 60px;
-}
-
-.spinner-ring {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 3px solid transparent;
-  border-radius: 50%;
-  animation: spin 2s linear infinite;
-}
-
-.spinner-ring:nth-child(1) {
-  border-top-color: #409eff;
-  animation-delay: 0s;
-}
-
-.spinner-ring:nth-child(2) {
-  border-right-color: #67c23a;
-  animation-delay: 0.3s;
-  animation-duration: 1.5s;
-}
-
-.spinner-ring:nth-child(3) {
-  border-bottom-color: #e6a23c;
-  animation-delay: 0.6s;
-  animation-duration: 1.8s;
-}
-
-.loading-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.loading-message {
-  font-size: 16px;
-  color: #409eff;
-  font-weight: 600;
-  text-align: center;
-}
-
-.loading-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #409eff;
-  animation: bounce 1.4s infinite ease-in-out;
-}
-
-.dot-2 { animation-delay: 0.2s; }
-.dot-3 { animation-delay: 0.4s; }
-
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-}
-
-.loading-progress {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 6px;
-  background: #f0f2f5;
-  border-radius: 3px;
+.compact-status .spinning { animation: spin 1s linear infinite; }
+.compact-status-text { font-size: 12px; font-weight: 500; }
+.compact-progress {
+  width: 90px;
+  height: 4px;
+  background: #f2f3f5;
+  border-radius: 999px;
   overflow: hidden;
-  position: relative;
 }
-
-.progress-fill {
+.compact-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #409eff, #67c23a, #e6a23c, #409eff);
-  background-size: 200% 100%;
-  border-radius: 3px;
-  animation: progress-flow 2s linear infinite;
-  width: 100%;
-}
-
-@keyframes progress-flow {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.progress-text {
-  font-size: 12px;
-  color: #909399;
-  text-align: center;
-  font-style: italic;
+  width: 0;
+  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
+  transition: width 0.25s ease;
 }
 
 .status-message {
-  padding: 16px 20px;
+  padding: 10px 12px;
   margin: 0;
   color: #f56c6c;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #fde2e2;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-align: center;
 }
+.status-message.compact { border-radius: 999px; }
 
 /* Subtitles Loading Overlay */
 .subtitles-loading-overlay {
@@ -2084,6 +2073,25 @@ export default defineComponent({
   background: #000;
 }
 
+/* Mini loader overlay inside video */
+.video-mini-loader {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border-radius: 8px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1;
+  z-index: 20;
+}
+.mini-loader-icon { font-size: 12px; }
+.mini-loader-text { white-space: nowrap; opacity: 0.9; }
+
 /* Subtitle Context Display */
 .subtitles-context-display {
   display: flex;
@@ -2267,31 +2275,22 @@ export default defineComponent({
   bottom: 0;
   width: 3px;
   background: transparent;
-  transition: all 0.3s ease;
 }
 
-.active-subtitle {
-  background: #fffbe6; /* light highlight */
-  color: #000;
-  border-radius: 6px;
-  font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(230, 162, 60, 0.25);
-  transform: none;
+/* Subtitle state styles */
+.subtitles-container p.active-subtitle {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #a0d8ff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.18);
 }
-
-.past-subtitle {
-  color: #8a8a8a;
-  background: #fafafa;
-  border-color: #efefef;
+.subtitles-container p.active-subtitle::before {
+  background: #409eff;
 }
-.future-subtitle {
-  color: #606266;
-  background: #fff;
+.subtitles-container p.past-subtitle {
+  opacity: 0.7;
 }
-
-.scroll-filler {
-  margin-top: 20px;
-  height: 50px;
+.subtitles-container p.future-subtitle {
+  opacity: 0.95;
 }
 
 /* Translated Subtitles Container */

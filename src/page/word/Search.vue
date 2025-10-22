@@ -499,17 +499,32 @@ export default {
       // Update language for the new mode
       const newLanguage = getLanguageForMode(item);
       console.log('newLanguage', newLanguage)
-      this.$router.push({
-        path: this.$route.path,
-        query: {
-          active: 'search',
-          selectedMode: item,
-          language: newLanguage,
-          originalText: encodeURIComponent(this.originalText),
-          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime()
-        }
-      })
+
+      const encodedOriginalText = encodeURIComponent(this.originalText || '');
+
+      // Build common query preserving existing params
+      const baseQuery = {
+        ...this.$route.query,
+        active: 'search',
+        selectedMode: item,
+        language: newLanguage,
+        originalText: encodedOriginalText,
+        ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
+        now: new Date().getTime()
+      };
+
+      // Decide target path based on whether the mode is an AI mode
+      if (AI_MODES.includes(item)) {
+        this.$router.push({
+          path: '/index/tools/aiResponseDetail',
+          query: baseQuery
+        })
+      } else {
+        this.$router.push({
+          path: '/index/tools/detail',
+          query: baseQuery
+        })
+      }
     },
 
     selectedLanguageChange(item) {

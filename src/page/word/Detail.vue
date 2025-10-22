@@ -907,29 +907,49 @@ export default {
 </template>
 
 <style scoped>
-/* Align with AIResponse page look & feel */
-/* Subtle row background similar to AI blocks, less heavy than solid gray */
+/* ==========================================
+   Detail.vue — Fully refreshed styles (2025-10)
+   Goals: modern, readable, responsive, accessible
+   Notes: keep class hooks, enhance Element UI via deep selectors
+   ========================================== */
+
+/* Layout & rhythm */
+.ai-container {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle section separators for pronunciation rows */
 .row-bg {
   width: 100%;
   padding: 6px 0;
-  background-color: transparent;
-  margin: 0 auto 6px auto;
+  margin: 0 auto 8px auto;
+  background: transparent;
   border-bottom: 1px dashed #e9ecef;
 }
 
-/* Container width and padding, following AI pages */
-.ai-container {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 8px 12px;
+/* Floating controls — compact, glassmorphism chips */
+.floating-controls {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-
-/* Floating controls to unify quick actions look */
-.floating-controls { position: fixed; z-index: 999; display: flex; align-items: center; gap: 8px; }
-.floating-controls-top { top: 8px; right: 16px; }
-.floating-controls-bottom { bottom: 8px; right: 24px; }
+.floating-controls-top { top: 12px; right: 16px; }
+.floating-controls-bottom { bottom: 12px; right: 16px; }
 .floating-controls .el-button {
-  background: #ffffff;
+  background: rgba(255,255,255,0.9);
   border: 1px solid #e9ecef;
   color: #606266;
   border-radius: 20px;
@@ -941,188 +961,122 @@ export default {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 .floating-controls .el-button i[class^='el-icon-'] { color: #76838f; }
+.floating-controls .el-button:focus { outline: 2px solid rgba(64,158,255,0.35); outline-offset: 1px; }
 
-/* Card styling to match AIResponse containers */
-.box-card {
-  width: 100%;
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  margin: 20px 0;
-}
-
-/* Make the card header visually consistent */
-.box-card >>> .el-card__header { padding: 0; }
-/* Use the existing alert as header, but flatten its spacing */
-.box-card >>> .el-card__header .el-alert { border-radius: 0; }
-
-.outline_fix { position: absolute; right: 5px; bottom: 5px; }
-.outline_fix_top_right { position: absolute; top: 5px; right: 5px; }
-.outline_fix_top_left {
-  position: absolute; text-align: left; top: 8px; left: 8px; width: auto;
-  background: rgba(0, 0, 0, 0.25);
-  color: #fff;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-.outline_fix_bottom_left { position: absolute; bottom: 5px; left: 5px; }
-.outline_fix_bottom_left_2 { position: absolute; bottom: 5px; left: 25px; }
-
-/* Align top title alert with consistent spacing */
-.header-title-alert { margin: 10px 0 0 0; }
-
-/* Responsive tweaks to mirror AI page */
-@media (max-width: 768px) {
-  .box-card { border-radius: 8px; margin: 12px 0; }
-  .row-bg { margin-bottom: 4px; }
-}
-
-/* ================= Additional polish to match AiResponseDetail ================= */
-/* Gradient title like AiResponse */
+/* Page lead/title — gradient chip with the word */
+.header-title-alert { margin: 12px 0 0 0; }
 .header-title-alert >>> .el-alert {
   background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 4px 18px rgba(64, 158, 255, 0.22);
 }
+.header-title-alert >>> .el-alert__content { padding: 14px 18px; }
 .header-title-alert >>> .el-alert__title,
 .header-title-alert >>> .el-alert__description { color: #ffffff; }
-.header-title-alert >>> .el-alert__content { padding: 12px 16px; }
 
-/* Paraphrase card header uses a vibrant gradient like selection title in AiResponse */
-.box-card >>> .el-card__header { cursor: pointer; }
+/* Paraphrase cards */
+.box-card {
+  width: 100%;
+  margin: 20px 0;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.box-card:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+
+/* Use alert as a visual header */
+.box-card >>> .el-card__header { padding: 0; border-bottom: none; cursor: pointer; }
 .box-card >>> .el-card__header .el-alert {
   background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
   color: #ffffff;
   border: none;
   border-radius: 0;
-  transition: all 0.3s ease;
+  transition: filter 0.2s ease, transform 0.2s ease;
 }
-.box-card >>> .el-card__header .el-alert:hover {
-  filter: brightness(1.03);
-  transform: translateY(-1px);
-}
+.box-card >>> .el-card__header .el-alert:hover { filter: brightness(1.03); transform: translateY(-1px); }
 .box-card >>> .el-card__header .el-alert .el-alert__title,
 .box-card >>> .el-card__header .el-alert .el-alert__description { color: #ffffff; }
 
-/* Pronunciation tags hover/interaction to feel clickable */
+/* Pronunciation chips */
 .word-detail >>> .el-tag {
   cursor: pointer;
   transition: all 0.2s ease;
+  border-radius: 999px;
+  border: 1px solid #e9ecef;
+  background: #f8fafc;
+  color: #34495e;
 }
-.word-detail >>> .el-tag:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
+.word-detail >>> .el-tag:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08); filter: brightness(1.02); }
+.word-detail >>> .el-tag .el-icon-video-play { color: #409eff; }
+.word-detail >>> .el-tag .el-icon-loading { color: #67c23a; }
+.word-detail >>> .el-tag:focus { outline: 2px solid rgba(64,158,255,0.3); outline-offset: 2px; }
 
-/* Example alerts polish */
+/* Alerts inside paraphrase body and examples */
 .word-detail >>> .el-alert.is-light {
   border: 1px solid #e9ecef;
-  border-radius: 10px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
 }
-.word-detail >>> .el-alert .el-alert__content { line-height: 1.7; }
+.word-detail >>> .el-alert.is-light::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #409eff 0%, #67c23a 100%);
+}
+.word-detail >>> .el-alert .el-alert__content { line-height: 1.7; color: #2c3e50; }
+.word-detail >>> .el-alert .el-alert__title { text-align: justify; }
 
-/* Improve divider spacing */
+/* Divider spacing */
 .word-detail >>> .el-divider { margin: 14px 0; }
 
-/* Dialog footer/button styles copied from AiResponse for consistency */
-.dialog-footer { text-align: center; padding: 16px 20px; }
-.dialog-footer .el-button {
-  margin: 0 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  min-width: 120px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-.dialog-footer .el-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-.dialog-footer .el-button--info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
-  border: none !important;
-  color: white !important;
-}
-.dialog-footer .el-button--primary {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-  border: none !important;
-  color: white !important;
-}
-.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
-  background: #f8f9fa !important;
-  border: 1px solid #e9ecef !important;
-  color: #6c757d !important;
-}
-
-/* Subtle row line to match AiResponse neutrality */
-.row-bg { border-bottom-color: #eef2f5; }
-
-/* Mobile radius alignment */
-@media (max-width: 768px) {
-  .header-title-alert >>> .el-alert { border-radius: 8px; }
-}
-
-/* ============== Word Select Dialog polish ============== */
-.word-select-dialog >>> .el-dialog__header {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: #fff;
-  border-bottom: none;
-  padding: 14px 16px;
-}
-.word-select-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
-.word-select-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
-.word-select-dialog >>> .el-dialog__body { padding-top: 10px; }
-
-/* Collapse items inside dialog */
-.word-select-dialog >>> .el-collapse-item__header {
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  padding: 10px 12px;
-  font-weight: 500;
-}
-.word-select-dialog >>> .el-collapse-item__wrap {
-  background: #ffffff;
-  border-bottom: 1px solid #f1f3f5;
-}
-.word-select-dialog >>> .el-collapse-item__content {
-  padding: 10px 16px 6px 16px;
-  color: #495057;
-}
-.word-select-dialog >>> .el-collapse-item__header:hover { background: #eef2f7; }
-
-/* Pagination styling */
-.word-select-dialog >>> .el-pagination.is-background .btn-prev,
-.word-select-dialog >>> .el-pagination.is-background .btn-next,
-.word-select-dialog >>> .el-pagination.is-background .el-pager li {
-  border-radius: 8px;
-}
-.word-select-dialog >>> .el-pagination.is-background .el-pager li.active {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: #fff;
-}
-.word-select-dialog >>> .el-pagination.is-background .el-pager li:not(.active):hover { filter: brightness(0.97); }
-
-/* Additional dialogs (collect list, confirm, help) */
+/* Dialog polish: word select, star list, confirm, help */
+.word-select-dialog >>> .el-dialog__header,
 .star-list-dialog >>> .el-dialog__header,
 .confirm-dialog >>> .el-dialog__header,
 .help-dialog >>> .el-dialog__header {
   background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
   color: #fff;
   border-bottom: none;
+  padding: 14px 16px;
 }
+.word-select-dialog >>> .el-dialog__title,
 .star-list-dialog >>> .el-dialog__title,
 .confirm-dialog >>> .el-dialog__title,
 .help-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
+.word-select-dialog >>> .el-dialog__headerbtn .el-dialog__close,
 .star-list-dialog >>> .el-dialog__headerbtn .el-dialog__close,
 .confirm-dialog >>> .el-dialog__headerbtn .el-dialog__close,
 .help-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
+.word-select-dialog >>> .el-dialog__body { padding-top: 10px; }
+
+/* Collapse in word-select dialog */
+.word-select-dialog >>> .el-collapse-item__header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 10px 12px;
+  font-weight: 500;
+}
+.word-select-dialog >>> .el-collapse-item__header:hover { background: #eef2f7; }
+.word-select-dialog >>> .el-collapse-item__wrap { background: #fff; border-bottom: 1px solid #f1f3f5; }
+.word-select-dialog >>> .el-collapse-item__content { padding: 10px 16px 6px 16px; color: #495057; }
+
+/* Pagination chips */
+.word-select-dialog >>> .el-pagination.is-background .btn-prev,
+.word-select-dialog >>> .el-pagination.is-background .btn-next,
+.word-select-dialog >>> .el-pagination.is-background .el-pager li { border-radius: 8px; }
+.word-select-dialog >>> .el-pagination.is-background .el-pager li.active {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+}
+.word-select-dialog >>> .el-pagination.is-background .el-pager li:not(.active):hover { filter: brightness(0.97); }
 
 /* Table buttons inside star list dialog */
 .star-list-dialog >>> .el-button.el-button--info {
@@ -1131,8 +1085,78 @@ export default {
   color: #fff !important;
 }
 
-/* Selection highlight consistent with AiResponse */
+/* Dialog footers */
+.dialog-footer { text-align: center; padding: 16px 20px; }
+.dialog-footer .el-button {
+  margin: 0 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
+  min-width: 120px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.dialog-footer .el-button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+.dialog-footer .el-button--info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  border: none !important;
+  color: #fff !important;
+}
+.dialog-footer .el-button--primary {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  border: none !important;
+  color: #fff !important;
+}
+.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
+  background: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  color: #6c757d !important;
+}
+
+/* Utility placements retained */
+.outline_fix { position: absolute; right: 6px; bottom: 6px; }
+.outline_fix_top_right { position: absolute; top: 6px; right: 6px; }
+.outline_fix_top_left {
+  position: absolute; top: 8px; left: 8px; width: auto;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.outline_fix_bottom_left { position: absolute; bottom: 6px; left: 6px; }
+.outline_fix_bottom_left_2 { position: absolute; bottom: 6px; left: 26px; }
+
+/* Selection color */
 .word-detail ::selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
 .word-detail ::-moz-selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
 
+/* Responsive tweaks */
+@media (max-width: 992px) {
+  .ai-container { padding: 10px 14px; }
+  .header-title-alert >>> .el-alert { border-radius: 10px; }
+}
+@media (max-width: 768px) {
+  .ai-container { padding: 8px 12px; }
+  .box-card { border-radius: 10px; margin: 14px 0; }
+  .row-bg { margin-bottom: 6px; }
+  .floating-controls { gap: 6px; padding: 4px; border-radius: 14px; }
+  .floating-controls-top { top: 10px; right: 12px; }
+  .floating-controls-bottom { bottom: 10px; right: 12px; }
+}
+@media (max-width: 420px) {
+  .floating-controls { right: 8px; }
+}
+
+/* Optional dark mode refinements */
+@media (prefers-color-scheme: dark) {
+  .row-bg { border-bottom-color: rgba(255,255,255,0.08); }
+  .ai-container { color: #e9eef3; }
+  .box-card { background: #111418; border-color: rgba(255,255,255,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+  .word-detail >>> .el-alert.is-light { background: #0f1216; border-color: rgba(255,255,255,0.08); }
+  .word-detail >>> .el-alert.is-light::before { background: linear-gradient(180deg, #65b0ff 0%, #7bd48b 100%); }
+  .word-detail >>> .el-tag { background: #12161b; border-color: rgba(255,255,255,0.08); color: #dfe6ee; }
+  .floating-controls { background: rgba(20, 24, 28, 0.6); border-color: rgba(255,255,255,0.08); }
+}
 </style>

@@ -184,9 +184,15 @@ export default {
     this.closeWebSocket('selection');
   },
   computed: {
+    // Ensure only valid AI modes are used; fallback to a safe default
+    validSelectedMode() {
+      const aiModes = Object.values(kiwiConsts.SEARCH_AI_MODES).map(m => m.value);
+      const mode = this.$route?.query?.selectedMode || this.selectedMode;
+      return aiModes.includes(mode) ? mode : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value;
+    },
     getTitle() {
-      const mode = Object.values(kiwiConsts.SEARCH_AI_MODES).find(mode => mode.value === this.selectedMode);
-      return mode ? mode.label : this.selectedMode;
+      const mode = Object.values(kiwiConsts.SEARCH_AI_MODES).find(mode => mode.value === this.validSelectedMode);
+      return mode ? mode.label : this.validSelectedMode;
     },
     parsedResponseText() {
       if (this.aiResponseVO.responseText) {
@@ -245,7 +251,8 @@ export default {
       let originalText = this.$route.query.originalText;
       let targetLanguage = this.$route.query.language ? this.$route.query.language : this.defaultTargetLanguage;
       let nativeLanguage = this.defaultNativeLanguage;
-      let selectedMode = this.$route.query.selectedMode
+      // Validate selected mode to avoid INVALID_PROMPT_MODE
+      let selectedMode = this.validSelectedMode;
 
       console.log('original text: ' + originalText + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' selectedMode: ' + selectedMode)
 

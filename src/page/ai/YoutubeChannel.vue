@@ -27,19 +27,19 @@
         <el-tab-pane label="My Channels" name="channels">
           <el-empty v-if="channels.length === 0" description="No channels added yet"></el-empty>
 
-          <!-- Channel list -->
-          <el-table v-else
+          <!-- Channel list (desktop/tablet) -->
+          <el-table v-else-if="!isSmallScreen"
               :data="channels"
               stripe
               style="width: 100%"
               @row-click="handleChannelClick">
-            <el-table-column prop="channelName" label="Channel Name" min-width="200">
+            <el-table-column prop="channelName" label="Channel Name" min-width="200" class-name="channel-name-col">
               <template slot-scope="scope">
                 <div class="channel-name">{{ scope.row.channelName }}</div>
               </template>
             </el-table-column>
             <!-- Favorite toggle -->
-            <el-table-column label="Favorite" width="130">
+            <el-table-column label="Favorite" width="130" class-name="favorite-col-cell">
               <template slot-scope="scope">
                 <el-button type="text"
                            :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
@@ -52,6 +52,30 @@
             <el-table-column width="120">
               <template slot-scope="scope">
                 <el-button type="text" size="small" @click.stop="handleChannelClick(scope.row)">View</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- Channel list (mobile) -->
+          <el-table v-else
+              :data="channels"
+              style="width: 100%">
+            <el-table-column label="Channel">
+              <template slot-scope="scope">
+                <div class="channel-row-mobile clickable" @click="handleChannelClick(scope.row)">
+                  <div class="row-top">
+                    <div class="title-text">{{ scope.row.channelName }}</div>
+                  </div>
+                  <div class="row-bottom">
+                    <el-button type="text"
+                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
+                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
+                               :disabled="isChannelPending(scope.row.channelId)"
+                               @click.stop="toggleChannelFavorite(scope.row)"></el-button>
+                    <el-button type="text" size="small" class="ml-8" @click.stop="handleChannelClick(scope.row)">View</el-button>
+                  </div>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -103,7 +127,7 @@
               </template>
             </el-table-column>
             <!-- Favorite toggle -->
-            <el-table-column label="Favorite" width="130">
+            <el-table-column label="Favorite" width="130" class-name="favorite-col-cell">
               <template slot-scope="scope">
                 <el-button type="text"
                            :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
@@ -339,7 +363,7 @@ export default {
         this.$router.push({
           path: '/index/tools/detail',
           query: { active: 'youtube', videoUrl: encodeURIComponent(url), ytbMode: 'player',
-                   ...(id ? { videoId: String(id) } : {}),
+                   ...(id ? { dbId: String(id) } : {}),
                    ...(favorited !== null && favorited !== undefined ? { favorited: String(!!favorited) } : {})
                  }
         });
@@ -504,3 +528,45 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Wrap long channel names into multiple lines and avoid horizontal scroll */
+.youtube-channel-manager .el-table td.channel-name-col .cell {
+  white-space: normal !important; /* override element-ui default nowrap */
+  word-break: break-word;
+  line-height: 1.4;
+}
+.youtube-channel-manager .channel-name {
+  white-space: inherit;
+}
+
+/* Add a bit more spacing between Status and Favorite columns */
+.youtube-channel-manager .el-table td.favorite-col-cell .cell {
+  padding-left: 16px; /* increase gap from previous column */
+}
+
+/* Mobile row layout for videos: ensure clear spacing between status tag and favorite icon */
+.video-row-mobile .row-bottom {
+  display: flex;
+  align-items: center;
+}
+.video-row-mobile .row-bottom .fav-btn {
+  margin-left: 12px !important; /* keep a comfortable distance from the status tag */
+}
+
+/* Mobile row layout for channels */
+.channel-row-mobile .row-bottom {
+  display: flex;
+  align-items: center;
+}
+.channel-row-mobile .row-bottom .fav-btn {
+  margin-right: 12px; /* spacing before View button */
+}
+
+/* Optional: ensure long titles in mobile don't overflow */
+.video-row-mobile .title-text,
+.channel-row-mobile .title-text {
+  white-space: normal;
+  word-break: break-word;
+}
+</style>

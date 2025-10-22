@@ -13,11 +13,15 @@ const isDevServer = (
 const isElectron = !isDevServer && (process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-prod')
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Backend URL
-const url = process.env.VUE_APP_API_URL || 'http://localhost:9991'
+// Backend URL handling
+// Use a localhost default for the dev-server proxy; do not inject a default for production web builds
+const devProxyTarget = process.env.VUE_APP_API_URL || 'http://localhost:9991'
+const definedApiEnv = isDevServer
+    ? devProxyTarget // during serve, allow overriding proxy target via env
+    : (process.env.VUE_APP_API_URL || '') // for build, only inject if explicitly provided; else same-origin
 
 console.log(`Building for ${isElectron ? 'Electron' : 'Web'} in ${isProduction ? 'Production' : 'Development'} mode.${isDevServer ? ' (Dev Server)' : ''}`);
-console.log(`API URL set to: ${url}`);
+console.log(`API URL set to: ${definedApiEnv || '(relative, same-origin)'}`);
 console.log(`Public path set to: ${isElectron ? './' : '/'} (devServer=${isDevServer})`);
 
 // Use absolute path for web/dev-server, relative for packaged Electron
@@ -58,7 +62,7 @@ module.exports = {
             new webpack.DefinePlugin({
                 'process.env': {
                     NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-                    VUE_APP_API_URL: JSON.stringify(process.env.VUE_APP_API_URL || url)
+                    VUE_APP_API_URL: JSON.stringify(definedApiEnv)
                 }
             }),
 
@@ -309,12 +313,12 @@ module.exports = {
         compress: true,
         // Always enable proxy during dev-server to avoid hitting the dev server with API paths directly
         proxy: {
-            '/auth': { target: url, ws: true, changeOrigin: true, secure: false },
-            '/wordBiz': { target: url, ws: true, changeOrigin: true, secure: false },
-            '/ai-biz': { target: url, ws: true, changeOrigin: true, secure: false },
-            '/code': { target: url, ws: true, changeOrigin: true, secure: false },
-            '/admin': { target: url, ws: true, changeOrigin: true, secure: false },
-            '/tools': { target: url, ws: true, changeOrigin: true, secure: false }
+            '/auth': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
+            '/wordBiz': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
+            '/ai-biz': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
+            '/code': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
+            '/admin': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
+            '/tools': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false }
         }
     },
 
