@@ -113,33 +113,7 @@
         </div>
       </div>
 
-      <el-divider class="custom-divider"></el-divider>
-
-      <!-- Acknowledgments Section -->
-      <div class="acknowledgments-section">
-        <h4 class="section-title">
-          <i class="el-icon-star-on"></i>
-          {{ $t('about.acknowledgments') }}
-        </h4>
-        <div class="service-provider">
-          <div class="provider-info">
-            <div class="provider-header">
-              <i class="el-icon-microphone"></i>
-              <span class="provider-name">Voice RSS</span>
-            </div>
-            <p class="provider-description">{{ $t('about.voiceRSSDescription') }}</p>
-            <a href="http://www.voicerss.org" target="_blank" class="provider-link">
-              <img src="/assets/external/info_dark_brown.gif"
-                   width="88px" height="31"
-                   style="border: 0"
-                   :alt="$t('about.voiceRSSAttribution')"
-                   class="provider-badge"/>
-              <span class="link-text">{{ $t('about.visitWebsite') }}</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
+      <!-- Keep a single divider between Contact and Copyright -->
       <el-divider class="custom-divider"></el-divider>
 
       <!-- Copyright Section -->
@@ -154,22 +128,8 @@
 </template>
 
 <script>
-import db from "@/util/db";
-import kiwiConst from "@/const/kiwiConsts";
-
-let that
-
 export default {
   name: 'about',
-  data() {
-    return {}
-  },
-  beforeCreate: function () {
-    that = this
-  },
-  mounted() {
-  },
-  methods: {}
 }
 </script>
 
@@ -210,8 +170,7 @@ export default {
 }
 
 .about-section,
-.contact-section,
-.acknowledgments-section {
+.contact-section {
   margin-bottom: 24px;
   background: white;
   border-radius: 12px;
@@ -396,6 +355,7 @@ export default {
   font-style: italic;
 }
 
+/* Keep provider styles removed section harmless if used elsewhere */
 .service-provider {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   border: 1px solid rgba(64, 158, 255, 0.1);
@@ -510,9 +470,7 @@ export default {
   animation: fadeInUp 0.6s ease 0.2s both;
 }
 
-.acknowledgments-section {
-  animation: fadeInUp 0.6s ease 0.3s both;
-}
+/* Removed acknowledgments-section animations */
 
 .copyright-section {
   animation: fadeInUp 0.6s ease 0.4s both;
@@ -535,8 +493,7 @@ export default {
   }
 
   .about-section,
-  .contact-section,
-  .acknowledgments-section {
+  .contact-section {
     padding: 16px;
     margin-bottom: 16px;
   }

@@ -2,7 +2,7 @@
   <div class="task-input">
     <el-form :model="newTask" class="task-form" label-position="top">
       <div class="form-row form-row-inline align-end">
-        <el-form-item :label="$t('todo.task')" class="flex-1 mr-8">
+        <el-form-item class="flex-1 mr-8">
           <el-input
             v-model="newTask.title"
             :placeholder="$t('todo.enterTaskTitle')"
@@ -10,13 +10,11 @@
             class="w-100"
           />
         </el-form-item>
-        <div class="add-btn-container">
-          <el-button type="primary" :disabled="!canAdd" icon="el-icon-plus" @click="handleAdd">{{ $t('todo.addTask') }}</el-button>
-        </div>
+        <!-- Moved Add button to the bottom action row -->
       </div>
 
       <div class="form-row">
-        <el-form-item :label="$t('todo.description')">
+        <el-form-item>
           <el-input
             v-model="newTask.description"
             type="textarea"
@@ -28,17 +26,33 @@
       </div>
 
       <div class="form-row form-row-inline">
-        <el-form-item :label="$t('todo.successPoints')" class="mr-8">
-          <el-input-number v-model="newTask.successPoints" :min="1" :max="100" size="small" />
+        <el-form-item class="mr-8">
+          <el-input-number
+            v-model="newTask.successPoints"
+            :min="1"
+            :max="100"
+            :step="1"
+            size="small"
+            class="numeric-input"
+            :placeholder="$t('todo.successPoints')"
+          />
         </el-form-item>
-        <el-form-item :label="$t('todo.failPoints')">
-          <el-input-number v-model="newTask.failPoints" :min="-100" :max="0" size="small" />
+        <el-form-item>
+          <el-input-number
+            v-model="newTask.failPoints"
+            :min="-100"
+            :max="0"
+            :step="1"
+            size="small"
+            class="numeric-input"
+            :placeholder="$t('todo.failPoints')"
+          />
         </el-form-item>
       </div>
 
       <div class="form-row form-row-inline">
-        <el-form-item :label="$t('todo.frequency')" class="mr-8">
-          <el-select v-model="newTask.frequency" class="w-100" size="small">
+        <el-form-item class="mr-8">
+          <el-select v-model="newTask.frequency" class="w-100" size="small" :placeholder="$t('todo.frequency')">
             <el-option label="One-time" value="once" />
             <el-option label="Daily" value="daily" />
             <el-option label="Weekly" value="weekly" />
@@ -46,9 +60,22 @@
             <el-option label="Custom Days" value="custom" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="newTask.frequency === 'custom'" :label="$t('todo.everyNDays')">
-          <el-input-number v-model="newTask.customDays" :min="2" :max="365" size="small" />
+        <el-form-item v-if="newTask.frequency === 'custom'">
+          <el-input
+            v-model.number="newTask.customDays"
+            type="number"
+            size="small"
+            :min="2"
+            :max="365"
+            :placeholder="$t('todo.everyNDays')"
+            class="numeric-input"
+          />
         </el-form-item>
+      </div>
+
+      <!-- Bottom action row -->
+      <div class="form-row form-actions">
+        <el-button type="primary" :disabled="!canAdd" icon="el-icon-plus" @click="handleAdd">{{ $t('todo.addTask') }}</el-button>
       </div>
     </el-form>
   </div>
@@ -91,18 +118,15 @@ export default {
 .form-row-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .align-end { align-items: flex-end; }
 .flex-1 { flex: 1 1 auto; min-width: 260px; }
-.add-btn-container { align-self: flex-end; display: flex; align-items: flex-end; }
+
+/* New bottom action row alignment */
+.form-actions { display: flex; justify-content: flex-end; }
 
 /* Tighter spacing between form items */
-::v-deep .el-form-item { margin-bottom: 8px; }
+::v-deep .el-form-item { margin-bottom: 8px; margin-left: 0; }
 
-/* Label styling (label-position=top) */
-::v-deep .el-form-item__label {
-  font-weight: 600;
-  color: #606266;
-  padding: 0 0 4px 0;
-  line-height: 1.2;
-}
+/* Numeric input consistent width */
+.numeric-input { width: 140px; }
 
 /* Inputs and selects */
 ::v-deep .el-input__inner,
@@ -133,15 +157,6 @@ export default {
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
 }
 
-/* Number inputs - consistent width and style */
-::v-deep .el-input-number { width: 140px; }
-::v-deep .el-input-number .el-input__inner { text-align: center; }
-::v-deep .el-input-number__decrease,
-::v-deep .el-input-number__increase {
-  background: #f5f7fa;
-  border-color: #e4e7ed;
-}
-
 /* Primary button alignment and style */
 ::v-deep .el-button--primary {
   border-radius: 8px;
@@ -156,8 +171,7 @@ export default {
 /* Responsive: stack button under input on narrow screens */
 @media (max-width: 600px) {
   .form-row-inline { flex-direction: column; align-items: stretch; gap: 8px; }
-  .add-btn-container { margin-top: 8px; }
   .flex-1 { min-width: 100%; }
-  ::v-deep .el-input-number { width: 100%; }
+  .numeric-input { width: 100%; }
 }
 </style>

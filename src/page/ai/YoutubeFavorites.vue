@@ -87,7 +87,9 @@
         <div v-if="loading" class="loading-container"><el-skeleton :rows="3" animated/></div>
         <template v-else>
           <el-empty v-if="favoriteChannels.length === 0" description="No favorite channels" />
-          <el-table v-else :data="favoriteChannels" stripe style="width: 100%">
+
+          <!-- Desktop/tablet table -->
+          <el-table v-else-if="!isSmallScreen" :data="favoriteChannels" stripe style="width: 100%">
             <el-table-column prop="channelName" label="Channel Name" min-width="200">
               <template slot-scope="scope">
                 <div class="channel-name">{{ scope.row.channelName }}</div>
@@ -106,6 +108,28 @@
             <el-table-column width="120">
               <template slot-scope="scope">
                 <el-button type="text" size="small" @click="goToChannel(scope.row)">View</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- Mobile stacked, multi-line items to avoid horizontal scroll -->
+          <el-table v-else :data="favoriteChannels" style="width: 100%">
+            <el-table-column label="Channel">
+              <template slot-scope="scope">
+                <div class="channel-row-mobile">
+                  <div class="row-top">
+                    <div class="title-text">{{ scope.row.channelName }}</div>
+                  </div>
+                  <div class="row-bottom">
+                    <el-button type="text"
+                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
+                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
+                               :disabled="isChannelPending(scope.row.channelId)"
+                               @click.stop="toggleChannelFavorite(scope.row)"></el-button>
+                    <el-button type="text" size="small" class="ml-8" @click="goToChannel(scope.row)">View</el-button>
+                  </div>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -294,7 +318,7 @@ export default {
 .pagination-container { margin-top: 20px; text-align: right; }
 .channel-name { display: flex; align-items: center; justify-content: space-between; }
 .video-title { display: flex; flex-direction: column; }
-.title-text { font-weight: 500; }
+.title-text { font-weight: 500; word-break: break-word; white-space: normal; }
 .video-published { display: flex; flex-direction: column; }
 .video-published .rel { font-weight: 500; }
 .video-published .abs { font-size: 12px; color: #909399; }
@@ -304,9 +328,12 @@ export default {
 .video-row-mobile .row-middle .rel { font-weight: 500; }
 .video-row-mobile .row-middle .sep { margin: 0 6px; color: #909399; }
 .video-row-mobile .row-bottom { margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+/* New: channel mobile row to avoid horizontal scroll */
+.channel-row-mobile { display: flex; flex-direction: column; padding: 8px 0; }
+.channel-row-mobile .row-top { display: flex; align-items: center; }
+.channel-row-mobile .row-bottom { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .clickable { cursor: pointer; }
 .ml-8 { margin-left: 8px; }
 .fav-btn { color: #C0C4CC; }
 .fav-btn.favorited { color: #f7ba2a; }
 </style>
-
