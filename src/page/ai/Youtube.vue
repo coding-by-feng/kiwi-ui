@@ -3,13 +3,15 @@
     <!-- Mode toggle control -->
     <div class="ytb-mode-switch">
       <el-radio-group v-model="currentMode" size="mini" @change="handleModeChange">
+        <el-radio-button :label="modes.FAVORITES">Favorites</el-radio-button>
         <el-radio-button :label="modes.CHANNEL">Channel</el-radio-button>
         <el-radio-button :label="modes.PLAYER">Player</el-radio-button>
       </el-radio-group>
     </div>
 
     <!-- Conditionally render Channel manager or Player based on route ytbMode -->
-    <youtube-channel v-if="currentMode === modes.CHANNEL" />
+    <youtube-favorites v-if="currentMode === modes.FAVORITES" />
+    <youtube-channel v-else-if="currentMode === modes.CHANNEL" />
     <youtube-player v-else :video-url="selectedVideoUrl" />
   </div>
 </template>
@@ -17,13 +19,15 @@
 <script>
 import YoutubePlayer from '@/page/ai/YoutubePlayer.vue'
 import YoutubeChannel from '@/page/ai/YoutubeChannel.vue'
+import YoutubeFavorites from '@/page/ai/YoutubeFavorites.vue'
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'YoutubePage',
   components: {
     YoutubePlayer,
-    YoutubeChannel
+    YoutubeChannel,
+    YoutubeFavorites
   },
   data() {
     return {
@@ -52,7 +56,8 @@ export default {
     initFromRoute() {
       const q = this.$route.query || {}
       // Determine mode from query, default to channel
-      const mode = (q.ytbMode === this.modes.PLAYER || q.ytbMode === this.modes.CHANNEL) ? q.ytbMode : this.modes.CHANNEL
+      const allowed = [this.modes.PLAYER, this.modes.CHANNEL, this.modes.FAVORITES]
+      const mode = allowed.includes(q.ytbMode) ? q.ytbMode : this.modes.CHANNEL
 
       // If ytbMode is missing, normalize URL to include default to improve deep-link consistency
       if (!q.ytbMode) {
@@ -76,11 +81,6 @@ export default {
     // Handle UI toggle to switch modes and persist to URL
     handleModeChange(val) {
       const q = { ...(this.$route.query || {}) }
-      // Preserve existing params (like videoUrl) and only change ytbMode
-      if (val !== this.modes.PLAYER) {
-        // Keep videoUrl in query so user can switch back without retyping
-        // Do nothing special here, just switch mode
-      }
       this.$router.replace({
         path: this.$route.path,
         query: { ...q, ytbMode: val }
