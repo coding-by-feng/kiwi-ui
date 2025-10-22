@@ -17,7 +17,6 @@ function getEnv(key) {
 
 let baseUrl = '';
 let codeUrl = '/code';
-let encodeKey = 'MyKiwiVocabulary';
 
 // Configure API base URLs based on environment
 if (isElectron) {
@@ -40,10 +39,10 @@ if (isElectron) {
         baseUrl = provided || '';
         codeUrl = provided ? `${provided}/code` : '/code';
     } else if (env.NODE_ENV === 'production') {
-        // Production configuration - use provided server URL or default local
+        // Production configuration - default to same-origin (relative) unless explicitly provided
         const provided = getEnv('VUE_APP_API_URL');
-        baseUrl = provided || 'http://localhost:9991'; // Update to your production URL if needed
-        codeUrl = `${baseUrl}/code`;
+        baseUrl = provided || '';
+        codeUrl = provided ? `${provided}/code` : '/code';
     } else if (env.NODE_ENV === 'test') {
         // Test configuration
         baseUrl = 'http://localhost:9991';

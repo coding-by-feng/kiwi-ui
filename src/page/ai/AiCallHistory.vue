@@ -106,43 +106,63 @@
           </div>
 
           <div class="history-item-actions">
-            <el-button
-                type="primary"
-                size="small"
+            <!-- Icon-only compact action buttons with tooltips -->
+            <el-tooltip content="Review" placement="top">
+              <el-button
+                class="action-btn"
+                size="mini"
+                circle
                 icon="el-icon-search"
-                @click="searchAgain(record)">
-              Review
-            </el-button>
-            <el-button
-                type="primary"
-                size="small"
+                :aria-label="'Review'"
+                @click="searchAgain(record)"
+              />
+            </el-tooltip>
+
+            <el-tooltip content="Copy" placement="top">
+              <el-button
+                class="action-btn"
+                size="mini"
+                circle
                 icon="el-icon-document-copy"
-                @click="copyPrompt(record.prompt)">
-              Copy
-            </el-button>
-            <el-button
-                type="primary"
-                size="small"
+                :aria-label="'Copy prompt'"
+                @click="copyPrompt(record.prompt)"
+              />
+            </el-tooltip>
+
+            <el-tooltip content="Details" placement="top">
+              <el-button
+                class="action-btn"
+                size="mini"
+                circle
                 icon="el-icon-view"
-                @click="viewDetails(record)">
-              Details
-            </el-button>
-            <el-button
-                type="primary"
-                size="small"
+                :aria-label="'Details'"
+                @click="viewDetails(record)"
+              />
+            </el-tooltip>
+
+            <el-tooltip content="Archive" placement="top">
+              <el-button
+                class="action-btn"
+                size="mini"
+                circle
                 icon="el-icon-box"
+                :aria-label="'Archive'"
                 @click="archiveItem(record.id)"
-                :loading="archivingIds.includes(record.id)">
-              Archive
-            </el-button>
-            <el-button
-                type="primary"
-                size="small"
+                :loading="archivingIds.includes(record.id)"
+              />
+            </el-tooltip>
+
+            <el-tooltip content="Delete" placement="top">
+              <el-button
+                class="action-btn"
+                size="mini"
+                circle
                 icon="el-icon-delete"
+                :aria-label="'Delete'"
                 @click="confirmDelete(record.id)"
-                :loading="deletingIds.includes(record.id)">
-              Delete
-            </el-button>
+                :loading="deletingIds.includes(record.id)"
+              />
+            </el-tooltip>
           </div>
         </el-card>
 
@@ -686,101 +706,59 @@ export default {
 
 .history-item-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   padding-top: 10px;
   border-top: 1px solid #f0f2f5;
-  gap: 6px;
-  overflow: hidden;
-  box-sizing: border-box;
-  align-items: center;
+  /* Keep on a single line with horizontal scroll if needed */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-.history-item-actions .el-button {
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  border: none !important;
-  padding: 8px 16px !important;
-  min-width: 80px !important;
+/* Compact icon-only action button */
+.history-item-actions .action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 1px solid #e4e7ed !important;
+  background: #fff !important;
+  color: #606266 !important;
+  box-shadow: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
 }
 
-.history-item-actions .el-button--primary {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-  color: white !important;
+.history-item-actions .action-btn:hover:not(.is-loading) {
+  background: #f5f7fa !important;
+  color: #303133 !important;
+  border-color: #cfd4dc !important;
 }
 
-.history-item-actions .el-button--primary:hover:not(.is-loading) {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--primary:focus {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--info {
-  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--info:hover:not(.is-loading) {
-  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--info:focus {
-  background: linear-gradient(135deg, #138496 0%, #1e7e34 100%) !important;
-  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--danger {
-  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--danger:hover:not(.is-loading) {
-  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button--danger:focus {
-  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
-  box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.3) !important;
-  color: white !important;
-}
-
-.history-item-actions .el-button:not(.el-button--primary):not(.el-button--info):not(.el-button--danger) {
-  background: #f8f9fa !important;
-  border: 1px solid #e9ecef !important;
-  color: #6c757d !important;
-}
-
-.history-item-actions .el-button:not(.el-button--primary):not(.el-button--info):not(.el-button--danger):hover:not(.is-loading) {
-  background: #e9ecef !important;
-  border-color: #dee2e6 !important;
-  color: #495057 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-.history-item-actions .el-button.is-loading {
+.history-item-actions .action-btn:active {
   transform: none !important;
-  opacity: 0.8;
 }
 
-.history-item-actions .el-button:active {
-  transform: translateY(0px) !important;
+.history-item-actions .action-btn [class^="el-icon-"],
+.history-item-actions .action-btn [class*=" el-icon-"] {
+  font-size: 16px;
+}
+
+/* Override previous large/button styles within actions for these icon buttons */
+.history-item-actions .action-btn.el-button--primary,
+.history-item-actions .action-btn.el-button--info,
+.history-item-actions .action-btn.el-button--danger {
+  background: #fff !important;
+  color: #606266 !important;
+}
+
+/* Remove previous button sizing overrides inside actions */
+.history-item-actions .el-button {
+  border-radius: 8px;
+  /* Keep other buttons (if any) reasonable, but our .action-btn overrides apply with !important */
 }
 
 .filter-row .el-button {
@@ -834,11 +812,10 @@ export default {
     width: 100%;
   }
   
+  /* Keep actions on a single line; allow horizontal scroll on mobile */
   .history-item-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding-top: 15px;
+    gap: 10px;
+    padding-top: 12px;
   }
   
 }
@@ -856,11 +833,10 @@ export default {
     padding: 10px;
   }
   
+  /* Ensure action buttons remain single-line with scroll */
   .history-item-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding-top: 15px;
+    gap: 10px;
+    padding-top: 12px;
   }
   
   .history-item-header {
@@ -992,7 +968,7 @@ export default {
   }
 
   .history-item-actions {
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .detail-dialog {
