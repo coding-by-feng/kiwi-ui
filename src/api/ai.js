@@ -97,6 +97,57 @@ export function getChannelVideos(channelId, current, size) {
     })
 }
 
+// Favorites API
+export function favoriteChannel(channelId) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/${channelId}/favorite`,
+    method: 'post',
+    headers: { isToken: true }
+  })
+}
+
+export function unfavoriteChannel(channelId) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/${channelId}/favorite`,
+    method: 'delete',
+    headers: { isToken: true }
+  })
+}
+
+export function favoriteVideo(videoId) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/video/${videoId}/favorite`,
+    method: 'post',
+    headers: { isToken: true }
+  })
+}
+
+export function unfavoriteVideo(videoId) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/video/${videoId}/favorite`,
+    method: 'delete',
+    headers: { isToken: true }
+  })
+}
+
+export function getFavoriteChannels(current, size) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/favorites/channels`,
+    method: 'get',
+    params: { current, size },
+    headers: { isToken: true }
+  })
+}
+
+export function getFavoriteVideos(current, size) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/favorites/videos`,
+    method: 'get',
+    params: { current, size },
+    headers: { isToken: true }
+  })
+}
+
 // YouTube Video-related API calls - UPDATED FOR SEPARATED ENDPOINTS
 export function downloadVideoScrollingSubtitles(videoUrl) {
     const url = `/ai-biz/ai/ytb/video/subtitles/scrolling?url=${encodeURIComponent(videoUrl)}`;

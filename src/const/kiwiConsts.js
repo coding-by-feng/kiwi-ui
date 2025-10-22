@@ -284,7 +284,8 @@ export default {
 
     YTB_MODE: {
         PLAYER: 'player',
-        CHANNEL: 'channel'
+        CHANNEL: 'channel',
+        FAVORITES: 'favorites'
     },
 
     AI_MODE_TAG: {

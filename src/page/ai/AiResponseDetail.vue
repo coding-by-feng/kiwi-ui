@@ -62,7 +62,7 @@
         <i class="el-icon-chat-dot-square"></i>
         Explanation for Selected Text
         <!-- Control buttons in the title bar -->
-        <div class="selection-title-controls">
+        <span class="selection-title-controls">
           <el-button
               class="fold-selection-button"
               type="text"
@@ -79,7 +79,7 @@
               :disabled="selectionApiLoading"
               title="Close explanation"
           ></el-button>
-        </div>
+        </span>
       </h3>
       <div class="selected-text-reference">
         <strong>Selected:</strong> "{{ lastSelectedText }}"
@@ -87,21 +87,21 @@
       <div
           v-show="!selectionContentCollapsed"
           class="selection-response-content"
-          v-loading="selectionApiLoading"
+          v-loading="selectionApiLoading && !isSelectionStreaming"
       >
-        <div v-if="isSelectionStreaming" class="streaming-indicator">
+        <div v-show="isSelectionStreaming" class="streaming-indicator">
           <i class="el-icon-loading"></i> Generating explanation...
         </div>
-        <div v-else v-html="parsedSelectionResponse"></div>
+        <div v-html="parsedSelectionResponse"></div>
       </div>
     </div>
 
     <!-- Original Response Container -->
     <div class="response-container">
-      <div v-if="isStreaming" class="streaming-indicator">
+      <div v-show="isStreaming" class="streaming-indicator">
         <i class="el-icon-loading"></i> Streaming response...
       </div>
-      <div v-else v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading"></div>
+      <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading && !isStreaming"></div>
       <el-button
           v-if="!apiLoading && parsedResponseText"
           class="copy-button"
@@ -662,9 +662,9 @@ export default {
       // Unescape common escaped characters
       return content
           .replace(/\\n/g, '\n')        // Convert \\n to actual newlines
-          .replace(/\\t/g, '\t')        // Convert \\t to actual tabs
-          .replace(/\\"/g, '"')         // Convert \\" to actual quotes
-          .replace(/\\\\/g, '\\');      // Convert \\\\ to single backslash
+          .replace(/\\t/g, '\t')        // Convert \\\t to actual tabs
+          .replace(/\\"/g, '"')         // Convert \\\" to actual quotes
+          .replace(/\\\\/g, '\\');      // Convert \\\\\\ to single backslash
     },
 
     copyResponseText() {
@@ -851,7 +851,7 @@ export default {
 
 /* Selection title controls styling */
 .selection-title-controls {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
 }

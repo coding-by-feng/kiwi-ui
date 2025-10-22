@@ -116,6 +116,21 @@
             <i class="el-icon-location-information"></i>
           </span>
         </div>
+        <!-- Favorite button moved to top controls bar -->
+        <div class="switch-group favorite-top-group">
+          <el-tooltip :content="canFavorite ? (isFavorited ? 'Unfavorite this video' : 'Favorite this video') : 'Load a video to favorite'" placement="top">
+            <el-button
+              :icon="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+              :class="['favorite-btn', isFavorited ? 'favorited' : '']"
+              circle
+              size="small"
+              :loading="pendingFavorite"
+              :disabled="pendingFavorite || !canFavorite"
+              @click.stop="toggleFavoriteOnPlayer"
+              aria-label="Favorite toggle"
+            />
+          </el-tooltip>
+        </div>
       </div>
     </div>
 
@@ -318,7 +333,7 @@
 
 <script>
 import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, deleteVideoSubtitles} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, deleteVideoSubtitles, favoriteVideo, unfavoriteVideo} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
@@ -335,12 +350,28 @@ export default defineComponent({
   name: 'YoutubeSubtitleDownloader',
   data() {
     const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
+    // Normalize stored translation toggle to an actual boolean; default OFF.
+    const storedIfTranslationRaw = getStore({ name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION });
+    const normalizedIfTranslation = (() => {
+      if (typeof storedIfTranslationRaw === 'boolean') return storedIfTranslationRaw;
+      if (typeof storedIfTranslationRaw === 'string') {
+        const v = storedIfTranslationRaw.toLowerCase();
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+      }
+      return false; // default OFF
+    })();
     return {
       videoUrl: null,
-      ifTranslation: getStore({name: kiwiConsts.CONFIG_KEY.IF_SUBTITLES_TRANSLATION}) || false,
+      ifTranslation: normalizedIfTranslation,
       selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) || null,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
+      // Use existing videoId field to store current video ID from route
       videoId: null,
+      // New: single favorite state for player view
+      isFavorited: false,
+      pendingFavorite: false,
+
       subtitles: [],
       translatedSubtitles: '',
       scrollingSubtitles: '',
@@ -362,6 +393,8 @@ export default defineComponent({
       showSelectionPopup: false,
       isPlaying: false,
       videoReady: false,
+      // New: flag for YouTube IFrame API readiness
+      youtubeApiReady: false,
 
       // WebSocket streaming
       websocket: null,
@@ -411,6 +444,10 @@ export default defineComponent({
     },
     currentProgress() {
       return this.isTranslationLoading ? this.translationProgress : this.subtitlesLoadingProgress;
+    },
+    // New: whether a single video can be favorited (requires a valid videoId)
+    canFavorite() {
+      return !!this.videoId;
     }
   },
   watch: {
@@ -429,6 +466,21 @@ export default defineComponent({
         }
       }
     },
+    // New: keep id and favorited in sync with query
+    '$route.query.videoId': {
+      handler(val) {
+        this.videoId = val ? String(val) : null;
+      },
+      immediate: true
+    },
+    '$route.query.favorited': {
+      handler(val) {
+        if (val === undefined || val === null) return;
+        const v = String(val).toLowerCase();
+        this.isFavorited = v === 'true' || v === '1';
+      },
+      immediate: true
+    },
     currentSubtitleIndex(newVal, oldVal) {
       if (this.autoCenterEnabled && newVal !== oldVal) {
         this.$nextTick(() => this.scrollActiveSubtitleIntoView());
@@ -443,11 +495,47 @@ export default defineComponent({
       this.videoUrl = decodeURIComponent(videoUrl);
       this.loadContent();
     }
+
+    // Initialize id and favorited from route once on mount
+    const q = this.$route.query || {};
+    this.videoId = q.videoId ? String(q.videoId) : this.videoId;
+    if (q.favorited !== undefined) {
+      const v = String(q.favorited).toLowerCase();
+      this.isFavorited = v === 'true' || v === '1';
+    }
   },
   beforeUnmount() {
     this.cleanup();
   },
   methods: {
+    // Favorite toggle for player
+    async toggleFavoriteOnPlayer() {
+      if (!this.canFavorite || this.pendingFavorite) return;
+      const id = this.videoId;
+      const prev = !!this.isFavorited;
+      // optimistic update
+      this.pendingFavorite = true;
+      this.isFavorited = !prev;
+      try {
+        const api = this.isFavorited ? favoriteVideo : unfavoriteVideo;
+        const res = await api(id);
+        if (!(res && res.data && res.data.code === 1)) {
+          throw new Error((res && res.data && res.data.msg) || 'Favorite toggle failed');
+        }
+        // Optional: reflect back to route for consistency
+        const q = { ...(this.$route.query || {}) };
+        if (String(q.favorited).toLowerCase() !== String(this.isFavorited)) {
+          this.$router.replace({ path: this.$route.path, query: { ...q, favorited: String(this.isFavorited) } });
+        }
+      } catch (e) {
+        // rollback
+        this.isFavorited = prev;
+        this.$message && this.$message.error ? this.$message.error(e.message || 'Failed to toggle favorite') : console.error(e);
+      } finally {
+        this.pendingFavorite = false;
+      }
+    },
+
     // Initialization
     initializeComponent() {
       this.loadYouTubeAPI();
@@ -706,7 +794,14 @@ export default defineComponent({
       await this.initializePlayer();
     },
 
+    // Load the YouTube IFrame API and mark readiness
     loadYouTubeAPI() {
+      // If API already present, mark ready immediately
+      if (window.YT && window.YT.Player) {
+        this.youtubeApiReady = true;
+        return;
+      }
+
       if (!document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'youtube-api-script';
@@ -714,11 +809,37 @@ export default defineComponent({
         document.head.appendChild(tag);
       }
 
-      window.onYouTubeIframeAPIReady = () => {
-        if (this.videoId) {
-          this.initializePlayer();
+      // Assign or wrap the global callback to update readiness state
+      const self = this;
+      const prevCb = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function() {
+        self.youtubeApiReady = true;
+        if (typeof prevCb === 'function') {
+          try { prevCb(); } catch (e) { /* no-op */ }
         }
       };
+    },
+
+    // Wait until the YouTube API is ready (or timeout)
+    ensureYouTubeAPIReady(timeout = 15000) {
+      if (this.youtubeApiReady || (window.YT && window.YT.Player)) {
+        this.youtubeApiReady = true;
+        return Promise.resolve();
+      }
+      return new Promise((resolve, reject) => {
+        const start = Date.now();
+        const check = () => {
+          if (this.youtubeApiReady || (window.YT && window.YT.Player)) {
+            this.youtubeApiReady = true;
+            resolve();
+          } else if (Date.now() - start >= timeout) {
+            reject(new Error('YouTube API failed to load in time'));
+          } else {
+            setTimeout(check, 100);
+          }
+        };
+        check();
+      });
     },
 
     async initializePlayer() {
@@ -775,6 +896,9 @@ export default defineComponent({
         this.videoId = videoId;
         this.statusMessage = 'Initializing player...';
 
+        // Ensure the YouTube IFrame API is ready before creating the player
+        await this.ensureYouTubeAPIReady();
+
         await this.initializePlayer();
 
         this.isLoading = false;
@@ -785,7 +909,7 @@ export default defineComponent({
 
       } catch (error) {
         console.error('Error loading content:', error);
-        this.statusMessage = 'Failed to load content';
+        this.statusMessage = error && error.message ? error.message : 'Failed to load content';
         this.isLoading = false;
       }
     },
@@ -2147,37 +2271,22 @@ export default defineComponent({
 }
 
 .active-subtitle {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: white;
-  border-radius: 8px;
-  transform: translateX(8px);
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
-  font-weight: 600;
-  scroll-margin-top: 40px;
-  scroll-margin-bottom: 40px;
-}
-
-.active-subtitle::before {
-  background: white;
+  background: #fffbe6; /* light highlight */
+  color: #000;
+  border-radius: 6px;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(230, 162, 60, 0.25);
+  transform: none;
 }
 
 .past-subtitle {
-  color: #909399;
-  background: #f8f9fa;
-  border-color: #e9ecef;
+  color: #8a8a8a;
+  background: #fafafa;
+  border-color: #efefef;
 }
-
-.past-subtitle::before {
-  background: #e9ecef;
-}
-
 .future-subtitle {
   color: #606266;
-  background: white;
-}
-
-.future-subtitle::before {
-  background: #f0f2f5;
+  background: #fff;
 }
 
 .scroll-filler {
@@ -2618,6 +2727,16 @@ export default defineComponent({
   .subtitles-wrapper {
     scroll-behavior: auto !important;
   }
+}
+
+/* Favorite overlay styles */
+/* .favorite-overlay { display: none; } */
+.favorite-top-group .favorite-btn {
+  background: rgba(255,255,255,0.95);
+  color: #909399;
+}
+.favorite-top-group .favorite-btn.favorited {
+  color: #f7ba2a;
 }
 </style>
 
