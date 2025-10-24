@@ -59,7 +59,10 @@ export default {
         open: '打开',
         download: '下载',
         upload: '上传',
-        default: '默认'
+        default: '默认',
+        all: '全部',
+        configure: '配置',
+        done: '完成'
     },
 
     // Navigation
@@ -90,7 +93,11 @@ export default {
         features: {
             intelligentMemory: '智能词汇记忆',
             pronunciation: '纯正发音练习',
-            personalizedPlan: '个性化学习计划'
+            personalizedPlan: '个性化学习计划',
+            aiAssistantModes: 'AI 助手多种强大模式',
+            bilingualEnEn: '英英释义并配中文讲解',
+            youtubePlayer: 'YouTube 播放器学习',
+            todoGamified: '待办和游戏化学习'
         },
         brand: {
             title: 'Kason英语学习平台',
@@ -136,7 +143,47 @@ export default {
         synonym: '同义词',
         antonym: '反义词',
         vocabularyAssociation: '词汇关联',
-        phrasesAssociation: '短语关联'
+        phrasesAssociation: '短语关联',
+        selectMode: '选择模式'
+    },
+
+    // User and settings (新增完整用户中心配置)
+    user: {
+        profile: '个人中心',
+        loginOut: '退出登录',
+        welcomeBack: '欢迎回来',
+        loginWith: '登录方式',
+        useGoogleAccount: '使用谷歌账户登录',
+        learningStats: '学习统计',
+        todayRemembered: '今日记住',
+        todayReviewed: '今日复习',
+        todayMastered: '今日掌握',
+        learningSettings: '学习设置',
+        pronunciationSource: '发音来源',
+        nativeLanguage: '母语',
+        backgroundMusic: '背景音乐',
+        letterSpelling: '字母拼写',
+        englishDefinition: '英文释义',
+        messageHints: '消息提示',
+        playExamples: '示例播放',
+        englishToEnglish: '英英模式',
+        defaultLanguage: '默认语言',
+        unknownLanguage: '未知语言',
+        registerSource: {
+            local: '本地注册',
+            google: 'Google 注册',
+            wechat: '微信注册',
+            qq: 'QQ 注册',
+            unknown: '未知来源'
+        },
+        clipboardDetection: '剪贴板检测',
+        clipboardDetectionTooltip: '当切换标签或搜索框为空时，自动检测剪贴板内容并提示使用',
+        // 热键配置
+        searchModeHotkeys: '搜索模式快捷键',
+        searchModeHotkeysTip: '按下 Ctrl（或 macOS 上的 Cmd）+ Shift + 数字 来切换模式',
+        resetToDefaults: '恢复默认',
+        hotkey: '快捷键',
+        pressKeys: '请按下按键...'
     },
 
     // Todo Gamification
@@ -192,16 +239,18 @@ export default {
         freqMonthly: '每月',
         freqEveryNDays: '每 {days} 天',
         freqOnce: '一次性',
+        customDays: '自定义天数',
 
         // 重置单个任务状态
         taskStatusReset: '任务状态已重置为待处理',
 
-        // 重置全部
+        // 重置全部（新增按钮文案）
+        resetAllToPending: '全部重置为待处理',
         resetAllConfirm: '这将把所有任务重置为“待处理”。是否继续？',
         resetAll: '全部重置',
         resetAllDone: '已将所有适用任务重置为待处理',
 
-        // 垃圾箱相关
+        // 垃圾箱相关（完善）
         clearTrashConfirm: '这将永久删除垃圾箱中的所有项目，且无法恢复。是否继续？',
         clearAll: '清空',
         trashCleared: '垃圾箱已清空',
@@ -211,19 +260,27 @@ export default {
         // Demo/清理
         demoCreated: '示例任务已创建',
         clearAllServerNote: '服务器暂不支持清空全部数据。此操作仅会清空垃圾箱，是否继续？',
+        demo: '示例',
 
         // 编辑冲突提示
         etagMismatchRefetched: '该任务已在其他地方更新，我们已为你重新加载最新版本，请重新应用你的更改。',
 
-        // 额外字段供 TrashList 使用
+        // 额外筛选与标签
+        statusFilter: '状态筛选：',
+        frequencyFilter: '频率筛选：',
+        allFrequencies: '全部频率',
+        doneNonDaily: '已完成（非每日）',
+        pendingLabel: '待处理',
+
+        // 回收站显示
         originalDate: '原始日期',
         deletedDate: '删除日期',
-        restore: '恢复',
         restoreToOriginal: '恢复至原日期',
         permanentlyDelete: '永久删除',
         permanentlyDeleteConfirm: '确定永久删除此任务？该操作不可撤销。',
         noTrashItems: '垃圾箱中暂无内容'
     },
+
     about: {
         title: '关于 Kason Tools',
         kasonTools: 'Kason Tools',
@@ -303,5 +360,46 @@ export default {
         playing: '播放中...',
         clickToPlay: '点击播放',
         nowPlaying: '正在播放'
+    },
+
+    // Messages and notifications (补充)
+    messages: {
+        clipboardDetectionEnabled: '剪贴板检测已开启',
+        clipboardDetectionDisabled: '剪贴板检测已关闭',
+        invalidConfig: '无效的配置',
+        saveFailed: '保存失败',
+        duplicateHotkey: '该快捷键已被使用',
+        invalidHotkey: '快捷键必须包含至少一个修饰键（Ctrl/Alt/Shift/Cmd）',
+        noHotkeysConfigured: '尚未配置任何快捷键'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: '释义本',
+            word: '单词本',
+            example: '例句本'
+        },
+        listLabel: {
+            paraphrase: '释义本',
+            word: '单词本',
+            example: '例句本'
+        },
+        selectReviewModePlaceholder: '选择复习/阅读模式',
+        selectMode: '选择模式'
+    },
+
+    // Review modes additions
+    review: {
+        stockReviewChToEn: '存量复习（汉英）',
+        totalReviewChToEn: '全量复习（汉英）',
+        downloadResources: '下载资源'
+    },
+
+    // Word details additions
+    word: {
+        hideDefinition: '隐藏释义',
+        showDefinition: '显示释义',
+        toggleWordVisibility: '点击切换是否显示单词'
     }
 }

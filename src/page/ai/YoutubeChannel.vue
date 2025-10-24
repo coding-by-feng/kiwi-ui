@@ -10,8 +10,10 @@
           class="input-with-submit"
           @keyup.enter.native="submitChannel"
       >
-        <el-button slot="append" icon="el-icon-plus" @click="submitChannel" :loading="submitting">
-        </el-button>
+        <template #append>
+          <el-button icon="el-icon-plus" @click="submitChannel" :loading="submitting">
+          </el-button>
+        </template>
       </el-input>
     </el-card>
 
@@ -34,23 +36,23 @@
               style="width: 100%"
               @row-click="handleChannelClick">
             <el-table-column prop="channelName" label="Channel Name" min-width="200" class-name="channel-name-col">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <div class="channel-name">{{ scope.row.channelName }}</div>
               </template>
             </el-table-column>
             <!-- Favorite toggle -->
             <el-table-column label="Favorite" width="130" class-name="favorite-col-cell">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-button type="text"
                            :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
                            :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
                            :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                           :disabled="isChannelPending(scope.row.channelId)"
+                           :disabled="!!pendingChannelFavorite[scope.row.channelId]"
                            @click.stop="toggleChannelFavorite(scope.row)"></el-button>
               </template>
             </el-table-column>
             <el-table-column width="120">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-button type="text" size="small" @click.stop="handleChannelClick(scope.row)">View</el-button>
               </template>
             </el-table-column>
@@ -61,7 +63,7 @@
               :data="channels"
               style="width: 100%">
             <el-table-column label="Channel">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <div class="channel-row-mobile clickable" @click="handleChannelClick(scope.row)">
                   <div class="row-top">
                     <div class="title-text">{{ scope.row.channelName }}</div>
@@ -71,7 +73,7 @@
                                :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
                                :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
                                :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="isChannelPending(scope.row.channelId)"
+                               :disabled="!!pendingChannelFavorite[scope.row.channelId]"
                                @click.stop="toggleChannelFavorite(scope.row)"></el-button>
                     <el-button type="text" size="small" class="ml-8" @click.stop="handleChannelClick(scope.row)">View</el-button>
                   </div>
@@ -98,43 +100,32 @@
         <el-tab-pane v-if="selectedChannel" :label="'Videos: ' + selectedChannel.channelName" name="videos">
           <el-page-header @back="goBackToChannels" :content="selectedChannel.channelName" title="" />
 
-          <!-- Desktop/tablet layout -->
+          <!-- Desktop/tablet layout now uses stacked multi-line rows to avoid horizontal scroll -->
           <el-table v-if="!isSmallScreen"
               :data="videos"
-              style="width: 100%; margin-top: 20px"
-              @row-click="handleVideoRowClick">
-            <!-- Title first -->
-            <el-table-column prop="videoTitle" label="Video Title" min-width="280">
-              <template slot-scope="scope">
-                <div class="video-title">
-                  <div class="title-text">{{ scope.row.videoTitle }}</div>
+              style="width: 100%; margin-top: 20px">
+            <el-table-column label="Video">
+              <template #default="scope">
+                <div class="video-row-desktop clickable" @click="openVideoUrl(scope.row.videoLink, scope.row.id, scope.row.favorited)">
+                  <div class="row-top">
+                    <div class="title-text">{{ scope.row.videoTitle }}</div>
+                  </div>
+                  <div class="row-middle" v-if="scope.row.publishedAt">
+                    <span class="rel">{{ formatRelative(scope.row.publishedAt) }}</span>
+                    <span class="sep">·</span>
+                    <span class="abs">{{ formatLocalDateTime(scope.row.publishedAt) }}</span>
+                  </div>
+                  <div class="row-bottom">
+                    <el-tag size="mini" effect="dark">{{ getStatusText(scope.row.status) }}</el-tag>
+                    <el-button type="text"
+                               class="ml-8"
+                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
+                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
+                               :disabled="!!pendingVideoFavorite[scope.row.id || scope.row.videoLink]"
+                               @click.stop="toggleVideoFavorite(scope.row)"></el-button>
+                  </div>
                 </div>
-              </template>
-            </el-table-column>
-            <!-- Published -->
-            <el-table-column prop="publishedAt" label="Published" width="240">
-              <template slot-scope="scope">
-                <div class="video-published" v-if="scope.row.publishedAt">
-                  <span class="rel">{{ formatRelative(scope.row.publishedAt) }}</span>
-                  <span class="abs">{{ formatLocalDateTime(scope.row.publishedAt) }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <!-- Status -->
-            <el-table-column prop="status" label="Status" width="120">
-              <template slot-scope="scope">
-                <el-tag size="small" effect="dark">{{ getStatusText(scope.row.status) }}</el-tag>
-              </template>
-            </el-table-column>
-            <!-- Favorite toggle -->
-            <el-table-column label="Favorite" width="130" class-name="favorite-col-cell">
-              <template slot-scope="scope">
-                <el-button type="text"
-                           :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                           :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                           :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                           :disabled="isVideoPending(scope.row.id)"
-                           @click.stop="toggleVideoFavorite(scope.row)"></el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -144,7 +135,7 @@
               :data="videos"
               style="width: 100%; margin-top: 20px">
             <el-table-column label="Video">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <div class="video-row-mobile clickable" @click="openVideoUrl(scope.row.videoLink, scope.row.id, scope.row.favorited)">
                   <div class="row-top">
                     <div class="title-text">{{ scope.row.videoTitle }}</div>
@@ -161,7 +152,7 @@
                                :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
                                :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
                                :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="isVideoPending(scope.row.id)"
+                               :disabled="!!pendingVideoFavorite[scope.row.id || scope.row.videoLink]"
                                @click.stop="toggleVideoFavorite(scope.row)"></el-button>
                   </div>
                 </div>
@@ -195,7 +186,9 @@ import {
   favoriteChannel,
   unfavoriteChannel,
   favoriteVideo,
-  unfavoriteVideo
+  unfavoriteVideo,
+  favoriteVideoByUrl,
+  unfavoriteVideoByUrl
 } from '@/api/ai'
 
 export default {
@@ -219,7 +212,7 @@ export default {
       videoTotal: 0,
 
       // Pending toggle tracking
-      pendingVideoFavorite: {}, // map videoId -> true
+      pendingVideoFavorite: {}, // map key(id or url) -> true
       pendingChannelFavorite: {}, // map channelId -> true
 
       // Responsive
@@ -349,9 +342,6 @@ export default {
       this.videoQuery.current = current
       this.fetchVideos()
     },
-    handleVideoRowClick(row) {
-      this.openVideoUrl(row.videoLink, row.id, row.favorited)
-    },
 
     goBackToChannels() {
       this.activeTabName = 'channels'
@@ -373,33 +363,61 @@ export default {
     },
 
     // Favorite toggles
-    isVideoPending(videoId) { return !!this.pendingVideoFavorite[videoId] },
+    isVideoPending(key) { return !!this.pendingVideoFavorite[key] },
     isChannelPending(channelId) { return !!this.pendingChannelFavorite[channelId] },
 
     async toggleVideoFavorite(item) {
-      const id = item.id
-      if (this.pendingVideoFavorite[id]) return
-      this.$set(this.pendingVideoFavorite, id, true)
+      const id = item && item.id
+      const url = item && item.videoLink
+      const key = id || url
+      if (!key) {
+        return this.$message.error('No valid video identifier')
+      }
+      if (this.pendingVideoFavorite[key]) return
+      this.$set(this.pendingVideoFavorite, key, true)
+
       const prevFavorited = !!item.favorited
       const prevCount = item.favoriteCount || 0
       // optimistic
       item.favorited = !prevFavorited
       item.favoriteCount = Math.max(0, prevCount + (item.favorited ? 1 : -1))
       this.syncVideoFavoriteState(id, item.favorited, item.favoriteCount)
+
       try {
-        const api = item.favorited ? favoriteVideo : unfavoriteVideo
-        const res = await api(id)
-        if (!(res && res.data && res.data.code === 1)) {
-          throw new Error(res && res.data && res.data.msg || 'Favorite toggle failed')
+        let res = null
+        let ok = false
+
+        if (id) {
+          const api = item.favorited ? favoriteVideo : unfavoriteVideo
+          res = await api(id)
+          ok = !!(res && res.data && res.data.code === 1)
+          // If ID path failed and we have URL, fallback to URL endpoint
+          if (!ok && url) {
+            const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
+            res = await apiUrl(url)
+            ok = !!(res && res.data && res.data.code === 1)
+          }
+        } else if (url) {
+          const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
+          res = await apiUrl(url)
+          ok = !!(res && res.data && res.data.code === 1)
+        }
+
+        if (!ok) {
+          // rollback on failure
+          item.favorited = prevFavorited
+          item.favoriteCount = prevCount
+          this.syncVideoFavoriteState(id, prevFavorited, prevCount)
+          this.$message.error((res && res.data && (res.data.msg || res.data.message)) || 'Favorite toggle failed')
         }
       } catch (e) {
-        // rollback
+        // rollback on error
         item.favorited = prevFavorited
         item.favoriteCount = prevCount
         this.syncVideoFavoriteState(id, prevFavorited, prevCount)
         this.$message.error(e.message || 'Failed to toggle favorite')
       } finally {
-        this.$delete(this.pendingVideoFavorite, id)
+        this.$delete(this.pendingVideoFavorite, key)
       }
     },
 
@@ -416,11 +434,16 @@ export default {
       try {
         const api = item.favorited ? favoriteChannel : unfavoriteChannel
         const res = await api(id)
-        if (!(res && res.data && res.data.code === 1)) {
-          throw new Error(res && res.data && res.data.msg || 'Favorite toggle failed')
+        const ok = res && res.data && res.data.code === 1
+        if (!ok) {
+          // rollback on failure
+          item.favorited = prevFavorited
+          item.favoriteCount = prevCount
+          this.syncChannelFavoriteState(id, prevFavorited, prevCount)
+          this.$message.error((res && res.data && res.data.msg) || 'Favorite toggle failed')
         }
       } catch (e) {
-        // rollback
+        // rollback on error
         item.favorited = prevFavorited
         item.favoriteCount = prevCount
         this.syncChannelFavoriteState(id, prevFavorited, prevCount)
@@ -530,6 +553,12 @@ export default {
 </script>
 
 <style scoped>
+/* Wrap table cells to avoid horizontal scrolling */
+.youtube-channel-manager .el-table .cell {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
 /* Wrap long channel names into multiple lines and avoid horizontal scroll */
 .youtube-channel-manager .el-table td.channel-name-col .cell {
   white-space: normal !important; /* override element-ui default nowrap */
@@ -545,12 +574,36 @@ export default {
   padding-left: 16px; /* increase gap from previous column */
 }
 
-/* Mobile row layout for videos: ensure clear spacing between status tag and favorite icon */
-.video-row-mobile .row-bottom {
+/* Shared stacked row layout for videos (desktop and mobile) */
+.video-row-desktop, .video-row-mobile {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+.video-row-desktop .row-top, .video-row-mobile .row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.video-row-desktop .row-middle, .video-row-mobile .row-middle {
+  margin-top: 4px;
+  color: #606266;
+  font-size: 12px;
+}
+.video-row-desktop .row-middle .rel, .video-row-mobile .row-middle .rel {
+  font-weight: 500;
+}
+.video-row-desktop .row-middle .sep, .video-row-mobile .row-middle .sep {
+  margin: 0 6px;
+  color: #909399;
+}
+/* Ensure clear spacing between status tag and favorite icon */
+.video-row-desktop .row-bottom, .video-row-mobile .row-bottom {
+  margin-top: 6px;
   display: flex;
   align-items: center;
 }
-.video-row-mobile .row-bottom .fav-btn {
+.video-row-desktop .row-bottom .fav-btn, .video-row-mobile .row-bottom .fav-btn {
   margin-left: 12px !important; /* keep a comfortable distance from the status tag */
 }
 
@@ -563,10 +616,16 @@ export default {
   margin-right: 12px; /* spacing before View button */
 }
 
-/* Optional: ensure long titles in mobile don't overflow */
+/* Optional: ensure long titles in mobile/desktop don't overflow */
 .video-row-mobile .title-text,
+.video-row-desktop .title-text,
 .channel-row-mobile .title-text {
   white-space: normal;
   word-break: break-word;
 }
+
+.clickable { cursor: pointer; }
+.ml-8 { margin-left: 8px; }
+.fav-btn { color: #C0C4CC; }
+.fav-btn.favorited { color: #f7ba2a; }
 </style>

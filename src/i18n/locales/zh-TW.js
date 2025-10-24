@@ -90,7 +90,11 @@ export default {
         features: {
             intelligentMemory: '智能詞彙記憶',
             pronunciation: '純正發音練習',
-            personalizedPlan: '個性化學習計劃'
+            personalizedPlan: '個性化學習計劃',
+            aiAssistantModes: 'AI 助手多種強大模式',
+            bilingualEnEn: '英英釋義並配中文講解',
+            youtubePlayer: 'YouTube 播放器學習',
+            todoGamified: '待辦與遊戲化學習'
         },
         brand: {
             title: 'Kason英語學習平台',
@@ -136,7 +140,8 @@ export default {
         synonym: '同義詞',
         antonym: '反義詞',
         vocabularyAssociation: '詞彙關聯',
-        phrasesAssociation: '短語關聯'
+        phrasesAssociation: '短語關聯',
+        selectMode: '選擇模式'
     },
 
     // Todo Gamification
@@ -304,5 +309,23 @@ export default {
         copyright: '©2025 Kason 英語學習平台。保留所有權利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上關注',
+    },
+
+    user: {
+        searchModeHotkeys: '搜尋模式快速鍵',
+        searchModeHotkeysTip: '按下 Ctrl（或 macOS 上的 Cmd）+ Shift + 數字 來切換模式',
+        resetToDefaults: '還原為預設',
+        hotkey: '快速鍵',
+        pressKeys: '請按下按鍵...'
+    },
+
+    messages: {
+        operationSuccess: '操作成功',
+        duplicateHotkey: '此快速鍵已被使用',
+        invalidHotkey: '快速鍵需包含至少一個修飾鍵（Ctrl/Alt/Shift/Cmd）',
+        noHotkeysConfigured: '尚未設定任何快速鍵',
+        saveFailed: '儲存失敗',
+        invalidConfig: '無效的設定',
+        clearOperation: '清除操作'
     }
 }

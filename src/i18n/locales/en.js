@@ -60,7 +60,9 @@ export default {
         download: 'Download',
         upload: 'Upload',
         default: 'Default',
-        all: 'All'
+        all: 'All',
+        configure: 'Configure',
+        done: 'Done'
     },
 
     // Navigation
@@ -151,6 +153,9 @@ export default {
         showDetails: 'Show details',
         hideDetails: 'Hide details',
         copied: 'Copied to clipboard',
+        hideDefinition: 'Hide definition',
+        showDefinition: 'Show definition',
+        toggleWordVisibility: 'Click to toggle word visibility'
     },
 
     // Collections/Star Lists
@@ -169,6 +174,22 @@ export default {
         operationSuccess: 'Operation successful',
         confirmDelete: 'Are you sure you want to delete this item?',
         deleteOperation: 'Delete Operation'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: 'Definitions',
+            word: 'Word Lists',
+            example: 'Example Lists'
+        },
+        listLabel: {
+            paraphrase: 'Definitions',
+            word: 'Word List',
+            example: 'Example List'
+        },
+        selectReviewModePlaceholder: 'Select review/reading mode',
+        selectMode: 'Select Mode'
     },
 
     // Review modes
@@ -214,7 +235,11 @@ export default {
         refreshingResources: 'Refreshing current review resources',
         reviewNext: 'Review next word',
         downloadNext: 'Download next word',
-        autoReviewWarning: 'Auto review starting, please wait!'
+        autoReviewWarning: 'Auto review starting, please wait!',
+        stockReviewChToEn: 'Standard Review (Chinese→English)',
+        totalReviewChToEn: 'Complete Review (Chinese→English)',
+        downloadResources: 'Download Resources',
+        modeTitle: 'Review Mode'
     },
 
     // YouTube features
@@ -281,7 +306,13 @@ export default {
             unknown: 'Unknown Source'
         },
         clipboardDetection: "Clipboard Detection",
-        clipboardDetectionTooltip: "Automatically detect and suggest using clipboard content when switching tabs or when search input is empty"
+        clipboardDetectionTooltip: "Automatically detect and suggest using clipboard content when switching tabs or when search input is empty",
+        // Hotkeys configuration
+        searchModeHotkeys: 'Search Mode Hotkeys',
+        searchModeHotkeysTip: 'Press Ctrl (or Cmd on macOS) + Shift + Number to switch modes',
+        resetToDefaults: 'Reset to defaults',
+        hotkey: 'Hotkey',
+        pressKeys: 'Press keys...'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
@@ -437,7 +468,13 @@ export default {
         clearOperation: 'Clear Operation',
         operationSuccess: 'Operation successful',
         clipboardDetectionEnabled: 'Clipboard detection is now enabled',
-        clipboardDetectionDisabled: 'Clipboard detection is now disabled'
+        clipboardDetectionDisabled: 'Clipboard detection is now disabled',
+        invalidConfig: 'Invalid configuration',
+        saveFailed: 'Save failed',
+        duplicateHotkey: 'This hotkey is already in use',
+        invalidHotkey: 'Hotkey must include at least one modifier (Ctrl/Alt/Shift/Cmd)',
+        noHotkeysConfigured: 'No hotkeys configured',
+        operationTipTitle: 'Notification'
     },
 
     // Time units
@@ -647,6 +684,7 @@ export default {
         // Demo/clear all
         demoCreated: 'Demo tasks created',
         clearAllServerNote: 'Server does not support clearing all data. This will clear trash only. Continue?',
+        demo: 'Demo',
 
         // ETag mismatch notice during edit
         etagMismatchRefetched: 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.',

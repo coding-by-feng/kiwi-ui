@@ -36,8 +36,6 @@ export default [{
             userCenter: UserCenter,
             about: About,
             bgm: Bgm,
-            aiResponseDetail: AiResponseDetail,
-            aiCallHistory: AiCallHistory, // Add the AI call history component
             youtube: Youtube,// Use the new component here
             youtubePlayer: YoutubePlayer, // Use the new component here
             todo: TodoView, // Add the todo component

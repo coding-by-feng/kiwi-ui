@@ -5,7 +5,7 @@
                 <div class="collapse-content">
                     <p class="example-sentence">{{ item.exampleSentence }}</p>
                     <div class="example-translation">
-                        {{ isShowParaphrase ? item.exampleTranslate : '释义已隐藏，点击上面灯泡显示' }}
+                        {{ isShowParaphrase ? item.exampleTranslate : $t('word.hiddenPrompt') }}
                     </div>
                     <div class="collapse-actions">
                         <el-button
@@ -13,7 +13,7 @@
                             type="text"
                             size="mini"
                             @click="isShowParaphrase = !isShowParaphrase"
-                            :title="isShowParaphrase ? '隐藏释义' : '显示释义'">
+                            :title="isShowParaphrase ? $t('word.hideDefinition') : $t('word.showDefinition')">
                             <i class="el-icon-s-opportunity"></i>
                         </el-button>
                         <el-button
@@ -21,7 +21,7 @@
                             type="text"
                             size="mini"
                             @click="removeExampleStarListFun(item.exampleId)"
-                            title="从收藏移除">
+                            :title="$t('word.removeFromCollection')">
                             <i class="el-icon-remove-outline"></i>
                         </el-button>
                     </div>

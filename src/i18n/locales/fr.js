@@ -90,7 +90,11 @@ export default {
         features: {
             intelligentMemory: 'Mémorisation intelligente du vocabulaire',
             pronunciation: 'Pratique de prononciation authentique',
-            personalizedPlan: 'Plan d\'apprentissage personnalisé'
+            personalizedPlan: 'Plan d\'apprentissage personnalisé',
+            aiAssistantModes: 'Assistant IA avec plusieurs modes puissants',
+            bilingualEnEn: 'Anglais-à-anglais avec explications en chinois',
+            youtubePlayer: 'Apprentissage avec lecteur YouTube',
+            todoGamified: 'Tâches et apprentissage ludifié'
         },
         brand: {
             title: 'Plateforme d\'apprentissage anglais Kason',
@@ -290,5 +294,25 @@ export default {
         allRanks: 'Tous les rangs',
         viewRankingDetails: 'Voir les détails du classement',
         maxRankReached: 'Rang maximum atteint !'
+    },
+
+    user: {
+        searchModeHotkeys: 'Raccourcis de mode de recherche',
+        searchModeHotkeysTip: 'Appuyez sur Ctrl (ou Cmd sur macOS) + Maj + Nombre pour changer de mode',
+        resetToDefaults: 'Rétablir les valeurs par défaut',
+        hotkey: 'Raccourci',
+        pressKeys: 'Appuyez sur des touches...'
+    },
+
+    messages: {
+        operationSuccess: 'Opération réussie',
+        duplicateHotkey: 'Ce raccourci est déjà utilisé',
+        invalidHotkey: 'Le raccourci doit inclure au moins une touche modificatrice (Ctrl/Alt/Shift/Cmd)',
+        noHotkeysConfigured: 'Aucun raccourci configuré',
+        saveFailed: 'Échec de l’enregistrement',
+        invalidConfig: 'Configuration invalide',
+        confirmDelete: 'Voulez-vous vraiment supprimer ?',
+        confirmClear: 'Vous allez nettoyer et recharger. Continuer ?',
+        clearOperation: 'Opération de nettoyage'
     }
 }

@@ -114,7 +114,8 @@ export default {
       ],
       currentPlayBgmIndex: null,
       currentPlayBgm: null,
-      bgm: getStore({name: 'bgm'})
+      // Read persisted preference using the standard config key
+      bgm: getStore({name: kiwiConst.CONFIG_KEY.BGM})
     }
   },
   beforeCreate: function () {
@@ -127,7 +128,8 @@ export default {
     this.currentPlayBgm.addEventListener('ended', async function () {
       that.nextBgm()
     })
-    if (this.bgm) {
+    // Only auto-play when explicitly enabled
+    if (this.bgm === kiwiConst.ENABLE_BGM.ENABLE) {
       this.playBgm(0)
     }
     this.countDbAudio()
