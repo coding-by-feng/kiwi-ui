@@ -2,6 +2,7 @@
 import {getStore} from '@/util/store'
 import website from '@/const/website'
 import {handleGoogleOAuthCallback} from '@/util/oauth'
+import kiwiConst from '@/const/kiwiConsts'
 
 export default {
   data() {
@@ -11,7 +12,9 @@ export default {
       query: this.$route.query,
       user: {
         userName: getStore({name: 'user_name'})
-      }
+      },
+      // New: feature tab visibility (persisted)
+      enabledTabs: this.loadEnabledTabs()
     }
   },
   watch: {
@@ -22,6 +25,8 @@ export default {
       this.query = { ...this.$route.query }
       // Also check for OAuth callback when route changes
       this.checkOAuthCallback()
+      // Ensure current active is allowed by settings
+      this.ensureActiveTabValid()
     }
   },
   computed: {
@@ -41,6 +46,14 @@ export default {
     // Check for Google OAuth callback first
     this.checkOAuthCallback()
 
+    // Listen for settings update events to refresh enabledTabs
+    try {
+      window.addEventListener('enabled-tabs-updated', this.refreshEnabledTabs)
+    } catch (_) {}
+
+    // Validate active tab initially against settings
+    this.ensureActiveTabValid()
+
     // Your existing mounted logic...
     // window.onresize = () => {
     //   return (() => {
@@ -48,7 +61,25 @@ export default {
     //   })()
     // }
   },
+  beforeDestroy() {
+    try { window.removeEventListener('enabled-tabs-updated', this.refreshEnabledTabs) } catch (_) {}
+  },
   methods: {
+    // Load map from storage and merge with defaults to avoid missing keys
+    loadEnabledTabs() {
+      try {
+        const stored = getStore({ name: kiwiConst.CONFIG_KEY.ENABLED_TABS }) || {}
+        return { ...kiwiConst.DEFAULT_ENABLED_TABS, ...stored }
+      } catch (e) {
+        return { ...kiwiConst.DEFAULT_ENABLED_TABS }
+      }
+    },
+    refreshEnabledTabs() {
+      this.enabledTabs = this.loadEnabledTabs()
+      // After updating, ensure active is still valid
+      this.ensureActiveTabValid()
+    },
+
     // Add this new method to check for OAuth callback
     checkOAuthCallback() {
       const hasOAuthParams = window.location.search.includes('token=') ||
@@ -90,6 +121,23 @@ export default {
     },
 
     handleSelectMenu() {
+    },
+
+    ensureActiveTabValid() {
+      const act = this.activeName
+      // Tabs governed by enabledTabs
+      const governed = ['starList','todo','youtube','about','bgm']
+      if (governed.includes(act)) {
+        const allowed = !!this.enabledTabs[act]
+        // Also consider login-gated tabs
+        if (!allowed || ((act === 'starList' || act === 'youtube') && !this.isLogin)) {
+          const preservedParams = { ...this.$route.query, active: 'search', now: new Date().getTime() }
+          if (this.activeName !== 'search') {
+            this.activeName = 'search'
+            this.$router.replace({ path: website.noAuthPath.detail, query: preservedParams })
+          }
+        }
+      }
     },
 
     tabClick(tab, event) {
@@ -211,19 +259,19 @@ export default {
         </span>
         <router-view name="search" :key="$route.fullPath"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="starList" v-if="isLogin">
+      <el-tab-pane name="starList" v-if="isLogin && enabledTabs.starList">
         <span slot="label">
           <i class="el-icon-tickets"></i>
         </span>
         <router-view name="starList" v-if="isAdmin"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="todo" lazy>
+      <el-tab-pane name="todo" lazy v-if="enabledTabs.todo">
         <span slot="label">
           <i class="el-icon-check"></i>
         </span>
         <router-view name="todo" v-if="activeName === 'todo'"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="youtube" v-if="isLogin">
+      <el-tab-pane name="youtube" v-if="isLogin && enabledTabs.youtube">
         <span slot="label">
           <i class="el-icon-video-camera"></i>
         </span>
@@ -241,13 +289,13 @@ export default {
         </span>
         <router-view name="userLogin"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="about">
+      <el-tab-pane name="about" v-if="enabledTabs.about">
         <span slot="label">
           <i class="el-icon-postcard"></i>
         </span>
         <router-view name="about"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="bgm">
+      <el-tab-pane name="bgm" v-if="enabledTabs.bgm">
         <span slot="label">
           <i class="el-icon-headset"></i>
         </span>

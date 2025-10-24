@@ -44,7 +44,20 @@ export default {
     auth: {
         welcome: 'Bienvenido de vuelta',
         loginWith: 'Iniciar sesión con',
-        google: 'Iniciar sesión con cuenta de Google'
+        google: 'Iniciar sesión con cuenta de Google',
+        brand: {
+            title: 'Herramientas de Inglés Kason',
+            subtitle: 'Plataforma inteligente de aprendizaje de inglés'
+        },
+        features: {
+            smartMemory: 'Memoria inteligente de vocabulario',
+            pronunciation: 'Práctica de pronunciación auténtica',
+            personalizedPlan: 'Plan de aprendizaje personalizado',
+            aiAssistantModes: 'Asistente de IA con múltiples modos potentes',
+            bilingualEnEn: 'Inglés a inglés con explicaciones en chino',
+            youtubePlayer: 'Aprendizaje con reproductor de YouTube',
+            todoGamified: 'Tareas y estudio gamificado'
+        }
     },
 
     ui: {
@@ -233,5 +246,39 @@ export default {
         playing: 'Reproduciendo...',
         clickToPlay: 'Clic para reproducir',
         nowPlaying: 'Reproduciendo ahora'
+    },
+
+    searchModes: {
+        dictionary: 'Diccionario',
+        directTranslation: 'Traducción directa',
+        explanation: 'Explicación',
+        grammarExplanation: 'Explicación gramatical',
+        grammarCorrection: 'Corrección gramatical',
+        vocabularyExplanation: 'Explicación de vocabulario',
+        synonym: 'Sinónimo',
+        antonym: 'Antónimo',
+        vocabularyAssociation: 'Asociación de vocabulario',
+        phrasesAssociation: 'Asociación de frases',
+        selectMode: 'Seleccionar modo'
+    },
+
+    user: {
+        searchModeHotkeys: 'Atajos de Modo de Búsqueda',
+        searchModeHotkeysTip: 'Presiona Ctrl (o Cmd en macOS) + Shift + Número para cambiar de modo',
+        resetToDefaults: 'Restablecer a valores predeterminados',
+        hotkey: 'Atajo',
+        pressKeys: 'Presiona teclas...'
+    },
+
+    messages: {
+        operationSuccess: 'Operación exitosa',
+        duplicateHotkey: 'Este atajo ya está en uso',
+        invalidHotkey: 'El atajo debe incluir al menos un modificador (Ctrl/Alt/Shift/Cmd)',
+        noHotkeysConfigured: 'No hay atajos configurados',
+        saveFailed: 'Guardado fallido',
+        invalidConfig: 'Configuración inválida',
+        confirmDelete: '¿Está seguro de que desea eliminar?',
+        confirmClear: 'Está a punto de limpiar y volver a cargar, ¿continuar?',
+        clearOperation: 'Operación de limpieza'
     }
 }

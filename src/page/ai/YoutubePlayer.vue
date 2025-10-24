@@ -327,7 +327,7 @@
 
 <script>
 import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, favoriteVideo, unfavoriteVideo} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, favoriteVideo, unfavoriteVideo, favoriteVideoByUrl, unfavoriteVideoByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
@@ -445,9 +445,12 @@ export default defineComponent({
     currentProgress() {
       return this.isTranslationLoading ? this.translationProgress : this.subtitlesLoadingProgress;
     },
-    // Whether a video can be favorited (requires a valid backend internal id)
+    // Whether a video can be favorited: either a valid backend id OR a valid URL with an extractable YouTube id
     canFavorite() {
-      return !!this.backendVideoId;
+      const hasBackendId = !!this.backendVideoId;
+      const hasValidUrl = !!(this.videoUrl && this.extractVideoId(this.videoUrl));
+      const hasPlayerId = !!(this.playerVideoId && this.isLikelyYoutubeId(this.playerVideoId));
+      return hasBackendId || hasValidUrl || hasPlayerId;
     },
     showMiniLoader() {
       return this.isLoading || !this.videoReady || this.isBuffering;
@@ -543,21 +546,47 @@ export default defineComponent({
     // Favorite toggle for player
     async toggleFavoriteOnPlayer() {
       if (!this.canFavorite || this.pendingFavorite) return;
-      const id = this.backendVideoId;
+
       const prev = !!this.isFavorited;
-      // optimistic update
       this.pendingFavorite = true;
-      this.isFavorited = !prev;
+      this.isFavorited = !prev; // optimistic update
+
+      const id = this.backendVideoId;
+      const fallbackUrl = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
+
       try {
-        const api = this.isFavorited ? favoriteVideo : unfavoriteVideo;
-        const res = await api(id);
-        if (!(res && res.data && res.data.code === 1)) {
-          throw new Error((res && res.data && res.data.msg) || 'Favorite toggle failed');
+        let res = null;
+        let ok = false;
+
+        if (id) {
+          const api = this.isFavorited ? favoriteVideo : unfavoriteVideo;
+          res = await api(id);
+          ok = !!(res && res.data && res.data.code === 1);
+          if (!ok && fallbackUrl && this.extractVideoId(fallbackUrl)) {
+            const apiUrl = this.isFavorited ? favoriteVideoByUrl : unfavoriteVideoByUrl;
+            res = await apiUrl(fallbackUrl);
+            ok = !!(res && res.data && res.data.code === 1);
+          }
+        } else if (fallbackUrl && this.extractVideoId(fallbackUrl)) {
+          const apiUrl = this.isFavorited ? favoriteVideoByUrl : unfavoriteVideoByUrl;
+          res = await apiUrl(fallbackUrl);
+          ok = !!(res && res.data && res.data.code === 1);
+        } else {
+          throw new Error('No valid video identifier available');
         }
-        // Optional: reflect back to route for consistency
+
+        if (!ok) {
+          throw new Error((res && res.data && (res.data.msg || res.data.message)) || 'Favorite toggle failed');
+        }
+
+        // Success toast
+        msgUtil.msgSuccess(this, this.isFavorited ? 'Added to favorites' : 'Removed from favorites', 1500);
+
+        // Reflect back to route for consistency
         const q = { ...(this.$route.query || {}) };
-        if (String(q.favorited).toLowerCase() !== String(this.isFavorited)) {
-          this.$router.replace({ path: this.$route.path, query: { ...q, favorited: String(this.isFavorited) } });
+        const newFavoritedStr = String(this.isFavorited);
+        if (String(q.favorited) !== newFavoritedStr) {
+          this.$router.replace({ path: this.$route.path, query: { ...q, favorited: newFavoritedStr } });
         }
       } catch (e) {
         // rollback
@@ -982,6 +1011,15 @@ export default defineComponent({
           return;
         }
 
+        // Keep the browser URL in sync with the new input
+        try {
+          const q = { ...(this.$route.query || {}) };
+          const encoded = encodeURIComponent(this.videoUrl);
+          if (q.videoUrl !== encoded) {
+            this.$router.replace({ path: this.$route.path, query: { ...q, videoUrl: encoded } });
+          }
+        } catch (_) { /* no-op if router unavailable */ }
+
         this.statusMessage = 'Initializing player...';
         this.startMiniLoaderPoll();
 
@@ -1047,15 +1085,45 @@ export default defineComponent({
         );
 
         if (response.status === 'fulfilled' && response.value?.status === 200) {
-          this.scrollingSubtitles = response.value.data.data;
-          this.parseSubtitles(this.scrollingSubtitles);
+          // Support both legacy string and new object payloads.
+          const payload = response.value?.data?.data;
+          let subtitlesStr = '';
+
+          if (payload && typeof payload === 'object') {
+            // Try common fields for subtitles string
+            subtitlesStr = payload.scrollingSubtitles || payload.subtitles || payload.content || '';
+
+            // Extract backend/internal video id for favorite feature
+            const maybeId = payload.id || payload.videoId || payload.dbId;
+            if (maybeId && !this.backendVideoId) {
+              this.backendVideoId = String(maybeId);
+            }
+
+            // Extract raw YouTube video id if provided
+            const maybeYtId = payload.youtubeVideoId || payload.ytId || payload.ytbId;
+            if (maybeYtId && this.isLikelyYoutubeId(String(maybeYtId))) {
+              this.playerVideoId = String(maybeYtId);
+            }
+
+            // Initialize favorited status if returned from server
+            if (typeof payload.favorited !== 'undefined') {
+              this.isFavorited = !!payload.favorited;
+            }
+          } else {
+            // Backward-compatible: payload is the raw subtitles string
+            subtitlesStr = typeof payload === 'string' ? payload : '';
+          }
+
+          this.scrollingSubtitles = subtitlesStr;
+          this.parseSubtitles(this.scrollingSubtitles || '');
 
           clearInterval(progressInterval);
           this.subtitlesLoadingProgress = 100;
           this.isSubtitlesLoading = false;
           this.middleControlEnabled = true;
 
-          msgUtil.msgSuccess(this, 'Subtitles loaded successfully!', 2000);
+          // Suppress popup: subtitles loaded successfully
+          // msgUtil.msgSuccess(this, 'Subtitles loaded successfully!', 2000);
 
           this.$nextTick(() => {
             this.applyTouchPreventions();
@@ -1359,8 +1427,9 @@ export default defineComponent({
 
     toggleScrollingSubtitles() {
       this.scrollingSubtitlesCollapsed = !this.scrollingSubtitlesCollapsed;
-      const action = this.scrollingSubtitlesCollapsed ? 'collapsed' : 'expanded';
-      msgUtil.msgSuccess(this, `Subtitles timeline ${action}`, 1000);
+      // Suppress popup on expand/collapse of subtitles timeline
+      // const action = this.scrollingSubtitlesCollapsed ? 'collapsed' : 'expanded';
+      // msgUtil.msgSuccess(this, `Subtitles timeline ${action}`, 1000);
       if (!this.scrollingSubtitlesCollapsed) {
         this.$nextTick(() => this.scrollActiveSubtitleIntoView());
       }
@@ -1368,8 +1437,9 @@ export default defineComponent({
 
     toggleTranslatedSubtitles() {
       this.translatedSubtitlesCollapsed = !this.translatedSubtitlesCollapsed;
-      const action = this.translatedSubtitlesCollapsed ? 'collapsed' : 'expanded';
-      msgUtil.msgSuccess(this, `Translated subtitles ${action}`, 1000);
+      // Suppress popup on expand/collapse of translated subtitles
+      // const action = this.translatedSubtitlesCollapsed ? 'collapsed' : 'expanded';
+      // msgUtil.msgSuccess(this, `Translated subtitles ${action}`, 1000);
     },
 
     cancelSubtitlesLoading() {

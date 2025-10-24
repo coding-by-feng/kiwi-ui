@@ -130,6 +130,25 @@ export function unfavoriteVideo(videoId) {
   })
 }
 
+// New: toggle video favorite by URL when backend videoId is unavailable/invalid
+export function favoriteVideoByUrl(videoUrl) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/video/favorite`,
+    method: 'post',
+    params: { videoUrl },
+    headers: { isToken: true }
+  })
+}
+
+export function unfavoriteVideoByUrl(videoUrl) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/video/favorite`,
+    method: 'delete',
+    params: { videoUrl },
+    headers: { isToken: true }
+  })
+}
+
 export function getFavoriteChannels(current, size) {
   return request({
     url: `/ai-biz/ai/ytb/channel/favorites/channels`,

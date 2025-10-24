@@ -90,7 +90,11 @@ export default {
         features: {
             intelligentMemory: 'スマート語彙記憶',
             pronunciation: '本格的発音練習',
-            personalizedPlan: '個人化学習プラン'
+            personalizedPlan: '個人化学習プラン',
+            aiAssistantModes: '複数の強力なモードを備えたAIアシスタント',
+            bilingualEnEn: '中国語の解説付き英英解釈',
+            youtubePlayer: 'YouTubeプレーヤー学習',
+            todoGamified: 'ToDoとゲーミフィケーション学習'
         },
         brand: {
             title: 'Kason英語学習プラットフォーム',
@@ -136,7 +140,8 @@ export default {
         synonym: '同義語',
         antonym: '反義語',
         vocabularyAssociation: '語彙関連',
-        phrasesAssociation: 'フレーズ関連'
+        phrasesAssociation: 'フレーズ関連',
+        selectMode: 'モードを選択'
     },
 
     // Todo Gamification
@@ -291,5 +296,25 @@ export default {
         playing: '再生中...',
         clickToPlay: 'クリックして再生',
         nowPlaying: '再生中'
+    },
+
+    user: {
+        searchModeHotkeys: '検索モードのショートカット',
+        searchModeHotkeysTip: 'Ctrl（macOS は Cmd）+ Shift + 数字 でモードを切り替え',
+        resetToDefaults: 'デフォルトにリセット',
+        hotkey: 'ショートカット',
+        pressKeys: 'キーを押してください...'
+    },
+
+    messages: {
+        operationSuccess: '操作が成功しました',
+        duplicateHotkey: 'このショートカットは既に使用されています',
+        invalidHotkey: 'ショートカットは少なくとも 1 つの修飾キー（Ctrl/Alt/Shift/Cmd）を含める必要があります',
+        noHotkeysConfigured: 'ショートカットが設定されていません',
+        saveFailed: '保存に失敗しました',
+        invalidConfig: '無効な設定',
+        confirmDelete: '削除してもよろしいですか？',
+        confirmClear: '現在のデータをクリアして再取得します。続行しますか？',
+        clearOperation: 'クリア操作'
     }
 }

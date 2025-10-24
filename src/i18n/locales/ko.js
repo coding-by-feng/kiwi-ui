@@ -49,7 +49,17 @@ export default {
     auth: {
         welcome: '다시 오신 것을 환영합니다',
         loginWith: '로그인 방법',
-        google: 'Google 계정으로 로그인'
+        google: 'Google 계정으로 로그인',
+        brand: {
+            title: 'Kason 영어 학습 도구',
+            subtitle: '스마트 영어 학습 플랫폼'
+        },
+        features: {
+            aiAssistantModes: '강력한 모드를 갖춘 AI 비서',
+            bilingualEnEn: '중국어 설명이 포함된 영영 해석',
+            youtubePlayer: 'YouTube 플레이어 학습',
+            todoGamified: '할 일과 게이미피케이션 학습'
+        }
     },
 
     ui: {
@@ -238,5 +248,39 @@ export default {
         playing: '재생 중...',
         clickToPlay: '클릭하여 재생',
         nowPlaying: '현재 재생 중'
+    },
+
+    searchModes: {
+        dictionary: '사전',
+        directTranslation: '직접 번역',
+        explanation: '설명',
+        grammarExplanation: '문법 설명',
+        grammarCorrection: '문법 수정',
+        vocabularyExplanation: '어휘 설명',
+        synonym: '동의어',
+        antonym: '반의어',
+        vocabularyAssociation: '어휘 연관',
+        phrasesAssociation: '구문 연관',
+        selectMode: '모드 선택'
+    },
+
+    user: {
+        searchModeHotkeys: '검색 모드 단축키',
+        searchModeHotkeysTip: 'Ctrl(또는 macOS의 Cmd) + Shift + 숫자를 눌러 모드를 전환',
+        resetToDefaults: '기본값으로 재설정',
+        hotkey: '단축키',
+        pressKeys: '키를 누르세요...'
+    },
+
+    messages: {
+        operationSuccess: '작업이 성공적으로 완료되었습니다',
+        duplicateHotkey: '이 단축키는 이미 사용 중입니다',
+        invalidHotkey: '단축키에는 적어도 하나의 수정 키(Ctrl/Alt/Shift/Cmd)가 포함되어야 합니다',
+        noHotkeysConfigured: '구성된 단축키가 없습니다',
+        saveFailed: '저장 실패',
+        invalidConfig: '잘못된 구성',
+        confirmDelete: '삭제하시겠습니까?',
+        confirmClear: '현재 데이터를 정리하고 다시 가져옵니다. 계속하시겠습니까?',
+        clearOperation: '정리 작업'
     }
 }

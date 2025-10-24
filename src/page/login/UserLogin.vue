@@ -44,10 +44,11 @@
             <div
               class="social-login-button google-login"
               :class="{ disabled: googleLoading }"
-              @click="!googleLoading && handleGoogleLogin"
+              @click="!googleLoading && handleGoogleLogin()"
               role="button"
               tabindex="0"
-              @keyup.enter.space="!googleLoading && handleGoogleLogin"
+              @keyup.enter="!googleLoading && handleGoogleLogin()"
+              @keyup.space="!googleLoading && handleGoogleLogin()"
             >
               <div class="social-icon">
                 <svg viewBox="0 0 24 24" width="20" height="20">
@@ -248,6 +249,28 @@ export default {
       return await waitForGapi()
     },
 
+    // Centralized backend OAuth starter (fallback)
+    async startBackendOAuth() {
+      console.log('🌐 [GOOGLE] Using backend authorization URL')
+      const response = await this.$http.get('/auth/oauth/google/authorize', { headers: { isToken: false } })
+      console.log('📡 [GOOGLE] Backend response:', response && response.data)
+
+      const data = response && response.data
+      const code = data && (data.code !== undefined ? data.code : data.status)
+      if (code === 1 || code === 200 || code === true) {
+        const url = data.data && (data.data.authorizationUrl || data.data.url)
+        if (url) {
+          console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', url)
+          window.location.href = url
+        } else {
+          throw new Error('Authorization URL missing in response')
+        }
+      } else {
+        const msg = (data && (data.msg || data.message)) || this.$t('auth.loginFailed')
+        throw new Error(msg)
+      }
+    },
+
     // Google OAuth methods
     async handleGoogleLogin() {
       console.log('🔵 [GOOGLE] Google login initiated')
@@ -259,41 +282,31 @@ export default {
 
         console.log('⏳ [GOOGLE] Setting loading states')
 
+        // Optional: allow forcing backend OAuth via env
+        const forceBackend = String(this.getEnvVar('VUE_APP_GOOGLE_FORCE_BACKEND_OAUTH') || this.getEnvVar('GOOGLE_FORCE_BACKEND_OAUTH') || '').toLowerCase() === 'true'
+        if (forceBackend) {
+          console.log('🧭 [GOOGLE] Force backend OAuth enabled via env, skipping gapi flow')
+          await this.startBackendOAuth()
+          return
+        }
+
         // Prefer direct Google API if possible; otherwise use backend auth URL
         let authInstance = await this.ensureGapiAuth2()
         if (authInstance) {
           console.log('📱 [GOOGLE] Using Google API directly')
-          const googleUser = await authInstance.signIn()
-          console.log('✅ [GOOGLE] Google sign-in successful:', googleUser)
-          await this.processGoogleUser(googleUser)
-        } else if (window.gapi && window.gapi.auth2) {
-          console.log('📱 [GOOGLE] Using existing Google API instance')
-          const inst = window.gapi.auth2.getAuthInstance()
-          const googleUser = await (inst ? inst.signIn() : Promise.reject(new Error('No Auth Instance')))
-          console.log('✅ [GOOGLE] Google sign-in successful:', googleUser)
-          await this.processGoogleUser(googleUser)
-        } else {
-          console.log('🌐 [GOOGLE] Using backend authorization URL')
-          // Method 2: Get authorization URL from backend
-          const response = await this.$http.get('/auth/oauth/google/authorize', { headers: { isToken: false } })
-          console.log('📡 [GOOGLE] Backend response:', response && response.data)
-
-          const data = response && response.data
-          // Treat both numeric success codes and boolean success flags
-          const code = data && (data.code !== undefined ? data.code : data.status)
-          if (code === 1 || code === 200 || code === true) {
-            const url = data.data && (data.data.authorizationUrl || data.data.url)
-            if (url) {
-              console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', url)
-              window.location.href = url
-            } else {
-              throw new Error('Authorization URL missing in response')
-            }
-          } else {
-            const msg = (data && (data.msg || data.message)) || this.$t('auth.loginFailed')
-            throw new Error(msg)
+          try {
+            const googleUser = await authInstance.signIn()
+            console.log('✅ [GOOGLE] Google sign-in successful:', googleUser)
+            await this.processGoogleUser(googleUser)
+            return
+          } catch (e) {
+            console.warn('⚠️ [GOOGLE] Direct sign-in failed, falling back to backend OAuth:', e && e.message)
+            // fall through to backend flow
           }
         }
+
+        // Fallback to backend OAuth if no auth instance is available or direct sign-in failed
+        await this.startBackendOAuth()
       } catch (error) {
         console.error('❌ [GOOGLE] Google login error:', error)
         this.$message.error((error && error.message) || this.$t('auth.loginFailed'))

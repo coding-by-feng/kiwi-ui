@@ -90,7 +90,11 @@ export default {
         features: {
             intelligentMemory: 'Intelligentes Vokabelgedächtnis',
             pronunciation: 'Authentische Aussprachepraxis',
-            personalizedPlan: 'Personalisierter Lernplan'
+            personalizedPlan: 'Personalisierter Lernplan',
+            aiAssistantModes: 'KI-Assistent mit mehreren leistungsstarken Modi',
+            bilingualEnEn: 'Englisch-zu-Englisch mit chinesischen Erklärungen',
+            youtubePlayer: 'Lernen mit YouTube-Player',
+            todoGamified: 'To-Do und spielerisches Lernen'
         },
         brand: {
             title: 'Kason English Learning Platform',
@@ -112,6 +116,26 @@ export default {
         vocabularyAssociation: 'Vokabularassoziation',
         phrasesAssociation: 'Phrasenassoziation',
         selectMode: 'Modus auswählen'
+    },
+
+    user: {
+        searchModeHotkeys: 'Suchmodus-Tastenkürzel',
+        searchModeHotkeysTip: 'Drücken Sie Strg (oder Cmd auf macOS) + Umschalt + Zahl, um den Modus zu wechseln',
+        resetToDefaults: 'Auf Standardwerte zurücksetzen',
+        hotkey: 'Tastenkürzel',
+        pressKeys: 'Tasten drücken...'
+    },
+
+    messages: {
+        operationSuccess: 'Vorgang erfolgreich',
+        duplicateHotkey: 'Dieses Tastenkürzel wird bereits verwendet',
+        invalidHotkey: 'Tastenkürzel muss mindestens eine Modifikatortaste enthalten (Ctrl/Alt/Shift/Cmd)',
+        noHotkeysConfigured: 'Keine Tastenkürzel konfiguriert',
+        saveFailed: 'Speichern fehlgeschlagen',
+        invalidConfig: 'Ungültige Konfiguration',
+        confirmDelete: 'Möchten Sie wirklich löschen?',
+        confirmClear: 'Aktuelle Daten werden bereinigt und neu geladen. Fortfahren?',
+        clearOperation: 'Bereinigungsvorgang'
     },
 
     // AI features

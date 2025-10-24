@@ -178,15 +178,20 @@ export default {
         this.detail.exampleDetailVisible = !this.detail.exampleDetailVisible
       }
     },
+    computeListLabel() {
+      return this.$t(`starList.listLabel.${this.list.listType}`)
+    },
     handleOperate() {
-      this.edit.title = this.list.listName + '-增加'
+      const label = this.computeListLabel()
+      this.edit.title = `${label} - ${this.$t('common.add')}`
       this.edit.type = 'add'
       this.edit.form.id = null
       this.edit.form.listName = ''
       this.edit.dialogVisible = true
     },
     handleEdit(index, row) {
-      this.edit.title = this.list.listName + '-修改'
+      const label = this.computeListLabel()
+      this.edit.title = `${label} - ${this.$t('common.edit')}`
       this.edit.type = 'update'
       this.edit.form.id = row.id
       this.edit.dialogVisible = true
@@ -194,13 +199,13 @@ export default {
     handleDelete(index, row) {
       const loading = this.$loading({
         lock: true,
-        text: 'Loading',
+        text: this.$t('common.loading'),
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       })
-      this.$confirm('即将进行删除, 是否继续?', '删除操作', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      this.$confirm(this.$t('messages.confirmDelete'), this.$t('collections.deleteOperation'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).then(() => {
         if (this.list.listType === 'word') {
@@ -401,7 +406,7 @@ export default {
       this.$message.success({
         duration: 1000,
         center: true,
-        message: '操作成功'
+        message: this.$t('messages.operationSuccess')
       })
     },
     multiModeReview(listId, mode) {
@@ -480,30 +485,30 @@ export default {
     <div class="control-bar">
       <!-- List type selector -->
       <select class="ctrl-select" v-model="list.listType" @change="listTypeClick(list.listType)" :disabled="loading || list.status !== 'list'">
-        <option value="paraphrase">释义本</option>
-        <option value="word">单词本</option>
-        <option value="example">例句本</option>
+        <option value="paraphrase">{{ $t('starList.listType.paraphrase') }}</option>
+        <option value="word">{{ $t('starList.listType.word') }}</option>
+        <option value="example">{{ $t('starList.listType.example') }}</option>
       </select>
 
       <!-- Global review mode selector (paraphrase list only) -->
       <select class="ctrl-select" v-if="list.listType === 'paraphrase' && list.status === 'list'" @change="selectReviewMode({mode: $event.target.value, id: 0})" :disabled="loading">
-        <option value="" disabled selected>选择复习/阅读模式</option>
-        <option value="stockReviewChToEn">存量复习(汉英)</option>
-        <option value="totalReviewChToEn">全量复习(汉英)</option>
-        <option value="stockReview">存量复习</option>
-        <option value="enhanceReview">强化复习</option>
-        <option value="totalReview">全量复习</option>
-        <option value="stockRead">存量阅读</option>
-        <option value="enhanceRead">强化阅读</option>
-        <option value="totalRead">全量阅读</option>
-        <option value="downloadReviewAudio">下载资源</option>
+        <option value="" disabled selected>{{ $t('starList.selectReviewModePlaceholder') }}</option>
+        <option value="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</option>
+        <option value="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</option>
+        <option value="stockReview">{{ $t('review.stockReview') }}</option>
+        <option value="enhanceReview">{{ $t('review.enhanceReview') }}</option>
+        <option value="totalReview">{{ $t('review.totalReview') }}</option>
+        <option value="stockRead">{{ $t('review.stockRead') }}</option>
+        <option value="enhanceRead">{{ $t('review.enhanceRead') }}</option>
+        <option value="totalRead">{{ $t('review.totalRead') }}</option>
+        <option value="downloadReviewAudio">{{ $t('review.downloadResources') }}</option>
       </select>
 
       <!-- Actions -->
-      <button class="ctrl-btn info" @click="goBack" :disabled="loading">返回</button>
-      <button class="ctrl-btn primary" @click="refresh" :disabled="loading">刷新</button>
-      <button class="ctrl-btn primary" @click="handleOperate" :disabled="loading || list.status !== 'list'">新建</button>
-      <button class="ctrl-btn secondary" @click="operationClick('switch')" :disabled="loading || list.status !== 'list'">{{ list.editMode ? '完成' : '编辑' }}</button>
+      <button class="ctrl-btn info" @click="goBack" :disabled="loading">{{ $t('common.back') }}</button>
+      <button class="ctrl-btn primary" @click="refresh" :disabled="loading">{{ $t('common.refresh') }}</button>
+      <button class="ctrl-btn primary" @click="handleOperate" :disabled="loading || list.status !== 'list'">{{ $t('common.add') }}</button>
+      <button class="ctrl-btn secondary" @click="operationClick('switch')" :disabled="loading || list.status !== 'list'">{{ list.editMode ? $t('common.done') : $t('common.edit') }}</button>
     </div>
 
     <!-- Simple list instead of el-table -->
@@ -514,21 +519,21 @@ export default {
 
           <!-- Per-row review mode (paraphrase list only, not in edit mode) -->
           <select class="row-select" v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode" @change="selectReviewMode({mode: $event.target.value, id: row.id})" :disabled="loading">
-            <option value="" disabled selected>选择模式</option>
-            <option value="stockReviewChToEn">存量复习(汉英)</option>
-            <option value="totalReviewChToEn">全量复习(汉英)</option>
-            <option value="stockReview">存量复习</option>
-            <option value="enhanceReview">强化复习</option>
-            <option value="totalReview">全量复习</option>
-            <option value="stockRead">存量阅读</option>
-            <option value="enhanceRead">强化阅读</option>
-            <option value="totalRead">全量阅读</option>
+            <option value="" disabled selected>{{ $t('starList.selectMode') }}</option>
+            <option value="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</option>
+            <option value="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</option>
+            <option value="stockReview">{{ $t('review.stockReview') }}</option>
+            <option value="enhanceReview">{{ $t('review.enhanceReview') }}</option>
+            <option value="totalReview">{{ $t('review.totalReview') }}</option>
+            <option value="stockRead">{{ $t('review.stockRead') }}</option>
+            <option value="enhanceRead">{{ $t('review.enhanceRead') }}</option>
+            <option value="totalRead">{{ $t('review.totalRead') }}</option>
           </select>
 
           <!-- Edit actions -->
           <div v-if="list.editMode" class="row-actions">
-            <button class="icon-btn" title="修改" @click="handleEdit(null, row)">✎</button>
-            <button class="icon-btn danger" title="删除" :disabled="loading" @click="handleDelete(null, row)">🗑️</button>
+            <button class="icon-btn" :title="$t('common.edit')" @click="handleEdit(null, row)">✎</button>
+            <button class="icon-btn danger" :title="$t('common.delete')" :disabled="loading" @click="handleDelete(null, row)">🗑️</button>
           </div>
         </li>
       </ul>
@@ -562,12 +567,12 @@ export default {
       <div class="modal">
         <div class="modal-header">{{ edit.title }}</div>
         <div class="modal-body">
-          <label class="modal-label">名字</label>
+          <label class="modal-label">{{ $t('collections.listName') }}</label>
           <input class="modal-input" v-model="edit.form.listName" :disabled="loading" />
         </div>
         <div class="modal-footer">
-          <button class="ctrl-btn secondary" @click="handleEditClose" :disabled="loading">取消</button>
-          <button class="ctrl-btn primary" @click="handleEditSubmit" :disabled="loading">确定</button>
+          <button class="ctrl-btn secondary" @click="handleEditClose" :disabled="loading">{{ $t('common.cancel') }}</button>
+          <button class="ctrl-btn primary" @click="handleEditSubmit" :disabled="loading">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </div>

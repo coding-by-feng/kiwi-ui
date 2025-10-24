@@ -110,7 +110,8 @@ export default {
         synonym: 'คำเหมือน',
         antonym: 'คำตรงข้าม',
         vocabularyAssociation: 'เชื่อมโยงคำศัพท์',
-        phrasesAssociation: 'เชื่อมโยงวลี'
+        phrasesAssociation: 'เชื่อมโยงวลี',
+        selectMode: 'เลือกโหมด'
     },
 
     // Word details
@@ -262,7 +263,12 @@ export default {
             unknown: 'ไม่ทราบแหล่งที่มา'
         },
         clipboardDetection: "ตรวจจับคลิปบอร์ด",
-        clipboardDetectionTooltip: "ตรวจจับและแนะนำการใช้เนื้อหาคลิปบอร์ดโดยอัตโนมัติเมื่อเปลี่ยนแท็บหรือเมื่อช่องค้นหาว่าง"
+        clipboardDetectionTooltip: "ตรวจจับและแนะนำการใช้เนื้อหาคลิปบอร์ดโดยอัตโนมัติเมื่อเปลี่ยนแท็บหรือเมื่อช่องค้นหาว่าง",
+        searchModeHotkeys: 'ปุ่มลัดโหมดการค้นหา',
+        searchModeHotkeysTip: 'กด Ctrl (หรือ Cmd บน macOS) + Shift + ตัวเลข เพื่อสลับโหมด',
+        resetToDefaults: 'รีเซ็ตเป็นค่าเริ่มต้น',
+        hotkey: 'ปุ่มลัด',
+        pressKeys: 'กดปุ่ม...'
     },
 
     // Login
@@ -414,7 +420,10 @@ export default {
         clearOperation: 'ล้างข้อมูล',
         operationSuccess: 'ดำเนินการสำเร็จ',
         clipboardDetectionEnabled: 'เปิดการตรวจจับคลิปบอร์ดแล้ว',
-        clipboardDetectionDisabled: 'ปิดการตรวจจับคลิปบอร์ดแล้ว'
+        clipboardDetectionDisabled: 'ปิดการตรวจจับคลิปบอร์ดแล้ว',
+        duplicateHotkey: 'ปุ่มลัดนี้ถูกใช้งานแล้ว',
+        invalidHotkey: 'ปุ่มลัดต้องมีอย่างน้อยหนึ่งคีย์ดัดแปลง (Ctrl/Alt/Shift/Cmd)',
+        noHotkeysConfigured: 'ยังไม่ได้กำหนดปุ่มลัด'
     },
 
     // Time units

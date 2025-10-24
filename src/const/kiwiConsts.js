@@ -167,8 +167,21 @@ export default {
         NATIVE_LANG: 'native_lang',
         UI_LANGUAGE: 'ui_language', // Add UI language key
         CLIPBOARD_DETECTION: 'clipboard_detection',
-        SUBTITLES_AUTO_CENTER: 'subtitles_auto_center' // New: persist subtitles auto-center preference
+        SUBTITLES_AUTO_CENTER: 'subtitles_auto_center', // New: persist subtitles auto-center preference
+        // New: hotkey configuration keys
+        SEARCH_MODE_HOTKEYS: 'search_mode_hotkeys',
+        // New: feature tabs enable/disable map
+        ENABLED_TABS: 'enabled_tabs'
     },
+
+    // Default visibility for feature tabs. Users can override in settings.
+    DEFAULT_ENABLED_TABS: Object.freeze({
+        starList: true,
+        todo: true,
+        youtube: true,
+        about: true,
+        bgm: true
+    }),
 
     DB_NAME: 'KIWI_VOCABULARY',
     DB_STORE_NAME: 'REVIEW_AUDIO_STORE',
@@ -213,6 +226,47 @@ export default {
         ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
         VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px'},
         PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association', width: '145px'},
+    }),
+
+    // Default hotkeys: use Ctrl+Shift+Number to switch modes quickly
+    // These can be overridden by saving a custom mapping to CONFIG_KEY.SEARCH_MODE_HOTKEYS
+    DEFAULT_SEARCH_MODE_HOTKEYS: Object.freeze({
+        '1': 'detail',                         // Dictionary
+        '2': 'directly-translation',           // Direct Translation
+        '3': 'translation-and-explanation',    // Explanation
+        '4': 'grammar-explanation',            // Grammar Explanation
+        '5': 'grammar-correction',             // Grammar Correction
+        '6': 'vocabulary-explanation',         // Vocabulary Explanation
+        '7': 'synonym',                        // Synonym
+        '8': 'antonym',                        // Antonym
+        '9': 'vocabulary-association',         // Vocabulary Association
+        '0': 'phrases-association'             // Phrases Association
+    }),
+
+    // Default hotkeys (new format): mapping of normalized combo strings to modes.
+    // Normalized combo format: 'Ctrl+Shift+1', 'Meta+Shift+1', 'Alt+S', 'Ctrl+Alt+G', etc.
+    // This coexists with legacy DEFAULT_SEARCH_MODE_HOTKEYS (digit->mode) for backward compatibility.
+    DEFAULT_SEARCH_HOTKEY_BINDINGS: Object.freeze({
+        'Ctrl+Shift+1': 'detail',
+        'Meta+Shift+1': 'detail',
+        'Ctrl+Shift+2': 'directly-translation',
+        'Meta+Shift+2': 'directly-translation',
+        'Ctrl+Shift+3': 'translation-and-explanation',
+        'Meta+Shift+3': 'translation-and-explanation',
+        'Ctrl+Shift+4': 'grammar-explanation',
+        'Meta+Shift+4': 'grammar-explanation',
+        'Ctrl+Shift+5': 'grammar-correction',
+        'Meta+Shift+5': 'grammar-correction',
+        'Ctrl+Shift+6': 'vocabulary-explanation',
+        'Meta+Shift+6': 'vocabulary-explanation',
+        'Ctrl+Shift+7': 'synonym',
+        'Meta+Shift+7': 'synonym',
+        'Ctrl+Shift+8': 'antonym',
+        'Meta+Shift+8': 'antonym',
+        'Ctrl+Shift+9': 'vocabulary-association',
+        'Meta+Shift+9': 'vocabulary-association',
+        'Ctrl+Shift+0': 'phrases-association',
+        'Meta+Shift+0': 'phrases-association'
     }),
 
     TOGGLE: {

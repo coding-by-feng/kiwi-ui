@@ -8,21 +8,21 @@
               {{ parahprase.paraphraseEnglish }}
             </p>
             <div class="paraphrase-translation">
-              {{ isShowParaphrase ? parahprase.meaningChinese : '释义已隐藏，点击上面灯泡显示' }}
+              {{ isShowParaphrase ? parahprase.meaningChinese : $t('word.hiddenPrompt') }}
             </div>
           </div>
           <div class="collapse-actions">
             <el-button class="collapse-action-button" type="text" size="mini"
                        @click="isShowParaphrase = !isShowParaphrase"
-                       :title="isShowParaphrase ? '隐藏释义' : '显示释义'">
+                       :title="isShowParaphrase ? $t('word.hideDefinition') : $t('word.showDefinition')">
               <i class="el-icon-s-opportunity"></i>
             </el-button>
             <el-button class="collapse-action-button info" type="text" size="mini"
-                       @click="showDetail(item.wordName)" title="查看详情">
+                       @click="showDetail(item.wordName)" :title="$t('word.showDetails')">
               <i class="el-icon-more-outline"></i>
             </el-button>
             <el-button class="collapse-action-button danger" type="text" size="mini"
-                       @click="removeWordStarListFun(item.wordId)" title="从收藏移除">
+                       @click="removeWordStarListFun(item.wordId)" :title="$t('word.removeFromCollection')">
               <i class="el-icon-remove-outline"></i>
             </el-button>
           </div>

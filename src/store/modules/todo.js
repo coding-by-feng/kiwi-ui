@@ -236,13 +236,28 @@ const actions = {
     const api = getApi()
     const raw = await api.getAnalyticsMonthly(months)
     const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
-    commit('SET_ANALYTICS_MONTHLY', r)
-    return r
+    // Normalize: server returns { data: { labels, points } }, local returns { labels, points }
+    const payload = (r && r.data && (Array.isArray(r.data.labels) || Array.isArray(r.data.points))) ? r.data : r
+    const normalized = {
+      labels: Array.isArray(payload && payload.labels) ? payload.labels : [],
+      points: Array.isArray(payload && payload.points) ? payload.points : []
+    }
+    commit('SET_ANALYTICS_MONTHLY', normalized)
+    return normalized
   },
   async fetchAnalyticsSummary(_, month) {
     const api = getApi()
     const raw = await api.getAnalyticsSummary(month)
-    return isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+    const r = isAxiosResponse(raw) ? ensureServerSuccess(raw) : raw
+    // Normalize: server returns { data: { ... } }, local returns flat object
+    const payload = (r && r.data && (typeof r.data.totalPoints !== 'undefined' || typeof r.data.completedCount !== 'undefined')) ? r.data : r
+    const normalized = {
+      month: String(payload && payload.month || month || ''),
+      totalPoints: typeof (payload && payload.totalPoints) === 'number' ? payload.totalPoints : 0,
+      completedCount: typeof (payload && payload.completedCount) === 'number' ? payload.completedCount : 0,
+      successRatePct: typeof (payload && payload.successRatePct) === 'number' ? payload.successRatePct : 0,
+    }
+    return normalized
   },
 }
 
