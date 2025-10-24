@@ -183,7 +183,10 @@ export default {
         searchModeHotkeysTip: '按下 Ctrl（或 macOS 上的 Cmd）+ Shift + 数字 来切换模式',
         resetToDefaults: '恢复默认',
         hotkey: '快捷键',
-        pressKeys: '请按下按键...'
+        pressKeys: '请按下按键...',
+        // 功能标签配置
+        featureTabs: '功能标签',
+        featureTabsTip: '在工具栏中显示或隐藏标签'
     },
 
     // Todo Gamification
@@ -401,5 +404,14 @@ export default {
         hideDefinition: '隐藏释义',
         showDefinition: '显示释义',
         toggleWordVisibility: '点击切换是否显示单词'
+    },
+
+    // 新增：功能标签名
+    tabs: {
+        todo: '待办',
+        youtube: 'YouTube',
+        about: '关于',
+        bgm: 'BGM 标签',
+        vocabularyReview: '词汇复习'
     }
 }

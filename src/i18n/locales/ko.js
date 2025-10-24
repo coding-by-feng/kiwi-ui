@@ -269,7 +269,10 @@ export default {
         searchModeHotkeysTip: 'Ctrl(또는 macOS의 Cmd) + Shift + 숫자를 눌러 모드를 전환',
         resetToDefaults: '기본값으로 재설정',
         hotkey: '단축키',
-        pressKeys: '키를 누르세요...'
+        pressKeys: '키를 누르세요...',
+        // 추가: 기능 탭 설정
+        featureTabs: '기능 탭',
+        featureTabsTip: '툴바에서 탭을 표시하거나 숨기기'
     },
 
     messages: {
@@ -282,5 +285,13 @@ export default {
         confirmDelete: '삭제하시겠습니까?',
         confirmClear: '현재 데이터를 정리하고 다시 가져옵니다. 계속하시겠습니까?',
         clearOperation: '정리 작업'
+    },
+
+    tabs: {
+        todo: '할 일',
+        youtube: 'YouTube',
+        about: '정보',
+        bgm: 'BGM 탭',
+        vocabularyReview: '어휘 복습'
     }
 }

@@ -312,7 +312,10 @@ export default {
         searchModeHotkeysTip: 'Press Ctrl (or Cmd on macOS) + Shift + Number to switch modes',
         resetToDefaults: 'Reset to defaults',
         hotkey: 'Hotkey',
-        pressKeys: 'Press keys...'
+        pressKeys: 'Press keys...',
+        // Added: Feature tabs settings
+        featureTabs: 'Feature Tabs',
+        featureTabsTip: 'Show or hide tabs in the toolbar'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
@@ -704,5 +707,14 @@ export default {
         permanentlyDelete: 'Permanently delete',
         permanentlyDeleteConfirm: 'Permanently delete this task? This cannot be undone.',
         noTrashItems: 'No items in trash'
+    },
+
+    // Added: Tabs labels for feature toggles
+    tabs: {
+        todo: 'Todo',
+        youtube: 'YouTube',
+        about: 'About',
+        bgm: 'BGM Tab',
+        vocabularyReview: 'Vocabulary Review'
     }
 }

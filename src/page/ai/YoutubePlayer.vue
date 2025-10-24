@@ -327,7 +327,7 @@
 
 <script>
 import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, favoriteVideo, unfavoriteVideo, favoriteVideoByUrl, unfavoriteVideoByUrl} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
@@ -445,12 +445,11 @@ export default defineComponent({
     currentProgress() {
       return this.isTranslationLoading ? this.translationProgress : this.subtitlesLoadingProgress;
     },
-    // Whether a video can be favorited: either a valid backend id OR a valid URL with an extractable YouTube id
+    // Whether a video can be favorited: requires a valid URL or a player video id we can convert to URL
     canFavorite() {
-      const hasBackendId = !!this.backendVideoId;
       const hasValidUrl = !!(this.videoUrl && this.extractVideoId(this.videoUrl));
       const hasPlayerId = !!(this.playerVideoId && this.isLikelyYoutubeId(this.playerVideoId));
-      return hasBackendId || hasValidUrl || hasPlayerId;
+      return hasValidUrl || hasPlayerId;
     },
     showMiniLoader() {
       return this.isLoading || !this.videoReady || this.isBuffering;
@@ -543,7 +542,7 @@ export default defineComponent({
     this.cleanup();
   },
   methods: {
-    // Favorite toggle for player
+    // Favorite toggle for player - always use video URL
     async toggleFavoriteOnPlayer() {
       if (!this.canFavorite || this.pendingFavorite) return;
 
@@ -551,30 +550,17 @@ export default defineComponent({
       this.pendingFavorite = true;
       this.isFavorited = !prev; // optimistic update
 
-      const id = this.backendVideoId;
+      // Always construct URL from current state
       const fallbackUrl = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
 
       try {
-        let res = null;
-        let ok = false;
-
-        if (id) {
-          const api = this.isFavorited ? favoriteVideo : unfavoriteVideo;
-          res = await api(id);
-          ok = !!(res && res.data && res.data.code === 1);
-          if (!ok && fallbackUrl && this.extractVideoId(fallbackUrl)) {
-            const apiUrl = this.isFavorited ? favoriteVideoByUrl : unfavoriteVideoByUrl;
-            res = await apiUrl(fallbackUrl);
-            ok = !!(res && res.data && res.data.code === 1);
-          }
-        } else if (fallbackUrl && this.extractVideoId(fallbackUrl)) {
-          const apiUrl = this.isFavorited ? favoriteVideoByUrl : unfavoriteVideoByUrl;
-          res = await apiUrl(fallbackUrl);
-          ok = !!(res && res.data && res.data.code === 1);
-        } else {
-          throw new Error('No valid video identifier available');
+        if (!fallbackUrl || !this.extractVideoId(fallbackUrl)) {
+          throw new Error('No valid video URL available');
         }
 
+        const apiUrl = this.isFavorited ? favoriteVideoByUrl : unfavoriteVideoByUrl;
+        const res = await apiUrl(fallbackUrl);
+        const ok = !!(res && res.data && res.data.code === 1);
         if (!ok) {
           throw new Error((res && res.data && (res.data.msg || res.data.message)) || 'Favorite toggle failed');
         }

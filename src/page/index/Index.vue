@@ -126,11 +126,11 @@ export default {
     ensureActiveTabValid() {
       const act = this.activeName
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','bgm']
+      const governed = ['starList','todo','youtube','about','aiHistory']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Also consider login-gated tabs
-        if (!allowed || ((act === 'starList' || act === 'youtube') && !this.isLogin)) {
+        if (!allowed || ((act === 'starList' || act === 'youtube' || act === 'aiHistory') && !this.isLogin)) {
           const preservedParams = { ...this.$route.query, active: 'search', now: new Date().getTime() }
           if (this.activeName !== 'search') {
             this.activeName = 'search'
@@ -277,6 +277,13 @@ export default {
         </span>
         <router-view name="youtube"></router-view>
       </el-tab-pane>
+      <!-- New: AI History tab -->
+      <el-tab-pane name="aiHistory" v-if="isLogin && enabledTabs.aiHistory">
+        <span slot="label">
+          <i class="el-icon-time"></i>
+        </span>
+        <router-view name="aiHistory"></router-view>
+      </el-tab-pane>
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label">
           <i class="el-icon-user"></i>
@@ -295,12 +302,7 @@ export default {
         </span>
         <router-view name="about"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="bgm" v-if="enabledTabs.bgm">
-        <span slot="label">
-          <i class="el-icon-headset"></i>
-        </span>
-        <router-view name="bgm"></router-view>
-      </el-tab-pane>
+      <!-- Removed BGM tab: content now lives under User Center -->
     </el-tabs>
   </div>
 </template>
