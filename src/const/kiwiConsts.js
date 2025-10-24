@@ -171,7 +171,9 @@ export default {
         // New: hotkey configuration keys
         SEARCH_MODE_HOTKEYS: 'search_mode_hotkeys',
         // New: feature tabs enable/disable map
-        ENABLED_TABS: 'enabled_tabs'
+        ENABLED_TABS: 'enabled_tabs',
+        // New: onboarding/guided tour completion flag
+        ONBOARDING_TOUR_DONE: 'onboarding_tour_done'
     },
 
     // Default visibility for feature tabs. Users can override in settings.
@@ -209,6 +211,9 @@ export default {
         ANTONYM: {label: 'Antonym', value: 'antonym'},
         VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association'},
         PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association'},
+        // New modes
+        VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion' },
+        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction' }
     },
 
     SEARCH_MODES_DATA: Object.freeze({
@@ -226,6 +231,9 @@ export default {
         ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
         VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px'},
         PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association', width: '145px'},
+        // New modes with approximate widths
+        VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion', width: '230px' },
+        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction', width: '240px' }
     }),
 
     // Default hotkeys: use Ctrl+Shift+Number to switch modes quickly
@@ -267,6 +275,7 @@ export default {
         'Meta+Shift+9': 'vocabulary-association',
         'Ctrl+Shift+0': 'phrases-association',
         'Meta+Shift+0': 'phrases-association'
+        // Users can add custom bindings for new modes via settings
     }),
 
     TOGGLE: {
@@ -327,6 +336,9 @@ export default {
         ANTONYM: 'input vocabulary',
         VOCABULARY_ASSOCIATION: 'input anything',
         PHRASES_ASSOCIATION: 'input anything',
+        // New modes
+        VOCABULARY_CHARACTER_EXPANSION: 'input anything',
+        AMBIGUOUS_ASSOCIATION_CORRECTION: 'input anything'
     },
 
     SUBTITLES_TYPE: {

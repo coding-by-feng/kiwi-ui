@@ -167,6 +167,25 @@ export function getFavoriteVideos(current, size) {
   })
 }
 
+// Check favorite status by backend video ID (Long)
+export function checkVideoFavoriteById(videoId) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/video/${videoId}/favorite`,
+    method: 'get',
+    headers: { isToken: true }
+  })
+}
+
+// Check favorite status by video URL
+export function checkVideoFavoriteByUrl(videoUrl) {
+  return request({
+    url: `/ai-biz/ai/ytb/channel/video/favorite`,
+    method: 'get',
+    params: { videoUrl },
+    headers: { isToken: true }
+  })
+}
+
 // YouTube Video-related API calls - UPDATED FOR SEPARATED ENDPOINTS
 export function downloadVideoScrollingSubtitles(videoUrl) {
     const url = `/ai-biz/ai/ytb/video/subtitles/scrolling?url=${encodeURIComponent(videoUrl)}`;

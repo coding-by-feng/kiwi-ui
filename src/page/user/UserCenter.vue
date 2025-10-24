@@ -387,7 +387,10 @@ export default {
           'synonym': 'synonym',
           'antonym': 'antonym',
           'vocabulary-association': 'vocabularyAssociation',
-          'phrases-association': 'phrasesAssociation'
+          'phrases-association': 'phrasesAssociation',
+          // New modes
+          'vocabulary-character-expansion': 'vocabularyCharacterExpansion',
+          'ambiguous-association-correction': 'ambiguousAssociationCorrection'
         }
         return map[value] || value
       }

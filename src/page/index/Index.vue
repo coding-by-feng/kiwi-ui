@@ -252,7 +252,7 @@ export default {
 
 <template>
   <div class="tab_nav" :style="{width: tabsWidth}">
-    <el-tabs type="border-card" :active-name="activeName" @tab-click="tabClick">
+    <el-tabs id="main-tabs" type="border-card" :active-name="activeName" @tab-click="tabClick">
       <el-tab-pane name="search">
         <span slot="label">
           <i class="el-icon-search"></i>

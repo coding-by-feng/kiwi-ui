@@ -144,6 +144,9 @@ export default {
         antonym: '反义词',
         vocabularyAssociation: '词汇关联',
         phrasesAssociation: '短语关联',
+        // 新增模式
+        vocabularyCharacterExpansion: '词形扩展',
+        ambiguousAssociationCorrection: '歧义关联纠正',
         selectMode: '选择模式'
     },
 
@@ -305,6 +308,9 @@ export default {
         copyright: '©2025 Kason 英语学习平台。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
+        // 新增 Discord 相关
+        discord: 'Discord',
+        joinDiscord: '加入 Discord 社群',
     },
 
     // New: full AI features
@@ -348,7 +354,9 @@ export default {
         streaming: '正在流式响应...',
         copyResponseText: '复制响应文本',
         textCopiedToClipboard: '文本已复制到剪贴板！',
-        failedToCopyText: '复制文本失败'
+        failedToCopyText: '复制文本失败',
+        // 新增：剪贴板提示
+        useClipboardContent: '使用剪贴板内容：“{text}”？'
     },
 
     // New: audio settings parity
@@ -373,7 +381,9 @@ export default {
         saveFailed: '保存失败',
         duplicateHotkey: '该快捷键已被使用',
         invalidHotkey: '快捷键必须包含至少一个修饰键（Ctrl/Alt/Shift/Cmd）',
-        noHotkeysConfigured: '尚未配置任何快捷键'
+        noHotkeysConfigured: '尚未配置任何快捷键',
+        // 新增：热键切换提示
+        switchedModeHotkey: '已通过 {key} 切换模式'
     },
 
     // StarList specific labels
@@ -399,19 +409,5 @@ export default {
         downloadResources: '下载资源'
     },
 
-    // Word details additions
-    word: {
-        hideDefinition: '隐藏释义',
-        showDefinition: '显示释义',
-        toggleWordVisibility: '点击切换是否显示单词'
-    },
 
-    // 新增：功能标签名
-    tabs: {
-        todo: '待办',
-        youtube: 'YouTube',
-        about: '关于',
-        bgm: 'BGM 标签',
-        vocabularyReview: '词汇复习'
-    }
 }

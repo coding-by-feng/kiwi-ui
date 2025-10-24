@@ -95,6 +95,22 @@
             </div>
           </div>
 
+          <!-- Discord -->
+          <div class="contact-item discord-item">
+            <div class="contact-header">
+              <i class="el-icon-chat-dot-round"></i>
+              <span class="contact-title">{{ $t('about.discord') }}</span>
+            </div>
+            <div class="contact-content">
+              <a href="https://discord.gg/E8yvMZkA" target="_blank" class="social-link discord-link">
+                <div class="social-button">
+                  <i class="el-icon-chat-dot-round"></i>
+                  <span class="social-text">{{ $t('about.joinDiscord') }}</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
           <!-- WeChat QR -->
           <div class="contact-item wechat-item">
             <div class="contact-header">
@@ -326,6 +342,15 @@ export default {
 
   &:hover {
     background: linear-gradient(135deg, #1f2328 0%, #24292e 100%);
+  }
+}
+
+/* Discord styling */
+.discord-link .social-button {
+  background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%);
+
+  &:hover {
+    background: linear-gradient(135deg, #4752C4 0%, #5865F2 100%);
   }
 }
 

@@ -113,6 +113,15 @@
           @click="copyResponseText">
         Copy
       </el-button>
+      <el-button
+          v-if="!apiLoading && parsedResponseText"
+          class="regen-button"
+          size="small"
+          icon="el-icon-refresh-right"
+          :title="'Regenerate response'"
+          @click="regenerateResponse">
+        Regenerate
+      </el-button>
     </div>
   </div>
 </template>
@@ -1015,6 +1024,24 @@ export default {
           });
     },
 
+    // New: regenerate response by recalling WS AI and replacing cache
+    regenerateResponse() {
+      if (this.apiLoading || this.isStreaming) return;
+      try {
+        const key = this.computeCacheKeyFromQuery(this.$route.query);
+        localStorage.removeItem(key);
+      } catch (e) { /* ignore */ }
+
+      // Reset main response state and errors
+      this.lastErrorMessage = '';
+      this.aiResponseVO.responseText = '';
+      this.closeWebSocket('main');
+      this.persistNow(); // persist cleared state
+
+      // Re-initiate the AI call with current inputs
+      this.init();
+    },
+
     // Compute a stable cache key based on core inputs
     computeCacheKeyFromQuery(query) {
       const originalText = query && query.originalText ? query.originalText : this.$route.query.originalText
@@ -1338,6 +1365,32 @@ export default {
 }
 
 .copy-button:active {
+  transform: translateY(0px);
+}
+
+.regen-button {
+  position: absolute;
+  top: 0;
+  right: 100px;
+  background: linear-gradient(135deg, #f56c6c 0%, #d9534f 100%) !important;
+  border: none !important;
+  color: white !important;
+  transition: all 0.3s ease;
+  border-radius: 6px !important;
+}
+
+.regen-button:hover {
+  background: linear-gradient(135deg, #e55b5b 0%, #c9302c 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 108, 108, 0.3);
+}
+
+.regen-button:focus {
+  background: linear-gradient(135deg, #e55b5b 0%, #c9302c 100%) !important;
+  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.3);
+}
+
+.regen-button:active {
   transform: translateY(0px);
 }
 
