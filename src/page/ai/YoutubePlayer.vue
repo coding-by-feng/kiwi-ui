@@ -198,9 +198,9 @@
     </div>
 
     <!-- Enhanced Content Container -->
-    <div class="content-container" v-if="(videoUrl && videoUrl !== '') || (playerVideoId && playerVideoId !== '')">
+    <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '') || (playerVideoId && playerVideoId !== '')">
       <!-- Left Panel (video and controls) -->
-      <div class="left-panel">
+      <div class="left-panel" :style="!isSmallScreen ? { width: leftPanelPercent + '%' } : null">
         <!-- Video Player Section -->
         <div class="video-section">
           <div class="video-container">
@@ -235,8 +235,22 @@
         </div>
       </div>
 
+      <!-- Draggable splitter: desktop only -->
+      <div
+        v-if="!isSmallScreen"
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        :aria-valuenow="leftPanelPercent"
+        aria-valuemin="20"
+        aria-valuemax="80"
+        tabindex="0"
+        @mousedown.prevent="startResize"
+        @dblclick="resetPanelSizes"
+      ></div>
+
       <!-- Right Panel (subtitles) -->
-      <div class="right-panel">
+      <div class="right-panel" :style="!isSmallScreen ? { width: (100 - leftPanelPercent) + '%' } : null">
         <!-- Enhanced Subtitles List -->
         <div class="subtitles-header clickable-header" @click="toggleScrollingSubtitles">
           <i class="el-icon-document"></i>
@@ -327,11 +341,12 @@
 
 <script>
 import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
 import MarkdownIt from 'markdown-it';
+import NoSleep from 'nosleep.js';
 
 const md = new MarkdownIt({
   html: true,
@@ -402,6 +417,18 @@ export default defineComponent({
       streamingBuffer: '',
       shouldShowTranslationContainer: false,
 
+      // WS stability state
+      wsHeartbeatInterval: null,
+      wsReconnectTimer: null,
+      wsReconnectAttempts: 0,
+      wsShouldReconnect: false,
+      wsSessionId: '',
+      lastTranslationRequest: null,
+      pageHidden: false,
+
+      // NoSleep helper to reduce iOS background suspension via wake-lock-like behavior
+      noSleep: null,
+
       // Optimized debouncing
       scrollTimeout: null,
       progressUpdateInterval: null,
@@ -414,6 +441,16 @@ export default defineComponent({
       isBuffering: false,
       miniLoaderPercent: 0,
       miniLoaderInterval: null,
+      // Splitter state (desktop only)
+      leftPanelPercent: (() => {
+        const v = getStore({ name: 'ytb_left_panel_percent' });
+        const n = typeof v === 'number' ? v : parseFloat(v);
+        const clamped = isNaN(n) ? 50 : Math.max(20, Math.min(80, n));
+        return clamped;
+      })(),
+      isResizing: false,
+      splitterMin: 20,
+      splitterMax: 80,
     };
   },
   computed: {
@@ -507,10 +544,29 @@ export default defineComponent({
       },
       immediate: true
     },
+    // When backend id becomes available later (e.g., from subtitles payload), re-check via ID
+    backendVideoId(newVal, oldVal) {
+      if (newVal && newVal !== oldVal) {
+        this.checkFavoriteStatus();
+      }
+    },
     currentSubtitleIndex(newVal, oldVal) {
       if (this.autoCenterEnabled && newVal !== oldVal) {
         this.$nextTick(() => this.scrollActiveSubtitleIntoView());
       }
+    },
+    leftPanelPercent: {
+      handler(newVal) {
+        // Update route query param on panel resize
+        this.$nextTick(() => {
+          const q = { ...(this.$route.query || {}) };
+          const newPercentStr = String(newVal);
+          if (String(q.leftPanelPercent) !== newPercentStr) {
+            this.$router.replace({ path: this.$route.path, query: { ...q, leftPanelPercent: newPercentStr } });
+          }
+        });
+      },
+      immediate: true
     }
   },
   mounted() {
@@ -540,6 +596,8 @@ export default defineComponent({
   },
   beforeUnmount() {
     this.cleanup();
+    // Ensure resize listeners are removed if user leaves mid-drag
+    this.stopResize();
   },
   methods: {
     // Favorite toggle for player - always use video URL
@@ -583,6 +641,35 @@ export default defineComponent({
       }
     },
 
+    // Check favorite status using either backend ID or video URL
+    async checkFavoriteStatus() {
+      if (this.pendingFavorite) return; // don't override optimistic state
+
+      let favorited = false;
+      try {
+        // Prefer backend ID when valid numeric ID is available
+        const id = this.backendVideoId;
+        const hasNumericId = id && /^\d+$/.test(String(id));
+        if (hasNumericId) {
+          const res = await checkVideoFavoriteById(id);
+          if (res && res.data) {
+            favorited = res.data.code === 1 ? !!res.data.data : false;
+          }
+        } else {
+          const url = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
+          if (url && this.extractVideoId(url)) {
+            const res = await checkVideoFavoriteByUrl(url);
+            if (res && res.data) {
+              favorited = res.data.code === 1 ? !!res.data.data : false;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to check favorite status:', e);
+      }
+      this.isFavorited = favorited;
+    },
+
     // Initialization
     initializeComponent() {
       this.loadYouTubeAPI();
@@ -590,12 +677,20 @@ export default defineComponent({
       this.checkScreenSize();
       this.applyTouchPreventions();
       this.updateDisplayStyle();
+      // Prepare NoSleep instance for iOS
+      try { this.noSleep = new NoSleep(); } catch (_) { this.noSleep = null; }
     },
 
     setupEventListeners() {
       document.addEventListener('click', this.handleClickOutside);
       window.addEventListener('resize', this.debounce(this.checkScreenSize, 250));
       window.addEventListener('resize', this.debounce(this.updateDisplayStyle, 250));
+      // Background/visibility and network stability handlers
+      document.addEventListener('visibilitychange', this.onVisibilityChange);
+      window.addEventListener('pagehide', this.onPageHide);
+      window.addEventListener('pageshow', this.onPageShow);
+      window.addEventListener('online', this.onOnline);
+      window.addEventListener('offline', this.onOffline);
     },
 
     cleanup() {
@@ -616,6 +711,14 @@ export default defineComponent({
       document.removeEventListener('click', this.handleClickOutside);
       window.removeEventListener('resize', this.checkScreenSize);
       window.removeEventListener('resize', this.updateDisplayStyle);
+      document.removeEventListener('visibilitychange', this.onVisibilityChange);
+      window.removeEventListener('pagehide', this.onPageHide);
+      window.removeEventListener('pageshow', this.onPageShow);
+      window.removeEventListener('online', this.onOnline);
+      window.removeEventListener('offline', this.onOffline);
+
+      this.clearWsTimers();
+      this.disableNoSleep();
     },
 
     clearTimeouts() {
@@ -627,6 +730,18 @@ export default defineComponent({
         clearInterval(this.progressUpdateInterval);
         this.progressUpdateInterval = null;
       }
+    },
+
+    clearWsTimers() {
+      if (this.wsHeartbeatInterval) {
+        clearInterval(this.wsHeartbeatInterval);
+        this.wsHeartbeatInterval = null;
+      }
+      if (this.wsReconnectTimer) {
+        clearTimeout(this.wsReconnectTimer);
+        this.wsReconnectTimer = null;
+      }
+      this.wsReconnectAttempts = 0;
     },
 
     // Simple debounce helper
@@ -652,6 +767,34 @@ export default defineComponent({
       // Hook to adjust touch behaviors on iOS/Safari; kept lightweight
     },
 
+    // Visibility and network handlers
+    onVisibilityChange() {
+      this.pageHidden = document.hidden;
+      if (!this.pageHidden) {
+        // On becoming visible, if translation was in progress and socket is down, try to resume
+        if (this.isTranslationLoading && (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)) {
+          this.scheduleReconnect(200);
+        }
+      }
+    },
+    onPageHide() {
+      // Browsers may suspend timers; keep minimal state; we'll resume on pageshow
+    },
+    onPageShow() {
+      if (this.isTranslationLoading && (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)) {
+        this.scheduleReconnect(200);
+      }
+    },
+    onOnline() {
+      if (this.isTranslationLoading) {
+        this.scheduleReconnect(100);
+      }
+    },
+    onOffline() {
+      // Optional: surface a compact notice
+      try { msgUtil.msgError(this, 'You are offline. Translation will resume when back online.', 2000); } catch (_) {}
+    },
+
     isSafariOrIOS() {
       if (typeof navigator === 'undefined') return false;
       const ua = navigator.userAgent || '';
@@ -670,6 +813,7 @@ export default defineComponent({
       }
 
       this.disconnectWebSocket();
+      this.clearWsTimers();
 
       return new Promise((resolve, reject) => {
         this.wsConnectionStatus = 'connecting';
@@ -689,7 +833,7 @@ export default defineComponent({
 
         const connectionTimeout = setTimeout(() => {
           if (this.wsConnectionStatus !== 'connected') {
-            this.websocket?.close();
+            try { this.websocket?.close(); } catch (_) {}
             reject(new Error('WebSocket connection timeout'));
           }
         }, 10000);
@@ -697,6 +841,14 @@ export default defineComponent({
         this.websocket.onopen = () => {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'connected';
+          // Start heartbeat keepalive (best-effort; may be throttled in background)
+          this.wsHeartbeatInterval = setInterval(() => {
+            try {
+              if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                this.websocket.send(JSON.stringify({ type: 'ping', ts: Date.now() }));
+              }
+            } catch (_) {}
+          }, 25000);
           resolve();
         };
 
@@ -706,17 +858,26 @@ export default defineComponent({
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'disconnected';
           this.websocket = null;
+          this.clearWsTimers();
 
           if (event.code === 1008 || event.code === 1011) {
             this.handleWebSocketError(new Error('Authentication failed'), 'Authentication failed. Please login again.');
+          }
+
+          // Unexpected close during active translation -> schedule reconnect
+          if (this.isTranslationLoading && this.wsShouldReconnect) {
+            this.scheduleReconnect();
           }
         };
 
         this.websocket.onerror = (error) => {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'error';
-          this.handleWebSocketError(error, 'Failed to connect to translation service.');
-          reject(error);
+          // If initial connect, reject; otherwise we'll attempt reconnect
+          if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+            this.handleWebSocketError(error, 'Failed to connect to translation service.');
+            reject(error);
+          }
         };
       });
     },
@@ -727,11 +888,17 @@ export default defineComponent({
         this.websocket = null;
         this.wsConnectionStatus = 'disconnected';
       }
+      this.clearWsTimers();
     },
 
     handleWebSocketMessage(event) {
       try {
         const response = JSON.parse(event.data);
+
+        if (response.type === 'pong') {
+          // Heartbeat reply; nothing to do
+          return;
+        }
 
         switch (response.type) {
           case 'connected':
@@ -767,6 +934,11 @@ export default defineComponent({
       this.streamingBuffer = '';
       this.shouldShowTranslationContainer = true;
       this.translatedSubtitlesCollapsed = false; // Keep expanded during streaming
+      this.wsShouldReconnect = true;
+      if (this.noSleep && this.isSafariOrIOS()) {
+        // Best-effort: enable wake lock-like behavior on mobile Safari
+        try { this.noSleep.enable(); } catch (_) {}
+      }
 
       this.startProgressAnimation();
     },
@@ -776,6 +948,11 @@ export default defineComponent({
 
       // Process chunk to handle newlines before adding to array
       const processedChunk = chunk.replace(/\\n|\n/g, '<br>');
+      // Basic de-duplication to mitigate reconnect overlap
+      const tail = this.translatedSubtitles.slice(-500);
+      if (tail && processedChunk && tail.includes(processedChunk)) {
+        return;
+      }
       this.translationChunks.push(processedChunk);
       this.translatedSubtitles = this.translationChunks.join('');
 
@@ -793,6 +970,8 @@ export default defineComponent({
       this.isTranslationLoading = false;
       this.translationProgress = 100;
       this.subtitlesLoadingComplete = true;
+      this.wsShouldReconnect = false;
+      this.clearWsTimers();
 
       if (response.fullResponse) {
         this.translatedSubtitles = response.fullResponse;
@@ -804,13 +983,23 @@ export default defineComponent({
       this.$nextTick(() => {
         this.applyTouchPreventions();
       });
+
+      this.disableNoSleep();
     },
 
     handleTranslationError(response) {
+      // Guard against stale errors after a successful session
+      if (!this.isTranslationLoading && this.translatedSubtitles) {
+        console.warn('Ignoring stale translation error after completion:', response);
+        return;
+      }
+
       this.isTranslationLoading = false;
       this.translationProgress = 0;
       this.subtitlesLoadingComplete = true;
       this.shouldShowTranslationContainer = false; // Hide container on error
+      this.wsShouldReconnect = false;
+      this.clearWsTimers();
 
       this.stopProgressAnimation();
 
@@ -822,11 +1011,17 @@ export default defineComponent({
       }
 
       msgUtil.msgError(this, errorMessage, 3000);
+      this.disableNoSleep();
     },
 
     handleWebSocketError(error, message) {
       console.error('WebSocket error:', error);
-      msgUtil.msgError(this, message, 3000);
+      // Avoid noisy toasts if we already have translated content or not actively loading
+      if (this.isTranslationLoading || !this.translatedSubtitles) {
+        msgUtil.msgError(this, message, 3000);
+      } else {
+        console.warn('Suppressing WS error toast because content is already present.');
+      }
     },
 
     async requestTranslation(videoUrl, language) {
@@ -837,11 +1032,17 @@ export default defineComponent({
 
         await this.connectWebSocket();
 
+        // New session id and remember payload for reconnects
+        this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+        this.wsShouldReconnect = true;
+        this.lastTranslationRequest = { videoUrl, language, requestType: 'TRANSLATION', requestId: this.wsSessionId };
+
         const request = {
           videoUrl: videoUrl,
           language: language,
           requestType: 'TRANSLATION',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          requestId: this.wsSessionId
         };
 
         this.websocket.send(JSON.stringify(request));
@@ -850,7 +1051,35 @@ export default defineComponent({
         this.isTranslationLoading = false;
         this.subtitlesLoadingComplete = true;
         this.shouldShowTranslationContainer = false;
+        this.wsShouldReconnect = false;
+        this.clearWsTimers();
+        this.disableNoSleep();
       }
+    },
+
+    // Reconnect with incremental backoff and resume request
+    scheduleReconnect(initialDelay) {
+      if (!this.wsShouldReconnect) return;
+      if (this.wsReconnectTimer) return;
+      const attempt = ++this.wsReconnectAttempts;
+      const delay = typeof initialDelay === 'number' ? initialDelay : Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+      this.wsReconnectTimer = setTimeout(async () => {
+        this.wsReconnectTimer = null;
+        try {
+          await this.connectWebSocket();
+          if (this.lastTranslationRequest && this.isTranslationLoading) {
+            const resumeRequest = {
+              ...this.lastTranslationRequest,
+              timestamp: Date.now(),
+              resumeFrom: this.translationChunks.length
+            };
+            this.websocket.send(JSON.stringify(resumeRequest));
+          }
+        } catch (e) {
+          // Keep trying while allowed
+          if (this.wsShouldReconnect) this.scheduleReconnect();
+        }
+      }, delay);
     },
 
     // Optimized progress animation
@@ -1005,6 +1234,9 @@ export default defineComponent({
             this.$router.replace({ path: this.$route.path, query: { ...q, videoUrl: encoded } });
           }
         } catch (_) { /* no-op if router unavailable */ }
+
+        // Check favorite status in background; don't block player init
+        this.checkFavoriteStatus();
 
         this.statusMessage = 'Initializing player...';
         this.startMiniLoaderPoll();
@@ -1541,13 +1773,6 @@ export default defineComponent({
       }
     },
 
-    // Remove or comment out the old downloadSubtitlesTxt method since it's no longer needed
-    /*
-    async downloadSubtitlesTxt() {
-      // This method is replaced by downloadTranslatedSubtitlesFromUI
-    },
-    */
-
     // Utilities
     extractVideoId(url) {
       try {
@@ -1635,7 +1860,60 @@ export default defineComponent({
       // Extract word-like tokens (letters incl. accents, numbers, apostrophes, hyphens)
       const tokens = s.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9'’-]+/g);
       return Array.isArray(tokens) && tokens.length === 1;
-    }
+    },
+
+    // NoSleep helpers
+    disableNoSleep() {
+      if (this.noSleep) {
+        try { this.noSleep.disable(); } catch (_) {}
+      }
+    },
+
+    // Splitter handlers
+    startResize(e) {
+      if (this.isSmallScreen) return;
+      this.isResizing = true;
+      try {
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      } catch (_) {}
+      this._onMouseMove = (evt) => this.onResizing(evt);
+      this._onMouseUp = () => this.stopResize();
+      window.addEventListener('mousemove', this._onMouseMove);
+      window.addEventListener('mouseup', this._onMouseUp, { once: true });
+    },
+    onResizing(evt) {
+      if (!this.isResizing) return;
+      const container = this.$el.querySelector('.content-container');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const x = evt.clientX - rect.left; // position within container
+      const percent = (x / rect.width) * 100;
+      const clamped = Math.max(this.splitterMin, Math.min(this.splitterMax, percent));
+      this.leftPanelPercent = Math.round(clamped * 10) / 10; // one decimal
+    },
+    stopResize() {
+      if (!this.isResizing) return;
+      this.isResizing = false;
+      try {
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      } catch (_) {}
+      if (this._onMouseMove) {
+        window.removeEventListener('mousemove', this._onMouseMove);
+        this._onMouseMove = null;
+      }
+      this.persistSplit();
+    },
+    resetPanelSizes() {
+      this.leftPanelPercent = 50;
+      this.persistSplit();
+    },
+    persistSplit() {
+      try {
+        setStore({ name: 'ytb_left_panel_percent', content: this.leftPanelPercent, type: 'local' });
+      } catch (_) {}
+    },
   }
 });
 </script>
@@ -2114,6 +2392,7 @@ export default defineComponent({
   padding: 0 20px;
   gap: 20px;
 }
+.content-container.resizing { cursor: col-resize; user-select: none; }
 
 .left-panel {
   width: 100%;

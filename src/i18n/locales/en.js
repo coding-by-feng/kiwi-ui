@@ -118,6 +118,9 @@ export default {
         antonym: 'Antonym',
         vocabularyAssociation: 'Vocabulary Association',
         phrasesAssociation: 'Phrases Association',
+        // New modes
+        vocabularyCharacterExpansion: 'Vocabulary Character Expansion',
+        ambiguousAssociationCorrection: 'Ambiguous Association Correction',
         selectMode: 'Select Mode'
     },
 
@@ -131,7 +134,10 @@ export default {
         synonym: 'Enter vocabulary',
         antonym: 'Enter vocabulary',
         vocabularyAssociation: 'Enter anything',
-        phrasesAssociation: 'Enter anything'
+        phrasesAssociation: 'Enter anything',
+        // New modes
+        vocabularyCharacterExpansion: 'Enter anything',
+        ambiguousAssociationCorrection: 'Enter anything'
     },
 
     // Word details
@@ -389,7 +395,9 @@ export default {
         streaming: 'Streaming response...',
         copyResponseText: 'Copy response text',
         textCopiedToClipboard: 'Text copied to clipboard!',
-        failedToCopyText: 'Failed to copy text'
+        failedToCopyText: 'Failed to copy text',
+        // New for clipboard dialog
+        useClipboardContent: 'Use clipboard content: "{text}"?'
     },
 
     // Audio and BGM
@@ -428,6 +436,9 @@ export default {
         copyright: '©2025 Kason English Learning Platform. All rights reserved.',
         github: 'GitHub',
         followOnGitHub: 'Follow on GitHub',
+        // Added Discord keys
+        discord: 'Discord',
+        joinDiscord: 'Join Discord'
     },
 
     // Messages and notifications
@@ -477,7 +488,9 @@ export default {
         duplicateHotkey: 'This hotkey is already in use',
         invalidHotkey: 'Hotkey must include at least one modifier (Ctrl/Alt/Shift/Cmd)',
         noHotkeysConfigured: 'No hotkeys configured',
-        operationTipTitle: 'Notification'
+        operationTipTitle: 'Notification',
+        // New
+        switchedModeHotkey: 'Switched mode via {key}'
     },
 
     // Time units
@@ -598,123 +611,6 @@ export default {
         taskStatusUpdate: 'Task {status}! {points} points',
         taskUpdatedSuccess: 'Task updated successfully!',
         taskDeletedSuccess: 'Task deleted successfully!',
-        taskTitleRequired: 'Task title is required',
-        confirmDeleteTask: 'Are you sure you want to delete this task?',
-        confirmDeleteHistoryRecord: 'Are you sure you want to delete this historical record?',
-        deleteHistoryRecord: 'Delete Historical Record',
-        historyRecordDeleted: 'Historical record deleted successfully!',
-        taskResetToPending: 'Task reset to pending status successfully!',
-
-        // Reset-all actions
-        resetAllToPending: 'Reset All to Pending',
-        resetAllConfirmTitle: 'Reset All Task Status',
-        resetAllConfirmMessage: 'This will reset {count} task(s) to Pending. Continue?',
-        allAlreadyPending: 'All tasks are already pending',
-        resetAllResult: 'Reset {count} task(s) to pending',
-
-        // Ranking system
-        rankingSystem: 'Ranking System',
-        currentRank: 'Current Rank',
-        nextRankTarget: 'Next Rank Target',
-        pointsNeeded: '{points} points needed',
-        congratulations: 'Congratulations!',
-        maxRankAchieved: 'You have reached the maximum rank!',
-        allRanks: 'All Ranks',
-        viewRankingDetails: 'View ranking details',
-        maxRankReached: 'Max rank reached!',
-
-        ranks: {
-            legendary: 'Legendary',
-            mythic: 'Mythic',
-            immortal: 'Immortal',
-            divine: 'Divine',
-            celestial: 'Celestial',
-            grandmaster: 'Grandmaster',
-            master: 'Master',
-            diamond: 'Diamond',
-            platinum: 'Platinum',
-            gold: 'Gold',
-            silver: 'Silver',
-            bronze: 'Bronze',
-            iron: 'Iron',
-            steel: 'Steel',
-            stone: 'Stone',
-            wood: 'Wood',
-            apprentice: 'Apprentice',
-            novice: 'Novice',
-            trainee: 'Trainee',
-            beginner: 'Beginner'
-        },
-        rankLevel: 'Level {level}',
-        nextRank: 'Next: {rank}',
-        maxRank: 'Max Rank',
-
-        // add for UI labels parity
-        editTask: 'Edit Task',
-        deleteTask: 'Delete Task',
-
-        // add for ranking displays
-        points: 'Points',
-
-        // Empty states for filters
-        noPendingTasks: 'No pending tasks',
-        noCompletedTasks: 'No completed tasks',
-        noDoneTasks: 'No done tasks',
-        noTasksAvailable: 'No tasks available',
-
-        // Frequency labels used in UI helpers
-        freqDaily: 'Daily',
-        freqWeekly: 'Weekly',
-        freqMonthly: 'Monthly',
-        freqEveryNDays: 'Every {days} days',
-        freqOnce: 'One-time',
-
-        // Reset single task status message
-        taskStatusReset: 'Task status reset to pending',
-
-        // Reset all statuses
-        resetAllConfirm: 'This will reset all tasks to Pending. Continue?',
-        resetAll: 'Reset All',
-        resetAllDone: 'All applicable tasks reset to pending',
-
-        // Trash actions
-        clearTrashConfirm: 'This will permanently delete all items in trash. This cannot be undone.',
-        clearAll: 'Clear All',
-        trashCleared: 'Trash cleared',
-        taskRestored: 'Task restored successfully',
-        trashDeleted: 'Task permanently deleted',
-
-        // Demo/clear all
-        demoCreated: 'Demo tasks created',
-        clearAllServerNote: 'Server does not support clearing all data. This will clear trash only. Continue?',
-        demo: 'Demo',
-
-        // ETag mismatch notice during edit
-        etagMismatchRefetched: 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.',
-
-        // Additional filters and trash UI labels
-        statusFilter: 'Status Filter:',
-        frequencyFilter: 'Frequency Filter:',
-        allFrequencies: 'All Frequencies',
-        doneNonDaily: 'Done (Non-Daily)',
-        pendingLabel: 'Pending',
-        customDays: 'Custom Days',
-
-        // Trash UI labels
-        originalDate: 'Original',
-        deletedDate: 'Deleted',
-        restoreToOriginal: 'Restore to original date',
-        permanentlyDelete: 'Permanently delete',
-        permanentlyDeleteConfirm: 'Permanently delete this task? This cannot be undone.',
-        noTrashItems: 'No items in trash'
-    },
-
-    // Added: Tabs labels for feature toggles
-    tabs: {
-        todo: 'Todo',
-        youtube: 'YouTube',
-        about: 'About',
-        bgm: 'BGM Tab',
-        vocabularyReview: 'Vocabulary Review'
+        taskTitleRequired: 'Task title is required'
     }
 }

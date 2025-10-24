@@ -141,6 +141,9 @@ export default {
         antonym: '反義詞',
         vocabularyAssociation: '詞彙關聯',
         phrasesAssociation: '短語關聯',
+        // 新增模式
+        vocabularyCharacterExpansion: '詞形擴展',
+        ambiguousAssociationCorrection: '歧義關聯糾正',
         selectMode: '選擇模式'
     },
 
@@ -259,85 +262,12 @@ export default {
         selectedText: '所選文字',
         explainSelection: '解釋選擇',
         searchOnDictionary: '在字典中搜尋',
-        noTextSelected: '未選取文字',
-        originalText: '原文',
-        selectTextToExplain: '根據語境選擇要解釋的文字',
-        expandExplanation: '展開解釋',
-        collapseExplanation: '收合解釋',
-        closeExplanation: '關閉解釋',
-        explanationForSelectedText: '所選文字的解釋',
-        generating: '正在產生解釋...',
-        streaming: '正在串流回應...',
-        copyResponseText: '複製回應文字',
-        textCopiedToClipboard: '文字已複製到剪貼簿！',
-        failedToCopyText: '複製文字失敗'
+        // 新增：剪貼簿提示
+        useClipboardContent: '使用剪貼簿內容：「{text}」？',
     },
 
-    // New: audio settings parity
-    audio: {
-        title: '音訊設定',
-        management: '音訊管理',
-        cleanAudioData: '清理音訊資料，共 {count}',
-        cleanAllCache: '清理所有快取',
-        backgroundMusic: '背景音樂',
-        audioCleanedSuccess: '音訊資料清理成功',
-        cacheCleanedSuccess: '所有快取清理成功',
-        playing: '播放中...',
-        clickToPlay: '點擊播放',
-        nowPlaying: '正在播放'
-    },
-
-    // About section
-    about: {
-        title: '關於 Kason Tools',
-        kasonTools: 'Kason Tools',
-        description: 'Kason Tools 是一個智慧英語學習平台，透過間隔重複與 AI 協助幫助你掌握詞彙。',
-        version: '版本 2.0',
-        contact: '聯絡我們',
-        instagram: 'Instagram',
-        followOnInstagram: '在 Instagram 上關注',
-        facebook: 'Facebook',
-        followOnFacebook: '在 Facebook 上關注',
-        linkedin: 'LinkedIn',
-        followOnLinkedIn: '在 LinkedIn 上關注',
-        wechatQR: '個人 WeChat 二維碼',
-        scanToAdd: '掃碼添加 WeChat',
-        acknowledgments: '特別感謝',
-        voiceRSSAttribution: 'Voice RSS - 線上文字轉語音服務',
-        voiceRSSDescription: '為我們的發音功能提供高品質的文字轉語音服務。',
-        visitWebsite: '造訪官方網站',
-        copyright: '©2025 Kason 英語學習平台。保留所有權利。',
-        github: 'GitHub',
-        followOnGitHub: '在 GitHub 上關注',
-    },
-
-    user: {
-        searchModeHotkeys: '搜尋模式快速鍵',
-        searchModeHotkeysTip: '按下 Ctrl（或 macOS 上的 Cmd）+ Shift + 數字 來切換模式',
-        resetToDefaults: '還原為預設',
-        hotkey: '快速鍵',
-        pressKeys: '請按下按鍵...',
-        // 新增：功能標籤配置
-        featureTabs: '功能標籤',
-        featureTabsTip: '在工具列中顯示或隱藏標籤'
-    },
-
+    // Messages and notifications (added keys)
     messages: {
-        operationSuccess: '操作成功',
-        duplicateHotkey: '此快速鍵已被使用',
-        invalidHotkey: '快速鍵需包含至少一個修飾鍵（Ctrl/Alt/Shift/Cmd）',
-        noHotkeysConfigured: '尚未設定任何快速鍵',
-        saveFailed: '儲存失敗',
-        invalidConfig: '無效的設定',
-        clearOperation: '清除操作'
-    },
-
-    // 新增：功能標籤名稱（與工具列切換一致）
-    tabs: {
-        todo: '待辦',
-        youtube: 'YouTube',
-        about: '關於',
-        bgm: 'BGM 分頁',
-        vocabularyReview: '詞彙複習'
+        switchedModeHotkey: '已透過 {key} 切換模式'
     }
 }

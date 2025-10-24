@@ -97,18 +97,51 @@ export default {
           id: 0,
           listName: ''
         }
-      }
-    }
-  },
-  computed: {
-    isSmallWindow() {
-      return window.innerWidth <= 400
+      },
+      // dynamic top spacing helpers to avoid overlap with fixed control bar
+      controlBarHeight: 0,
+      controlBarOffsetTop: 0
     }
   },
   async mounted() {
     await this.init(false)
+    this.$nextTick(() => {
+      this.updateControlBarMetrics()
+      window.addEventListener('resize', this.updateControlBarMetrics, { passive: true })
+      window.addEventListener('orientationchange', this.updateControlBarMetrics, { passive: true })
+    })
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.updateControlBarMetrics)
+    window.removeEventListener('orientationchange', this.updateControlBarMetrics)
+  },
+  watch: {
+    'list.status'() {
+      this.$nextTick(this.updateControlBarMetrics)
+    },
+    'list.listType'() {
+      this.$nextTick(this.updateControlBarMetrics)
+    },
+    tableVisible() {
+      this.$nextTick(this.updateControlBarMetrics)
+    }
   },
   methods: {
+    // Measure the fixed control bar and compute offset to push content below it
+    updateControlBarMetrics() {
+      this.$nextTick(() => {
+        const bar = this.$refs.controlBar
+        if (!bar) return
+        const height = Math.ceil(bar.getBoundingClientRect().height || 0)
+        const computed = window.getComputedStyle(bar)
+        let topPx = 0
+        if (computed && computed.top && computed.top.endsWith('px')) {
+          topPx = parseFloat(computed.top) || 0
+        }
+        this.controlBarHeight = height
+        this.controlBarOffsetTop = topPx
+      })
+    },
     async init(isUpdateCache) {
       if (this.$route.query.listType) {
         this.list.listType = this.$route.query.listType
@@ -148,6 +181,7 @@ export default {
         }
       }
       this.loading = false
+      this.$nextTick(this.updateControlBarMetrics)
     },
     async refresh() {
       if (this.list.status === 'list') {
@@ -177,6 +211,7 @@ export default {
       } else if (this.list.listType === 'example') {
         this.detail.exampleDetailVisible = !this.detail.exampleDetailVisible
       }
+      this.$nextTick(this.updateControlBarMetrics)
     },
     computeListLabel() {
       return this.$t(`starList.listLabel.${this.list.listType}`)
@@ -474,6 +509,13 @@ export default {
       this.$router.push({path: '/index/tools/detail', query: query})
       window.location.reload()
     }
+  },
+  computed: {
+    // total top margin for the list to clear the fixed control bar
+    listContentTop() {
+      // add an extra small gap (12px) for breathing room
+      return Math.max(80, Math.ceil(this.controlBarOffsetTop + this.controlBarHeight + 12))
+    }
   }
 }
 </script>
@@ -482,7 +524,7 @@ export default {
 
   <div class="text item starlist-container" v-loading="loading">
     <!-- Native control bar -->
-    <div class="control-bar">
+    <div class="control-bar" ref="controlBar">
       <!-- List type selector -->
       <select class="ctrl-select" v-model="list.listType" @change="listTypeClick(list.listType)" :disabled="loading || list.status !== 'list'">
         <option value="paraphrase">{{ $t('starList.listType.paraphrase') }}</option>
@@ -512,7 +554,7 @@ export default {
     </div>
 
     <!-- Simple list instead of el-table -->
-    <div v-show="tableVisible" class="starlist-table">
+    <div v-show="tableVisible" class="starlist-table" :style="{ marginTop: listContentTop + 'px' }">
       <ul class="starlist-list">
         <li v-for="row in list.starListData" :key="row.id" class="starlist-item">
           <button class="list-name-button" @click="selectOneList(row.id, false)" :disabled="loading">{{ row.listName }}</button>
@@ -591,7 +633,7 @@ export default {
   top: 60px;
   left: 35px;
   z-index: 99;
-  display: inline-flex;
+  display: flex; /* allow better control */
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
@@ -599,6 +641,39 @@ export default {
   background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   color: #fff;
+}
+
+/* Make the bar adapt on small screens: wrap into a compact grid and avoid overflow */
+@media (max-width: 480px) {
+  .control-bar {
+    left: 8px;
+    right: 8px; /* stretch to viewport margins */
+    padding: 6px 8px;
+    gap: 6px;
+    /* switch to grid so controls can wrap cleanly */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    width: auto;
+    max-width: calc(100vw - 16px);
+    overflow: visible; /* no horizontal scroll */
+    top: 56px;
+  }
+  .ctrl-btn,
+  .ctrl-select {
+    font-size: 12px;
+    padding: 6px 8px;
+    white-space: nowrap; /* keep labels on one line inside */
+    width: 100%; /* fill grid cell */
+  }
+  /* give the content more top margin to clear the (now taller) bar handled via JS */
+}
+
+/* Ultra small phones: single column stack */
+@media (max-width: 360px) {
+  .control-bar {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ctrl-select {
@@ -610,6 +685,12 @@ export default {
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 14px;
+  max-width: 240px; /* prevent overlong select on small screens */
+}
+
+/* Additional small-screen constraints for selects */
+@media (max-width: 480px) {
+  .ctrl-select { max-width: 48vw; }
 }
 
 .ctrl-select:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -628,7 +709,6 @@ export default {
 .ctrl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* List styling */
-.starlist-table { margin-top: 100px; }
 .starlist-list { list-style: none; padding: 0; margin: 0; }
 .starlist-item {
   display: flex;
@@ -649,6 +729,11 @@ export default {
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
+  flex: 1 1 auto; /* allow the name to take remaining space */
+  min-width: 0; /* so it can shrink and ellipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .row-select {
@@ -660,6 +745,15 @@ export default {
   border: 1px solid #e4e7ed;
   border-radius: 6px;
   padding: 6px 10px;
+  flex: 0 0 auto;
+  max-width: 220px; /* cap width to avoid overflow */
+}
+
+@media (max-width: 480px) {
+  .row-select {
+    max-width: 44vw; /* keep dropdown compact on narrow screens */
+    font-size: 12px;
+  }
 }
 
 .row-actions { margin-left: auto; display: inline-flex; gap: 8px; }
@@ -697,6 +791,5 @@ export default {
 
 @media (max-width: 768px) {
   .control-bar { top: 56px; left: 12px; padding: 6px 10px; gap: 6px; }
-  .starlist-table { margin-top: 90px; }
 }
 </style>
