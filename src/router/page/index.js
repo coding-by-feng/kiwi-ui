@@ -7,7 +7,6 @@ import GrammarListener from '@/page/word/GrammarListener'
 import UserLogin from '@/page/login/UserLogin'
 import UserCenter from '@/page/user/UserCenter'
 import About from '@/page/about/Index'
-import Bgm from '@/page/bgm/Index'
 import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
 import AiCallHistory from '@/page/ai/AiCallHistory.vue' // Import the new AI call history component
 import Youtube from '@/page/ai/Youtube.vue'
@@ -35,10 +34,10 @@ export default [{
             userLogin: UserLogin,
             userCenter: UserCenter,
             about: About,
-            bgm: Bgm,
             youtube: Youtube,// Use the new component here
             youtubePlayer: YoutubePlayer, // Use the new component here
             todo: TodoView, // Add the todo component
+            aiHistory: AiCallHistory // Expose AiCallHistory as a top-level named view for the Index tab
         },
         children: [{
             path: 'detail',

@@ -123,7 +123,10 @@ export default {
         searchModeHotkeysTip: 'Drücken Sie Strg (oder Cmd auf macOS) + Umschalt + Zahl, um den Modus zu wechseln',
         resetToDefaults: 'Auf Standardwerte zurücksetzen',
         hotkey: 'Tastenkürzel',
-        pressKeys: 'Tasten drücken...'
+        pressKeys: 'Tasten drücken...',
+        // Neu: Funktions-Tabs-Einstellungen
+        featureTabs: 'Funktions-Tabs',
+        featureTabsTip: 'Tabs in der Werkzeugleiste ein- oder ausblenden'
     },
 
     messages: {
@@ -313,5 +316,14 @@ export default {
         rankLevel: 'Level {level}',
         nextRank: 'Nächste: {rank}',
         maxRank: 'Maximaler Rang erreicht!'
+    },
+
+    // Neu: Tabs-Beschriftungen für Feature-Umschalter
+    tabs: {
+        todo: 'To-Do',
+        youtube: 'YouTube',
+        about: 'Über',
+        bgm: 'BGM-Tab',
+        vocabularyReview: 'Vokabelwiederholung'
     }
 }

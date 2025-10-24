@@ -303,7 +303,10 @@ export default {
         searchModeHotkeysTip: 'Ctrl（macOS は Cmd）+ Shift + 数字 でモードを切り替え',
         resetToDefaults: 'デフォルトにリセット',
         hotkey: 'ショートカット',
-        pressKeys: 'キーを押してください...'
+        pressKeys: 'キーを押してください...',
+        // 追加：機能タブ設定
+        featureTabs: '機能タブ',
+        featureTabsTip: 'ツールバーのタブを表示/非表示'
     },
 
     messages: {
@@ -316,5 +319,13 @@ export default {
         confirmDelete: '削除してもよろしいですか？',
         confirmClear: '現在のデータをクリアして再取得します。続行しますか？',
         clearOperation: 'クリア操作'
+    },
+
+    tabs: {
+        todo: 'To-Do',
+        youtube: 'YouTube',
+        about: '概要',
+        bgm: 'BGM タブ',
+        vocabularyReview: '語彙復習'
     }
 }

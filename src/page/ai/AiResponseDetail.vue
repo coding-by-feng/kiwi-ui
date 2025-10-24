@@ -231,8 +231,21 @@ export default {
       this.closeSelectionResponse();
 
       if (forceRefresh) {
-        console.log('Force refresh detected (now param changed); re-initializing fetch')
-        this.init()
+        console.log('Force refresh detected (now param changed)')
+        // Try to restore from cache for the new key first to avoid UI blanking
+        const restored = this.tryRestoreFromCache()
+        if (!restored) {
+          // If no cache available and no current content, perform a fresh init
+          const hasContent = ((this.aiResponseVO.responseText || '').toString().trim().length > 0)
+          if (!hasContent) {
+            console.log('No cache or existing content; re-initializing fetch')
+            this.init()
+          } else {
+            console.log('Keeping existing content; skip immediate re-fetch')
+          }
+        } else {
+          console.log('Restored content from cache; skip immediate re-fetch')
+        }
         return
       }
 
@@ -1048,9 +1061,10 @@ export default {
           originalTextCollapsed: !!this.originalTextCollapsed,
           timestamp: Date.now()
         }
-        sessionStorage.setItem(key, JSON.stringify(data))
+        // Persist to localStorage for longer-lived cache
+        localStorage.setItem(key, JSON.stringify(data))
         // Keep a pointer to last used key for quick restore
-        sessionStorage.setItem('aiResponseCache:lastKey', key)
+        localStorage.setItem('aiResponseCache:lastKey', key)
       } catch (e) {
         console.warn('Failed to save AI state cache:', e)
       }
@@ -1059,7 +1073,7 @@ export default {
     tryRestoreFromCache() {
       try {
         const key = this.computeCacheKeyFromQuery(this.$route.query)
-        const raw = sessionStorage.getItem(key)
+        const raw = localStorage.getItem(key)
         if (!raw) return false
         const obj = JSON.parse(raw)
 

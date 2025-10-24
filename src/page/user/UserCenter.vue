@@ -212,15 +212,34 @@
               <i class="el-icon-question help-icon"></i>
             </el-tooltip>
           </div>
-          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-            <el-tooltip :content="$t('tabs.todo') || 'Todo'" placement="top"><el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)"></el-switch></el-tooltip>
-            <el-tooltip :content="$t('tabs.youtube') || 'YouTube'" placement="top"><el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)"></el-switch></el-tooltip>
-            <el-tooltip :content="$t('tabs.about') || 'About'" placement="top"><el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)"></el-switch></el-tooltip>
-            <el-tooltip :content="$t('tabs.bgm') || 'BGM Tab'" placement="top"><el-switch v-model="enabledTabsLocal.bgm" class="custom-switch" @change="onFeatureToggle('bgm', $event)"></el-switch></el-tooltip>
-            <el-tooltip :content="$t('tabs.vocabularyReview') || 'Vocabulary Review'" placement="top"><el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)"></el-switch></el-tooltip>
+          <div class="feature-toggles feature-toggles--stacked">
+            <div class="feature-toggle">
+              <span class="feature-label">{{ $t('tabs.todo') || 'Todo' }}</span>
+              <el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)" :aria-label="$t('tabs.todo') || 'Todo'"></el-switch>
+            </div>
+            <div class="feature-toggle">
+              <span class="feature-label">{{ $t('tabs.youtube') || 'YouTube' }}</span>
+              <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube') || 'YouTube'"></el-switch>
+            </div>
+            <div class="feature-toggle">
+              <span class="feature-label">{{ $t('tabs.about') || 'About' }}</span>
+              <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about') || 'About'"></el-switch>
+            </div>
+            <div class="feature-toggle">
+              <span class="feature-label">{{ $t('tabs.vocabularyReview') || 'Vocabulary Review' }}</span>
+              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview') || 'Vocabulary Review'"></el-switch>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- NEW: Audio (BGM) Section embedded into User Center -->
+    <div class="settings-section">
+      <h4 class="section-title">
+        <i class="el-icon-headset"></i> {{ $t('audio.title') }}
+      </h4>
+      <Bgm />
     </div>
 
     <!-- Hotkeys Config Dialog -->
@@ -279,11 +298,13 @@ import { getStore, setStore } from '@/util/store'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import util from '@/util/util'
+import Bgm from '@/page/bgm/Index'
 
 const USER_NAME = 'user_name'
 
 export default {
   name: 'UserCenter',
+  components: { Bgm },
   data() {
     return {
       userInfo: {
@@ -1417,5 +1438,37 @@ export default {
 }
 .hotkeys-icon-btn i {
   font-size: 16px;
+}
+
+/* Feature Toggles Styling */
+.feature-toggles {
+  width: 100%;
+}
+.feature-toggles--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.feature-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* label left, switch right */
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(64,158,255,0.06) 0%, rgba(103,194,58,0.06) 100%);
+}
+.feature-label {
+  font-size: 13px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+.feature-toggle .custom-switch {
+  margin-left: 12px;
+}
+@media (max-width: 768px) {
+  .feature-toggles--stacked { gap: 6px; }
+  .feature-toggle { padding: 5px 8px; }
+  .feature-label { font-size: 12px; }
 }
 </style>

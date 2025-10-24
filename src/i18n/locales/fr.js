@@ -301,7 +301,9 @@ export default {
         searchModeHotkeysTip: 'Appuyez sur Ctrl (ou Cmd sur macOS) + Maj + Nombre pour changer de mode',
         resetToDefaults: 'Rétablir les valeurs par défaut',
         hotkey: 'Raccourci',
-        pressKeys: 'Appuyez sur des touches...'
+        pressKeys: 'Appuyez sur des touches...',
+        featureTabs: 'Onglets de fonctionnalités',
+        featureTabsTip: 'Afficher ou masquer les onglets dans la barre d\'outils'
     },
 
     messages: {
@@ -314,5 +316,13 @@ export default {
         confirmDelete: 'Voulez-vous vraiment supprimer ?',
         confirmClear: 'Vous allez nettoyer et recharger. Continuer ?',
         clearOperation: 'Opération de nettoyage'
+    },
+
+    tabs: {
+        todo: 'À faire',
+        youtube: 'YouTube',
+        about: 'À propos',
+        bgm: 'Onglet BGM',
+        vocabularyReview: 'Révision du vocabulaire'
     }
 }

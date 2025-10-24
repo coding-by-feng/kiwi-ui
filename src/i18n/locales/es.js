@@ -267,7 +267,10 @@ export default {
         searchModeHotkeysTip: 'Presiona Ctrl (o Cmd en macOS) + Shift + Número para cambiar de modo',
         resetToDefaults: 'Restablecer a valores predeterminados',
         hotkey: 'Atajo',
-        pressKeys: 'Presiona teclas...'
+        pressKeys: 'Presiona teclas...',
+        // Añadido: configuración de pestañas de funciones
+        featureTabs: 'Pestañas de funciones',
+        featureTabsTip: 'Mostrar u ocultar pestañas en la barra de herramientas'
     },
 
     messages: {
@@ -280,5 +283,14 @@ export default {
         confirmDelete: '¿Está seguro de que desea eliminar?',
         confirmClear: 'Está a punto de limpiar y volver a cargar, ¿continuar?',
         clearOperation: 'Operación de limpieza'
+    },
+
+    // Añadido: etiquetas de pestañas para los conmutadores de funciones
+    tabs: {
+        todo: 'Por hacer',
+        youtube: 'YouTube',
+        about: 'Acerca de',
+        bgm: 'Pestaña BGM',
+        vocabularyReview: 'Revisión de vocabulario'
     }
 }

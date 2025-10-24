@@ -316,7 +316,10 @@ export default {
         searchModeHotkeysTip: '按下 Ctrl（或 macOS 上的 Cmd）+ Shift + 數字 來切換模式',
         resetToDefaults: '還原為預設',
         hotkey: '快速鍵',
-        pressKeys: '請按下按鍵...'
+        pressKeys: '請按下按鍵...',
+        // 新增：功能標籤配置
+        featureTabs: '功能標籤',
+        featureTabsTip: '在工具列中顯示或隱藏標籤'
     },
 
     messages: {
@@ -327,5 +330,14 @@ export default {
         saveFailed: '儲存失敗',
         invalidConfig: '無效的設定',
         clearOperation: '清除操作'
+    },
+
+    // 新增：功能標籤名稱（與工具列切換一致）
+    tabs: {
+        todo: '待辦',
+        youtube: 'YouTube',
+        about: '關於',
+        bgm: 'BGM 分頁',
+        vocabularyReview: '詞彙複習'
     }
 }
