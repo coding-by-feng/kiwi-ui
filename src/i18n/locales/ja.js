@@ -326,6 +326,17 @@ export default {
         youtube: 'YouTube',
         about: '概要',
         bgm: 'BGM タブ',
-        vocabularyReview: '語彙復習'
+        vocabularyReview: '語彙復習',
+        aiHistory: 'AI履歴'
+    },
+
+    about: {
+        // ...existing code...
+        runGuidedTour: 'Run Guided Tour',
+        resetGuidedTour: 'Reset Guided Tour',
+        guidedTour: 'Guided Tour',
+        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
+        tourEnabled: 'Enable Tours',
+        showHelpIcon: 'Show Help Icon'
     }
 }

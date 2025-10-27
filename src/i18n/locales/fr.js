@@ -323,6 +323,16 @@ export default {
         youtube: 'YouTube',
         about: 'À propos',
         bgm: 'Onglet BGM',
-        vocabularyReview: 'Révision du vocabulaire'
+        vocabularyReview: 'Révision du vocabulaire',
+        aiHistory: 'Historique IA'
+    },
+
+    about: {
+        runGuidedTour: 'Run Guided Tour',
+        resetGuidedTour: 'Reset Guided Tour',
+        guidedTour: 'Guided Tour',
+        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
+        tourEnabled: 'Enable Tours',
+        showHelpIcon: 'Show Help Icon'
     }
 }

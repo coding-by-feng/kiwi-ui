@@ -323,6 +323,12 @@ export default {
     },
     defaultNativeLanguage() {
       return getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) ? getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+    },
+    isWsOnly() {
+      try {
+        const q = this.$route && this.$route.query ? this.$route.query : this.preservedQueryParams || {}
+        return q.wsOnly === '1' || q.wsOnly === 1 || q.wsOnly === true
+      } catch (_) { return false }
     }
   },
   methods: {
@@ -767,7 +773,8 @@ export default {
         // Only for main, only if no data yet
         if (isSelection) return
         if (that._mainWsHadData) return
-        // Retry up to max attempts, then fallback
+        const wsOnly = that.isWsOnly === true
+        // Retry up to max attempts
         if (that._mainWsAttempts < that._mainWsMaxAttempts) {
           const backoff = 200 * Math.pow(2, that._mainWsAttempts - 1) // 200ms, 400ms
           console.log(`WS retry ${that._mainWsAttempts} scheduled in ${backoff}ms`)
@@ -786,8 +793,13 @@ export default {
           }, backoff)
         } else if (!that._mainFallbackInFlight) {
           that._mainFallbackInFlight = true
-          console.log('WS failed to start streaming; falling back to HTTP API')
-          that.fetchViaHttpFallback()
+          if (wsOnly) {
+            console.log('WS-only mode: skipping HTTP fallback and surfacing error')
+            that.handleError('Realtime connection failed. Please try again or check your network.');
+          } else {
+            console.log('WS failed to start streaming; falling back to HTTP API')
+            that.fetchViaHttpFallback()
+          }
         }
       }
 
@@ -1044,9 +1056,36 @@ export default {
 
     // Compute a stable cache key based on core inputs
     computeCacheKeyFromQuery(query) {
-      const originalText = query && query.originalText ? query.originalText : this.$route.query.originalText
-      const selectedMode = query && query.selectedMode ? query.selectedMode : this.validSelectedMode
-      const language = query && query.language ? query.language : this.defaultTargetLanguage
+      // Prefer passed query strictly; only fallback to current route if not provided
+      const q = query || this.$route.query || {}
+      const originalText = q.originalText
+      // Validate selected mode to keep compatibility with computed validSelectedMode
+      const selectedMode = q.selectedMode || this.validSelectedMode
+      const language = q.language || this.defaultTargetLanguage
+
+      // Decode entire content (whole content)
+      const decoded = (() => {
+        if (!originalText) return ''
+        try {
+          let t = originalText
+          while (t !== decodeURIComponent(t)) t = decodeURIComponent(t)
+          return t
+        } catch (e) { return originalText }
+      })()
+
+      // New cache key format: mode-targetLang-searchingContent (whole content)
+      // Use a recognizable namespace prefix; URI-encode the content to keep key safe
+      const key = `aiResponseCache:${selectedMode}-${language}-${encodeURIComponent(decoded)}`
+      this.lastCacheKey = key
+      return key
+    },
+
+    // Keep legacy hash-based key computation for backward compatibility restore
+    computeLegacyCacheKeyFromQuery(query) {
+      const q = query || this.$route.query || {}
+      const originalText = q.originalText
+      const selectedMode = q.selectedMode || this.validSelectedMode
+      const language = q.language || this.defaultTargetLanguage
       const native = this.defaultNativeLanguage
       const decoded = (() => {
         if (!originalText) return ''
@@ -1059,7 +1098,6 @@ export default {
       const payload = `${selectedMode}::${language}::${native}::${decoded}`
       const hash = this.simpleHash(payload)
       const key = `aiResponseCache:${hash}`
-      this.lastCacheKey = key
       return key
     },
 
@@ -1092,6 +1130,7 @@ export default {
         localStorage.setItem(key, JSON.stringify(data))
         // Keep a pointer to last used key for quick restore
         localStorage.setItem('aiResponseCache:lastKey', key)
+        this.lastCacheKey = key
       } catch (e) {
         console.warn('Failed to save AI state cache:', e)
       }
@@ -1099,8 +1138,20 @@ export default {
 
     tryRestoreFromCache() {
       try {
-        const key = this.computeCacheKeyFromQuery(this.$route.query)
-        const raw = localStorage.getItem(key)
+        const newKey = this.computeCacheKeyFromQuery(this.$route.query)
+        let raw = localStorage.getItem(newKey)
+
+        // If no new-format cache exists, try legacy key for backward compatibility
+        if (!raw) {
+          const legacyKey = this.computeLegacyCacheKeyFromQuery(this.$route.query)
+          const legacyRaw = legacyKey ? localStorage.getItem(legacyKey) : null
+          if (legacyRaw) {
+            // Migrate to new key format for future lookups
+            try { localStorage.setItem(newKey, legacyRaw) } catch (_) {}
+            raw = legacyRaw
+          }
+        }
+
         if (!raw) return false
         const obj = JSON.parse(raw)
 
@@ -1134,7 +1185,8 @@ export default {
           requestId: ''
         }))
         this.originalTextCollapsed = !!obj.originalTextCollapsed
-        console.log('Restored AI state from cache:', key)
+        console.log('Restored AI state from cache:', newKey)
+        this.lastCacheKey = newKey
         return true
       } catch (e) {
         console.warn('Failed to restore AI state cache:', e)

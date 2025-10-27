@@ -397,7 +397,8 @@ export default {
         if (/etag mismatch/i.test(msg)) {
           try {
             await this.fetchTaskAction(taskId)
-            this.$alert(this.$t('todo.etagMismatchRefetched') || 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.', 'Edit Conflict', { type: 'warning' })
+            // Use todo-specific i18n title instead of missing common key
+            this.$alert(this.$t('todo.etagMismatchRefetched') || 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.', this.$t('todo.editConflictTitle'), { type: 'warning' })
           } catch (_) {}
         }
       }
@@ -416,14 +417,14 @@ export default {
     shouldShowResetAction(task) { return task.status === 'success' || task.status === 'fail' },
 
     getCompletionTagType(task) { if (task.status==='success') return 'success'; if (task.status==='fail') return 'danger'; return 'info' },
-    getCompletionTagText(task) { if (task.status==='success') return this.$t('todo.completed'); if (task.status==='fail') return this.$t('todo.failed'); return 'Done' },
+    getCompletionTagText(task) { if (task.status==='success') return this.$t('todo.completed'); if (task.status==='fail') return this.$t('todo.failed'); return this.$t('common.done') },
 
     async resetTaskStatus(taskId) {
       try { await this.resetTaskStatusAction(taskId); await this.fetchTasksWithFilters(); this.$message.success(this.$t('todo.taskStatusReset') || 'Task status reset to pending') } catch (_) {}
     },
     async resetAllTaskStatuses() {
       try {
-        const toConfirm = await this.$confirm(this.$t('todo.resetAllConfirm') || 'This will reset all tasks to Pending. Continue?', 'Reset All Task Status', { confirmButtonText: this.$t('todo.resetAll') || 'Reset All', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(() => false)
+        const toConfirm = await this.$confirm(this.$t('todo.resetAllConfirm') || 'This will reset all tasks to Pending. Continue?', this.$t('todo.resetAllTitle'), { confirmButtonText: this.$t('todo.resetAll') || 'Reset All', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(() => false)
         if (!toConfirm) return
         await this.resetAllTaskStatusesAction()
         await this.fetchTasksWithFilters()
@@ -436,39 +437,9 @@ export default {
     async restoreTask(taskId) { try { await this.restoreTrashItemAction(taskId); await Promise.all([ this.loadTrash(), this.fetchTasksWithFilters() ]); this.$message.success(this.$t('todo.taskRestored') || 'Task restored successfully') } catch (_) {} },
     async permanentlyDeleteTask(taskId) { try { await this.deleteTrashItemAction(taskId); await this.loadTrash(); this.$message.success(this.$t('todo.trashDeleted') || 'Task permanently deleted') } catch (_) {} },
     async clearTrash() {
-      const ok = await this.$confirm(this.$t('todo.clearTrashConfirm') || 'This will permanently delete all items in trash. This cannot be undone.', 'Clear Trash', { confirmButtonText: this.$t('todo.clearAll') || 'Clear All', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(()=>false)
+      const ok = await this.$confirm(this.$t('todo.clearTrashConfirm') || 'This will permanently delete all items in trash. This cannot be undone.', this.$t('todo.clearTrashTitle'), { confirmButtonText: this.$t('todo.clearAll') || 'Clear All', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(()=>false)
       if (!ok) return
       try { await this.clearTrashAction(); await this.loadTrash(); this.$message.success(this.$t('todo.trashCleared') || 'Trash cleared') } catch (_) {}
-    },
-
-    // History
-    async loadHistoryForDate(date) {
-      const d = date || this.selectedDate
-      this.selectedDate = d
-      const dateStr = this.formatDateKey(d)
-      try { await this.fetchHistoryAction({ date: dateStr, page: 1, pageSize: 200 }) } catch (_) {}
-    },
-    async deleteHistoryRecord(id, originalDate) {
-      try { await this.deleteHistoryAction(id); await this.loadHistoryForDate(originalDate || this.selectedDate); this.$message.success(this.$t('todo.historyRecordDeleted')) } catch (_) {}
-    },
-
-    // Analytics
-    async loadAnalytics() {
-      try {
-        await this.fetchAnalyticsMonthlyAction(6)
-        const month = this.formatMonthKey(new Date())
-        const summary = await this.fetchAnalyticsSummaryAction(month)
-        const normalized = summary && typeof summary === 'object' ? {
-          totalPoints: typeof summary.totalPoints === 'number' ? summary.totalPoints : 0,
-          completedCount: typeof summary.completedCount === 'number' ? summary.completedCount : 0,
-          successRatePct: typeof summary.successRatePct === 'number' ? summary.successRatePct : 0,
-        } : { totalPoints: 0, completedCount: 0, successRatePct: 0 }
-        this._analyticsSummary = normalized
-      } catch (_) { this._analyticsSummary = { totalPoints: 0, completedCount: 0, successRatePct: 0 } }
-    },
-    getMonthlyData() {
-      const payload = this.analyticsMonthly || { labels: [], points: [] }
-      return { labels: payload.labels || [], data: payload.points || [] }
     },
 
     // Demo / Clear All
@@ -476,7 +447,7 @@ export default {
       try { await this.demoSeedAction(); await Promise.all([ this.fetchTasksWithFilters(), this.loadHistoryForDate(this.selectedDate) ]); this.$message.success(this.$t('todo.demoCreated') || 'Demo tasks created') } catch (_) {}
     },
     async clearAllData() {
-      const ok = await this.$confirm(this.$t('todo.clearAllServerNote') || 'Server does not support clearing all data. This will clear trash only. Continue?', 'Clear Data', { confirmButtonText: this.$t('todo.clearAll') || 'Clear', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(()=>false)
+      const ok = await this.$confirm(this.$t('todo.clearAllServerNote') || 'Server does not support clearing all data. This will clear trash only. Continue?', this.$t('todo.clearDataTitle'), { confirmButtonText: this.$t('todo.clearAll') || 'Clear', cancelButtonText: this.$t('common.cancel') || 'Cancel', type:'warning' }).catch(()=>false)
       if (!ok) return
       await this.clearTrash()
     },
@@ -495,8 +466,50 @@ export default {
     getNextRankImage() { if (!this.currentRankDisplay.nextThreshold) return (RANK_ASSETS.legendary && RANK_ASSETS.legendary.image) || '/assets/rankings/legendary.png'; const next = this.serverRanksForDisplay.find(r=> this.getRankName(r.key) === this.currentRankDisplay.nextRankName); return next? next.image: ((RANK_ASSETS.legendary && RANK_ASSETS.legendary.image) || '/assets/rankings/legendary.png') },
 
     shouldShowStatusDisplay(task) { return task.status !== 'pending' },
-    onRankImageError(e) { if (!e || !e.target) return; e.target.onerror=null; e.target.src=this.fallbackRankImage; if (!e.target.title) e.target.title='Placeholder' },
+    onRankImageError(e) { if (!e || !e.target) return; e.target.onerror=null; e.target.src=this.fallbackRankImage; if (!e.target.title) e.target.title=this.$t('todo.placeholderImage') },
 
+    // Added: History helpers wired to store
+    async loadHistoryForDate(date) {
+      try {
+        const ymd = this.formatDateKey(date)
+        this.selectedDate = new Date(date)
+        await this.fetchHistoryAction({ date: ymd, page: 1, pageSize: 100 })
+      } catch (_) {}
+    },
+    async deleteHistoryRecord(id, originalDate) {
+      try {
+        await this.deleteHistoryAction(id)
+        // Reload current date view (prefer the original date passed from record)
+        await this.loadHistoryForDate(originalDate || this.selectedDate)
+        this.$message.success(this.$t('todo.historyRecordDeleted'))
+      } catch (_) {}
+    },
+
+    // Added: Analytics wiring and adapter for chart component
+    async loadAnalytics() {
+      try {
+        // Fetch last 6 months trend
+        await this.fetchAnalyticsMonthlyAction(6)
+        const currentMonth = this.formatMonthKey(new Date())
+        const summary = await this.fetchAnalyticsSummaryAction(currentMonth)
+        if (summary && typeof summary === 'object') {
+          this._analyticsSummary = {
+            totalPoints: typeof summary.totalPoints === 'number' ? summary.totalPoints : 0,
+            completedCount: typeof summary.completedCount === 'number' ? summary.completedCount : 0,
+            successRatePct: typeof summary.successRatePct === 'number' ? summary.successRatePct : 0
+          }
+        } else {
+          this._analyticsSummary = { totalPoints: 0, completedCount: 0, successRatePct: 0 }
+        }
+      } catch (_) {
+        this._analyticsSummary = { totalPoints: 0, completedCount: 0, successRatePct: 0 }
+      }
+    },
+    getMonthlyData() {
+      const labels = (this.analyticsMonthly && Array.isArray(this.analyticsMonthly.labels)) ? this.analyticsMonthly.labels : []
+      const points = (this.analyticsMonthly && Array.isArray(this.analyticsMonthly.points)) ? this.analyticsMonthly.points : []
+      return { labels, data: points }
+    },
   }
 }
 </script>

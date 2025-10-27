@@ -130,19 +130,6 @@
               />
             </el-tooltip>
 
-            <!-- New: Regenerate (WS API recalling) -->
-            <el-tooltip content="Regenerate" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-refresh"
-                :aria-label="'Regenerate response'"
-                :loading="regeneratingIds.includes(record.id)"
-                @click="regenerateResponse(record)"
-              />
-            </el-tooltip>
-
             <el-tooltip content="Details" placement="top">
               <el-button
                 class="action-btn"
@@ -240,8 +227,7 @@
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
 import { Message } from 'element-ui';
-import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory, callAiChatCompletion } from '@/api/ai'; // Import the API functions
-import { getStore } from '@/util/store';
+import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai'; // Removed callAiChatCompletion
 
 export default {
   name: 'AiCallHistory',
@@ -267,8 +253,6 @@ export default {
 
       archivingIds: [],
       deletingIds: [],
-      // New: regeneration loading ids
-      regeneratingIds: [],
       lastClassificationFilter: 'normal'
     }
   },
@@ -381,27 +365,13 @@ export default {
     },
 
     getModeTagType(modeValue) {
-      const tagTypes = {
-        'directly-translation': 'primary',
-        'translation-and-explanation': 'success',
-        'grammar-explanation': 'warning',
-        'grammar-correction': '', // remove bright type to rely on subtle custom class
-        'vocabulary-explanation': 'info',
-        'synonym': 'primary',
-        'antonym': 'warning',
-        'vocabulary-association': 'success',
-        'phrases-association': 'info',
-        'selection-explanation': 'warning',
-        // New modes
-        'vocabulary-character-expansion': 'success',
-        'ambiguous-association-correction': 'warning'
-      };
-      return tagTypes[modeValue] || '';
+      // Use a consistent green style for all modes
+      return 'success';
     },
 
     // Add a custom class to fine-tune Grammar Correction styling
     getModeClass(modeValue) {
-      if (modeValue === 'grammar-correction') return 'tag-grammar-correction';
+      // No special class; keep all tags consistent in color/style
       return '';
     },
 
@@ -496,60 +466,6 @@ export default {
           });
     },
 
-    // New: Regenerate response via HTTP API and replace local cache
-    async regenerateResponse(record) {
-      const id = record.id;
-      if (!id) return;
-      if (!record || !record.prompt || !record.promptMode || !record.targetLanguage) {
-        Message.error('Incomplete record, cannot regenerate');
-        return;
-      }
-
-      // Mark loading state
-      this.regeneratingIds.push(id);
-      try {
-        const nativeLang = record.nativeLanguage || getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || 'ZH_CN';
-        const res = await callAiChatCompletion(record.promptMode, record.targetLanguage, nativeLang, record.prompt);
-        const data = (res && res.data && res.data.data) ? res.data.data : '';
-        const responseText = typeof data === 'string' ? data : JSON.stringify(data);
-
-        // Compute cache key compatible with AiResponseDetail.vue
-        const key = this.computeCacheKeyFromRecord(record, nativeLang);
-        const cachePayload = {
-          aiResponseText: responseText,
-          selectionExplanations: [],
-          originalTextCollapsed: false,
-          timestamp: Date.now()
-        };
-        localStorage.setItem(key, JSON.stringify(cachePayload));
-        localStorage.setItem('aiResponseCache:lastKey', key);
-
-        Message.success('Regenerated and cache replaced');
-      } catch (e) {
-        console.error('Regenerate failed:', e);
-        const msg = e && e.response && e.response.data && e.response.data.msg ? e.response.data.msg : (e.message || 'Failed to regenerate');
-        Message.error(msg);
-      } finally {
-        this.regeneratingIds = this.regeneratingIds.filter(i => i !== id);
-      }
-    },
-
-    // Match AiResponseDetail.vue hashing and key scheme
-    simpleHash(str) {
-      let hash = 5381;
-      for (let i = 0; i < (str || '').length; i++) {
-        hash = ((hash << 5) + hash) + str.charCodeAt(i);
-        hash = hash & hash;
-      }
-      return (hash >>> 0).toString(36);
-    },
-    computeCacheKeyFromRecord(record, nativeLang) {
-      // Use prompt as-is to match searchAgain() behavior which uses encodeURIComponent(record.prompt)
-      const decoded = record.prompt || '';
-      const payload = `${record.promptMode}::${record.targetLanguage}::${nativeLang}::${decoded}`;
-      const hash = this.simpleHash(payload);
-      return `aiResponseCache:${hash}`;
-    },
 
     viewDetails(record) {
       console.log('Viewing details for record:', record);
@@ -999,13 +915,6 @@ export default {
   color: white;
 }
 
-/* Subtle style specifically for Grammar Correction */
-.el-tag.tag-grammar-correction {
-  background: #f5f7fa !important; /* neutral light gray */
-  color: #606266 !important;       /* standard Element text gray */
-  border: 1px solid #e4e7ed !important; /* subtle border */
-  box-shadow: none !important;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {

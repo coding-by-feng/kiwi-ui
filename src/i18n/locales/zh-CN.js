@@ -65,6 +65,15 @@ export default {
         done: '完成'
     },
 
+    // Tabs labels (new)
+    tabs: {
+        todo: '待办',
+        youtube: 'YouTube',
+        about: '关于',
+        vocabularyReview: '词汇复习',
+        aiHistory: 'AI 历史'
+    },
+
     // Navigation
     nav: {
         search: '搜索',
@@ -210,81 +219,130 @@ export default {
         frequency: '频率',
         selectFrequency: '选择频率',
         everyNDays: '每N天',
+        // Added frequency option labels used by selectors and formatters
+        freqOnce: '一次性',
+        freqDaily: '每天',
+        freqWeekly: '每周',
+        freqMonthly: '每月',
+        customDays: '自定义天数',
+        // Added formatter string
+        freqEveryNDays: '每 {days} 天',
         addTask: '添加任务',
         completed: '✅ 已完成',
         failed: '❌ 已失败',
         success: '成功',
         fail: '失败',
-        noTasksToday: '今天还没有任务，在上方添加你的第一个任务！',
+        done: '已完成',
+
+        // 过滤与空状态（已存在的保持）
+        statusFilter: '状态筛选：',
+        frequencyFilter: '频率筛选：',
+        allFrequencies: '全部频率',
+        doneNonDaily: '已完成（非每日）',
+        pendingLabel: '待处理',
+        noPendingTasks: '没有待处理任务',
+        noCompletedTasks: '没有已完成任务',
+        noDoneTasks: '没有已完成标记的任务',
+        noTasksAvailable: '暂无可用任务',
+
+        // 历史/日期
         selectDate: '选择日期',
         noTasksForDate: '所选日期没有找到任务',
+        deleteHistoryRecord: '删除历史记录',
+        confirmDeleteHistoryRecord: '确定要删除该历史记录吗？',
+        historyRecordDeleted: '历史记录已删除',
+
+        // 图表与统计
         barChart: '📊 柱状图',
         lineChart: '📈 折线图',
         donutChart: '🍩 环形图',
         monthlySummary: '月度总结',
         tasksCompleted: '已完成任务',
         successRate: '成功率',
+        thisMonth: '本月',
+        tasksDone: '个任务',
+        successRateLabel: '成功率',
+        monthlyPointsLabel: '月度积分',
+
+        // 任务操作消息
         taskAddedSuccess: '任务添加成功！',
         taskStatusUpdate: '任务{status}！{points}积分',
         taskUpdatedSuccess: '任务更新成功！',
         taskDeletedSuccess: '任务删除成功！',
         taskTitleRequired: '任务标题不能为空',
-        confirmDeleteTask: '确定要删除这个任务吗？',
-        editTask: '编辑任务',
-        deleteTask: '删除任务',
-
-        // 过滤空状态
-        noPendingTasks: '没有待处理任务',
-        noCompletedTasks: '没有已完成任务',
-        noDoneTasks: '没有已完成标记的任务',
-        noTasksAvailable: '暂无可用任务',
-
-        // 频率标签
-        freqDaily: '每日',
-        freqWeekly: '每周',
-        freqMonthly: '每月',
-        freqEveryNDays: '每 {days} 天',
-        freqOnce: '一次性',
-        customDays: '自定义天数',
-
-        // 重置单个任务状态
         taskStatusReset: '任务状态已重置为待处理',
 
-        // 重置全部（新增按钮文案）
+        // 重置全部
         resetAllToPending: '全部重置为待处理',
         resetAllConfirm: '这将把所有任务重置为“待处理”。是否继续？',
         resetAll: '全部重置',
         resetAllDone: '已将所有适用任务重置为待处理',
+        resetAllTitle: '重置全部任务状态',
 
-        // 垃圾箱相关（完善）
+        // 垃圾箱
         clearTrashConfirm: '这将永久删除垃圾箱中的所有项目，且无法恢复。是否继续？',
         clearAll: '清空',
+        clearTrashTitle: '清空垃圾箱',
         trashCleared: '垃圾箱已清空',
         taskRestored: '任务已成功恢复',
         trashDeleted: '任务已被永久删除',
-
-        // Demo/清理
-        demoCreated: '示例任务已创建',
-        clearAllServerNote: '服务器暂不支持清空全部数据。此操作仅会清空垃圾箱，是否继续？',
-        demo: '示例',
-
-        // 编辑冲突提示
-        etagMismatchRefetched: '该任务已在其他地方更新，我们已为你重新加载最新版本，请重新应用你的更改。',
-
-        // 额外筛选与标签
-        statusFilter: '状态筛选：',
-        frequencyFilter: '频率筛选：',
-        allFrequencies: '全部频率',
-        doneNonDaily: '已完成（非每日）',
-        pendingLabel: '待处理',
-
-        // 回收站显示
         originalDate: '原始日期',
         deletedDate: '删除日期',
         restoreToOriginal: '恢复至原日期',
         permanentlyDelete: '永久删除',
         permanentlyDeleteConfirm: '确定永久删除此任务？该操作不可撤销。',
-        noTrashItems: '垃圾箱中暂无内容'
+        noTrashItems: '垃圾箱中暂无内容',
+
+        // Demo/清理
+        demo: '示例',
+        demoCreated: '示例任务已创建',
+        clearAllServerNote: '服务器暂不支持清空全部数据。此操作仅会清空垃圾箱，是否继续？',
+        clearDataTitle: '清理数据',
+
+        // 编辑冲突
+        etagMismatchRefetched: '该任务已在其他地方更新，我们已为你重新加载最新版本，请重新应用你的更改。',
+        editConflictTitle: '编辑冲突',
+
+        // 排名/段位系统
+        rankingSystem: '段位系统',
+        currentRank: '当前段位',
+        nextRankTarget: '下一段位目标',
+        points: '积分',
+        rankLevel: '等级 {level}',
+        pointsNeeded: '还需 {points} 积分',
+        congratulations: '恭喜！',
+        maxRankAchieved: '你已经达到最高段位！',
+        allRanks: '全部段位',
+        viewRankingDetails: '查看段位详情',
+        maxRank: '最高段位',
+        nextRank: '下一段位：{rank}',
+        maxRankReached: '已达最高段位',
+        placeholderImage: '占位图',
+        ranks: {
+            legendary: '传奇',
+            mythic: '神话',
+            immortal: '不朽',
+            divine: '神圣',
+            celestial: '天界',
+            grandmaster: '宗师',
+            master: '大师',
+            diamond: '钻石',
+            platinum: '白金',
+            gold: '黄金',
+            silver: '白银',
+            bronze: '青铜',
+            iron: '黑铁',
+            steel: '钢铁',
+            stone: '磐石',
+            wood: '木质',
+            apprentice: '学徒',
+            novice: '新秀',
+            trainee: '见习',
+            beginner: '初学者'
+        },
+
+        // 删除任务确认
+        confirmDeleteTask: '确定要删除这个任务吗？'
     },
 
     about: {
@@ -308,6 +366,14 @@ export default {
         copyright: '©2025 Kason 英语学习平台。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
+        // 新增：引导按钮文案
+        runGuidedTour: '启动引导教程',
+        resetGuidedTour: '重置引导教程',
+        // 新增：引导开关与提示
+        guidedTour: '引导教程',
+        guidedTourTip: '开启/关闭新手引导及右下角悬浮帮助图标',
+        tourEnabled: '开启引导',
+        showHelpIcon: '显示帮助图标',
         // 新增 Discord 相关
         discord: 'Discord',
         joinDiscord: '加入 Discord 社群',

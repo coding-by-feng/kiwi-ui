@@ -3,6 +3,7 @@
     <el-row type="flex" justify="center">
       <el-col>
         <el-autocomplete
+            id="search-input"
             ref="auto"
             :type="getInputType"
             v-model="originalText"
@@ -20,7 +21,7 @@
                      v-if="lazy"
                      icon="el-icon-switch-button"
                      @click="closeLazy"></el-button>
-          <el-select v-if="!lazy" v-model="selectedMode" slot="prepend"
+          <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode" slot="prepend"
                      size="mini"
                      :style="selectWidthStyle"
                      @change="selectedModeChange">
@@ -31,7 +32,7 @@
                 :value="item.value">
             </el-option>
           </el-select>
-          <el-button slot="append" size="mini" icon="el-icon-search"
+          <el-button id="search-submit-btn" slot="append" size="mini" icon="el-icon-search"
                      @click="onSubmit()"></el-button>
         </el-autocomplete>
       </el-col>
@@ -40,6 +41,7 @@
     <el-row>
       <el-select v-if="!ifVocabularyMode" v-model="selectedMode"
                  size="mini"
+                 id="mode-select"
                  class="select-base mode-select"
                  @change="selectedModeChange">
         <el-option
@@ -51,6 +53,7 @@
       </el-select>
       <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini"
                  :placeholder="$t('common.language')"
+                 id="language-select"
                  class="select-base language-select" @change="selectedLanguageChange">
         <el-option
             v-for="(code, language) in languageCodes"
@@ -66,7 +69,7 @@
       <el-button v-if="!ifVocabularyMode" icon="el-icon-question" type="info" plain
                  size="mini" @click="explainMore()" :title="$t('searchModes.explanation')"></el-button>
       <!-- AI History Button -->
-      <el-button v-if="!ifVocabularyMode" icon="el-icon-time" type="warning" plain
+      <el-button v-if="!ifVocabularyMode" id="ai-history-btn" icon="el-icon-time" type="warning" plain
                  size="mini" @click="viewAiHistory()"
                  :title="$t('ai.aiCallHistory')">
       </el-button>
@@ -758,7 +761,9 @@ export default {
           language: this.selectedLanguage,
           originalText: encodedOriginalText,
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime()
+          now: new Date().getTime(),
+          // Force WS-only behavior on the detail page
+          wsOnly: '1'
         }
       })
     },
