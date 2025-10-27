@@ -231,6 +231,29 @@
             </div>
           </div>
         </div>
+
+        <!-- NEW: Guided Tour & Help Icon -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>{{ $t('about.guidedTour') || 'Guided Tour' }}</span>
+            <el-tooltip :content="$t('about.guidedTourTip') || 'Enable/disable onboarding tours and the floating help icon'" placement="top" effect="dark">
+              <i class="el-icon-question help-icon"></i>
+            </el-tooltip>
+          </div>
+          <div class="feature-toggles">
+            <div class="feature-toggle">
+              <span class="feature-label">{{ $t('about.tourEnabled') || 'Enable Tours' }}</span>
+              <el-switch v-model="tourEnabledLocal" class="custom-switch" @change="onToggleTour($event)"></el-switch>
+            </div>
+            <div class="feature-toggle">
+              <span class="feature-label">{{ $t('about.showHelpIcon') || 'Show Help Icon' }}</span>
+              <el-switch v-model="showHelpIconLocal" class="custom-switch" @change="onToggleHelpIcon($event)"></el-switch>
+            </div>
+            <el-button size="mini" type="text" @click="resetGuidedTour">
+              <i class="el-icon-refresh"></i> {{ $t('about.resetGuidedTour') || 'Reset Guided Tour' }}
+            </el-button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -299,6 +322,7 @@ import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import util from '@/util/util'
 import Bgm from '@/page/bgm/Index'
+import { resetOnboardingTour } from '@/util/tour'
 
 const USER_NAME = 'user_name'
 
@@ -337,7 +361,10 @@ export default {
       hotkeyRows: [],
 
       // NEW: Feature tabs toggle local state
-      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS }
+      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS },
+      // NEW: tour settings
+      tourEnabledLocal: true,
+      showHelpIconLocal: true
     }
   },
 
@@ -469,13 +496,14 @@ export default {
         })
         this.user.nativeLang = kiwiConst.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
       }
+      // Change default clipboard detection to DISABLE by default
       if (util.isEmptyStr(this.user.clipboardDetection)) {
         setStore({
           name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION,
-          content: kiwiConst.CLIPBOARD_DETECTION.ENABLE,
+          content: kiwiConst.CLIPBOARD_DETECTION.DISABLE,
           type: 'local'
         })
-        this.user.clipboardDetection = kiwiConst.CLIPBOARD_DETECTION.ENABLE
+        this.user.clipboardDetection = kiwiConst.CLIPBOARD_DETECTION.DISABLE
       }
 
       // Initialize feature tabs visibility
@@ -489,6 +517,27 @@ export default {
         }
       } catch (e) {
         this.enabledTabsLocal = { ...kiwiConst.DEFAULT_ENABLED_TABS }
+      }
+
+      // Initialize guided tour settings
+      try {
+        const t = getStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED })
+        if (t == null) {
+          setStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED, content: kiwiConst.TOUR_SETTING.ENABLE, type: 'local' })
+          this.tourEnabledLocal = true
+        } else {
+          this.tourEnabledLocal = (t === kiwiConst.TOUR_SETTING.ENABLE || t === true || t === '1' || t === 'true')
+        }
+        const icon = getStore({ name: kiwiConst.CONFIG_KEY.SHOW_TOUR_ICON })
+        if (icon == null) {
+          setStore({ name: kiwiConst.CONFIG_KEY.SHOW_TOUR_ICON, content: kiwiConst.TOUR_SETTING.ENABLE, type: 'local' })
+          this.showHelpIconLocal = true
+        } else {
+          this.showHelpIconLocal = (icon === kiwiConst.TOUR_SETTING.ENABLE || icon === true || icon === '1' || icon === 'true')
+        }
+      } catch (e) {
+        this.tourEnabledLocal = true
+        this.showHelpIconLocal = true
       }
     },
 
@@ -824,6 +873,30 @@ export default {
         console.error('Failed to save hotkeys:', e)
         this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
       }
+    },
+
+    // NEW: tour toggles
+    onToggleTour(enabled) {
+      try {
+        setStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED, content: enabled ? kiwiConst.TOUR_SETTING.ENABLE : kiwiConst.TOUR_SETTING.DISABLE, type: 'local' })
+        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
+        try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
+      } catch (e) {
+        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
+      }
+    },
+    onToggleHelpIcon(visible) {
+      try {
+        setStore({ name: kiwiConst.CONFIG_KEY.SHOW_TOUR_ICON, content: visible ? kiwiConst.TOUR_SETTING.ENABLE : kiwiConst.TOUR_SETTING.DISABLE, type: 'local' })
+        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
+        try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
+      } catch (e) {
+        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
+      }
+    },
+    resetGuidedTour() {
+      try { resetOnboardingTour() } catch (_) {}
+      this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
     }
   }
 }

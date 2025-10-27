@@ -8,6 +8,13 @@
         </h3>
       </div>
 
+      <!-- Quick Actions -->
+      <div class="about-actions">
+        <el-button id="run-tour-btn" type="primary" icon="el-icon-guide" @click="runGuidedTour">
+          {{ $t('about.runGuidedTour') || 'Run Guided Tour' }}
+        </el-button>
+      </div>
+
       <!-- App Description Section -->
       <div class="about-section">
         <h4 class="section-title">
@@ -144,8 +151,16 @@
 </template>
 
 <script>
+import { resetOnboardingTour, maybeStartOnboardingTour } from '@/util/tour'
+
 export default {
   name: 'about',
+  methods: {
+    runGuidedTour() {
+      try { resetOnboardingTour() } catch (_) {}
+      this.$nextTick(() => { maybeStartOnboardingTour(this.$router) })
+    }
+  }
 }
 </script>
 
@@ -183,6 +198,12 @@ export default {
   i {
     font-size: 20px;
   }
+}
+
+.about-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 12px 0;
 }
 
 .about-section,

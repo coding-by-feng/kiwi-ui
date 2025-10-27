@@ -1035,14 +1035,14 @@ export default defineComponent({
         // New session id and remember payload for reconnects
         this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
         this.wsShouldReconnect = true;
-        this.lastTranslationRequest = { videoUrl, language, requestType: 'TRANSLATION', requestId: this.wsSessionId };
+        this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.wsSessionId };
 
         const request = {
           videoUrl: videoUrl,
           language: language,
-          requestType: 'TRANSLATION',
+          requestType: 'translated',
           timestamp: Date.now(),
-          requestId: this.wsSessionId
+          sessionId: this.wsSessionId
         };
 
         this.websocket.send(JSON.stringify(request));
@@ -1070,8 +1070,7 @@ export default defineComponent({
           if (this.lastTranslationRequest && this.isTranslationLoading) {
             const resumeRequest = {
               ...this.lastTranslationRequest,
-              timestamp: Date.now(),
-              resumeFrom: this.translationChunks.length
+              timestamp: Date.now()
             };
             this.websocket.send(JSON.stringify(resumeRequest));
           }

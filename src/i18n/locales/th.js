@@ -377,6 +377,12 @@ export default {
         copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason สงวนลิขสิทธิ์',
         github: 'GitHub',
         followOnGitHub: 'ติดตามบน GitHub',
+        runGuidedTour: 'Run Guided Tour',
+        resetGuidedTour: 'Reset Guided Tour',
+        guidedTour: 'Guided Tour',
+        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
+        tourEnabled: 'Enable Tours',
+        showHelpIcon: 'Show Help Icon'
     },
 
     // Messages and notifications
@@ -554,7 +560,7 @@ export default {
         resetAllConfirmTitle: 'รีเซ็ตสถานะงานทั้งหมด',
         resetAllConfirmMessage: 'ระบบจะรีเซ็ต {count} งานให้เป็นสถานะรอดำเนินการ ดำเนินการต่อหรือไม่?',
         allAlreadyPending: 'งานทั้งหมดอยู่ในสถานะรอดำเนินการแล้ว',
-        resetAllResult: 'รีเซ็ตงาน {count} งานเป็นรอดำเนินการแล้ว',
+        resetAllResult: 'รีเซ็ตงาน {count} งานเป็นรอดดำเนินการแล้ว',
 
         // Ranking system
         ranks: {
@@ -599,5 +605,14 @@ export default {
         allRanks: 'อันดับทั้งหมด',
         viewRankingDetails: 'ดูรายละเอียดอันดับ',
         maxRankReached: 'ถึงอันดับสูงสุดแล้ว!',
+    },
+
+    // Tabs labels for feature toggles
+    tabs: {
+        todo: 'สิ่งที่ต้องทำ',
+        youtube: 'YouTube',
+        about: 'เกี่ยวกับ',
+        vocabularyReview: 'ทบทวนคำศัพท์',
+        aiHistory: 'ประวัติ AI'
     }
 }

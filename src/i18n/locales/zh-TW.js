@@ -152,7 +152,7 @@ export default {
         title: '待辦事項',
         totalPoints: '總積分',
         taskList: '任務列表',
-        todayTasks: "今日任務",
+        todayTasks: '今日任務',
         trash: '垃圾桶',
         history: '歷史記錄',
         analytics: '統計分析',
@@ -165,47 +165,106 @@ export default {
         frequency: '頻率',
         selectFrequency: '選擇頻率',
         everyNDays: '每N天',
+        // Added: options used in selects and formatters
+        freqOnce: '一次性',
+        freqDaily: '每天',
+        freqWeekly: '每週',
+        freqMonthly: '每月',
+        customDays: '自訂天數',
+        freqEveryNDays: '每 {days} 天',
         addTask: '添加任務',
+
+        // Status labels
         completed: '✅ 已完成',
         failed: '❌ 已失敗',
         success: '成功',
         fail: '失敗',
-        noTasksToday: '今天暫無任務，請在上方添加第一個任務！',
+        done: '已完成',
+
+        // Filters and empty states
+        statusFilter: '狀態篩選：',
+        frequencyFilter: '頻率篩選：',
+        allFrequencies: '全部頻率',
+        doneNonDaily: '已完成（非每日）',
+        pendingLabel: '待處理',
+        noPendingTasks: '沒有待處理任務',
+        noCompletedTasks: '沒有已完成任務',
+        noDoneTasks: '沒有已完成標記的任務',
+        noTasksAvailable: '暫無可用任務',
+
+        // History
         selectDate: '選擇日期',
         noTasksForDate: '所選日期無任務記錄',
+        deleteHistoryRecord: '刪除歷史記錄',
+        confirmDeleteHistoryRecord: '確定要刪除此歷史記錄嗎？',
+        historyRecordDeleted: '歷史記錄刪除成功！',
+
+        // Analytics
         barChart: '📊 柱狀圖',
         lineChart: '📈 折線圖',
         donutChart: '🍩 環形圖',
         monthlySummary: '月度總結',
         tasksCompleted: '已完成任務',
         successRate: '成功率',
+        thisMonth: '本月',
+        tasksDone: '個任務',
+        successRateLabel: '成功率',
+        monthlyPointsLabel: '月度積分',
+
+        // Messages
         taskAddedSuccess: '任務添加成功！',
         taskStatusUpdate: '任務{status}！{points}積分',
         taskUpdatedSuccess: '任務更新成功！',
         taskDeletedSuccess: '任務刪除成功！',
         taskTitleRequired: '任務標題必填',
-        confirmDeleteTask: '確定要刪除此任務嗎？',
-        editTask: '編輯任務',
-        deleteTask: '刪除任務',
+        taskStatusReset: '任務狀態已重置為待處理',
 
-        // 歷史記錄操作
-        confirmDeleteHistoryRecord: '確定要刪除此歷史記錄嗎？',
-        deleteHistoryRecord: '刪除歷史記錄',
-        historyRecordDeleted: '歷史記錄刪除成功！',
+        // Reset all
+        resetAllToPending: '全部重置為待處理',
+        resetAllConfirm: '這將把所有任務重置為「待處理」。是否繼續？',
+        resetAll: '全部重置',
+        resetAllDone: '已將所有適用任務重置為待處理',
+        resetAllTitle: '重置全部任務狀態',
 
-        // 排名/積分
-        points: '積分',
+        // Trash
+        clearTrashConfirm: '這將永久刪除垃圾桶中的所有項目，且無法恢復。是否繼續？',
+        clearAll: '清空',
+        clearTrashTitle: '清空垃圾桶',
+        trashCleared: '垃圾桶已清空',
+        taskRestored: '任務已成功恢復',
+        trashDeleted: '任務已被永久刪除',
+        originalDate: '原始日期',
+        deletedDate: '刪除日期',
+        restoreToOriginal: '恢復至原日期',
+        permanentlyDelete: '永久刪除',
+        permanentlyDeleteConfirm: '確定永久刪除此任務？此操作不可撤銷。',
+        noTrashItems: '垃圾桶中暫無內容',
+
+        // Demo & Clear
+        demo: '示例',
+        demoCreated: '示例任務已建立',
+        clearAllServerNote: '伺服器暫不支援清空全部資料。此操作僅會清空垃圾桶，是否繼續？',
+        clearDataTitle: '清理資料',
+
+        // Edit conflict
+        etagMismatchRefetched: '該任務已在其他地方更新，我們已為你重新載入最新版本，請重新應用你的變更。',
+        editConflictTitle: '編輯衝突',
+
+        // Ranking
         rankingSystem: '排名系統',
         currentRank: '當前段位',
         nextRankTarget: '下一級目標',
+        points: '積分',
+        rankLevel: '等級 {level}',
         pointsNeeded: '還需 {points} 分',
         congratulations: '恭喜！',
         maxRankAchieved: '你已達到最高段位！',
         allRanks: '全部段位',
         viewRankingDetails: '查看段位詳情',
-        maxRankReached: '已達最高段位！',
-
-        // 段位名稱
+        maxRank: '最高段位',
+        nextRank: '下一級：{rank}',
+        maxRankReached: '已達最高段位',
+        placeholderImage: '佔位圖',
         ranks: {
             legendary: '傳說',
             mythic: '神話',
@@ -228,8 +287,9 @@ export default {
             trainee: '見習',
             beginner: '初學者'
         },
-        rankLevel: '等級 {level}',
-        nextRank: '下一級：{rank}',
+
+        // Deletion confirms
+        confirmDeleteTask: '確定要刪除此任務嗎？'
     },
 
     // New: full AI features
@@ -269,5 +329,49 @@ export default {
     // Messages and notifications (added keys)
     messages: {
         switchedModeHotkey: '已透過 {key} 切換模式'
+    },
+
+    // Tabs labels for feature toggles
+    tabs: {
+        todo: '待辦',
+        youtube: 'YouTube',
+        about: '關於',
+        vocabularyReview: '詞彙複習',
+        aiHistory: 'AI 歷史'
+    },
+
+    // About section (supplemented)
+    about: {
+        title: '關於 Kason Tools',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Tools 是一款由 AI 輔助的英語學習工作台，融合了間隔重複複習、道地發音練習、基於 YouTube 字幕的即時翻譯與講解、智慧收藏、個人化學習流程、進度統計以及帶有排行榜的待辦打卡系統。',
+        version: '版本 2.0',
+        contact: '聯絡我們',
+        instagram: 'Instagram',
+        followOnInstagram: '在 Instagram 上關注',
+        facebook: 'Facebook',
+        followOnFacebook: '在 Facebook 上關注',
+        linkedin: 'LinkedIn',
+        followOnLinkedIn: '在 LinkedIn 上關注',
+        wechatQR: '個人微信二維碼',
+        scanToAdd: '掃碼添加微信',
+        acknowledgments: '特別感謝',
+        voiceRSSAttribution: 'Voice RSS - 線上文字轉語音服務',
+        voiceRSSDescription: '為我們的發音功能提供高品質的文字轉語音服務。',
+        visitWebsite: '造訪官網',
+        copyright: '©2025 Kason 英語學習平台。保留所有權利。',
+        github: 'GitHub',
+        followOnGitHub: '在 GitHub 上關注',
+        // 新增：導覽按鈕文案
+        runGuidedTour: '啟動導覽教學',
+        resetGuidedTour: '重置導覽教學',
+        // 新增：導覽開關與提示
+        guidedTour: '導覽教學',
+        guidedTourTip: '開啟/關閉新手導覽與右下角懸浮說明圖示',
+        tourEnabled: '啟用導覽',
+        showHelpIcon: '顯示說明圖示',
+        // 新增 Discord 相關
+        discord: 'Discord',
+        joinDiscord: '加入 Discord 社群'
     }
 }

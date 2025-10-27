@@ -65,6 +65,15 @@ export default {
         done: 'Done'
     },
 
+    // Tabs labels (new)
+    tabs: {
+        todo: 'To-Do',
+        youtube: 'YouTube',
+        about: 'About',
+        vocabularyReview: 'Vocabulary Review',
+        aiHistory: 'AI History'
+    },
+
     // Navigation
     nav: {
         search: 'Search',
@@ -436,7 +445,15 @@ export default {
         copyright: '©2025 Kason English Learning Platform. All rights reserved.',
         github: 'GitHub',
         followOnGitHub: 'Follow on GitHub',
-        // Added Discord keys
+        // New: Tour button label
+        runGuidedTour: 'Run Guided Tour',
+        resetGuidedTour: 'Reset Guided Tour',
+        // New: Guided Tour settings labels
+        guidedTour: 'Guided Tour',
+        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
+        tourEnabled: 'Enable Tours',
+        showHelpIcon: 'Show Help Icon',
+        // 新增 Discord 相关
         discord: 'Discord',
         joinDiscord: 'Join Discord'
     },
@@ -577,6 +594,7 @@ export default {
 
     // Todo Gamification
     todo: {
+        // Base
         title: 'To-Do',
         totalPoints: 'Total Points',
         taskList: 'Task List',
@@ -584,6 +602,8 @@ export default {
         trash: 'Trash',
         history: 'History',
         analytics: 'Analytics',
+
+        // Task fields
         task: 'Task',
         description: 'Description',
         enterTaskTitle: 'Enter task title',
@@ -593,24 +613,129 @@ export default {
         frequency: 'Frequency',
         selectFrequency: 'Select frequency',
         everyNDays: 'Every N Days',
+        freqOnce: 'One-time',
+        freqDaily: 'Daily',
+        freqWeekly: 'Weekly',
+        freqMonthly: 'Monthly',
+        customDays: 'Custom Days',
+        freqEveryNDays: 'Every {days} days',
         addTask: 'Add Task',
+
+        // Status labels
         completed: 'Completed',
         failed: 'Failed',
         success: 'success',
         fail: 'failed',
-        noTasksToday: 'No tasks for today. Add your first task above!',
+        done: 'Done',
+
+        // Filters and empty states
+        statusFilter: 'Status:',
+        frequencyFilter: 'Frequency:',
+        allFrequencies: 'All Frequencies',
+        doneNonDaily: 'Done (non-daily)',
+        pendingLabel: 'Pending',
+        noPendingTasks: 'No pending tasks',
+        noCompletedTasks: 'No completed tasks',
+        noDoneTasks: 'No done tasks',
+        noTasksAvailable: 'No tasks available',
+
+        // History/Date
         selectDate: 'Select date',
         noTasksForDate: 'No tasks found for selected date',
+        deleteHistoryRecord: 'Delete history record',
+        confirmDeleteHistoryRecord: 'Are you sure you want to delete this history record?',
+        historyRecordDeleted: 'History record deleted',
+
+        // Analytics labels
         barChart: 'Bar Chart',
         lineChart: 'Line Chart',
         donutChart: 'Donut Chart',
         monthlySummary: 'Monthly Summary',
         tasksCompleted: 'Tasks Completed',
         successRate: 'Success Rate',
+        thisMonth: 'this month',
+        tasksDone: 'tasks done',
+        successRateLabel: 'success rate',
+        monthlyPointsLabel: 'Monthly Points',
+
+        // Messages
         taskAddedSuccess: 'Task added successfully!',
         taskStatusUpdate: 'Task {status}! {points} points',
         taskUpdatedSuccess: 'Task updated successfully!',
         taskDeletedSuccess: 'Task deleted successfully!',
-        taskTitleRequired: 'Task title is required'
+        taskTitleRequired: 'Task title is required',
+        taskStatusReset: 'Task status reset to pending',
+
+        // Reset all
+        resetAllToPending: 'Reset All to Pending',
+        resetAllConfirm: 'This will reset all tasks to Pending. Continue?',
+        resetAll: 'Reset All',
+        resetAllDone: 'All applicable tasks reset to pending',
+        resetAllTitle: 'Reset All Task Status',
+
+        // Trash
+        clearTrashConfirm: 'This will permanently delete all items in trash. This cannot be undone. Continue?',
+        clearAll: 'Clear All',
+        clearTrashTitle: 'Clear Trash',
+        trashCleared: 'Trash cleared',
+        taskRestored: 'Task restored successfully',
+        trashDeleted: 'Task permanently deleted',
+        originalDate: 'Original Date',
+        deletedDate: 'Deleted Date',
+        restoreToOriginal: 'Restore to original',
+        permanentlyDelete: 'Permanently delete',
+        permanentlyDeleteConfirm: 'Permanently delete this task? This cannot be undone.',
+        noTrashItems: 'No items in trash',
+
+        // Demo & Clear all
+        demo: 'Demo',
+        demoCreated: 'Demo tasks created',
+        clearAllServerNote: 'Server does not support clearing all data. This will clear trash only. Continue?',
+        clearDataTitle: 'Clear Data',
+
+        // Edit conflict
+        etagMismatchRefetched: 'The task was updated elsewhere. We reloaded the latest version. Please re-apply your changes.',
+        editConflictTitle: 'Edit Conflict',
+
+        // Ranking
+        rankingSystem: 'Ranking System',
+        currentRank: 'Current Rank',
+        nextRankTarget: 'Next Rank Target',
+        points: 'points',
+        rankLevel: 'Level {level}',
+        pointsNeeded: '{points} points needed',
+        congratulations: 'Congratulations!',
+        maxRankAchieved: 'You have achieved the maximum rank!',
+        allRanks: 'All Ranks',
+        viewRankingDetails: 'View ranking details',
+        maxRank: 'Max Rank',
+        nextRank: 'Next: {rank}',
+        maxRankReached: 'Max rank reached',
+        placeholderImage: 'Placeholder',
+        ranks: {
+            legendary: 'Legendary',
+            mythic: 'Mythic',
+            immortal: 'Immortal',
+            divine: 'Divine',
+            celestial: 'Celestial',
+            grandmaster: 'Grandmaster',
+            master: 'Master',
+            diamond: 'Diamond',
+            platinum: 'Platinum',
+            gold: 'Gold',
+            silver: 'Silver',
+            bronze: 'Bronze',
+            iron: 'Iron',
+            steel: 'Steel',
+            stone: 'Stone',
+            wood: 'Wood',
+            apprentice: 'Apprentice',
+            novice: 'Novice',
+            trainee: 'Trainee',
+            beginner: 'Beginner'
+        },
+
+        // Deletion confirms
+        confirmDeleteTask: 'Are you sure you want to delete this task?'
     }
 }

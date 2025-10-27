@@ -173,7 +173,10 @@ export default {
         // New: feature tabs enable/disable map
         ENABLED_TABS: 'enabled_tabs',
         // New: onboarding/guided tour completion flag
-        ONBOARDING_TOUR_DONE: 'onboarding_tour_done'
+        ONBOARDING_TOUR_DONE: 'onboarding_tour_done',
+        // New: guided tour global enable and help icon visibility
+        TOUR_ENABLED: 'tour_enabled',
+        SHOW_TOUR_ICON: 'show_tour_icon'
     },
 
     // Default visibility for feature tabs. Users can override in settings.
@@ -362,6 +365,12 @@ export default {
     // Add these constants to your kiwiConsts.js file
 
     CLIPBOARD_DETECTION: {
+        ENABLE: 'enable',
+        DISABLE: 'disable'
+    },
+
+    // New: Guided tour and help icon enable/disable enums
+    TOUR_SETTING: {
         ENABLE: 'enable',
         DISABLE: 'disable'
     }

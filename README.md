@@ -2,6 +2,8 @@
 
 Kason Tools is an integrated language learning and media-assisted study workstation. It combines rapid vocabulary lookup, contextual video (YouTube) learning, grammar/audio immersion, spaced review (starred items), background focus music, and AI-assisted exploration into a single, tab‑driven interface deployable on the web or as a desktop app via Electron.
 
+> For full website setup and deployment instructions, see docs/WEBSITE_GUIDE.md.
+
 The goal is to reduce friction between looking up a word, seeing it used in authentic media, saving it for review, and generating AI clarifications (examples, paraphrases, grammar hints) without juggling multiple sites. Local grammar audio/text assets enable low‑latency offline-ish practice; Electron packaging adds a distraction‑reduced, native‑feeling environment.
 
 Primary users:
@@ -103,12 +105,12 @@ Axios wrapper: src/router/axios.js
 - Electron-aware baseURL and headers
 - Centralized error handling via Element Message
 
-Important: In production builds, axios is externalized by webpack and is expected to be provided by a CDN script tag in public/index.html. See Troubleshooting below if the app does not start.
+Important: In this repository axios is bundled by default in production. If you decide to externalize axios (vue.config.js > configureWebpack.externals), ensure a matching CDN <script> tag is present in public/index.html so window.axios exists at runtime.
 
 
 - Vue CLI config: vue.config.js
   - publicPath: '/' for web, './' for Electron
-  - Externals in production: axios, wechat (remove or adjust if not using global scripts)
+  - Externals in production: none by default; you may opt-in to externalize libraries (e.g., axios) if you provide CDN scripts
   - Transpile: pdfjs-dist, @smallwei/avue, vue-pdf-embed
   - SplitChunks tuned for mobile; gzip compression in production
   - CSS: sass-loader configured via sassOptions (precision)
@@ -130,14 +132,8 @@ If the site shows only the fallback “Loading; Please wait …” message after
 - Do NOT call Vue.use(router instance). The router is already installed via Vue.use(VueRouter) and passed into new Vue({ router }).
 - File: src/main.js — remove the line: Vue.use(router)
 
-2) Ensure axios CDN is loading (only affects production)
-- vue.config.js externalizes axios in production. That means window.axios must exist.
-- public/index.html includes axios from https://cdn.bootcss.com/axios/0.19.0/axios.min.js.
-- If the CDN is blocked/slow, the app will fail at startup.
-
-Options:
-- Preferred: stop externalizing axios. In vue.config.js remove 'axios' from configureWebpack.externals for production so it’s bundled.
-- Or switch to a reliable CDN (e.g., jsdelivr, unpkg) and/or add a local fallback loader.
+2) Ensure axios availability
+- In this repo axios is bundled by default. If you chose to externalize it in vue.config.js, make sure the CDN script is reachable in production.
 
 3) Check browser console for errors
 - 404/blocked CDN, “plugin.apply is not a function” (caused by Vue.use(router)), CORS, etc.

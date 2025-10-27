@@ -1,5 +1,5 @@
 <template>
-  <div class="list-container">
+  <div class="list-container" :style="{ marginTop: listContentTop + 'px' }">
     <el-collapse accordion v-for="item in listItems" :key="item.wordId" class="kiwi-collapse">
       <el-collapse-item :title="item.wordName" :name="item.wordId">
         <div class="collapse-content">
@@ -69,20 +69,55 @@ export default {
         pages: 0
       },
       listItems: [],
-      listRefresh: false
+      listRefresh: false,
+      // dynamic top spacing to avoid overlap with fixed control bar
+      controlBarHeight: 0,
+      controlBarOffsetTop: 0
     }
   },
   mounted() {
     this.init()
+    // measure control bar after render
+    this.$nextTick(() => {
+      this.updateControlBarMetrics()
+      window.addEventListener('resize', this.updateControlBarMetrics, { passive: true })
+      window.addEventListener('orientationchange', this.updateControlBarMetrics, { passive: true })
+    })
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.updateControlBarMetrics)
+    window.removeEventListener('orientationchange', this.updateControlBarMetrics)
   },
   watch: {
     'listId'() {
       this.init()
+      this.$nextTick(this.updateControlBarMetrics)
     }
   },
   methods: {
     ...wordStarList,
     ...msgUtil,
+    // Measure the fixed control bar and compute offset to push content below it
+    updateControlBarMetrics() {
+      this.$nextTick(() => {
+        const bar = document.querySelector('.control-bar')
+        if (!bar) {
+          // fallback margin when control bar not found
+          this.controlBarHeight = 0
+          this.controlBarOffsetTop = 68
+          return
+        }
+        const rect = bar.getBoundingClientRect()
+        const height = Math.ceil((rect && rect.height) || 0)
+        const computed = window.getComputedStyle(bar)
+        let topPx = 0
+        if (computed && computed.top && computed.top.endsWith('px')) {
+          topPx = parseFloat(computed.top) || 0
+        }
+        this.controlBarHeight = height
+        this.controlBarOffsetTop = topPx
+      })
+    },
     async init() {
       // todo 对listId进行非空等判断
       if (this.listId < 1) {
@@ -124,6 +159,13 @@ export default {
     },
     pageChange() {
       this.initList()
+    }
+  },
+  computed: {
+    // total top margin for the list to clear the fixed control bar
+    listContentTop() {
+      // add a small gap
+      return Math.max(80, Math.ceil(this.controlBarOffsetTop + this.controlBarHeight + 12))
     }
   }
 }
