@@ -241,6 +241,11 @@ export default {
 
       if (forceRefresh) {
         console.log('Force refresh detected (now param changed)')
+        // If wsOnly flag is set, always initiate a fresh WS call immediately
+        if (this.isWsOnly) {
+          this.init()
+          return
+        }
         // Try to restore from cache for the new key first to avoid UI blanking
         const restored = this.tryRestoreFromCache()
         if (!restored) {
@@ -1230,6 +1235,10 @@ export default {
 
     tryRestoreFromCache() {
       try {
+        // When wsOnly flag is present, bypass cache restoration to force a live WS call
+        if (this.isWsOnly) {
+          return false
+        }
         const newKey = this.computeCacheKeyFromQuery(this.$route.query)
         let raw = localStorage.getItem(newKey)
 
