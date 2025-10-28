@@ -151,14 +151,17 @@
 </template>
 
 <script>
-import { resetOnboardingTour, maybeStartOnboardingTour } from '@/util/tour'
+import { resetOnboardingTour, maybeStartOnboardingTour, startTourNow } from '@/util/tour'
 
 export default {
   name: 'about',
   methods: {
     runGuidedTour() {
       try { resetOnboardingTour() } catch (_) {}
-      this.$nextTick(() => { maybeStartOnboardingTour(this.$router) })
+      // Start the full cross-tab guided tour; fallback to onboarding if needed
+      this.$nextTick(() => {
+        try { startTourNow(this.$router) } catch (_) { try { maybeStartOnboardingTour(this.$router) } catch (__) {} }
+      })
     }
   }
 }

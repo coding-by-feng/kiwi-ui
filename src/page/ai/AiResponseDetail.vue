@@ -638,8 +638,17 @@ export default {
           case 'completed':
             item.isStreaming = false;
             item.apiLoading = false;
-            if (response.fullResponse) {
-              item.responseText = response.fullResponse;
+            // Prefer fullResponse if available; then post-validate to extract only responseText
+            try {
+              const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
+                ? response.fullResponse
+                : item.responseText;
+              const extracted = this.extractResponseTextFromPayload(finalPayload);
+              item.responseText = (typeof extracted === 'string' && extracted.length > 0)
+                ? extracted
+                : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+            } catch (_) {
+              // best-effort fallback keeps whatever accumulated
             }
             try { item.websocket && item.websocket.close(); } catch (e) { /* ignore */ }
             item.websocket = null;
@@ -827,7 +836,12 @@ export default {
         if (!info) throw new Error('No request context for fallback')
         const res = await callAiChatCompletion(info.selectedMode, info.targetLanguage, info.nativeLanguage, info.decodedText)
         const data = (res && res.data && res.data.data) || ''
-        this.aiResponseVO.responseText = typeof data === 'string' ? data : JSON.stringify(data)
+        // Post-validate fallback payload to ensure only responseText is used
+        const extracted = this.extractResponseTextFromPayload(data)
+        const finalText = (typeof extracted === 'string' && extracted.length > 0)
+          ? extracted
+          : (typeof data === 'string' ? data : JSON.stringify(data))
+        this.aiResponseVO.responseText = finalText
         this.apiLoading = false
         this.isStreaming = false
         this.lastErrorMessage = ''
@@ -893,9 +907,20 @@ export default {
           that.apiLoading = false;
 
           // Use fullResponse if available (it should be properly formatted)
-          if (response.fullResponse) {
-            console.log('Using fullResponse instead of accumulated chunks');
-            that.aiResponseVO.responseText = response.fullResponse;
+          // Then post-validate to extract only responseText as the final result
+          try {
+            const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
+              ? response.fullResponse
+              : that.aiResponseVO.responseText;
+            const extracted = this.extractResponseTextFromPayload(finalPayload);
+            that.aiResponseVO.responseText = (typeof extracted === 'string' && extracted.length > 0)
+              ? extracted
+              : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+          } catch (_) {
+            // keep previous content if parsing fails unexpectedly
+            if (response.fullResponse) {
+              that.aiResponseVO.responseText = response.fullResponse;
+            }
           }
 
           that.closeWebSocket('main');
@@ -945,9 +970,19 @@ export default {
           that.isSelectionStreaming = false;
           that.selectionApiLoading = false;
 
-          if (response.fullResponse) {
-            console.log('Using fullResponse for selection instead of accumulated chunks');
-            that.selectionResponseText = response.fullResponse;
+          // Prefer fullResponse if available; then post-validate to extract only responseText
+          try {
+            const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
+              ? response.fullResponse
+              : that.selectionResponseText;
+            const extracted = this.extractResponseTextFromPayload(finalPayload);
+            that.selectionResponseText = (typeof extracted === 'string' && extracted.length > 0)
+              ? extracted
+              : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+          } catch (_) {
+            if (response.fullResponse) {
+              that.selectionResponseText = response.fullResponse;
+            }
           }
 
           that.closeWebSocket('selection');
@@ -999,16 +1034,73 @@ export default {
       return 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     },
 
+    // Add post-validation helpers to extract only responseText from a final payload
+    sanitizePotentialJsonString(str) {
+      if (typeof str !== 'string') return '';
+      let s = (str || '').trim();
+      // Remove fenced code blocks markers like ```json and ```
+      s = s.replace(/^```[a-zA-Z]*\n?/, '').replace(/```$/, '');
+      // Replace curly quotes with straight quotes
+      s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+      // Trim again
+      s = s.trim();
+      if (!s.startsWith('{')) {
+        const firstBrace = s.indexOf('{');
+        const lastBrace = s.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          s = s.substring(firstBrace, lastBrace + 1).trim();
+        }
+      }
+      return s;
+    },
+
+    tryParseJsonLoose(str) {
+      if (typeof str !== 'string') return null;
+      const cleaned = this.sanitizePotentialJsonString(str);
+      try {
+        return JSON.parse(cleaned);
+      } catch (_) {
+        return null;
+      }
+    },
+
+    extractResponseTextFromPayload(payload) {
+      try {
+        if (payload && typeof payload === 'object') {
+          if (typeof payload.responseText === 'string') return payload.responseText;
+          if (payload.data && typeof payload.data.responseText === 'string') return payload.data.responseText;
+          return null;
+        }
+        if (typeof payload === 'string') {
+          const obj = this.tryParseJsonLoose(payload);
+          if (obj) {
+            if (typeof obj.responseText === 'string') return obj.responseText;
+            if (obj.data && typeof obj.data.responseText === 'string') return obj.data.responseText;
+          }
+          // Attempt direct regex extraction after normalizing quotes
+          const normalized = payload.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+          const match = normalized.match(/"responseText"\s*:\s*"([\s\S]*?)"/);
+          if (match) {
+            // Unescape common sequences inside the captured string
+            return match[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+          }
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    },
+
     // Add this method to your Vue component methods
     unescapeContent(content) {
       if (!content) return '';
 
       // Unescape common escaped characters
       return content
-          .replace(/\\n/g, '\n')        // Convert \\n to actual newlines
+          .replace(/\\n/g, '\n')        // Convert \\\n to actual newlines
           .replace(/\\t/g, '\t')        // Convert \\\t to actual tabs
-          .replace(/\\"/g, '"')         // Convert \\\" to actual quotes
-          .replace(/\\\\/g, '\\');      // Convert \\\\\\ to single backslash
+          .replace(/\\\"/g, '"')         // Convert \\\\\" to actual quotes
+          .replace(/\\\\/g, '\\');      // Convert \\\\\\\\ to single backslash
     },
 
     parseMarkdown(content) {

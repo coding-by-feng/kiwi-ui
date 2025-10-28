@@ -2,10 +2,63 @@
 // Runs once per browser (first visit) unless reset. Safe to call after Vue mount.
 
 import {driver as createDriver} from 'driver.js'
+import {getStore, setStore} from '@/util/store'
+import kiwiConsts from '@/const/kiwiConsts'
 
 const TOUR_STORAGE_KEY = 'kiwi.tour.v1.completed'
 const TOUR_ENABLE_STORAGE_KEY = 'kiwi.tour.enabled'
 const TOUR_ICON_VISIBILITY_KEY = 'kiwi.tour.icon.visible'
+
+// New: global helpers for enable/visibility flags using store with localStorage fallback
+function coerceEnabled(val, defaultVal = true) {
+  if (val == null) return defaultVal
+  const v = String(val).toLowerCase()
+  return v === '1' || v === 'true' || v === 'enable' || v === 'enabled' || val === true
+}
+
+function coerceDisabled(val, defaultVal = false) {
+  if (val == null) return defaultVal
+  const v = String(val).toLowerCase()
+  return v === '0' || v === 'false' || v === 'disable' || v === 'disabled' || val === false
+}
+
+function isTourGloballyEnabled() {
+  try {
+    const fromStore = getStore({ name: kiwiConsts.CONFIG_KEY.TOUR_ENABLED })
+    if (fromStore != null) return coerceEnabled(fromStore, true) && !coerceDisabled(fromStore, false)
+  } catch (_) {}
+  try {
+    const local = localStorage.getItem(TOUR_ENABLE_STORAGE_KEY)
+    if (local != null) return coerceEnabled(local, true)
+  } catch (_) {}
+  return true
+}
+
+function setTourGloballyEnabled(enabled) {
+  try {
+    setStore({ name: kiwiConsts.CONFIG_KEY.TOUR_ENABLED, content: enabled ? kiwiConsts.TOUR_SETTING.ENABLE : kiwiConsts.TOUR_SETTING.DISABLE, type: 'local' })
+  } catch (_) {}
+  try { localStorage.setItem(TOUR_ENABLE_STORAGE_KEY, enabled ? '1' : '0') } catch (_) {}
+}
+
+function getHelpIconVisible() {
+  try {
+    const fromStore = getStore({ name: kiwiConsts.CONFIG_KEY.SHOW_TOUR_ICON })
+    if (fromStore != null) return coerceEnabled(fromStore, true) && !coerceDisabled(fromStore, false)
+  } catch (_) {}
+  try {
+    const local = localStorage.getItem(TOUR_ICON_VISIBILITY_KEY)
+    if (local != null) return coerceEnabled(local, true)
+  } catch (_) {}
+  return true
+}
+
+function setHelpIconVisible(visible) {
+  try {
+    setStore({ name: kiwiConsts.CONFIG_KEY.SHOW_TOUR_ICON, content: visible ? kiwiConsts.TOUR_SETTING.ENABLE : kiwiConsts.TOUR_SETTING.DISABLE, type: 'local' })
+  } catch (_) {}
+  try { localStorage.setItem(TOUR_ICON_VISIBILITY_KEY, visible ? '1' : '0') } catch (_) {}
+}
 
 function getDriverFactory() {
   try {
@@ -30,6 +83,38 @@ function safeQuery(selector) {
 
 function elementExists(selector) {
   return !!safeQuery(selector)
+}
+
+// Normalize legacy popover { position } to driver.js v1 { side, align }
+function normalizePopover(pop) {
+  if (!pop || typeof pop !== 'object') return pop
+  if (!('position' in pop)) return pop
+  const pos = pop.position
+  const normalized = { ...pop }
+  delete normalized.position
+  if (pos === 'center') {
+    normalized.side = 'over'
+    normalized.align = 'center'
+  } else if (pos === 'top' || pos === 'right' || pos === 'bottom' || pos === 'left' || pos === 'over') {
+    normalized.side = pos
+  } else {
+    // fallback
+    normalized.side = 'bottom'
+  }
+  return normalized
+}
+
+function normalizeSteps(steps) {
+  try {
+    return (steps || []).map(s => {
+      if (s && s.popover) {
+        return { ...s, popover: normalizePopover(s.popover) }
+      }
+      return s
+    })
+  } catch (_) {
+    return steps
+  }
 }
 
 function findTabItem(name) {
@@ -187,7 +272,7 @@ function buildSteps(router) {
   }
 
   // Language switcher if present (header area)
-  const langSwitcher = safeQuery('.language-switcher-container, #language-switcher, [data-role="language-switcher"]')
+  const langSwitcher = safeQuery('.language-switcher-container, .language-switcher, #language-switcher, [data-role="language-switcher"]')
   if (langSwitcher) {
     steps.push({
       element: langSwitcher,
@@ -463,8 +548,10 @@ function buildSteps(router) {
 }
 
 function startOnboardingTour(router, markCompleteOnClose = true) {
-  const steps = buildSteps(router).filter(s => !!s.element)
+  let steps = buildSteps(router).filter(s => !!s.element)
   if (!steps.length) return null
+  // Normalize popover spec for driver.js v1
+  steps = normalizeSteps(steps)
 
   // Respect global tour enabled flag
   if (!isTourGloballyEnabled()) return null
@@ -474,31 +561,26 @@ function startOnboardingTour(router, markCompleteOnClose = true) {
 
   let drv
   try {
+    const markDisabled = () => {
+      try { localStorage.setItem(TOUR_STORAGE_KEY, '1') } catch (_) {}
+      // Auto-disable future tours and hide icon after first run completion
+      setTourGloballyEnabled(false)
+      setHelpIconVisible(false)
+      try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
+    }
     drv = factory({
       animate: true,
-      opacity: 0.4,
-      padding: 6,
+      overlayOpacity: 0.4,
+      stagePadding: 6,
       allowClose: true,
-      overlayClickNext: false,
-      showButtons: ['next', 'previous', 'close']
+      overlayClickBehavior: 'close',
+      showButtons: ['next', 'previous', 'close'],
+      // Only mark completed when requested (first-run onboarding)
+      ...(markCompleteOnClose ? { onDestroyed: markDisabled, onCloseClick: markDisabled } : {})
     })
   } catch (e) {
     console.error('[tour] Failed to create Driver instance:', e)
     return null
-  }
-
-  if (markCompleteOnClose) {
-    try {
-      const markDisabled = () => {
-        localStorage.setItem(TOUR_STORAGE_KEY, '1')
-        // Auto-disable future tours and hide icon after first run completion
-        setTourGloballyEnabled(false)
-        setHelpIconVisible(false)
-        try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
-      }
-      drv.on('reset', markDisabled)
-      drv.on('destroyed', markDisabled)
-    } catch (_) {}
   }
 
   try {
@@ -552,17 +634,18 @@ async function activateTab(name, router) {
   await sleep(100)
 }
 
-function createDriverInstance() {
+function createDriverInstance(extras = {}) {
   const factory = getDriverFactory()
   if (!factory) return null
   try {
     return factory({
       animate: true,
-      opacity: 0.4,
-      padding: 6,
+      overlayOpacity: 0.4,
+      stagePadding: 6,
       allowClose: true,
-      overlayClickNext: false,
-      showButtons: ['next', 'previous', 'close']
+      overlayClickBehavior: 'close',
+      showButtons: ['next', 'previous', 'close'],
+      ...extras
     })
   } catch (e) {
     console.error('[tour] Failed to create Driver instance:', e)
@@ -663,12 +746,15 @@ function collectUserCenterSteps() {
 function driveSteps(steps) {
   return new Promise((resolve) => {
     if (!steps || steps.length === 0) return resolve(false)
-    const drv = createDriverInstance()
+    // Normalize popovers for driver.js v1
+    const normalized = normalizeSteps(steps)
+    const drv = createDriverInstance({
+      onDestroyed: () => resolve(true),
+      onCloseClick: () => resolve(true)
+    })
     if (!drv) return resolve(false)
     try {
-      if (typeof drv.setSteps === 'function') drv.setSteps(steps)
-      drv.on && drv.on('destroyed', () => resolve(true))
-      drv.on && drv.on('reset', () => resolve(true))
+      if (typeof drv.setSteps === 'function') drv.setSteps(normalized)
       if (typeof drv.drive === 'function') drv.drive()
       else if (typeof drv.start === 'function') drv.start()
       else resolve(false)
@@ -686,7 +772,7 @@ export async function startFullGuidedTour(router) {
   if (elementExists('#main-tabs')) {
     intro.push({ element: '#main-tabs', popover: { title: 'Feature Tabs', description: 'Switch sections here. Some tabs require login or can be toggled in settings.', position: 'bottom' } })
   }
-  const langSwitcher = safeQuery('.language-switcher-container, #language-switcher, [data-role="language-switcher"]')
+  const langSwitcher = safeQuery('.language-switcher-container, .language-switcher, #language-switcher, [data-role="language-switcher"]')
   if (langSwitcher) intro.push({ element: langSwitcher, popover: { title: 'App Language', description: 'Change the interface language.', position: 'left' } })
   await driveSteps(intro)
 
@@ -695,7 +781,7 @@ export async function startFullGuidedTour(router) {
     { name: 'search', waitFor: '#search-input', collect: collectSearchSteps },
     { name: 'starList', waitFor: '.starlist-container', collect: collectStarListSteps },
     { name: 'todo', waitFor: '.todo-gamification, .todo-view', collect: collectTodoSteps },
-    { name: 'youtube', waitFor: '.youtube-page', collect: collectYoutubeSteps },
+    { name: 'youtube', waitFor: '.youtube-page, .youtube-player, .youtube-channel-manager, .youtube-favorites', collect: collectYoutubeSteps },
     { name: 'aiHistory', waitFor: '.ai-call-history', collect: collectAiHistorySteps },
     { name: 'userCenter', waitFor: '.user-center-container', collect: collectUserCenterSteps }
   ]
@@ -754,3 +840,6 @@ try {
     }
   }
 } catch (_) {}
+
+// New: export helpers used by other components
+export { isTourGloballyEnabled, setTourGloballyEnabled, getHelpIconVisible, setHelpIconVisible }
