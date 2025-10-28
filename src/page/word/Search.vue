@@ -673,7 +673,7 @@ export default {
         path: this.$route.path,
         query: {
           active: 'search',
-          originalText: encodeURIComponent(real.toLowerCase()),
+          originalText: encodeURIComponent(real),
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           now: new Date().getTime()
         }
@@ -752,7 +752,7 @@ export default {
       }
       this.$refs.auto.close()
 
-      const encodedOriginalText = encodeURIComponent(real.toLowerCase())
+      const encodedOriginalText = encodeURIComponent(real)
       this.$router.push({
         path: '/index/tools/aiResponseDetail',
         query: {
@@ -848,7 +848,7 @@ export default {
 
       this.$refs.auto.close();
 
-      const encodedOriginalText = encodeURIComponent(real.toLowerCase())
+      const encodedOriginalText = encodeURIComponent(real)
       console.log('encodedOriginalText', encodedOriginalText)
 
       // Preserve all existing URL parameters and supplement with search-specific ones

@@ -1,6 +1,7 @@
 // Onboarding tour utilities using driver.js
 // Runs once per browser (first visit) unless reset. Safe to call after Vue mount.
 
+import 'driver.js/dist/driver.css'
 import {driver as createDriver} from 'driver.js'
 import {getStore, setStore} from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
@@ -41,23 +42,13 @@ function setTourGloballyEnabled(enabled) {
   try { localStorage.setItem(TOUR_ENABLE_STORAGE_KEY, enabled ? '1' : '0') } catch (_) {}
 }
 
-function getHelpIconVisible() {
-  try {
-    const fromStore = getStore({ name: kiwiConsts.CONFIG_KEY.SHOW_TOUR_ICON })
-    if (fromStore != null) return coerceEnabled(fromStore, true) && !coerceDisabled(fromStore, false)
-  } catch (_) {}
-  try {
-    const local = localStorage.getItem(TOUR_ICON_VISIBILITY_KEY)
-    if (local != null) return coerceEnabled(local, true)
-  } catch (_) {}
-  return true
+export function getHelpIconVisible() {
+  // Help icon removed; always return false to keep it hidden if any legacy code checks it
+  return false
 }
 
 function setHelpIconVisible(visible) {
-  try {
-    setStore({ name: kiwiConsts.CONFIG_KEY.SHOW_TOUR_ICON, content: visible ? kiwiConsts.TOUR_SETTING.ENABLE : kiwiConsts.TOUR_SETTING.DISABLE, type: 'local' })
-  } catch (_) {}
-  try { localStorage.setItem(TOUR_ICON_VISIBILITY_KEY, visible ? '1' : '0') } catch (_) {}
+  // no-op: help icon is removed
 }
 
 function getDriverFactory() {
@@ -345,25 +336,12 @@ function buildSteps(router) {
     })
   }
 
-  // Floating Help button (if present)
-  const helpBtn = safeQuery('.help-tour-button')
-  if (helpBtn) {
-    steps.push({
-      element: helpBtn,
-      popover: {
-        title: 'Help & Tour',
-        description: 'Use this floating button anytime to re‑run or reset the guided tour.',
-        position: 'left'
-      }
-    })
-  }
-
   // Final tip
   steps.push({
     element: '#main-tabs',
     popover: {
       title: 'Tip',
-      description: 'Re‑run this tour later from the Help button or via window.KiwiTour in the console.',
+      description: 'You can re‑run this tour later from About > Run Guided Tour.',
       position: 'bottom'
     }
   })
@@ -539,59 +517,51 @@ function buildSteps(router) {
 
   // About
   const runTourBtn = safeQuery('#run-tour-btn')
+  // Normalize popover spec for driver.js v1
   if (runTourBtn) steps.push({
+
+  // Respect global tour enabled flag
     element: runTourBtn,
+
     popover: { title: 'Run Guided Tour', description: 'You can re-run the guided tour anytime from About.', position: 'bottom' }
   })
+
 
   return steps
 }
 
+      // Auto-disable future tours and hide icon after first run completion
 function startOnboardingTour(router, markCompleteOnClose = true) {
   let steps = buildSteps(router).filter(s => !!s.element)
   if (!steps.length) return null
-  // Normalize popover spec for driver.js v1
   steps = normalizeSteps(steps)
-
-  // Respect global tour enabled flag
   if (!isTourGloballyEnabled()) return null
-
   const factory = getDriverFactory()
   if (!factory) return null
-
   let drv
   try {
     const markDisabled = () => {
+      // Only mark completed when requested (first-run onboarding)
       try { localStorage.setItem(TOUR_STORAGE_KEY, '1') } catch (_) {}
-      // Auto-disable future tours and hide icon after first run completion
       setTourGloballyEnabled(false)
-      setHelpIconVisible(false)
       try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
     }
     drv = factory({
       animate: true,
-      overlayOpacity: 0.4,
-      stagePadding: 6,
-      allowClose: true,
-      overlayClickBehavior: 'close',
-      showButtons: ['next', 'previous', 'close'],
-      // Only mark completed when requested (first-run onboarding)
-      ...(markCompleteOnClose ? { onDestroyed: markDisabled, onCloseClick: markDisabled } : {})
     })
-  } catch (e) {
-    console.error('[tour] Failed to create Driver instance:', e)
-    return null
-  }
-
-  try {
     if (typeof drv.setSteps === 'function') drv.setSteps(steps)
     // Some versions accept steps in options; setSteps covers both safely
     if (typeof drv.drive === 'function') drv.drive()
     else if (typeof drv.start === 'function') drv.start()
     else {
       console.error('[tour] Driver instance has no drive/start method')
-      return null
     }
+    // Best-effort: mark complete when user closes or finishes
+    try {
+      if (typeof drv.on === 'function') {
+        drv.on('destroyed', () => { if (markCompleteOnClose) markDisabled() })
+      }
+    } catch (_) {}
   } catch (e) {
     console.error('[tour] Failed to start Driver tour:', e)
     return null
@@ -736,31 +706,64 @@ function collectUserCenterSteps() {
   const steps = []
   const logoutBtn = safeQuery('.user-center-container .logout-button')
   if (logoutBtn) steps.push({ element: logoutBtn, popover: { title: 'Logout', description: 'Sign out from your account here.', position: 'left' } })
-  const hotkeysBtn = safeQuery('.user-center-container .hotkeys-icon-btn')
-  if (hotkeysBtn) steps.push({ element: hotkeysBtn, popover: { title: 'Search Mode Hotkeys', description: 'Configure keyboard shortcuts for Search modes.', position: 'left' } })
-  const featureToggles = safeQuery('.user-center-container .feature-toggles')
-  if (featureToggles) steps.push({ element: featureToggles, popover: { title: 'Feature Tabs', description: 'Show or hide To‑do, YouTube, About, and Collections tabs.', position: 'top' } })
-  return steps
-}
+    let done = false
+    let cancelled = false
+    let completed = false
+    let idx = 0
+    const total = normalized.length
 
-function driveSteps(steps) {
-  return new Promise((resolve) => {
-    if (!steps || steps.length === 0) return resolve(false)
-    // Normalize popovers for driver.js v1
-    const normalized = normalizeSteps(steps)
-    const drv = createDriverInstance({
-      onDestroyed: () => resolve(true),
-      onCloseClick: () => resolve(true)
-    })
-    if (!drv) return resolve(false)
-    try {
+    const safeResolve = (res) => {
+      if (done) return
+      done = true
+      resolve(res)
+    }
+
+  const hotkeysBtn = safeQuery('.user-center-container .hotkeys-icon-btn')
+      () => {
+        if (idx >= total - 1) {
+          completed = true
+        } else {
+          idx++
+        }
+      },
+      onPrevClick: () => {
+        idx = Math.max(0, idx - 1)
+      },
+      onCloseClick: () => {
+        cancelled = true
+        safeResolve({ ok: true, cancelled: true })
+      },
+      onDestroyed: () => {
+        // Treat any destroy without explicit completion as a cancellation (overlay click, Esc, etc.)
+        if (cancelled) return safeResolve({ ok: true, cancelled: true })
+        if (completed) return safeResolve({ ok: true, cancelled: false })
+  const helpBtn = safeQuery('.help-tour-button')
+  if (helpBtn) outro.push({ element: helpBtn, popover: { title: 'Help & Tour', description: 'Use this floating button anytime to re‑run or reset the guided tour.', position: 'left' } })
+  outro.push({ element: '#main-tabs', popover: { title: 'Tip', description: 'You can re‑run this tour later from the Help button or via window.KiwiTour.', position: 'bottom' } })
+      }
+  if (featureToggles) steps.push({ element: featureToggles, popover: { title: 'Feature Tabs', description: 'Show or hide To‑do, YouTube, About, and Collections tabs.', position: 'top' } })
+    if (!drv) return safeResolve({ ok: false, cancelled: false })
+}
       if (typeof drv.setSteps === 'function') drv.setSteps(normalized)
       if (typeof drv.drive === 'function') drv.drive()
       else if (typeof drv.start === 'function') drv.start()
-      else resolve(false)
+      else safeResolve({ ok: false, cancelled: false })
+            if (typeof drv.start === 'function') drv.start()
+          }
+  const helpBtn = safeQuery('.help-tour-button')
+  if (helpBtn) outro.push({ element: helpBtn, popover: { title: 'Help & Tour', description: 'Use this floating button anytime to re‑run or reset the guided tour.', position: 'left' } })
+  outro.push({ element: '#main-tabs', popover: { title: 'Tip', description: 'You can re‑run this tour later from the Help button or via window.KiwiTour.', position: 'bottom' } })
+      } else if (typeof drv.setSteps === 'function') {
+        drv.setSteps(normalized)
+        if (typeof drv.start === 'function') drv.start()
+      } else if (typeof drv.start === 'function') {
+        drv.start()
+      } else {
+        return resolve({ ok: false, cancelled: false })
+  intro.push({ element: 'body', popover: { title: 'Welcome to Kason Tools', description: 'A quick tour to get you oriented.', position: 'center' } })
     } catch (e) {
       console.error('[tour] driveSteps failed:', e)
-      resolve(false)
+      resolve({ ok: false, cancelled: false })
     }
   })
 }
@@ -768,13 +771,14 @@ function driveSteps(steps) {
 export async function startFullGuidedTour(router) {
   // Initial intro on current view
   const intro = []
-  intro.push({ element: 'body', popover: { title: 'Welcome to Kason Tools', description: 'A quick tour to get you oriented.', position: 'center' } })
+  intro.push({ element: typeof document !== 'undefined' ? document.body : 'body', popover: { title: 'Welcome to Kason Tools', description: 'A quick tour to get you oriented.', position: 'center' } })
   if (elementExists('#main-tabs')) {
     intro.push({ element: '#main-tabs', popover: { title: 'Feature Tabs', description: 'Switch sections here. Some tabs require login or can be toggled in settings.', position: 'bottom' } })
   }
   const langSwitcher = safeQuery('.language-switcher-container, .language-switcher, #language-switcher, [data-role="language-switcher"]')
   if (langSwitcher) intro.push({ element: langSwitcher, popover: { title: 'App Language', description: 'Change the interface language.', position: 'left' } })
-  await driveSteps(intro)
+  const introRes = await driveSteps(intro)
+  if (introRes && introRes.cancelled) return
 
   // Sections in order; each step set runs after auto-navigation and DOM ready
   const sections = [
@@ -790,56 +794,43 @@ export async function startFullGuidedTour(router) {
     // Skip if tab is not available
     if (!findTabItem(sec.name)) continue
     await activateTab(sec.name, router)
-    const ok = await waitForSelector(sec.waitFor, 7000, 120)
+    const ok = await waitForSelector(sec.waitFor, 2000)
     if (!ok) continue
     const steps = sec.collect()
-    if (steps && steps.length) await driveSteps(steps)
+    if (steps && steps.length) {
+      const res = await driveSteps(steps)
+      if (res && res.cancelled) return
+    }
   }
 
-  // Final tip and Help button
+  // Final tip (icon removed)
   const outro = []
-  const helpBtn = safeQuery('.help-tour-button')
-  if (helpBtn) outro.push({ element: helpBtn, popover: { title: 'Help & Tour', description: 'Use this floating button anytime to re‑run or reset the guided tour.', position: 'left' } })
-  outro.push({ element: '#main-tabs', popover: { title: 'Tip', description: 'You can re‑run this tour later from the Help button or via window.KiwiTour.', position: 'bottom' } })
+  outro.push({ element: '#main-tabs', popover: { title: 'Tip', description: 'You can re‑run this tour later from About > Run Guided Tour.', position: 'bottom' } })
   await driveSteps(outro)
 }
 
+// Convenience API used by the floating Help button to kick off the full tour
 export function startTourNow(router) {
-  // Respect global toggle when starting explicitly as well
-  if (!isTourGloballyEnabled()) return null
-  try { return startFullGuidedTour(router) } catch (_) { return startOnboardingTour(router, false) }
-}
-
-export function maybeStartOnboardingTour(router) {
   try {
-    if (localStorage.getItem(TOUR_STORAGE_KEY) === '1') return
-    if (!isTourGloballyEnabled()) return
-  } catch (_) { /* ignore storage errors */ }
-
-  // Delay slightly to let the DOM settle
-  setTimeout(() => {
-    startOnboardingTour(router, true)
-  }, 300)
+    // Ensure the tour is enabled for manual runs
+    setTourGloballyEnabled(true)
+  } catch (_) {}
+  return startFullGuidedTour(router)
 }
 
+// Reset onboarding flags and show the help icon again
 export function resetOnboardingTour() {
   try { localStorage.removeItem(TOUR_STORAGE_KEY) } catch (_) {}
-  // Also re-enable if the user explicitly resets
-  setTourGloballyEnabled(true)
-  setHelpIconVisible(true)
+  try { setTourGloballyEnabled(true) } catch (_) {}
   try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
 }
 
-// Expose a simple console API for power users and support
-// Usage: KiwiTour.reset(); KiwiTour.start();
-try {
-  if (typeof window !== 'undefined') {
-    window.KiwiTour = {
-      start: () => startOnboardingTour(null, false),
-      reset: () => resetOnboardingTour()
-    }
-  }
-} catch (_) {}
-
-// New: export helpers used by other components
-export { isTourGloballyEnabled, setTourGloballyEnabled, getHelpIconVisible, setHelpIconVisible }
+// Start onboarding tour if globally enabled and not yet completed
+export function maybeStartOnboardingTour(router) {
+  try {
+    if (!isTourGloballyEnabled()) return
+    const done = localStorage.getItem(TOUR_STORAGE_KEY) === '1'
+    if (done) return
+  } catch (_) {}
+  try { startOnboardingTour(router, true) } catch (e) { console.error('[tour] maybeStartOnboardingTour failed:', e) }
+}

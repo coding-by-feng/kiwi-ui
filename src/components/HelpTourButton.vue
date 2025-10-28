@@ -6,7 +6,7 @@
     @mousedown="startDrag($event)"
     @touchstart.passive="startDrag($event)"
   >
-    <el-dropdown ref="menu" trigger="click" @command="onCommand">
+    <el-dropdown ref="menu" trigger="contextmenu" @command="onCommand">
       <el-button
         type="primary"
         circle
@@ -109,7 +109,16 @@ export default {
         e.preventDefault()
         return false
       }
-      return true
+      if (this.isDragging) {
+        e.stopPropagation()
+        e.preventDefault()
+        return false
+      }
+      try { startTourNow(this.$router) } catch (_) {}
+      // Prevent opening the contextmenu dropdown on left-click
+      e.stopPropagation()
+      e.preventDefault()
+      return false
     },
     loadPositionOrDefault() {
       try {

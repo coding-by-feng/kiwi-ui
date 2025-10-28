@@ -232,11 +232,11 @@
           </div>
         </div>
 
-        <!-- NEW: Guided Tour & Help Icon -->
+        <!-- NEW: Guided Tour (icon removed) -->
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('about.guidedTour') || 'Guided Tour' }}</span>
-            <el-tooltip :content="$t('about.guidedTourTip') || 'Enable/disable onboarding tours and the floating help icon'" placement="top" effect="dark">
+            <el-tooltip :content="$t('about.guidedTourTip') || 'Enable or disable onboarding tours'" placement="top" effect="dark">
               <i class="el-icon-question help-icon"></i>
             </el-tooltip>
           </div>
@@ -244,10 +244,6 @@
             <div class="feature-toggle">
               <span class="feature-label">{{ $t('about.tourEnabled') || 'Enable Tours' }}</span>
               <el-switch v-model="tourEnabledLocal" class="custom-switch" @change="onToggleTour($event)"></el-switch>
-            </div>
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('about.showHelpIcon') || 'Show Help Icon' }}</span>
-              <el-switch v-model="showHelpIconLocal" class="custom-switch" @change="onToggleHelpIcon($event)"></el-switch>
             </div>
             <el-button size="mini" type="text" @click="resetGuidedTour">
               <i class="el-icon-refresh"></i> {{ $t('about.resetGuidedTour') || 'Reset Guided Tour' }}
@@ -362,9 +358,8 @@ export default {
 
       // NEW: Feature tabs toggle local state
       enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS },
-      // NEW: tour settings
-      tourEnabledLocal: true,
-      showHelpIconLocal: true
+      // NEW: tour settings (icon removed)
+      tourEnabledLocal: true
     }
   },
 
@@ -519,7 +514,7 @@ export default {
         this.enabledTabsLocal = { ...kiwiConst.DEFAULT_ENABLED_TABS }
       }
 
-      // Initialize guided tour settings
+      // Initialize guided tour settings (icon removed; keep only enable flag)
       try {
         const t = getStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED })
         if (t == null) {
@@ -528,16 +523,8 @@ export default {
         } else {
           this.tourEnabledLocal = (t === kiwiConst.TOUR_SETTING.ENABLE || t === true || t === '1' || t === 'true')
         }
-        const icon = getStore({ name: kiwiConst.CONFIG_KEY.SHOW_TOUR_ICON })
-        if (icon == null) {
-          setStore({ name: kiwiConst.CONFIG_KEY.SHOW_TOUR_ICON, content: kiwiConst.TOUR_SETTING.ENABLE, type: 'local' })
-          this.showHelpIconLocal = true
-        } else {
-          this.showHelpIconLocal = (icon === kiwiConst.TOUR_SETTING.ENABLE || icon === true || icon === '1' || icon === 'true')
-        }
       } catch (e) {
         this.tourEnabledLocal = true
-        this.showHelpIconLocal = true
       }
     },
 
@@ -875,19 +862,10 @@ export default {
       }
     },
 
-    // NEW: tour toggles
+    // NEW: tour toggles (icon removed)
     onToggleTour(enabled) {
       try {
         setStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED, content: enabled ? kiwiConst.TOUR_SETTING.ENABLE : kiwiConst.TOUR_SETTING.DISABLE, type: 'local' })
-        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
-        try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
-      } catch (e) {
-        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
-      }
-    },
-    onToggleHelpIcon(visible) {
-      try {
-        setStore({ name: kiwiConst.CONFIG_KEY.SHOW_TOUR_ICON, content: visible ? kiwiConst.TOUR_SETTING.ENABLE : kiwiConst.TOUR_SETTING.DISABLE, type: 'local' })
         this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
         try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
       } catch (e) {
