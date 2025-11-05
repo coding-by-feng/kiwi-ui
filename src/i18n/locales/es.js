@@ -297,11 +297,5 @@ export default {
 
     about: {
         // ...existing code...
-        runGuidedTour: 'Run Guided Tour',
-        resetGuidedTour: 'Reset Guided Tour',
-        guidedTour: 'Guided Tour',
-        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
-        tourEnabled: 'Enable Tours',
-        showHelpIcon: 'Show Help Icon'
     }
 }

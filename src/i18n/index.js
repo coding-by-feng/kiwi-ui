@@ -12,7 +12,7 @@ import ko from './locales/ko'
 import fr from './locales/fr'
 import de from './locales/de'
 import es from './locales/es'
-
+import th from './locales/th' // Add Thai translations support
 // Import Element UI locales
 import enLocale from 'element-ui/lib/locale/lang/en'
 import zhCNLocale from 'element-ui/lib/locale/lang/zh-CN'
@@ -22,6 +22,8 @@ import koLocale from 'element-ui/lib/locale/lang/ko'
 import frLocale from 'element-ui/lib/locale/lang/fr'
 import deLocale from 'element-ui/lib/locale/lang/de'
 import esLocale from 'element-ui/lib/locale/lang/es'
+// Element UI may not provide Thai; fallback to English for Element texts
+const thElementLocale = enLocale
 
 Vue.use(VueI18n)
 
@@ -57,6 +59,11 @@ const messages = {
     'es': {
         ...es,
         el: esLocale.el
+    },
+    // Add Thai messages
+    'th': {
+        ...th,
+        el: thElementLocale.el
     }
 }
 
@@ -81,7 +88,9 @@ function getInitialLocale() {
         [kiwiConsts.TRANSLATION_LANGUAGE_CODE.Korean]: 'ko',
         [kiwiConsts.TRANSLATION_LANGUAGE_CODE.French]: 'fr',
         [kiwiConsts.TRANSLATION_LANGUAGE_CODE.German]: 'de',
-        [kiwiConsts.TRANSLATION_LANGUAGE_CODE.Spanish]: 'es'
+        [kiwiConsts.TRANSLATION_LANGUAGE_CODE.Spanish]: 'es',
+        // Map Thai to UI locale 'th'
+        [kiwiConsts.TRANSLATION_LANGUAGE_CODE.Thai]: 'th'
     }
 
     if (translationLang && langMapping[translationLang]) {

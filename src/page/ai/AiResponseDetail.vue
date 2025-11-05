@@ -104,7 +104,14 @@
         <i class="el-icon-loading"></i> Streaming response...
       </div>
       <div v-if="lastErrorMessage" class="inline-error">{{ lastErrorMessage }}</div>
-      <div v-html="parsedResponseText" style="text-align: justify; margin-bottom: 40px;" v-loading="apiLoading && !isStreaming"></div>
+      <div
+        v-html="parsedResponseText"
+        style="text-align: justify; margin-bottom: 40px;"
+        v-loading="apiLoading && !isStreaming"
+        ref="mainResponseRef"
+        @mouseup="handleTextSelectionFromMainResponse"
+        @touchend="handleTextSelectionFromMainResponse"
+      ></div>
       <el-button
           v-if="!apiLoading && parsedResponseText"
           class="copy-button"
@@ -216,19 +223,29 @@ export default {
   watch: {
     '$route'() {
       console.log('AiResponseDetail component watch')
-      const oldKey = this.lastCacheKey || this.computeCacheKeyFromQuery(this.preservedQueryParams)
+      const oldKey = this.lastCacheKey || this.computeCacheKeyFromQuery(this.preservedQueryParams, { remember: false })
       const newKey = this.computeCacheKeyFromQuery(this.$route.query)
+      const keyChanged = oldKey !== newKey
 
       // Detect force refresh via 'now' param change
       const oldNow = this.preservedQueryParams && this.preservedQueryParams.now
       const newNow = this.$route.query && this.$route.query.now
       const forceRefresh = oldNow !== newNow && typeof newNow !== 'undefined'
 
+      const hasCacheForNewKey = this.hasMeaningfulCacheForQuery(this.$route.query)
+
       // Always update preserved query params snapshot
       this.preservedQueryParams = { ...this.$route.query };
 
       if (oldKey === newKey && !forceRefresh) {
-        console.log('Route change without core input change; ignoring (no save/restore)')
+        if (!hasCacheForNewKey) {
+          console.log('No cache found for current key; triggering fresh AI fetch')
+          this.closeWebSocket('main');
+          this.closeSelectionResponse();
+          this.init();
+        } else {
+          console.log('Route change without core input change; using existing cache')
+        }
         return
       }
 
@@ -249,14 +266,25 @@ export default {
         // Try to restore from cache for the new key first to avoid UI blanking
         const restored = this.tryRestoreFromCache()
         if (!restored) {
-          // If no cache available and no current content, perform a fresh init
-          const hasContent = ((this.aiResponseVO.responseText || '').toString().trim().length > 0)
-          if (!hasContent) {
-            console.log('No cache or existing content; re-initializing fetch')
+          if (keyChanged) {
+            console.log('Cache miss for new inputs; initializing fresh fetch')
+            this.init()
+          } else if (!hasCacheForNewKey) {
+            console.log('Force refresh without cache; initializing fresh fetch')
             this.init()
           } else {
-            console.log('Keeping existing content; skip immediate re-fetch')
+            // If no cache available and no current content, perform a fresh init
+            const hasContent = ((this.aiResponseVO.responseText || '').toString().trim().length > 0)
+            if (!hasContent) {
+              console.log('No cache or existing content; re-initializing fetch')
+              this.init()
+            } else {
+              console.log('Keeping existing content; skip immediate re-fetch')
+            }
           }
+        } else if (keyChanged) {
+          // IMPORTANT: Do not re-fetch when cache exists for the new key
+          console.log('Restored cache for new inputs; cache hit => skip re-fetch')
         } else {
           console.log('Restored content from cache; skip immediate re-fetch')
         }
@@ -264,7 +292,9 @@ export default {
       }
 
       // Try restore for the new key; if not found or empty, fetch
-      if (!this.tryRestoreFromCache()) {
+      const restored = this.tryRestoreFromCache()
+      if (!restored) {
+        console.log('No cache available for new key; initializing fresh fetch')
         this.init()
       }
     }
@@ -416,6 +446,14 @@ export default {
       if (!containerEl) return;
       const contextText = containerEl.innerText || '';
       this.handleTextSelectionGeneric(containerEl, contextText, { source: 'explanation', explanationId: item.id });
+    },
+
+    // New: handle text selection from the main AI response content
+    handleTextSelectionFromMainResponse() {
+      const containerEl = this.$refs.mainResponseRef
+      if (!containerEl) return
+      const contextText = containerEl.innerText || ''
+      this.handleTextSelectionGeneric(containerEl, contextText, { source: 'response' })
     },
 
     // Generic selection handler given a container and its plain-text context
@@ -1048,7 +1086,6 @@ export default {
       // Replace curly quotes with straight quotes
       s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
       // Trim again
-      s = s.trim();
       if (!s.startsWith('{')) {
         const firstBrace = s.indexOf('{');
         const lastBrace = s.lastIndexOf('}');
@@ -1152,7 +1189,8 @@ export default {
     },
 
     // Compute a stable cache key based on core inputs
-    computeCacheKeyFromQuery(query) {
+    computeCacheKeyFromQuery(query, options = {}) {
+      const { remember = true } = options
       // Prefer passed query strictly; only fallback to current route if not provided
       const q = query || this.$route.query || {}
       const originalText = q.originalText
@@ -1173,7 +1211,9 @@ export default {
       // New cache key format: mode-targetLang-searchingContent (whole content)
       // Use a recognizable namespace prefix; URI-encode the content to keep key safe
       const key = `aiResponseCache:${selectedMode}-${language}-${encodeURIComponent(decoded)}`
-      this.lastCacheKey = key
+      if (remember) {
+        this.lastCacheKey = key
+      }
       return key
     },
 
@@ -1196,6 +1236,36 @@ export default {
       const hash = this.simpleHash(payload)
       const key = `aiResponseCache:${hash}`
       return key
+    },
+
+    hasMeaningfulCacheInRaw(raw) {
+      if (!raw) return false
+      try {
+        const obj = JSON.parse(raw)
+        const cachedText = (obj.aiResponseText || '').toString().trim()
+        if (cachedText.length > 0) return true
+        const cachedExps = Array.isArray(obj.selectionExplanations) ? obj.selectionExplanations : []
+        return cachedExps.some(it => ((it.responseText || '').toString().trim().length > 0))
+      } catch (_) {
+        return false
+      }
+    },
+
+    hasMeaningfulCacheForQuery(query) {
+      try {
+        if (typeof localStorage === 'undefined') return false
+        const primaryKey = this.computeCacheKeyFromQuery(query, { remember: false })
+        if (primaryKey && this.hasMeaningfulCacheInRaw(localStorage.getItem(primaryKey))) {
+          return true
+        }
+        const legacyKey = this.computeLegacyCacheKeyFromQuery(query)
+        if (legacyKey && this.hasMeaningfulCacheInRaw(localStorage.getItem(legacyKey))) {
+          return true
+        }
+      } catch (e) {
+        console.warn('Cache inspection failed:', e)
+      }
+      return false
     },
 
     simpleHash(str) {

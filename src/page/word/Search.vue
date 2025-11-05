@@ -166,10 +166,8 @@ export default {
       // Desktop clipboard notification
       clipboardNotification: null,
 
-      // Hotkey mapping for search modes (digit -> mode value)
-      modeHotkeys: {},
-      // New: fully customizable hotkey bindings (combo string -> mode value)
-      hotkeyBindings: {}
+      // Remove renderer hotkeys state
+      userHotkeysEnabled: false
     }
   },
 
@@ -232,16 +230,11 @@ export default {
     console.log('Search component mounted')
     this.setupClipboardHandling();
 
-    // Initialize and attach global hotkeys for switching modes
-    this.initModeHotkeys();
-    document.addEventListener('keydown', this.handleGlobalHotkeys);
-    // React to hotkey mapping changes coming from UserCenter
-    window.addEventListener('hotkeys-updated', this.refreshModeHotkeys);
+    // Do NOT bind renderer keydown listeners; global hotkeys are handled in Electron main
+    window.addEventListener('hotkeys-updated', () => Message({ message: this.$t ? this.$t('messages.operationSuccess') : 'Hotkeys updated', type: 'success', duration: 1000 }))
   },
   beforeDestroy() {
     this.cleanupClipboardHandling();
-    // Remove global hotkey listener
-    document.removeEventListener('keydown', this.handleGlobalHotkeys);
     window.removeEventListener('hotkeys-updated', this.refreshModeHotkeys);
   },
   watch: {
@@ -258,172 +251,6 @@ export default {
   },
   methods: {
     ...wordSearch,
-
-    // Re-read mapping from storage after changes in User Center
-    refreshModeHotkeys() {
-      try {
-        this.initModeHotkeys();
-        Message({ message: this.$t ? this.$t('messages.operationSuccess') : 'Hotkeys updated', type: 'success', duration: 1000 });
-      } catch (_) {}
-    },
-
-    // Initialize mode hotkeys from storage or sensible defaults
-    initModeHotkeys() {
-      try {
-        const stored = getStore({ name: kiwiConsts.CONFIG_KEY.SEARCH_MODE_HOTKEYS });
-        const legacyDefaults = kiwiConsts.DEFAULT_SEARCH_MODE_HOTKEYS || {};
-        const comboDefaults = kiwiConsts.DEFAULT_SEARCH_HOTKEY_BINDINGS || {};
-
-        // Legacy mapping (digit -> mode)
-        let legacyMap = {};
-        // New combo mapping ("Ctrl+Alt+K" -> mode)
-        let comboMap = {};
-
-        if (stored && typeof stored === 'object') {
-          const keys = Object.keys(stored);
-          const isCombo = keys.some(k => k.includes('+'));
-          if (isCombo) {
-            comboMap = { ...stored };
-          } else {
-            // Legacy digits map was saved; keep for backward compatibility
-            legacyMap = { ...stored };
-          }
-        }
-
-        // Fill in defaults without overwriting existing
-        legacyMap = { ...legacyDefaults, ...legacyMap };
-        comboMap = { ...comboDefaults, ...comboMap };
-
-        this.modeHotkeys = legacyMap;
-        this.hotkeyBindings = comboMap;
-
-        // Persist back the union of user overrides and defaults of the same kind
-        // Keep the same shape as the stored one to avoid unexpected migration automatically
-        setStore({ name: kiwiConsts.CONFIG_KEY.SEARCH_MODE_HOTKEYS, content: stored || comboMap || legacyMap, type: 'local' });
-
-        console.log('[Hotkeys] Initialized legacy map:', legacyMap);
-        console.log('[Hotkeys] Initialized combo map:', comboMap);
-      } catch (e) {
-        console.warn('[Hotkeys] Failed to initialize mapping, using defaults only');
-        this.modeHotkeys = { ...(kiwiConsts.DEFAULT_SEARCH_MODE_HOTKEYS || {}) };
-        this.hotkeyBindings = { ...(kiwiConsts.DEFAULT_SEARCH_HOTKEY_BINDINGS || {}) };
-      }
-    },
-
-    // Normalize KeyboardEvent to combo string, e.g., "Ctrl+Shift+1", "Meta+K", "Alt+S"
-    normalizeEventToCombo(e) {
-      // Ignore if no non-modifier key was pressed
-      const key = (e.key || '').toString();
-      const isModifierKey = ['Shift', 'Control', 'Alt', 'Meta'].includes(key);
-      if (isModifierKey) return null;
-
-      const parts = [];
-      if (e.metaKey) parts.push('Meta');
-      if (e.ctrlKey) parts.push('Ctrl');
-      if (e.altKey) parts.push('Alt');
-      if (e.shiftKey) parts.push('Shift');
-
-      // Require at least one modifier to avoid capturing regular typing
-      if (parts.length === 0) return null;
-
-      // Map key presentation
-      let keyLabel = '';
-      if (key.length === 1) {
-        keyLabel = key.toUpperCase();
-      } else {
-        const map = {
-          'Escape': 'Esc',
-          ' ': 'Space',
-          'Spacebar': 'Space',
-          'ArrowUp': 'ArrowUp',
-          'ArrowDown': 'ArrowDown',
-          'ArrowLeft': 'ArrowLeft',
-          'ArrowRight': 'ArrowRight',
-          'Enter': 'Enter',
-          'Tab': 'Tab',
-          'Backspace': 'Backspace',
-          'Delete': 'Delete',
-          'Home': 'Home',
-          'End': 'End',
-          'PageUp': 'PageUp',
-          'PageDown': 'PageDown'
-        };
-        if (map[key]) keyLabel = map[key];
-        else if (/^F\d{1,2}$/.test(key)) keyLabel = key; // function keys
-        else if (/^[0-9]$/.test(key)) keyLabel = key; // digits (when key is digit)
-        else keyLabel = key.charAt(0).toUpperCase() + key.slice(1);
-      }
-
-      // Normalize Numpad digits e.code like Numpad1: when pressing number on numpad, e.key is '1' usually
-      // So keyLabel above already handles it as '1'.
-
-      parts.push(keyLabel);
-      return parts.join('+');
-    },
-
-    // Global hotkeys handler: support fully customizable combos first, then legacy Ctrl/Cmd+Shift+Digit
-    handleGlobalHotkeys(e) {
-      try {
-        // Ignore IME composition
-        if (e.isComposing) return;
-
-        // Avoid interfering in inputs/textareas/contentEditable unless strong modifiers are used
-        const target = e.target || document.activeElement;
-        const tag = (target && target.tagName) ? target.tagName.toLowerCase() : '';
-        const isEditable = tag === 'input' || tag === 'textarea' || (target && target.isContentEditable);
-
-        // Build normalized combo and check mapping
-        const combo = this.normalizeEventToCombo(e);
-        if (combo && this.hotkeyBindings && this.hotkeyBindings[combo]) {
-          const mode = this.hotkeyBindings[combo];
-          const allowedModes = Object.values(kiwiConsts.SEARCH_MODES_DATA).map(m => m.value);
-          if (!allowedModes.includes(mode)) return;
-
-          // If in an editable and only one modifier (Alt) maybe still OK; we already require at least one modifier.
-          // Prevent default to avoid side effects
-          e.preventDefault();
-          e.stopPropagation();
-
-          if (this.selectedMode !== mode) {
-            this.selectedModeChange(mode);
-            Message({ message: this.$t ? this.$t('messages.switchedModeHotkey', { key: combo }) : `Switched mode: ${mode}`, type: 'success', duration: 1200 });
-          }
-          return;
-        }
-
-        // Legacy behavior: Ctrl/Cmd + Shift + Digit
-        if (!e.shiftKey || (!e.ctrlKey && !e.metaKey)) return;
-
-        let digit = null;
-        if (/^Digit[0-9]$/.test(e.code)) {
-          digit = e.code.slice(5);
-        } else if (/^[0-9]$/.test(e.key)) {
-          digit = e.key;
-        }
-        if (digit == null) return;
-
-        const map = this.modeHotkeys || {};
-        const mode = map[digit];
-        if (!mode) return;
-
-        const allowedModes = Object.values(kiwiConsts.SEARCH_MODES_DATA).map(m => m.value);
-        if (!allowedModes.includes(mode)) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (this.selectedMode !== mode) {
-          this.selectedModeChange(mode);
-          Message({
-            message: this.$t('messages.switchedModeHotkey', { key: `${e.metaKey ? 'Cmd' : 'Ctrl'}+Shift+${digit}` }),
-            type: 'success',
-            duration: 1200
-          });
-        }
-      } catch (err) {
-        console.warn('[Hotkeys] error:', err && err.message);
-      }
-    },
 
     getModeTranslationKey(value) {
       const modeKeys = {
@@ -699,17 +526,17 @@ export default {
         now: new Date().getTime()
       };
 
-      // Decide target path based on whether the mode is an AI mode
-      if (AI_MODES.includes(item)) {
-        this.$router.push({
-          path: '/index/tools/aiResponseDetail',
-          query: baseQuery
+      // Always jump to the Search tab first, then to AI or detail; this forces re-trigger even if same mode
+      const toDetail = { path: '/index/tools/detail', query: { ...baseQuery, now: Date.now() } }
+      const isAi = AI_MODES.includes(item)
+
+      if (isAi) {
+        this.$router.replace(toDetail).finally(() => {
+          const toAi = { path: '/index/tools/aiResponseDetail', query: { ...baseQuery, now: Date.now() } }
+          this.$router.replace(toAi)
         })
       } else {
-        this.$router.push({
-          path: '/index/tools/detail',
-          query: baseQuery
-        })
+        this.$router.replace(toDetail)
       }
     },
 

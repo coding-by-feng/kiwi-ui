@@ -445,14 +445,7 @@ export default {
         copyright: '©2025 Kason English Learning Platform. All rights reserved.',
         github: 'GitHub',
         followOnGitHub: 'Follow on GitHub',
-        // New: Tour button label
-        runGuidedTour: 'Run Guided Tour',
-        resetGuidedTour: 'Reset Guided Tour',
-        // New: Guided Tour settings labels
-        guidedTour: 'Guided Tour',
-        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
-        tourEnabled: 'Enable Tours',
-        showHelpIcon: 'Show Help Icon',
+        // Tour keys removed
         // 新增 Discord 相关
         discord: 'Discord',
         joinDiscord: 'Join Discord'

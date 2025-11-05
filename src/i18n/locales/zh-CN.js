@@ -366,17 +366,6 @@ export default {
         copyright: '©2025 Kason 英语学习平台。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
-        // 新增：引导按钮文案
-        runGuidedTour: '启动引导教程',
-        resetGuidedTour: '重置引导教程',
-        // 新增：引导开关与提示
-        guidedTour: '引导教程',
-        guidedTourTip: '开启/关闭新手引导及右下角悬浮帮助图标',
-        tourEnabled: '开启引导',
-        showHelpIcon: '显示帮助图标',
-        // 新增 Discord 相关
-        discord: 'Discord',
-        joinDiscord: '加入 Discord 社群',
     },
 
     // New: full AI features

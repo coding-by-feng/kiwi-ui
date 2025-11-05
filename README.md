@@ -3,6 +3,7 @@
 Kason Tools is an integrated language learning and media-assisted study workstation. It combines rapid vocabulary lookup, contextual video (YouTube) learning, grammar/audio immersion, spaced review (starred items), background focus music, and AI-assisted exploration into a single, tab‑driven interface deployable on the web or as a desktop app via Electron.
 
 > For full website setup and deployment instructions, see docs/WEBSITE_GUIDE.md.
+> For desktop packaging specifics, see docs/ELECTRON_GUIDE.md.
 
 The goal is to reduce friction between looking up a word, seeing it used in authentic media, saving it for review, and generating AI clarifications (examples, paraphrases, grammar hints) without juggling multiple sites. Local grammar audio/text assets enable low‑latency offline-ish practice; Electron packaging adds a distraction‑reduced, native‑feeling environment.
 
@@ -65,7 +66,8 @@ Technology focus: pragmatic Vue 2.7 stack (incremental migration-friendly), Elem
 
 2) Environment variables
 - VUE_APP_API_URL: Backend API base URL (default http://localhost:9991 if unset)
-- IS_ELECTRON: Set to true only when you need to force Electron-specific behavior. For dev, electron-dev script sets it automatically.
+- IS_ELECTRON: Set to true only when you need to force Electron-specific behavior. Desktop builds use `npm run build:electron`, which sets it automatically.
+- Electron runtime configs live in `config/electron.env` (bundled) with optional overrides in `config/electron.env.local` or the Electron userData directory. See docs/ELECTRON_GUIDE.md.
 
 You can export variables in your shell or create .env files (e.g., .env.development, .env.production) as per Vue CLI.
 
@@ -77,14 +79,14 @@ You can export variables in your shell or create .env files (e.g., .env.developm
 
 
 - Production web build
-- npm run build
+- npm run build (alias for npm run build:web)
   - Output: dist/
 
-- Package Electron app (runs build first)
-- macOS: npm run dist-mac (or pack-mac)
-- Windows: npm run dist-win (or pack-win)
-- Linux: npm run dist-linux (or pack-linux)
-- All: npm run dist-all
+- Package Electron app (each command runs npm run build:electron first)
+  - macOS: npm run dist-mac (or pack-mac)
+  - Windows: npm run dist-win (or pack-win)
+  - Linux: npm run dist-linux (or pack-linux)
+  - All: npm run dist-all
 
 Electron artifacts are written to dist_electron/.
 

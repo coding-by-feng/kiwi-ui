@@ -8,11 +8,9 @@
         </h3>
       </div>
 
-      <!-- Quick Actions -->
+      <!-- Quick Actions (Guided Tour button removed) -->
       <div class="about-actions">
-        <el-button id="run-tour-btn" type="primary" icon="el-icon-guide" @click="runGuidedTour">
-          {{ $t('about.runGuidedTour') || 'Run Guided Tour' }}
-        </el-button>
+        <!-- Guided Tour button removed -->
       </div>
 
       <!-- App Description Section -->
@@ -151,19 +149,9 @@
 </template>
 
 <script>
-import { resetOnboardingTour, maybeStartOnboardingTour, startTourNow } from '@/util/tour'
-
+// Guided Tour imports removed
 export default {
-  name: 'about',
-  methods: {
-    runGuidedTour() {
-      try { resetOnboardingTour() } catch (_) {}
-      // Start the full cross-tab guided tour; fallback to onboarding if needed
-      this.$nextTick(() => {
-        try { startTourNow(this.$router) } catch (_) { try { maybeStartOnboardingTour(this.$router) } catch (__) {} }
-      })
-    }
-  }
+  name: 'about'
 }
 </script>
 

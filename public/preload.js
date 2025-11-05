@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Environment variables (safe ones only)
     getEnvVar: (key) => {
         // Only allow specific environment variables for security
-        const allowedVars = ['KIWI_SERVER_URL', 'VUE_APP_API_URL', 'NODE_ENV'];
+        const allowedVars = ['KIWI_SERVER_URL', 'VUE_APP_API_URL', 'NODE_ENV', 'WEBSITE_URL'];
         if (allowedVars.includes(key)) {
             return process.env[key];
         }
@@ -48,14 +48,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
             isDev: isDev,
             environment: isDev ? 'development' : 'production',
             url: window.location.href,
-            platform: process.platform
+            platform: process.platform,
+            websiteUrl: process.env.WEBSITE_URL || 'https://kason.app'
         };
     },
 
     // Console logging for debugging
     log: (message) => {
         console.log('[Renderer]:', message);
-    }
+    },
+
+    // Hotkey-driven navigation: renderer can request navigation, and receive navigation events
+    requestNavigate: (active, params = {}) => ipcRenderer.invoke('request-navigate', active, params),
+    onNavigate: (callback) => {
+        const listener = (event, payload) => {
+            try { callback(payload) } catch (e) { console.warn('navigate callback error', e) }
+        }
+        ipcRenderer.on('navigate-to', listener)
+        return () => ipcRenderer.removeListener('navigate-to', listener)
+    },
+
+    // Global hotkeys registration (no defaults; user-configured only)
+    registerGlobalHotkeys: (mapping) => ipcRenderer.invoke('register-global-hotkeys', mapping),
+    unregisterGlobalHotkeys: () => ipcRenderer.invoke('unregister-global-hotkeys')
 });
 
 // Add session debugging and persistence helpers

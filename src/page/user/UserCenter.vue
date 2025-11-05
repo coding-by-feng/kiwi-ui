@@ -231,25 +231,6 @@
             </div>
           </div>
         </div>
-
-        <!-- NEW: Guided Tour (icon removed) -->
-        <div class="setting-item">
-          <div class="setting-label">
-            <span>{{ $t('about.guidedTour') || 'Guided Tour' }}</span>
-            <el-tooltip :content="$t('about.guidedTourTip') || 'Enable or disable onboarding tours'" placement="top" effect="dark">
-              <i class="el-icon-question help-icon"></i>
-            </el-tooltip>
-          </div>
-          <div class="feature-toggles">
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('about.tourEnabled') || 'Enable Tours' }}</span>
-              <el-switch v-model="tourEnabledLocal" class="custom-switch" @change="onToggleTour($event)"></el-switch>
-            </div>
-            <el-button size="mini" type="text" @click="resetGuidedTour">
-              <i class="el-icon-refresh"></i> {{ $t('about.resetGuidedTour') || 'Reset Guided Tour' }}
-            </el-button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -318,7 +299,7 @@ import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import util from '@/util/util'
 import Bgm from '@/page/bgm/Index'
-import { resetOnboardingTour } from '@/util/tour'
+import { setLanguage as setUiLanguage } from '@/i18n'
 
 const USER_NAME = 'user_name'
 
@@ -357,9 +338,7 @@ export default {
       hotkeyRows: [],
 
       // NEW: Feature tabs toggle local state
-      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS },
-      // NEW: tour settings (icon removed)
-      tourEnabledLocal: true
+      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS }
     }
   },
 
@@ -513,19 +492,6 @@ export default {
       } catch (e) {
         this.enabledTabsLocal = { ...kiwiConst.DEFAULT_ENABLED_TABS }
       }
-
-      // Initialize guided tour settings (icon removed; keep only enable flag)
-      try {
-        const t = getStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED })
-        if (t == null) {
-          setStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED, content: kiwiConst.TOUR_SETTING.ENABLE, type: 'local' })
-          this.tourEnabledLocal = true
-        } else {
-          this.tourEnabledLocal = (t === kiwiConst.TOUR_SETTING.ENABLE || t === true || t === '1' || t === 'true')
-        }
-      } catch (e) {
-        this.tourEnabledLocal = true
-      }
     },
 
     // Utility methods
@@ -575,6 +541,14 @@ export default {
         type: 'local'
       })
       this.user.nativeLang = command
+      // Map native language to UI language and switch immediately
+      try {
+        const map = kiwiConst.UI_LANGUAGE_MAPPING || {}
+        const ui = map[command]
+        if (ui) {
+          setUiLanguage(ui)
+        }
+      } catch (e) { /* ignore */ }
       this.$message.success(this.$t('messages.operationSuccess'))
     },
 
@@ -709,7 +683,6 @@ export default {
     openHotkeysDialog() {
       try {
         const stored = getStore({ name: kiwiConst.CONFIG_KEY.SEARCH_MODE_HOTKEYS })
-        const defaultsCombo = kiwiConst.DEFAULT_SEARCH_HOTKEY_BINDINGS || {}
 
         let comboMap = {}
         if (stored && typeof stored === 'object') {
@@ -726,7 +699,7 @@ export default {
             }, {})
           }
         } else {
-          comboMap = { ...defaultsCombo }
+          comboMap = {}
         }
 
         this.hotkeyRows = Object.entries(comboMap).map(([combo, mode], i) => ({
@@ -740,7 +713,8 @@ export default {
         }
         this.hotkeysDialogVisible = true
       } catch (e) {
-        this.hotkeyRows = Object.entries(kiwiConst.DEFAULT_SEARCH_HOTKEY_BINDINGS || {}).map(([combo, mode], i) => ({ id: `${combo}-${i}`, combo, mode }))
+        const firstMode = (Object.values(kiwiConst.SEARCH_MODES_DATA)[0] || {}).value || 'detail'
+        this.hotkeyRows = [{ id: `error-${Date.now()}`, combo: '', mode: firstMode }]
         this.hotkeysDialogVisible = true
       }
     },
@@ -819,11 +793,11 @@ export default {
     },
 
     resetHotkeysToDefaults() {
-      const defaults = kiwiConst.DEFAULT_SEARCH_HOTKEY_BINDINGS || {}
-      this.hotkeyRows = Object.entries(defaults).map(([combo, mode], i) => ({ id: `${combo}-${i}-${Date.now()}` , combo, mode }))
+      const firstMode = (Object.values(kiwiConst.SEARCH_MODES_DATA)[0] || {}).value || 'detail'
+      this.hotkeyRows = [{ id: `reset-${Date.now()}`, combo: '', mode: firstMode }]
     },
 
-    saveHotkeys() {
+    async saveHotkeys() {
       try {
         // Build map and validate
         const map = {}
@@ -853,6 +827,32 @@ export default {
         }
 
         setStore({ name: kiwiConst.CONFIG_KEY.SEARCH_MODE_HOTKEYS, content: map, type: 'local' })
+        const hasHotkeys = Object.keys(map).length > 0
+        let registrationResult = null
+        try {
+          if (window.electronAPI) {
+            if (hasHotkeys && typeof window.electronAPI.registerGlobalHotkeys === 'function') {
+              registrationResult = await window.electronAPI.registerGlobalHotkeys({ modes: map })
+            } else if (!hasHotkeys && typeof window.electronAPI.unregisterGlobalHotkeys === 'function') {
+              registrationResult = await window.electronAPI.unregisterGlobalHotkeys()
+            }
+          }
+        } catch (ipcError) {
+          console.warn('Failed to sync global hotkeys with Electron:', ipcError)
+        }
+
+        const failedCombos = []
+        if (registrationResult && registrationResult.failed) {
+          failedCombos.push(...(registrationResult.failed.tabs || []))
+          failedCombos.push(...(registrationResult.failed.modes || []))
+        }
+        if (failedCombos.length > 0) {
+          this.$message.warning(
+              (this.$t && this.$t('messages.hotkeyRegistrationFailed'))
+                  || `Unable to register some shortcuts: ${failedCombos.join(', ')}`
+          )
+        }
+
         this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
         this.hotkeysDialogVisible = false
         try { window.dispatchEvent(new Event('hotkeys-updated')) } catch (_) {}
@@ -860,21 +860,6 @@ export default {
         console.error('Failed to save hotkeys:', e)
         this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
       }
-    },
-
-    // NEW: tour toggles (icon removed)
-    onToggleTour(enabled) {
-      try {
-        setStore({ name: kiwiConst.CONFIG_KEY.TOUR_ENABLED, content: enabled ? kiwiConst.TOUR_SETTING.ENABLE : kiwiConst.TOUR_SETTING.DISABLE, type: 'local' })
-        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
-        try { window.dispatchEvent(new Event('tour-settings-updated')) } catch (_) {}
-      } catch (e) {
-        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
-      }
-    },
-    resetGuidedTour() {
-      try { resetOnboardingTour() } catch (_) {}
-      this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
     }
   }
 }

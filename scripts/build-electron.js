@@ -102,7 +102,7 @@ async function buildVueApp() {
     logStep('3', 'Building Vue application...');
 
     try {
-        execSync('npm run build', { stdio: 'inherit' });
+        execSync('npm run build:electron', { stdio: 'inherit' });
         logSuccess('Vue application built successfully');
     } catch (error) {
         logError('Failed to build Vue application');
