@@ -296,6 +296,14 @@ export default {
         aiHistory: 'AI 기록'
     },
 
+    pdf: {
+        selectButton: 'PDF 선택',
+        changeButton: 'PDF 변경',
+        selectPrompt: 'PDF 파일을 선택해 시작하세요',
+        invalidType: '유효한 PDF 파일을 선택해 주세요.',
+        loadFailed: 'PDF 파일을 불러오지 못했습니다.'
+    },
+
     about: {
     }
 }

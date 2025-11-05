@@ -74,6 +74,14 @@ export default {
         aiHistory: 'AI History'
     },
 
+    pdf: {
+        selectButton: 'Select PDF',
+        changeButton: 'Change PDF',
+        selectPrompt: 'Select a PDF to begin',
+        invalidType: 'Please choose a valid PDF file.',
+        loadFailed: 'Failed to load the PDF file.'
+    },
+
     // Navigation
     nav: {
         search: 'Search',

@@ -330,6 +330,14 @@ export default {
         aiHistory: 'AI履歴'
     },
 
+    pdf: {
+        selectButton: 'PDF を選択',
+        changeButton: 'PDF を変更',
+        selectPrompt: 'PDF を選択して開始',
+        invalidType: '有効な PDF ファイルを選択してください。',
+        loadFailed: 'PDF ファイルの読み込みに失敗しました。'
+    },
+
     about: {
     }
 }

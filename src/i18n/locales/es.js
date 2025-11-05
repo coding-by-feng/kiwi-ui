@@ -295,6 +295,14 @@ export default {
         aiHistory: 'Historial de IA'
     },
 
+    pdf: {
+        selectButton: 'Seleccionar PDF',
+        changeButton: 'Cambiar PDF',
+        selectPrompt: 'Select a PDF to begin',
+        invalidType: 'Please choose a valid PDF file.',
+        loadFailed: 'Failed to load the PDF file.'
+    },
+
     about: {
         // ...existing code...
     }

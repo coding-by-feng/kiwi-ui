@@ -74,6 +74,14 @@ export default {
         aiHistory: 'AI 历史'
     },
 
+    pdf: {
+        selectButton: '选择 PDF 文件',
+        changeButton: '更换 PDF 文件',
+        selectPrompt: '选择一个 PDF 文件开始',
+        invalidType: '请选择有效的 PDF 文件。',
+        loadFailed: 'PDF 文件加载失败。'
+    },
+
     // Navigation
     nav: {
         search: '搜索',
