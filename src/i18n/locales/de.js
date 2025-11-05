@@ -328,6 +328,14 @@ export default {
         aiHistory: 'AI-Verlauf'
     },
 
+    pdf: {
+        selectButton: 'PDF auswählen',
+        changeButton: 'PDF ändern',
+        selectPrompt: 'Select a PDF to begin',
+        invalidType: 'Please choose a valid PDF file.',
+        loadFailed: 'Failed to load the PDF file.'
+    },
+
     about: {
     }
 }

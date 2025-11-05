@@ -126,7 +126,7 @@ export default {
     ensureActiveTabValid() {
       const act = this.activeName
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','aiHistory']
+      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Also consider login-gated tabs
@@ -276,6 +276,12 @@ export default {
           <i class="el-icon-video-camera"></i>
         </span>
         <router-view name="youtube"></router-view>
+      </el-tab-pane>
+      <el-tab-pane name="pdfReader" lazy v-if="enabledTabs.pdfReader">
+        <span slot="label">
+          <i class="el-icon-document"></i>
+        </span>
+        <router-view name="pdfReader" v-if="activeName === 'pdfReader'"></router-view>
       </el-tab-pane>
       <!-- New: AI History tab -->
       <el-tab-pane name="aiHistory" v-if="isLogin && enabledTabs.aiHistory">
