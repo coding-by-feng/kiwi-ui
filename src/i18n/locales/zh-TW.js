@@ -361,17 +361,6 @@ export default {
         visitWebsite: '造訪官網',
         copyright: '©2025 Kason 英語學習平台。保留所有權利。',
         github: 'GitHub',
-        followOnGitHub: '在 GitHub 上關注',
-        // 新增：導覽按鈕文案
-        runGuidedTour: '啟動導覽教學',
-        resetGuidedTour: '重置導覽教學',
-        // 新增：導覽開關與提示
-        guidedTour: '導覽教學',
-        guidedTourTip: '開啟/關閉新手導覽與右下角懸浮說明圖示',
-        tourEnabled: '啟用導覽',
-        showHelpIcon: '顯示說明圖示',
-        // 新增 Discord 相關
-        discord: 'Discord',
-        joinDiscord: '加入 Discord 社群'
+        followOnGitHub: '在 GitHub 上關注'
     }
 }

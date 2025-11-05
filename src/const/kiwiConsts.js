@@ -171,12 +171,8 @@ export default {
         // New: hotkey configuration keys
         SEARCH_MODE_HOTKEYS: 'search_mode_hotkeys',
         // New: feature tabs enable/disable map
-        ENABLED_TABS: 'enabled_tabs',
-        // New: onboarding/guided tour completion flag
-        ONBOARDING_TOUR_DONE: 'onboarding_tour_done',
-        // New: guided tour global enable and help icon visibility
-        TOUR_ENABLED: 'tour_enabled',
-        SHOW_TOUR_ICON: 'show_tour_icon'
+        ENABLED_TABS: 'enabled_tabs'
+        // Removed: ONBOARDING_TOUR_DONE, TOUR_ENABLED, SHOW_TOUR_ICON
     },
 
     // Default visibility for feature tabs. Users can override in settings.
@@ -239,47 +235,6 @@ export default {
         AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction', width: '240px' }
     }),
 
-    // Default hotkeys: use Ctrl+Shift+Number to switch modes quickly
-    // These can be overridden by saving a custom mapping to CONFIG_KEY.SEARCH_MODE_HOTKEYS
-    DEFAULT_SEARCH_MODE_HOTKEYS: Object.freeze({
-        '1': 'detail',                         // Dictionary
-        '2': 'directly-translation',           // Direct Translation
-        '3': 'translation-and-explanation',    // Explanation
-        '4': 'grammar-explanation',            // Grammar Explanation
-        '5': 'grammar-correction',             // Grammar Correction
-        '6': 'vocabulary-explanation',         // Vocabulary Explanation
-        '7': 'synonym',                        // Synonym
-        '8': 'antonym',                        // Antonym
-        '9': 'vocabulary-association',         // Vocabulary Association
-        '0': 'phrases-association'             // Phrases Association
-    }),
-
-    // Default hotkeys (new format): mapping of normalized combo strings to modes.
-    // Normalized combo format: 'Ctrl+Shift+1', 'Meta+Shift+1', 'Alt+S', 'Ctrl+Alt+G', etc.
-    // This coexists with legacy DEFAULT_SEARCH_MODE_HOTKEYS (digit->mode) for backward compatibility.
-    DEFAULT_SEARCH_HOTKEY_BINDINGS: Object.freeze({
-        'Ctrl+Shift+1': 'detail',
-        'Meta+Shift+1': 'detail',
-        'Ctrl+Shift+2': 'directly-translation',
-        'Meta+Shift+2': 'directly-translation',
-        'Ctrl+Shift+3': 'translation-and-explanation',
-        'Meta+Shift+3': 'translation-and-explanation',
-        'Ctrl+Shift+4': 'grammar-explanation',
-        'Meta+Shift+4': 'grammar-explanation',
-        'Ctrl+Shift+5': 'grammar-correction',
-        'Meta+Shift+5': 'grammar-correction',
-        'Ctrl+Shift+6': 'vocabulary-explanation',
-        'Meta+Shift+6': 'vocabulary-explanation',
-        'Ctrl+Shift+7': 'synonym',
-        'Meta+Shift+7': 'synonym',
-        'Ctrl+Shift+8': 'antonym',
-        'Meta+Shift+8': 'antonym',
-        'Ctrl+Shift+9': 'vocabulary-association',
-        'Meta+Shift+9': 'vocabulary-association',
-        'Ctrl+Shift+0': 'phrases-association',
-        'Meta+Shift+0': 'phrases-association'
-        // Users can add custom bindings for new modes via settings
-    }),
 
     TOGGLE: {
         OFF: 'off',
@@ -365,12 +320,6 @@ export default {
     // Add these constants to your kiwiConsts.js file
 
     CLIPBOARD_DETECTION: {
-        ENABLE: 'enable',
-        DISABLE: 'disable'
-    },
-
-    // New: Guided tour and help icon enable/disable enums
-    TOUR_SETTING: {
         ENABLE: 'enable',
         DISABLE: 'disable'
     }

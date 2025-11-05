@@ -20,6 +20,7 @@ This guide explains how to automatically grab the latest YouTube iframe API and 
 ### 3. **Updated Build Scripts**
 - ✅ `npm run build` - Full build with resource updates
 - ✅ `npm run build:quick` - Skip resource downloads (for fast testing)
+- ✅ `npm run build:electron` - Full build with Electron-specific public path + env flags
 - ✅ `npm run optimize:resources` - Only update external resources
 - ✅ `npm run optimize:images` - Only optimize images
 
@@ -66,6 +67,12 @@ scripts/
 ```bash
 npm run build
 # Downloads latest resources + optimizes images + builds
+```
+
+### Electron Build (Desktop Packaging)
+```bash
+npm run build:electron
+# Same as production build but sets IS_ELECTRON=true for relative asset paths
 ```
 
 ### Quick Build (Testing)

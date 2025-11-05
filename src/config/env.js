@@ -18,6 +18,13 @@ function getEnv(key) {
 let baseUrl = '';
 let codeUrl = '/code';
 
+// Determine hosted website origin if provided by main process
+const websiteUrl = getEnv('WEBSITE_URL');
+let hostedOrigin = '';
+try {
+    hostedOrigin = websiteUrl ? new URL(websiteUrl).origin : '';
+} catch (e) { hostedOrigin = ''; }
+
 // Configure API base URLs based on environment
 if (isElectron) {
     // In Electron, allow explicit override via KIWI_SERVER_URL; avoid VUE_APP_API_URL during dev to prevent CORS
@@ -26,10 +33,21 @@ if (isElectron) {
         baseUrl = explicit || '';
         codeUrl = explicit ? `${explicit}/code` : '/code';
     } else {
-        // Packaged Electron or production can honor either env var
-        const explicit = getEnv('KIWI_SERVER_URL') || getEnv('VUE_APP_API_URL');
-        baseUrl = explicit || 'http://localhost:9991';
-        codeUrl = `${baseUrl}/code`;
+        // If running the hosted website inside Electron (electron-prod hitting kason.app), prefer same-origin
+        try {
+            const currentOrigin = (typeof window !== 'undefined' && window.location) ? window.location.origin : '';
+            if (hostedOrigin && currentOrigin === hostedOrigin) {
+                baseUrl = '';
+                codeUrl = '/code';
+            }
+        } catch (e) { /* ignore */ }
+
+        // Otherwise, packaged Electron or explicit override can honor either env var
+        if (!baseUrl) {
+            const explicit = getEnv('KIWI_SERVER_URL') || getEnv('VUE_APP_API_URL');
+            baseUrl = explicit || 'http://localhost:9991';
+            codeUrl = `${baseUrl}/code`;
+        }
     }
 } else {
     // Web version configuration

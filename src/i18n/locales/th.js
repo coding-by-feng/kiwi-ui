@@ -376,13 +376,7 @@ export default {
         visitWebsite: 'เยี่ยมชมเว็บไซต์ทางการ',
         copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason สงวนลิขสิทธิ์',
         github: 'GitHub',
-        followOnGitHub: 'ติดตามบน GitHub',
-        runGuidedTour: 'Run Guided Tour',
-        resetGuidedTour: 'Reset Guided Tour',
-        guidedTour: 'Guided Tour',
-        guidedTourTip: 'Enable/disable onboarding tours and the floating help icon',
-        tourEnabled: 'Enable Tours',
-        showHelpIcon: 'Show Help Icon'
+        followOnGitHub: 'ติดตามบน GitHub'
     },
 
     // Messages and notifications
