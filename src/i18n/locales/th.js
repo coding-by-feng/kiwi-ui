@@ -608,5 +608,13 @@ export default {
         about: 'เกี่ยวกับ',
         vocabularyReview: 'ทบทวนคำศัพท์',
         aiHistory: 'ประวัติ AI'
+    },
+
+    pdf: {
+        selectButton: 'เลือก PDF',
+        changeButton: 'เปลี่ยน PDF',
+        selectPrompt: 'เลือกไฟล์ PDF เพื่อเริ่มต้น',
+        invalidType: 'โปรดเลือกไฟล์ PDF ที่ถูกต้อง',
+        loadFailed: 'ไม่สามารถโหลดไฟล์ PDF ได้'
     }
 }
