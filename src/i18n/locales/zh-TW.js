@@ -340,6 +340,14 @@ export default {
         aiHistory: 'AI 歷史'
     },
 
+    pdf: {
+        selectButton: '選擇 PDF 檔',
+        changeButton: '更換 PDF 檔',
+        selectPrompt: '選擇一個 PDF 檔開始',
+        invalidType: '請選擇有效的 PDF 檔案。',
+        loadFailed: 'PDF 檔案載入失敗。'
+    },
+
     // About section (supplemented)
     about: {
         title: '關於 Kason Tools',
