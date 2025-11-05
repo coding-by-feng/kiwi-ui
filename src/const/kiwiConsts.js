@@ -181,7 +181,8 @@ export default {
         todo: true,
         youtube: true,
         about: true,
-        aiHistory: true // New: AI History tab enabled by default
+        aiHistory: true, // New: AI History tab enabled by default
+        pdfReader: true
     }),
 
     DB_NAME: 'KIWI_VOCABULARY',

@@ -12,6 +12,7 @@ import AiCallHistory from '@/page/ai/AiCallHistory.vue' // Import the new AI cal
 import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
 import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
+import PdfReader from '@/page/pdf/PdfReader.vue'
 
 export default [{
     path: '/',
@@ -37,7 +38,8 @@ export default [{
             youtube: Youtube,// Use the new component here
             youtubePlayer: YoutubePlayer, // Use the new component here
             todo: TodoView, // Add the todo component
-            aiHistory: AiCallHistory // Expose AiCallHistory as a top-level named view for the Index tab
+            aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
+            pdfReader: PdfReader
         },
         children: [{
             path: 'detail',
