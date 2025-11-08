@@ -288,19 +288,40 @@ export default {
       });
     },
 
+    navigateIfChanged(target, { ignoreKeys = ['now'] } = {}) {
+      try {
+        const current = { path: this.$route.path, query: { ...this.$route.query } }
+        const targetQuery = { ...target.query }
+        // Remove ignored transient keys before comparison
+        ignoreKeys.forEach(k => { if (current.query[k] !== undefined) delete current.query[k]; if (targetQuery[k] !== undefined) delete targetQuery[k] })
+        const samePath = current.path === target.path
+        const keys = new Set([...Object.keys(current.query), ...Object.keys(targetQuery)])
+        let sameQuery = true
+        keys.forEach(k => { if (String(current.query[k] || '') !== String(targetQuery[k] || '')) sameQuery = false })
+        if (samePath && sameQuery) return // Idempotent: do nothing
+        // Prefer replace to avoid history spam
+        this.$router.replace(target)
+      } catch (e) {
+        console.warn('navigateIfChanged failed, falling back to push', e)
+        this.$router.push(target)
+      }
+    },
+
     // Updated method to navigate to AI History
     viewAiHistory() {
       console.log('Navigating to AI call history')
-      this.$router.push({
+      const target = {
         path: '/index/tools/aiCallHistory',
         query: {
           active: 'search',
           selectedMode: this.selectedMode,
           language: this.selectedLanguage,
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
+          originalText: this.$route.query.originalText || '',
           now: new Date().getTime()
         }
-      });
+      }
+      this.navigateIfChanged(target)
     },
 
     // Device Detection and Setup
@@ -515,8 +536,8 @@ export default {
 
     selectedModeChange(item) {
       console.log('selectedModeChange', item)
-      const newLanguage = getLanguageForMode(item);
-      const encodedOriginalText = encodeURIComponent(this.originalText || '');
+      const newLanguage = getLanguageForMode(item)
+      const encodedOriginalText = encodeURIComponent(this.originalText || '')
       const baseQuery = {
         ...this.$route.query,
         active: 'search',
@@ -524,19 +545,17 @@ export default {
         language: newLanguage,
         originalText: encodedOriginalText,
         ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
-      };
+      }
       const isAi = AI_MODES.includes(item)
       const target = isAi
         ? { path: '/index/tools/aiResponseDetail', query: baseQuery }
         : { path: '/index/tools/detail', query: baseQuery }
-      // Idempotence guard
-      const same = (this.$route.path === target.path) && Object.keys(baseQuery).every(k => String(this.$route.query[k]||'') === String(baseQuery[k]||''))
-      if (!same) this.$router.replace(target)
+      this.navigateIfChanged(target)
     },
 
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
-      this.saveLanguageForMode(this.selectedMode, item);
+      this.saveLanguageForMode(this.selectedMode, item)
       const target = {
         path: this.$route.path,
         query: {
@@ -548,9 +567,7 @@ export default {
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
       }
-      if (this.$route.path !== target.path || JSON.stringify(this.$route.query) !== JSON.stringify(target.query)) {
-        this.$router.replace(target)
-      }
+      this.navigateIfChanged(target)
     },
 
     onBack() {
@@ -565,16 +582,13 @@ export default {
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
       }
-      this.$router.replace(target)
+      this.navigateIfChanged(target)
     },
 
     explainMore() {
       let real = this.originalText.trim()
-      if (util.isEmptyStr(real)) {
-        return
-      }
+      if (util.isEmptyStr(real)) return
       this.$refs.auto.close()
-
       const encodedOriginalText = encodeURIComponent(real)
       const target = {
         path: '/index/tools/aiResponseDetail',
@@ -587,12 +601,8 @@ export default {
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
       }
-      // Idempotence guard
-      if (this.$route.path !== target.path || JSON.stringify(this.$route.query) !== JSON.stringify(target.query)) {
-        this.$router.replace(target)
-      }
+      this.navigateIfChanged(target)
     },
-
     handleKeyDown(event) {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey || event.shiftKey)) {
         if (this.getInputType === kiwiConsts.INPUT_TYPE.TEXTAREA) {
@@ -687,29 +697,26 @@ export default {
         now: new Date().getTime()
       }
 
-      if (AI_MODES.includes(this.selectedMode)) {
-        this.$router.push({
-          path: '/index/tools/aiResponseDetail',
-          query: baseQuery
-        })
-      } else {
-        this.$router.push({
-          path: '/index/tools/detail',
-          query: baseQuery
-        })
-      }
+      const isAi = AI_MODES.includes(this.selectedMode)
+      const target = isAi
+        ? { path: '/index/tools/aiResponseDetail', query: baseQuery }
+        : { path: '/index/tools/detail', query: baseQuery }
+      this.navigateIfChanged(target, { ignoreKeys: ['now'] })
     },
 
     closeLazy() {
       let queryTmp = {}
       if (this.originalText) {
-        queryTmp = {originalText: this.originalText}
+        queryTmp = { originalText: this.originalText }
       }
-      let query = {
-        active: 'search',
-        ...queryTmp
+      const target = {
+        path: '/index/tools/detail',
+        query: {
+          active: 'search',
+          ...queryTmp
+        }
       }
-      this.$router.push({path: '/index/tools/detail', query: query})
+      this.navigateIfChanged(target)
     }
   }
 }
