@@ -195,8 +195,8 @@ function setupRendererHotkeysFallback(vue, storedMap, registrationResult) {
                 } else if (vue && vue.$router) {
                     // Fallback if not in Electron for any reason
                     const website = require('@/const/website').default
-                    const kiwiConstsLocal = require('@/const/kiwiConsts').default
-                    const AI_VALUES = Object.values(kiwiConstsLocal.SEARCH_AI_MODES).map(m => m.value)
+                    // Use top-level imported kiwiConsts instead of dynamic require
+                    const AI_VALUES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(m => m.value)
                     const isAi = AI_VALUES.includes(mode)
                     const baseQuery = { ...vue.$route.query, selectedMode: mode, active: 'search' }
 
@@ -207,7 +207,7 @@ function setupRendererHotkeysFallback(vue, storedMap, registrationResult) {
                     }
 
                     if (isAi) {
-                        const target = { path: '/index/tools/aiResponseDetail', query: baseQuery }
+                        const target = { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: baseQuery }
                         // Idempotence guard
                         if (vue.$route.path === target.path && sameCore(vue.$route.query, target.query)) return
                         vue.$router.replace(target)
@@ -238,7 +238,7 @@ if (isIOS) {
         console.error('iOS Error:', e.error?.message || e.message, e.filename, e.lineno);
         // Send error info to your server for debugging
         if (navigator.sendBeacon) {
-            navigator.sendBeacon('/api/log-error', JSON.stringify({
+            navigator.sendBeacon(kiwiConsts.API_BASE.LOG_ERROR, JSON.stringify({
                 error: e.error?.message || e.message,
                 file: e.filename,
                 line: e.lineno,
@@ -310,7 +310,7 @@ const vueInstance = new Vue({
             if (window.electronAPI && typeof window.electronAPI.onNavigate === 'function') {
                 this._offNavigate = window.electronAPI.onNavigate(({ active, params }) => {
                     const website = require('@/const/website').default
-                    const kiwiConsts = require('@/const/kiwiConsts').default
+                    // Use top-level imported kiwiConsts
 
                     // Always target Search tab as the base for tool views
                     const baseQuery = {
@@ -329,7 +329,7 @@ const vueInstance = new Vue({
                             // Step 1: go to Search (detail) to ensure tab focus
                             this.$router.replace(toDetail).finally(() => {
                                 // Step 2: jump into AI detail with fresh timestamp so same-mode re-triggers
-                                const toAi = { path: '/index/tools/aiResponseDetail', query: { ...baseQuery, now: Date.now() } }
+                                const toAi = { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: { ...baseQuery, now: Date.now() } }
                                 this.$router.replace(toAi)
                             })
                         } else {

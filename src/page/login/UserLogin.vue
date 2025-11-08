@@ -109,6 +109,7 @@
 <script>
 import {mapGetters} from 'vuex'
 import { setStore } from '@/util/store'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'GoogleLogin',
@@ -252,23 +253,24 @@ export default {
     // Centralized backend OAuth starter (fallback)
     async startBackendOAuth() {
       console.log('🌐 [GOOGLE] Using backend authorization URL')
-      const response = await this.$http.get('/auth/oauth/google/authorize', { headers: { isToken: false } })
-      console.log('📡 [GOOGLE] Backend response:', response && response.data)
-
-      const data = response && response.data
-      const code = data && (data.code !== undefined ? data.code : data.status)
-      if (code === 1 || code === 200 || code === true) {
-        const url = data.data && (data.data.authorizationUrl || data.data.url)
-        if (url) {
-          console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', url)
-          window.location.href = url
-        } else {
-          throw new Error('Authorization URL missing in response')
-        }
-      } else {
-        const msg = (data && (data.msg || data.message)) || this.$t('auth.loginFailed')
-        throw new Error(msg)
-      }
+      return this.$http.get(`${kiwiConsts.API_BASE.AUTH}/google/authorize`, { headers: { isToken: false } })
+        .then(response => {
+          console.log('📡 [GOOGLE] Backend response:', response && response.data)
+          const data = response && response.data
+          const code = data && (data.code !== undefined ? data.code : data.status)
+          if (code === 1 || code === 200 || code === true) {
+            const url = data.data && (data.data.authorizationUrl || data.data.url)
+            if (url) {
+              console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', url)
+              window.location.href = url
+            } else {
+              throw new Error('Authorization URL missing in response')
+            }
+          } else {
+            const msg = (data && (data.msg || data.message)) || this.$t('auth.loginFailed')
+            throw new Error(msg)
+          }
+        })
     },
 
     // Google OAuth methods
@@ -335,7 +337,7 @@ export default {
         console.log('📊 [GOOGLE] Extracted user data:', userData)
 
         // Attempt to login with Google
-        const loginResponse = await this.$http.post('/auth/oauth/google/login', {
+        const loginResponse = await this.$http.post(`${kiwiConsts.API_BASE.AUTH}/google/login`, {
           accessToken: userData.accessToken
         }, { headers: { isToken: false } })
 
@@ -411,7 +413,7 @@ export default {
       console.log('📊 [REDIRECT] Route query word:', word)
 
       // Build destination and preserve all current query params, forcing active=search
-      const redirectPath = '/index/tools/detail'
+      const redirectPath = kiwiConsts.ROUTES.DETAIL
       const redirectQuery = { ...currentQuery, active: 'search' }
 
       console.log('🎯 [REDIRECT] Redirect destination:', {

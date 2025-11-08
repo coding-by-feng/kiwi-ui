@@ -3,7 +3,7 @@ import {getStore, setStore} from '@/util/store'
 import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
-import kiwiConst from '@/const/kiwiConsts'
+import kiwiConsts from '@/const/kiwiConsts'
 
 function emptyExampleStars() {
   setStore({
@@ -372,7 +372,7 @@ export default {
         } else {
           query = {...queryTmp}
         }
-        this.$router.push({path: '/index/tools/detail', query: query})
+        this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: query})
       }
       this.list.status = 'list'
     },
@@ -465,7 +465,7 @@ export default {
           now: new Date().getTime()
         }
       }
-      this.$router.push({path: '/index/tools/detail', query: query})
+      this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: query})
     },
     totalReview(listId, currentMode) {
       let query
@@ -488,7 +488,7 @@ export default {
           now: new Date().getTime()
         }
       }
-      this.$router.push({path: '/index/tools/detail', query: query})
+      this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: query})
     },
     multiModeRead(listId, mode) {
       let query
@@ -499,14 +499,14 @@ export default {
         this.selectOneList(listId, false)
         query = {active: 'starList', mode: mode, listId: listId, listType: this.list.listType}
       }
-      this.$router.push({path: '/index/tools/detail', query: query})
+      this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: query})
     },
     closeAutoReview() {
       this.detail.paraphraseIsReview = false
       this.detail.paraphraseIsRead = false
       this.detail.paraphraseDetailVisible = false
       let query = {active: 'starList'}
-      this.$router.push({path: '/index/tools/detail', query: query})
+      this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: query})
       window.location.reload()
     }
   },

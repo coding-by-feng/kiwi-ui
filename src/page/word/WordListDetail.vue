@@ -47,6 +47,7 @@
 <script>
 import wordStarList from '@/api/wordStarList'
 import msgUtil from '@/util/msg'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'wordStarListDetail',
@@ -144,7 +145,7 @@ export default {
         word: wordName,
         now: new Date().getTime()
       };
-      this.$router.push({path: '/index/tools/detail', query: preservedQuery})
+      this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: preservedQuery})
     },
     async removeWordStarListFun(wordId) {
       this.removeWordStarList({wordId: wordId, listId: this.listId})

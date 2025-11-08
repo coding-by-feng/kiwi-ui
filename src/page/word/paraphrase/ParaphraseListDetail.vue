@@ -4,7 +4,7 @@ import msgUtil from '@/util/msg'
 import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import review from '@/api/review'
-import kiwiConst from '@/const/kiwiConsts'
+import kiwiConsts from '@/const/kiwiConsts'
 import audioUtil from '../../../util/audioUtil'
 import NoSleep from 'nosleep.js'
 
@@ -629,7 +629,7 @@ export default {
     handleShowDetail() {
       this.detail.dialogVisible = false
       this.$router.push({
-        path: '/index/tools/detail',
+        path: kiwiConsts.ROUTES.DETAIL,
         query: {active: 'search', originalText: this.detail.paraphraseVO.wordName}
       })
     },

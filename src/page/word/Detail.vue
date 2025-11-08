@@ -6,8 +6,7 @@ import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import audioPlay from '@/api/audioPlay'
 import wordStarList from '@/api/wordStarList'
-import kiwiConsts from "@/const/kiwiConsts";
-import kiwiConst from "@/const/kiwiConsts";
+import kiwiConsts from '@/const/kiwiConsts'
 
 let that
 
@@ -23,7 +22,7 @@ export default {
       loading: false,
       windowInnerHeight: window.innerHeight,
       dialogHelpVisible: false,
-      isShowParaphrase: !getStore({name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN}),
+      isShowParaphrase: !getStore({name: kiwiConsts.CONFIG_KEY.IS_EN_TO_EN}),
       isShowExample: true,
       isUKPronunciationPlaying: false,
       isUSPronunciationPlaying: false,
@@ -237,7 +236,7 @@ export default {
             now: new Date().getTime()
           }
           this.$router.push({
-            path: '/index/tools/aiResponseDetail',
+            path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
             query: preservedQuery
           })
         }
@@ -260,8 +259,8 @@ export default {
             for (let j = 0; j < pronunciationVOList.length; j++) {
               try {
                 let audio = new Audio()
-                audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + pronunciationVOList[j].pronunciationId
-                
+                audio.src = `${kiwiConsts.API_BASE.WORD_BIZ}/pronunciation/downloadVoice/` + pronunciationVOList[j].pronunciationId
+
                 // Add error handling for audio loading
                 audio.addEventListener('error', (e) => {
                   console.warn('Audio loading failed:', e)

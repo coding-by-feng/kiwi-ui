@@ -1,4 +1,5 @@
 import kiwiConst from '@/const/kiwiConsts'
+import kiwiConsts from '@/const/kiwiConsts'
 
 /**
  * 打开数据库
@@ -157,9 +158,9 @@ export function cursorGetData(db, storeName) {
 }
 
 export function buildDataKey(url, urlsKey) {
-    let keyPrefix = url.replaceAll('/wordBiz/word/review/downloadReviewAudio', 'RA')
-        .replaceAll('/wordBiz/word/pronunciation/downloadVoice', 'PA')
-        .replaceAll('/wordBiz/word/review/character/downloadReviewAudio', 'CA');
+    let keyPrefix = url.replaceAll(`${kiwiConsts.API_BASE.WORD_BIZ}/review/downloadReviewAudio`, 'RA')
+        .replaceAll(`${kiwiConsts.API_BASE.WORD_BIZ}/pronunciation/downloadVoice`, 'PA')
+        .replaceAll(`${kiwiConsts.API_BASE.WORD_BIZ}/review/character/downloadReviewAudio`, 'CA');
     if (urlsKey) {
         return keyPrefix + '_' + urlsKey;
     }

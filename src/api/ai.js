@@ -1,9 +1,10 @@
 import request from '@/router/axios'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export function callAiChatCompletion(selectedMode, targetLanguage, nativeLanguage, originalText) {
     console.log('callAiChatCompletion selectedMode: ' + selectedMode + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' originalText: ' + originalText)
     return request({
-        url: `/ai-biz/ai/v2/${selectedMode}/${targetLanguage}/${nativeLanguage}/${encodeURIComponent(encodeURIComponent(originalText))}`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/v2/${selectedMode}/${targetLanguage}/${nativeLanguage}/${encodeURIComponent(encodeURIComponent(originalText))}`,
         headers: {
             isToken: true
         },
@@ -24,7 +25,7 @@ export function getAiCallHistory(current, size, filter = null) {
     }
     
     return request({
-        url: `/ai-biz/ai/history`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/history`,
         method: 'get',
         params: params,
         headers: {
@@ -36,7 +37,7 @@ export function getAiCallHistory(current, size, filter = null) {
 // Archive AI call history item
 export function archiveAiCallHistory(id) {
     return request({
-        url: `/ai-biz/ai/history/${id}/archive`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/history/${id}/archive`,
         method: 'put',
         headers: {
             isToken: true
@@ -47,7 +48,7 @@ export function archiveAiCallHistory(id) {
 // Delete AI call history item
 export function deleteAiCallHistory(id) {
     return request({
-        url: `/ai-biz/ai/history/${id}`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/history/${id}`,
         method: 'delete',
         headers: {
             isToken: true
@@ -58,7 +59,7 @@ export function deleteAiCallHistory(id) {
 // YouTube Channel API calls
 export function getChannelList(current, size) {
     return request({
-        url: `/ai-biz/ai/ytb/channel/page`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/page`,
         method: 'get',
         params: {
             current: current,
@@ -72,7 +73,7 @@ export function getChannelList(current, size) {
 
 export function submitChannel(channelLinkOrName) {
     return request({
-        url: `/ai-biz/ai/ytb/channel`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel`,
         method: 'post',
         params: {
             channelLinkOrName: channelLinkOrName.trim()
@@ -85,7 +86,7 @@ export function submitChannel(channelLinkOrName) {
 
 export function getChannelVideos(channelId, current, size) {
     return request({
-        url: `/ai-biz/ai/ytb/channel/${channelId}/videos`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/videos`,
         method: 'get',
         params: {
             current: current,
@@ -100,7 +101,7 @@ export function getChannelVideos(channelId, current, size) {
 // Favorites API
 export function favoriteChannel(channelId) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/${channelId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/favorite`,
     method: 'post',
     headers: { isToken: true }
   })
@@ -108,7 +109,7 @@ export function favoriteChannel(channelId) {
 
 export function unfavoriteChannel(channelId) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/${channelId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/favorite`,
     method: 'delete',
     headers: { isToken: true }
   })
@@ -116,7 +117,7 @@ export function unfavoriteChannel(channelId) {
 
 export function favoriteVideo(videoId) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/video/${videoId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/video/${videoId}/favorite`,
     method: 'post',
     headers: { isToken: true }
   })
@@ -124,7 +125,7 @@ export function favoriteVideo(videoId) {
 
 export function unfavoriteVideo(videoId) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/video/${videoId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/video/${videoId}/favorite`,
     method: 'delete',
     headers: { isToken: true }
   })
@@ -133,7 +134,7 @@ export function unfavoriteVideo(videoId) {
 // New: toggle video favorite by URL when backend videoId is unavailable/invalid
 export function favoriteVideoByUrl(videoUrl) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/video/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/video/favorite`,
     method: 'post',
     params: { videoUrl },
     headers: { isToken: true }
@@ -142,7 +143,7 @@ export function favoriteVideoByUrl(videoUrl) {
 
 export function unfavoriteVideoByUrl(videoUrl) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/video/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/video/favorite`,
     method: 'delete',
     params: { videoUrl },
     headers: { isToken: true }
@@ -151,7 +152,7 @@ export function unfavoriteVideoByUrl(videoUrl) {
 
 export function getFavoriteChannels(current, size) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/favorites/channels`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/favorites/channels`,
     method: 'get',
     params: { current, size },
     headers: { isToken: true }
@@ -160,7 +161,7 @@ export function getFavoriteChannels(current, size) {
 
 export function getFavoriteVideos(current, size) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/favorites/videos`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/favorites/videos`,
     method: 'get',
     params: { current, size },
     headers: { isToken: true }
@@ -170,7 +171,7 @@ export function getFavoriteVideos(current, size) {
 // Check favorite status by backend video ID (Long)
 export function checkVideoFavoriteById(videoId) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/video/${videoId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/video/${videoId}/favorite`,
     method: 'get',
     headers: { isToken: true }
   })
@@ -179,7 +180,7 @@ export function checkVideoFavoriteById(videoId) {
 // Check favorite status by video URL
 export function checkVideoFavoriteByUrl(videoUrl) {
   return request({
-    url: `/ai-biz/ai/ytb/channel/video/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/video/favorite`,
     method: 'get',
     params: { videoUrl },
     headers: { isToken: true }
@@ -188,7 +189,7 @@ export function checkVideoFavoriteByUrl(videoUrl) {
 
 // YouTube Video-related API calls - UPDATED FOR SEPARATED ENDPOINTS
 export function downloadVideoScrollingSubtitles(videoUrl) {
-    const url = `/ai-biz/ai/ytb/video/subtitles/scrolling?url=${encodeURIComponent(videoUrl)}`;
+    const url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles/scrolling?url=${encodeURIComponent(videoUrl)}`;
     return request({
         url: url,
         headers: {
@@ -199,7 +200,7 @@ export function downloadVideoScrollingSubtitles(videoUrl) {
 }
 
 export function downloadVideoTranslatedSubtitles(videoUrl, language) {
-    let url = `/ai-biz/ai/ytb/video/subtitles/translated?url=${encodeURIComponent(videoUrl)}`;
+    let url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles/translated?url=${encodeURIComponent(videoUrl)}`;
     if (language) {
         url += `&language=${language}`;
     }
@@ -218,7 +219,7 @@ export function downloadVideoSubtitles(videoUrl, language) {
     if (!language) {
         language = 'EN';
     }
-    url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
+    url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
     return request({
         url: url,
         headers: {
@@ -231,9 +232,9 @@ export function downloadVideoSubtitles(videoUrl, language) {
 export function deleteVideoSubtitles(videoUrl, language) {
     let url;
     if (language) {
-        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
+        url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}&language=${language}`;
     } else {
-        url = `/ai-biz/ai/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}`;
+        url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles?url=${encodeURIComponent(videoUrl)}`;
     }
     return request({
         url: url,
@@ -246,7 +247,7 @@ export function deleteVideoSubtitles(videoUrl, language) {
 
 export function downloadVideo(videoUrl) {
     return request({
-        url: `/ai-biz/ai/ytb/video/download?url=${encodeURIComponent(videoUrl)}`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/download?url=${encodeURIComponent(videoUrl)}`,
         headers: {
             isToken: true
         },
@@ -257,7 +258,7 @@ export function downloadVideo(videoUrl) {
 
 export function getVideoTitle(videoUrl) {
     return request({
-        url: `/ai-biz/ai/ytb/video/title?url=${encodeURIComponent(videoUrl)}`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/title?url=${encodeURIComponent(videoUrl)}`,
         headers: {
             isToken: true
         },
