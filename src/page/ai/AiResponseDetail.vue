@@ -358,6 +358,49 @@ export default {
       } catch (_) { /* ignore */ }
     },
 
+    async initializeFromRoute() {
+      // Preserve the latest route params for future navigations
+      try {
+        this.preservedQueryParams = { ...this.$route.query };
+      } catch (e) {
+        this.preservedQueryParams = {};
+      }
+
+      // Ensure any active streams are closed and stacked explanations cleared
+      this.closeWebSocket('all');
+      this.closeSelectionResponse();
+
+      // Reset per-request state
+      this.apiLoading = false;
+      this.isStreaming = false;
+      this.currentRequestId = null;
+      this.selectionDialogVisible = false;
+      this.selectionResponseVisible = false;
+      this.selectionApiLoading = false;
+      this.isSelectionStreaming = false;
+      this.selectionCurrentRequestId = null;
+      this.selectedText = '';
+      this.selectionResponseText = '';
+      this.lastSelectedText = '';
+      this.selectionSourceType = '';
+      this.selectionSourceExplanationId = '';
+      this.lastErrorMessage = '';
+      this.aiResponseVO.responseText = '';
+      this._mainWsAttempts = 0;
+      this._mainWsHadData = false;
+      this._mainFallbackInFlight = false;
+      this._lastMainRequest = null;
+
+      // Sync the selected mode from the current route
+      this.selectedMode = this.$route?.query?.selectedMode;
+
+      // Attempt to restore cached content; otherwise trigger a fresh init
+      const restored = this.tryRestoreFromCache();
+      if (!restored) {
+        await this.init();
+      }
+    },
+
     async init() {
       // Clear previous inline errors before a new session
       this.lastErrorMessage = ''
