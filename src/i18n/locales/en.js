@@ -69,6 +69,7 @@ export default {
     tabs: {
         todo: 'To-Do',
         youtube: 'YouTube',
+        pdfReader: 'PDF Reader',
         about: 'About',
         vocabularyReview: 'Vocabulary Review',
         aiHistory: 'AI History'
@@ -79,7 +80,15 @@ export default {
         changeButton: 'Change PDF',
         selectPrompt: 'Select a PDF to begin',
         invalidType: 'Please choose a valid PDF file.',
-        loadFailed: 'Failed to load the PDF file.'
+        loadFailed: 'Failed to load the PDF file.',
+        showTextPanel: 'Show Text Panel',
+        hideTextPanel: 'Hide Text Panel',
+        fullscreenLeft: 'Full View Left',
+        exitFullscreen: 'Exit Full View',
+        pageLabel: 'Page {page}',
+        noTextForPage: 'No selectable text detected on this page.',
+        noExtractedText: 'No extracted text available for this document.',
+        markdownFailed: 'Failed to convert PDF to Markdown.'
     },
 
     // Navigation

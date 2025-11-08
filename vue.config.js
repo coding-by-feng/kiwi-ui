@@ -34,7 +34,9 @@ module.exports = {
 
     transpileDependencies: [
         '@smallwei/avue',
-        'chart.js'
+        'chart.js',
+        '@opendocsg/pdf2md',
+        'unpdf'
     ],
 
     configureWebpack: {
@@ -44,6 +46,7 @@ module.exports = {
             alias: {
                 '@': path.resolve(__dirname, './src'),
                 '@i': path.resolve(__dirname, './src/assets'),
+                'unpdf/pdfjs$': 'unpdf/dist/pdfjs.mjs'
             },
             extensions: ['.js', '.vue', '.json']
         },
@@ -183,6 +186,14 @@ module.exports = {
     chainWebpack: config => {
         // Remove prefetch plugin to reduce initial load
         config.plugins.delete('prefetch')
+
+        // Ensure .mjs in selected node_modules are transpiled and parsed correctly
+        config.module
+            .rule('mjs-fix')
+            .test(/\.mjs$/)
+            .include.add(/node_modules\/(?:@opendocsg\/pdf2md|unpdf)/)
+            .end()
+            .type('javascript/auto')
 
         // Optimize preload for critical resources
         config.plugin('preload').tap(args => {

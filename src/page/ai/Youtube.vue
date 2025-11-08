@@ -59,8 +59,8 @@ export default {
       const allowed = [this.modes.PLAYER, this.modes.CHANNEL, this.modes.FAVORITES]
       const mode = allowed.includes(q.ytbMode) ? q.ytbMode : this.modes.CHANNEL
 
-      // If ytbMode is missing, normalize URL to include default to improve deep-link consistency
-      if (!q.ytbMode) {
+      // Only normalize URL to include ytbMode when YouTube tab is active to avoid interfering with other tabs
+      if (!q.ytbMode && this.$route.query.active === 'youtube') {
         this.$router.replace({
           path: this.$route.path,
           query: { ...q, ytbMode: mode }
@@ -83,7 +83,7 @@ export default {
       const q = { ...(this.$route.query || {}) }
       this.$router.replace({
         path: this.$route.path,
-        query: { ...q, ytbMode: val }
+        query: { ...q, active: 'youtube', ytbMode: val }
       })
     }
   }

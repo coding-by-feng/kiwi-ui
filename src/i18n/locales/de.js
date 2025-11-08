@@ -322,6 +322,7 @@ export default {
     tabs: {
         todo: 'To-Do',
         youtube: 'YouTube',
+        pdfReader: 'PDF-Viewer',
         about: 'Über',
         bgm: 'BGM-Tab',
         vocabularyReview: 'Vokabelwiederholung',
@@ -333,7 +334,15 @@ export default {
         changeButton: 'PDF ändern',
         selectPrompt: 'Select a PDF to begin',
         invalidType: 'Please choose a valid PDF file.',
-        loadFailed: 'Failed to load the PDF file.'
+        loadFailed: 'Failed to load the PDF file.',
+        showTextPanel: 'Textbereich anzeigen',
+        hideTextPanel: 'Textbereich ausblenden',
+        fullscreenLeft: 'Linke Seite im Vollbild',
+        exitFullscreen: 'Vollbild verlassen',
+        pageLabel: 'Seite {page}',
+        noTextForPage: 'Für diese Seite wurde kein auswählbarer Text gefunden.',
+        noExtractedText: 'Für dieses Dokument stehen keine extrahierten Texte zur Verfügung.',
+        markdownFailed: 'PDF konnte nicht in Markdown umgewandelt werden.'
     },
 
     about: {

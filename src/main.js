@@ -198,10 +198,24 @@ function setupRendererHotkeysFallback(vue, storedMap, registrationResult) {
                     const kiwiConstsLocal = require('@/const/kiwiConsts').default
                     const AI_VALUES = Object.values(kiwiConstsLocal.SEARCH_AI_MODES).map(m => m.value)
                     const isAi = AI_VALUES.includes(mode)
-                    const baseQuery = { ...vue.$route.query, selectedMode: mode, active: 'search', now: Date.now() }
-                    const toDetail = { path: website.noAuthPath.detail, query: baseQuery }
-                    if (isAi) vue.$router.replace(toDetail).finally(() => vue.$router.replace({ path: '/index/tools/aiResponseDetail', query: { ...baseQuery, now: Date.now() } }))
-                    else vue.$router.replace(toDetail)
+                    const baseQuery = { ...vue.$route.query, selectedMode: mode, active: 'search' }
+
+                    // Helper: shallow compare relevant keys ignoring transient ones
+                    const sameCore = (a, b) => {
+                        const keys = ['active','selectedMode','language','originalText','ytbMode']
+                        return keys.every(k => String((a||{})[k]||'') === String((b||{})[k]||''))
+                    }
+
+                    if (isAi) {
+                        const target = { path: '/index/tools/aiResponseDetail', query: baseQuery }
+                        // Idempotence guard
+                        if (vue.$route.path === target.path && sameCore(vue.$route.query, target.query)) return
+                        vue.$router.replace(target)
+                    } else {
+                        const target = { path: website.noAuthPath.detail, query: baseQuery }
+                        if (vue.$route.path === target.path && sameCore(vue.$route.query, target.query)) return
+                        vue.$router.replace(target)
+                    }
                 }
             } catch (err) {
                 console.warn('Renderer hotkey fallback navigation failed:', err)

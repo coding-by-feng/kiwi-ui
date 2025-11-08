@@ -290,6 +290,7 @@ export default {
     tabs: {
         todo: '할 일',
         youtube: 'YouTube',
+        pdfReader: 'PDF 뷰어',
         about: '정보',
         bgm: 'BGM 탭',
         vocabularyReview: '어휘 복습',
@@ -301,7 +302,15 @@ export default {
         changeButton: 'PDF 변경',
         selectPrompt: 'PDF 파일을 선택해 시작하세요',
         invalidType: '유효한 PDF 파일을 선택해 주세요.',
-        loadFailed: 'PDF 파일을 불러오지 못했습니다.'
+        loadFailed: 'PDF 파일을 불러오지 못했습니다.',
+        showTextPanel: '텍스트 패널 표시',
+        hideTextPanel: '텍스트 패널 숨기기',
+        fullscreenLeft: '왼쪽 전체 화면',
+        exitFullscreen: '전체 화면 종료',
+        pageLabel: '{page}쪽',
+        noTextForPage: '이 페이지에서 선택 가능한 텍스트가 없습니다.',
+        noExtractedText: '이 문서에서 추출 가능한 텍스트가 없습니다.',
+        markdownFailed: 'PDF를 Markdown으로 변환하지 못했습니다.'
     },
 
     about: {

@@ -37,23 +37,37 @@
         </div>
       </div>
 
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="handleCloseSelectionDialog">Cancel</el-button>
-        <el-button
-            type="info"
-            @click="searchOnDictionary"
-            icon="el-icon-search"
-        >
-          Search on Dictionary
-        </el-button>
-        <el-button
-            type="primary"
-            @click="explainSelectedText"
-            :loading="selectionApiLoading"
-        >
-          Explain Selection
-        </el-button>
-      </span>
+      <div slot="footer" class="selection-dialog-footer">
+        <el-button size="small" @click="handleCloseSelectionDialog">Cancel</el-button>
+        <div class="selection-actions-right">
+          <el-button
+              size="small"
+              type="success"
+              plain
+              icon="el-icon-document-copy"
+              :disabled="!selectedText"
+              @click="copySelectedText"
+          >
+            Copy Selection
+          </el-button>
+          <el-button
+              size="small"
+              type="info"
+              @click="searchOnDictionary"
+              icon="el-icon-search"
+          >
+            Search on Dictionary
+          </el-button>
+          <el-button
+              size="small"
+              type="primary"
+              @click="explainSelectedText"
+              :loading="selectionApiLoading"
+          >
+            Explain Selection
+          </el-button>
+        </div>
+      </div>
     </el-dialog>
 
     <!-- Multiple Selection Response Displays -->
@@ -138,10 +152,10 @@ import util from '@/util/util'
 import kiwiConsts from "@/const/kiwiConsts";
 import MarkdownIt from 'markdown-it';
 import {getStore} from '@/util/store'
-import msgUtil from "@/util/msg";
 import { callAiChatCompletion } from '@/api/ai'
 // Import the language utility function
 import { getInitialSelectedLanguage } from '@/util/langUtil';
+import msgUtil from '@/util/msg';
 
 const md = new MarkdownIt({
   html: true,
@@ -152,6 +166,7 @@ const md = new MarkdownIt({
 let that;
 
 export default {
+  name: 'AiResponseDetail',
   data() {
     return {
       aiResponseVO: {
@@ -220,94 +235,6 @@ export default {
       await this.init();
     }
   },
-  watch: {
-    '$route'() {
-      console.log('AiResponseDetail component watch')
-      const oldKey = this.lastCacheKey || this.computeCacheKeyFromQuery(this.preservedQueryParams, { remember: false })
-      const newKey = this.computeCacheKeyFromQuery(this.$route.query)
-      const keyChanged = oldKey !== newKey
-
-      // Detect force refresh via 'now' param change
-      const oldNow = this.preservedQueryParams && this.preservedQueryParams.now
-      const newNow = this.$route.query && this.$route.query.now
-      const forceRefresh = oldNow !== newNow && typeof newNow !== 'undefined'
-
-      const hasCacheForNewKey = this.hasMeaningfulCacheForQuery(this.$route.query)
-
-      // Always update preserved query params snapshot
-      this.preservedQueryParams = { ...this.$route.query };
-
-      if (oldKey === newKey && !forceRefresh) {
-        if (!hasCacheForNewKey) {
-          console.log('No cache found for current key; triggering fresh AI fetch')
-          this.closeWebSocket('main');
-          this.closeSelectionResponse();
-          this.init();
-        } else {
-          console.log('Route change without core input change; using existing cache')
-        }
-        return
-      }
-
-      // Inputs changed or forced refresh: persist current state under old key
-      this.saveStateToCache(oldKey)
-
-      // Close sockets from previous session
-      this.closeWebSocket('main');
-      this.closeSelectionResponse();
-
-      if (forceRefresh) {
-        console.log('Force refresh detected (now param changed)')
-        // If wsOnly flag is set, always initiate a fresh WS call immediately
-        if (this.isWsOnly) {
-          this.init()
-          return
-        }
-        // Try to restore from cache for the new key first to avoid UI blanking
-        const restored = this.tryRestoreFromCache()
-        if (!restored) {
-          if (keyChanged) {
-            console.log('Cache miss for new inputs; initializing fresh fetch')
-            this.init()
-          } else if (!hasCacheForNewKey) {
-            console.log('Force refresh without cache; initializing fresh fetch')
-            this.init()
-          } else {
-            // If no cache available and no current content, perform a fresh init
-            const hasContent = ((this.aiResponseVO.responseText || '').toString().trim().length > 0)
-            if (!hasContent) {
-              console.log('No cache or existing content; re-initializing fetch')
-              this.init()
-            } else {
-              console.log('Keeping existing content; skip immediate re-fetch')
-            }
-          }
-        } else if (keyChanged) {
-          // IMPORTANT: Do not re-fetch when cache exists for the new key
-          console.log('Restored cache for new inputs; cache hit => skip re-fetch')
-        } else {
-          console.log('Restored content from cache; skip immediate re-fetch')
-        }
-        return
-      }
-
-      // Try restore for the new key; if not found or empty, fetch
-      const restored = this.tryRestoreFromCache()
-      if (!restored) {
-        console.log('No cache available for new key; initializing fresh fetch')
-        this.init()
-      }
-    }
-  },
-  beforeDestroy() {
-    // Persist current state to cache so we can restore when user comes back
-    const key = this.computeCacheKeyFromQuery(this.$route.query)
-    this.saveStateToCache(key)
-
-    this.closeWebSocket('main');
-    // Close all selection websockets
-    this.closeSelectionResponse();
-  },
   computed: {
     // Ensure only valid AI modes are used; fallback to a safe default
     validSelectedMode() {
@@ -360,11 +287,42 @@ export default {
       return getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) ? getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     },
     isWsOnly() {
-      try {
-        const q = this.$route && this.$route.query ? this.$route.query : this.preservedQueryParams || {}
-        return q.wsOnly === '1' || q.wsOnly === 1 || q.wsOnly === true
-      } catch (_) { return false }
+      // Force wsOnly off to avoid repeated refreshes and duplicate calls
+      return false
+    },
+    coreQueryKey() {
+      const q = this.$route && this.$route.query ? this.$route.query : {}
+      const selectedMode = (q.selectedMode || '').toString()
+      const language = (q.language || '').toString()
+      const originalText = (q.originalText || '').toString()
+      return `${selectedMode}|${language}|${originalText}`
     }
+  },
+  watch: {
+    '$route.query': {
+      deep: true,
+      handler(newQ, oldQ) {
+        try {
+          const newKey = [String(newQ.selectedMode||''), String(newQ.language||''), String(newQ.originalText||'')].join('|')
+          const oldKey = [String(oldQ && oldQ.selectedMode||''), String(oldQ && oldQ.language||''), String(oldQ && oldQ.originalText||'')].join('|')
+          // Ignore route churn if core inputs haven’t changed
+          if (newKey === oldKey) return
+          // Otherwise, re-initialize once with new core inputs
+          this.initializeFromRoute()
+        } catch (e) {
+          this.initializeFromRoute()
+        }
+      }
+    }
+  },
+  beforeDestroy() {
+    // Persist current state to cache so we can restore when user comes back
+    const key = this.computeCacheKeyFromQuery(this.$route.query)
+    this.saveStateToCache(key)
+
+    this.closeWebSocket('main');
+    // Close all selection websockets
+    this.closeSelectionResponse();
   },
   methods: {
     ...msgUtil,
@@ -497,7 +455,32 @@ export default {
       }
     },
 
-    // Close and clear all selection responses
+    copySelectedText() {
+      const text = this.selectedText && this.selectedText.trim();
+      if (!text) return;
+
+      const onSuccess = () => this.msgSuccess(this, this.$t('common.copy') || 'Copied to clipboard');
+      const onError = () => this.msgError(this, this.$t('common.error') || 'Copy failed');
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(onError);
+      } else {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'absolute';
+          textarea.style.left = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          onSuccess();
+        } catch (_) {
+          onError();
+        }
+      }
+    },
     closeSelectionResponse() {
       // Close any active WebSocket connections for items
       if (Array.isArray(this.selectionExplanations)) {
@@ -1700,41 +1683,34 @@ export default {
   color: #495057 !important;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .original-text-container,
-  .selection-response-container {
-    margin: 15px 0;
-    border-radius: 8px;
-  }
+/* Align footer buttons in Explain Selected Text dialog */
+.selection-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 6px 0;
+}
+.selection-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto; /* push right on wide screens */
+}
+.selection-dialog-footer .el-button {
+  white-space: nowrap; /* prevent label wrapping */
+}
+/* New: provide consistent button widths */
+.selection-dialog-footer .el-button { min-width: 110px; }
+.selection-actions-right .el-button { min-width: 140px; }
 
-  .original-text-title,
-  .selection-response-title {
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-
-  .original-text-content,
-  .selection-response-content {
-    padding: 16px;
-    font-size: 14px;
-  }
-
-  .close-selection-button,
-  .fold-selection-button {
-    padding: 2px 6px !important;
-    font-size: 14px !important;
-  }
-
-  .dialog-footer .el-button {
-    margin: 8px 4px;
-    min-width: 120px;
-    padding: 10px 16px;
-  }
-
-  .dialog-footer {
-    padding: 16px;
-  }
+@media (max-width: 640px) {
+  .selection-dialog-footer { flex-direction: column; align-items: stretch; gap: 8px; }
+  .selection-actions-right { width: 100%; justify-content: center; gap: 8px; }
+  .selection-dialog-footer .el-button { width: 100%; min-width: 0; }
 }
 
 .inline-error {

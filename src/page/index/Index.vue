@@ -14,7 +14,10 @@ export default {
         userName: getStore({name: 'user_name'})
       },
       // New: feature tab visibility (persisted)
-      enabledTabs: this.loadEnabledTabs()
+      enabledTabs: this.loadEnabledTabs(),
+      lastSearchRoute: (this.$route.query.active || 'search') === 'search'
+        ? { path: this.$route.path, query: { ...this.$route.query } }
+        : null
     }
   },
   watch: {
@@ -25,6 +28,12 @@ export default {
       this.query = { ...this.$route.query }
       // Also check for OAuth callback when route changes
       this.checkOAuthCallback()
+      if ((this.$route.query.active || 'search') === 'search') {
+        this.lastSearchRoute = {
+          path: this.$route.path,
+          query: { ...this.$route.query }
+        }
+      }
       // Ensure current active is allowed by settings
       this.ensureActiveTabValid()
     }
@@ -141,6 +150,21 @@ export default {
     },
 
     tabClick(tab, event) {
+      if (tab.name === 'search') {
+        const fallbackPath = website.noAuthPath.detail
+        const targetRoute = this.lastSearchRoute || { path: fallbackPath, query: { ...this.$route.query, active: 'search' } }
+        const preservedQuery = {
+          ...(targetRoute.query || {}),
+          active: 'search',
+          now: new Date().getTime()
+        }
+        this.$router.replace({
+          path: targetRoute.path || fallbackPath,
+          query: preservedQuery
+        })
+        return
+      }
+
       // Preserve ALL existing query parameters when switching tabs
       const preservedParams = {
         ...this.$route.query, // Start with all existing parameters
@@ -257,7 +281,7 @@ export default {
         <span slot="label">
           <i class="el-icon-search"></i>
         </span>
-        <router-view name="search" :key="$route.fullPath"></router-view>
+        <router-view name="search"></router-view>
       </el-tab-pane>
       <el-tab-pane name="starList" v-if="isLogin && enabledTabs.starList">
         <span slot="label">
@@ -275,7 +299,7 @@ export default {
         <span slot="label">
           <i class="el-icon-video-camera"></i>
         </span>
-        <router-view name="youtube"></router-view>
+        <router-view name="youtube" v-if="activeName === 'youtube'"></router-view>
       </el-tab-pane>
       <el-tab-pane name="pdfReader" lazy v-if="enabledTabs.pdfReader">
         <span slot="label">

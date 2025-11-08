@@ -335,6 +335,7 @@ export default {
     tabs: {
         todo: '待辦',
         youtube: 'YouTube',
+        pdfReader: 'PDF 閱讀器',
         about: '關於',
         vocabularyReview: '詞彙複習',
         aiHistory: 'AI 歷史'
@@ -345,7 +346,15 @@ export default {
         changeButton: '更換 PDF 檔',
         selectPrompt: '選擇一個 PDF 檔開始',
         invalidType: '請選擇有效的 PDF 檔案。',
-        loadFailed: 'PDF 檔案載入失敗。'
+        loadFailed: 'PDF 檔案載入失敗。',
+        showTextPanel: '顯示右側文字',
+        hideTextPanel: '隱藏右側文字',
+        fullscreenLeft: '左側全螢幕檢視',
+        exitFullscreen: '退出全螢幕',
+        pageLabel: '第 {page} 頁',
+        noTextForPage: '此頁未偵測到可選文字。',
+        noExtractedText: '本文件沒有可提取的文字。',
+        markdownFailed: '無法將 PDF 轉換為 Markdown。'
     },
 
     // About section (supplemented)
