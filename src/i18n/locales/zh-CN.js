@@ -69,6 +69,7 @@ export default {
     tabs: {
         todo: '待办',
         youtube: 'YouTube',
+        pdfReader: 'PDF 阅读器',
         about: '关于',
         vocabularyReview: '词汇复习',
         aiHistory: 'AI 历史'
@@ -79,7 +80,15 @@ export default {
         changeButton: '更换 PDF 文件',
         selectPrompt: '选择一个 PDF 文件开始',
         invalidType: '请选择有效的 PDF 文件。',
-        loadFailed: 'PDF 文件加载失败。'
+        loadFailed: 'PDF 文件加载失败。',
+        showTextPanel: '显示右侧文本',
+        hideTextPanel: '隐藏右侧文本',
+        fullscreenLeft: '左侧全屏查看',
+        exitFullscreen: '退出全屏',
+        pageLabel: '第 {page} 页',
+        noTextForPage: '本页未检测到可选文本。',
+        noExtractedText: '当前文档没有可提取的文本。',
+        markdownFailed: '无法将 PDF 转换为 Markdown。'
     },
 
     // Navigation

@@ -222,6 +222,14 @@
               <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube') || 'YouTube'"></el-switch>
             </div>
             <div class="feature-toggle">
+              <span class="feature-label">{{ $t('tabs.pdfReader') || 'PDF Reader' }}</span>
+              <el-switch
+                v-model="enabledTabsLocal.pdfReader"
+                class="custom-switch"
+                @change="onFeatureToggle('pdfReader', $event)"
+                :aria-label="$t('tabs.pdfReader') || 'PDF Reader'"></el-switch>
+            </div>
+            <div class="feature-toggle">
               <span class="feature-label">{{ $t('tabs.about') || 'About' }}</span>
               <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about') || 'About'"></el-switch>
             </div>

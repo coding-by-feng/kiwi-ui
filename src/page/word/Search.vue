@@ -76,7 +76,9 @@
     </el-row>
     <el-divider></el-divider>
     <el-row justify="center">
-      <router-view :name="getRouterView"></router-view>
+      <keep-alive>
+        <router-view :name="getRouterView"></router-view>
+      </keep-alive>
     </el-row>
 
     <!-- Mode Selection Dialog for Clipboard Content -->
@@ -496,80 +498,74 @@ export default {
       if (real === '') {
         return
       }
-      this.$router.push({
+      // Single-step, idempotent navigation to Search with selected text only
+      const target = {
         path: this.$route.path,
         query: {
+          ...this.$route.query,
           active: 'search',
           originalText: encodeURIComponent(real),
-          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime()
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
-      })
+      }
+      if (this.$route.path !== target.path || JSON.stringify(this.$route.query) !== JSON.stringify(target.query)) {
+        this.$router.replace(target)
+      }
     },
 
     selectedModeChange(item) {
       console.log('selectedModeChange', item)
-      // Update language for the new mode
       const newLanguage = getLanguageForMode(item);
-      console.log('newLanguage', newLanguage)
-
       const encodedOriginalText = encodeURIComponent(this.originalText || '');
-
-      // Build common query preserving existing params
       const baseQuery = {
         ...this.$route.query,
         active: 'search',
         selectedMode: item,
         language: newLanguage,
         originalText: encodedOriginalText,
-        ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-        now: new Date().getTime()
+        ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
       };
-
-      // Always jump to the Search tab first, then to AI or detail; this forces re-trigger even if same mode
-      const toDetail = { path: '/index/tools/detail', query: { ...baseQuery, now: Date.now() } }
       const isAi = AI_MODES.includes(item)
-
-      if (isAi) {
-        this.$router.replace(toDetail).finally(() => {
-          const toAi = { path: '/index/tools/aiResponseDetail', query: { ...baseQuery, now: Date.now() } }
-          this.$router.replace(toAi)
-        })
-      } else {
-        this.$router.replace(toDetail)
-      }
+      const target = isAi
+        ? { path: '/index/tools/aiResponseDetail', query: baseQuery }
+        : { path: '/index/tools/detail', query: baseQuery }
+      // Idempotence guard
+      const same = (this.$route.path === target.path) && Object.keys(baseQuery).every(k => String(this.$route.query[k]||'') === String(baseQuery[k]||''))
+      if (!same) this.$router.replace(target)
     },
 
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
-      // Save language setting for current mode
       this.saveLanguageForMode(this.selectedMode, item);
-
-      this.$router.push({
+      const target = {
         path: this.$route.path,
         query: {
+          ...this.$route.query,
           active: 'search',
           selectedMode: this.selectedMode,
           language: item,
           originalText: encodeURIComponent(this.originalText),
-          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime()
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
-      })
+      }
+      if (this.$route.path !== target.path || JSON.stringify(this.$route.query) !== JSON.stringify(target.query)) {
+        this.$router.replace(target)
+      }
     },
 
     onBack() {
       this.selectedMode = kiwiConsts.SEARCH_DEFAULT_MODE
-      this.$router.push({
+      const target = {
         path: '/index/tools/detail',
         query: {
+          ...this.$route.query,
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_DEFAULT_MODE,
           originalText: '',
-          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime()
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
-      })
+      }
+      this.$router.replace(target)
     },
 
     explainMore() {
@@ -580,19 +576,21 @@ export default {
       this.$refs.auto.close()
 
       const encodedOriginalText = encodeURIComponent(real)
-      this.$router.push({
+      const target = {
         path: '/index/tools/aiResponseDetail',
         query: {
+          ...this.$route.query,
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
           language: this.selectedLanguage,
           originalText: encodedOriginalText,
-          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
-          now: new Date().getTime(),
-          // Force WS-only behavior on the detail page
-          wsOnly: '1'
+          ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
-      })
+      }
+      // Idempotence guard
+      if (this.$route.path !== target.path || JSON.stringify(this.$route.query) !== JSON.stringify(target.query)) {
+        this.$router.replace(target)
+      }
     },
 
     handleKeyDown(event) {

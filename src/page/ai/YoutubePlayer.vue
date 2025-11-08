@@ -325,28 +325,28 @@
         </div>
       </div>
 
-      <!-- Enhanced Vocabulary Lookup Popup -->
-      <div
-          v-if="showSelectionPopup"
-          ref="vocabularyPopup"
-          class="vocabulary-popup"
-          @click="navigateToTools"
-      >
-        <i class="el-icon-search"></i>
-        <span>"{{ selectedText }}"</span>
-      </div>
+      <!-- Inline AI Search Dialog for selected text -->
+      <ai-selection-popup
+        :visible.sync="showSelectionPopup"
+        :selected-text.sync="selectedText"
+        title="AI Search"
+        @open-ai-tab="onOpenAiTabFromPopup"
+      />
+
     </div>
   </div>
 </template>
 
 <script>
-import {defineComponent} from 'vue';
+// Removed defineComponent import for Vue 2 options API
+// import {defineComponent} from 'vue';
 import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from "@/const/kiwiConsts";
 import {getStore, setStore} from "@/util/store";
 import MarkdownIt from 'markdown-it';
 import NoSleep from 'nosleep.js';
+import AiSelectionPopup from '@/components/ai/AiSelectionPopup.vue'
 
 const md = new MarkdownIt({
   html: true,
@@ -355,8 +355,9 @@ const md = new MarkdownIt({
   typographer: true
 });
 
-export default defineComponent({
+export default {
   name: 'YoutubeSubtitleDownloader',
+  components: { AiSelectionPopup },
   data() {
     const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
     // Normalize stored translation toggle to an actual boolean; default OFF.
@@ -400,13 +401,14 @@ export default defineComponent({
       forceHideInput: false,
       isSmallScreen: false,
       selectedText: '',
+      // Use dialog instead of small bubble for selection actions and AI streaming
       showSelectionPopup: false,
       isPlaying: false,
       videoReady: false,
       // New: flag for YouTube IFrame API readiness
       youtubeApiReady: false,
 
-      // WebSocket streaming
+      // WebSocket streaming (subtitles translation)
       websocket: null,
       wsUrl: '/ai-biz/ai/ws/ytb/subtitle',
       isTranslationLoading: false,
@@ -451,6 +453,14 @@ export default defineComponent({
       isResizing: false,
       splitterMin: 20,
       splitterMax: 80,
+
+      // Inline AI search (generic) streaming state
+      aiWebsocket: null,
+      aiSearchLoading: false,
+      aiIsStreaming: false,
+      aiRequestId: '',
+      aiResponseText: '',
+      aiLastError: ''
     };
   },
   computed: {
@@ -496,6 +506,11 @@ export default defineComponent({
       if (this.isBuffering) return 'Buffering...';
       if (!this.videoReady) return 'Preparing...';
       return 'Loading...';
+    },
+    // Parsed AI response rendered as Markdown
+    aiParsedResponseText() {
+      const text = this.unescapeContent(this.aiResponseText || '');
+      return md.render(text);
     }
   },
   watch: {
@@ -557,8 +572,10 @@ export default defineComponent({
     },
     leftPanelPercent: {
       handler(newVal) {
-        // Update route query param on panel resize
+        // Update route query param on panel resize only when YouTube tab is active
         this.$nextTick(() => {
+          const isYoutubeActive = (this.$route && this.$route.query && this.$route.query.active === 'youtube')
+          if (!isYoutubeActive) return
           const q = { ...(this.$route.query || {}) };
           const newPercentStr = String(newVal);
           if (String(q.leftPanelPercent) !== newPercentStr) {
@@ -594,7 +611,7 @@ export default defineComponent({
       this.isFavorited = v === 'true' || v === '1';
     }
   },
-  beforeUnmount() {
+  beforeDestroy() {
     this.cleanup();
     // Ensure resize listeners are removed if user leaves mid-drag
     this.stopResize();
@@ -719,6 +736,9 @@ export default defineComponent({
 
       this.clearWsTimers();
       this.disableNoSleep();
+
+      // Close inline AI WS if any
+      this.closeAiStream();
     },
 
     clearTimeouts() {
@@ -1227,10 +1247,13 @@ export default defineComponent({
 
         // Keep the browser URL in sync with the new input
         try {
-          const q = { ...(this.$route.query || {}) };
-          const encoded = encodeURIComponent(this.videoUrl);
-          if (q.videoUrl !== encoded) {
-            this.$router.replace({ path: this.$route.path, query: { ...q, videoUrl: encoded } });
+          const isYoutubeActive = (this.$route && this.$route.query && this.$route.query.active === 'youtube')
+          if (isYoutubeActive) {
+            const q = { ...(this.$route.query || {}) };
+            const encoded = encodeURIComponent(this.videoUrl);
+            if (q.videoUrl !== encoded) {
+              this.$router.replace({ path: this.$route.path, query: { ...q, videoUrl: encoded } });
+            }
           }
         } catch (_) { /* no-op if router unavailable */ }
 
@@ -1280,6 +1303,11 @@ export default defineComponent({
       this.statusMessage = 'Loading video...';
       this.miniLoaderPercent = 0;
       this.isBuffering = false;
+
+      // Reset inline AI search state
+      this.closeAiStream(true);
+      this.aiResponseText = '';
+      this.aiLastError = '';
     },
 
     async loadSubtitlesInBackground() {
@@ -1482,6 +1510,35 @@ export default defineComponent({
       }
     },
 
+    // Handle Open in AI Tab from shared popup
+    onOpenAiTabFromPopup(payload) {
+      const text = (payload && payload.text) ? String(payload.text).trim() : (this.selectedText || '').trim();
+      if (!text) return;
+
+      // Close any inline AI stream from old dialog logic (if any)
+      try { this.closeAiStream(true); } catch (_) {}
+
+      const encodedOriginalText = encodeURIComponent(text);
+      const selectedMode = kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value;
+      const language = this.selectedLanguage || getStore({ name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE }) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese;
+      const ytbMode = (this.$route && this.$route.query && this.$route.query.ytbMode) ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL;
+
+      // Single-step navigation directly to AI tab; pass selected text via URL only.
+      const toAi = {
+        path: '/index/tools/aiResponseDetail',
+        query: {
+          ...(this.$route?.query || {}),
+          active: 'search',
+          selectedMode,
+          language,
+          originalText: encodedOriginalText,
+          ytbMode
+        }
+      };
+
+      this.$router.replace(toAi).finally(() => { this.showSelectionPopup = false; });
+    },
+
     pauseVideo() {
       if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
         this.player.pauseVideo();
@@ -1502,12 +1559,14 @@ export default defineComponent({
       msgUtil.msgSuccess(this, 'Cleared subtitles', 1200);
     },
 
-    // Text selection and vocabulary
+    // Text selection and AI dialog
     handleTextSelection(event) {
+      this.pauseVideo();
       this.showQueryingWords(event);
     },
 
     handleTextSelectionWithPausing(event) {
+      // Kept for explicit call sites; ensure pause happens first
       this.pauseVideo();
       this.handleTextSelection(event);
     },
@@ -1518,78 +1577,166 @@ export default defineComponent({
 
       if (selectedText) {
         this.selectedText = selectedText;
-        this.positionPopup(selection, event);
+        // Open inline AI dialog directly instead of navigating
+        this.showSelectionPopup = true;
       } else {
         this.closePopup();
       }
     },
 
-    positionPopup(selection, event) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-
-      if (this.isMobileDevice()) {
-        setTimeout(() => selection.removeAllRanges(), 10);
-        event.preventDefault();
+    // Inline AI search
+    aiSearchSelectedText() {
+      const text = (this.selectedText || '').trim();
+      if (!text) {
+        this.aiLastError = 'No text selected';
+        return;
       }
-
-      this.showSelectionPopup = true;
-
-      this.$nextTick(() => {
-        const popup = document.querySelector('.vocabulary-popup');
-        if (popup) {
-          const viewportWidth = window.innerWidth;
-          const popupWidth = popup.offsetWidth;
-          let left = rect.left + (rect.width / 2);
-
-          left = Math.max(10 + (popupWidth / 2), Math.min(left, viewportWidth - 10 - (popupWidth / 2)));
-
-          popup.style.left = `${left}px`;
-          popup.style.top = `${rect.bottom + 10}px`;
-          popup.style.transform = 'translateX(-50%)';
-        }
-      });
-
-      event.preventDefault();
-    },
-
-    navigateToTools() {
-      const cleanedText = this.selectedText.replace(/\n/g, ' ').trim();
-      const encodedText = encodeURIComponent(cleanedText);
-
-      this.player.pauseVideo();
-
-      // Decide mode: single vocabulary -> Vocabulary Explanation; otherwise keep Direct Translation
-      const isSingle = this.isSingleWord(cleanedText);
-      const selectedMode = isSingle
+      // Determine mode based on single-word detection
+      const isSingle = this.isSingleWord(text);
+      const promptMode = isSingle
           ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value
           : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value;
-
-      this.$router.push({
-        path: '/index/tools/aiResponseDetail',
-        query: {
-          active: 'search',
-          selectedMode: selectedMode,
-          language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
-          originalText: encodedText,
-          ytbMode: 'player',
-          now: Date.now()
-        }
-      });
+      const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese;
+      const nativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese;
+      this.startAiStreaming({ prompt: text, promptMode, targetLanguage, nativeLanguage });
     },
 
+    startAiStreaming({ prompt, promptMode, targetLanguage, nativeLanguage }) {
+      // Reset state
+      this.aiLastError = '';
+      this.aiResponseText = '';
+      this.aiSearchLoading = true;
+      this.aiIsStreaming = true;
+      this.aiRequestId = this.generateRequestId();
+
+      // Token
+      const token = getStore({name: 'access_token'});
+      if (!token) {
+        this.aiSearchLoading = false;
+        this.aiIsStreaming = false;
+        this.aiLastError = 'Authentication token not found. Please login again.';
+        msgUtil.msgError(this, this.aiLastError);
+        return;
+      }
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`;
+
+      try { this.closeAiStream(); } catch (_) {}
+      try { this.aiWebsocket = new WebSocket(wsUrl); } catch (e) {
+        this.aiSearchLoading = false;
+        this.aiIsStreaming = false;
+        this.aiLastError = 'Failed to open WebSocket';
+        msgUtil.msgError(this, this.aiLastError);
+        return;
+      }
+
+      this.aiWebsocket.onopen = () => {
+        const request = {
+          prompt: prompt,
+          promptMode: promptMode,
+          targetLanguage: targetLanguage,
+          nativeLanguage: nativeLanguage,
+          aiUrl: wsUrl,
+          timestamp: Date.now(),
+          requestId: this.aiRequestId
+        };
+        try {
+          this.aiWebsocket.send(JSON.stringify(request));
+        } catch (e) {
+          this.handleAiStreamError('Failed to send request');
+        }
+      };
+
+      this.aiWebsocket.onmessage = (event) => {
+        let response;
+        try {
+          response = JSON.parse(event.data);
+        } catch (error) {
+          this.handleAiStreamError('Failed to parse response');
+          return;
+        }
+
+        switch (response.type) {
+          case 'connected':
+            // no-op
+            break;
+          case 'started':
+            this.aiIsStreaming = true;
+            break;
+          case 'chunk':
+            if (response.chunk) {
+              this.aiResponseText += response.chunk;
+            }
+            break;
+          case 'completed':
+            this.aiIsStreaming = false;
+            this.aiSearchLoading = false;
+            try {
+              const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
+                ? response.fullResponse
+                : this.aiResponseText;
+              const extracted = this.extractResponseTextFromPayload(finalPayload);
+              this.aiResponseText = (typeof extracted === 'string' && extracted.length > 0)
+                ? extracted
+                : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+            } catch (_) {
+              if (response.fullResponse) {
+                this.aiResponseText = response.fullResponse;
+              }
+            }
+            try { this.aiWebsocket && this.aiWebsocket.close(); } catch (_) {}
+            this.aiWebsocket = null;
+            break;
+          case 'error':
+            this.handleAiStreamError((response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : ''));
+            break;
+          default:
+            // ignore
+            break;
+        }
+      };
+
+      this.aiWebsocket.onerror = () => {
+        this.handleAiStreamError('WebSocket connection error');
+      };
+
+      this.aiWebsocket.onclose = () => {
+        this.aiSearchLoading = false;
+        this.aiIsStreaming = false;
+      };
+    },
+
+    handleAiStreamError(message) {
+      this.aiSearchLoading = false;
+      this.aiIsStreaming = false;
+      this.aiLastError = message || 'AI streaming error';
+      try { this.aiWebsocket && this.aiWebsocket.close(); } catch (_) {}
+      this.aiWebsocket = null;
+      msgUtil.msgError(this, this.aiLastError);
+    },
+
+    closeAiStream(silent) {
+      try { if (this.aiWebsocket) { this.aiWebsocket.close(); } } catch (_) {}
+      this.aiWebsocket = null;
+      this.aiSearchLoading = false;
+      this.aiIsStreaming = false;
+      if (!silent) {
+        this.aiLastError = '';
+      }
+    },
+
+    // Dialog controls
     closePopup() {
+      // Stop streaming and reset transient state; keep selectedText for convenience
+      this.closeAiStream(true);
       this.showSelectionPopup = false;
-      this.selectedText = '';
+      // Do not clear selectedText so user can re-open and search again quickly
     },
 
     handleClickOutside(event) {
-      const popup = document.querySelector('.vocabulary-popup');
-      const interactiveElements = document.querySelectorAll('.subtitles-context-display, .subtitles-container, .translated-subtitles-container');
-
-      if (popup && !Array.from(interactiveElements).some(el => el.contains(event.target))) {
-        this.closePopup();
-      }
+      // No-op: dialog controls visibility; outside clicks are handled by Element UI overlay
     },
 
     // UI state management
@@ -1898,7 +2045,7 @@ export default defineComponent({
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
       } catch (_) {}
-      if (this._onMouseMove) {
+      if this._onMouseMove) {
         window.removeEventListener('mousemove', this._onMouseMove);
         this._onMouseMove = null;
       }
@@ -1913,8 +2060,73 @@ export default defineComponent({
         setStore({ name: 'ytb_left_panel_percent', content: this.leftPanelPercent, type: 'local' });
       } catch (_) {}
     },
+
+    // Helpers reused from AI detail component
+    generateRequestId() {
+      return 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    },
+    sanitizePotentialJsonString(str) {
+      if (typeof str !== 'string') return '';
+      let s = (str || '').trim();
+      // Remove fenced code blocks markers like ```json and ```
+      s = s.replace(/^```[a-zA-Z]*\n?/, '').replace(/```$/, '');
+      // Replace curly quotes with straight quotes
+      s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+      // Trim again
+      if (!s.startsWith('{')) {
+        const firstBrace = s.indexOf('{');
+        const lastBrace = s.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          s = s.substring(firstBrace, lastBrace + 1).trim();
+        }
+      }
+      return s;
+    },
+    tryParseJsonLoose(str) {
+      if (typeof str !== 'string') return null;
+      const cleaned = this.sanitizePotentialJsonString(str);
+      try {
+        return JSON.parse(cleaned);
+      } catch (_) {
+        return null;
+      }
+    },
+    extractResponseTextFromPayload(payload) {
+      try {
+        if (payload && typeof payload === 'object') {
+          if (typeof payload.responseText === 'string') return payload.responseText;
+          if (payload.data && typeof payload.data.responseText === 'string') return payload.data.responseText;
+          return null;
+        }
+        if (typeof payload === 'string') {
+          const obj = this.tryParseJsonLoose(payload);
+          if (obj) {
+            if (typeof obj.responseText === 'string') return obj.responseText;
+            if (obj.data && typeof obj.data.responseText === 'string') return obj.data.responseText;
+          }
+          // Attempt direct regex extraction after normalizing quotes
+          const normalized = payload.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+          const match = normalized.match(/"responseText"\s*:\s*"([\s\S]*?)"/);
+          if (match) {
+            // Unescape common sequences inside the captured string
+            return match[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+          }
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    },
+    unescapeContent(content) {
+      if (!content) return '';
+      return content
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\');
+    }
   }
-});
+};
 </script>
 
 <style scoped>
@@ -2781,49 +2993,14 @@ export default defineComponent({
   text-align: justify;
 }
 
-/* Vocabulary Popup */
-.vocabulary-popup {
-  position: fixed;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  max-width: 60%;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  width: fit-content;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* AI Search Dialog */
+.ai-dialog-content { padding: 10px 0; }
+.selected-text-preview { margin-bottom: 10px; color: #606266; }
+.ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: #fff; border: 1px solid #ebeef5; border-radius: 8px; }
+.inline-error { color: #f56c6c; background: #fdecea; border: 1px solid #f5c2c0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
 
-.vocabulary-popup::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  margin-left: -8px;
-  border-width: 8px;
-  border-style: solid;
-  border-color: transparent transparent #409eff transparent;
-}
-
-.vocabulary-popup:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-}
-
-.vocabulary-popup i {
-  font-size: 16px;
-}
+/* Vocabulary Popup (deprecated, replaced by dialog) */
+/* .vocabulary-popup { display: none; } */
 
 /* Clickable headers */
 .clickable-header {

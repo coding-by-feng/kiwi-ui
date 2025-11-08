@@ -289,6 +289,7 @@ export default {
     tabs: {
         todo: 'Por hacer',
         youtube: 'YouTube',
+        pdfReader: 'Visor PDF',
         about: 'Acerca de',
         bgm: 'Pestaña BGM',
         vocabularyReview: 'Revisión de vocabulario',
@@ -300,7 +301,15 @@ export default {
         changeButton: 'Cambiar PDF',
         selectPrompt: 'Select a PDF to begin',
         invalidType: 'Please choose a valid PDF file.',
-        loadFailed: 'Failed to load the PDF file.'
+        loadFailed: 'Failed to load the PDF file.',
+        showTextPanel: 'Mostrar panel de texto',
+        hideTextPanel: 'Ocultar panel de texto',
+        fullscreenLeft: 'Vista completa a la izquierda',
+        exitFullscreen: 'Salir de vista completa',
+        pageLabel: 'Página {page}',
+        noTextForPage: 'No se detectó texto seleccionable en esta página.',
+        noExtractedText: 'No hay texto extraído disponible para este documento.',
+        markdownFailed: 'No se pudo convertir el PDF a Markdown.'
     },
 
     about: {

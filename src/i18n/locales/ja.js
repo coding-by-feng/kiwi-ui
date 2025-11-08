@@ -324,6 +324,7 @@ export default {
     tabs: {
         todo: 'To-Do',
         youtube: 'YouTube',
+        pdfReader: 'PDFリーダー',
         about: '概要',
         bgm: 'BGM タブ',
         vocabularyReview: '語彙復習',
@@ -335,7 +336,15 @@ export default {
         changeButton: 'PDF を変更',
         selectPrompt: 'PDF を選択して開始',
         invalidType: '有効な PDF ファイルを選択してください。',
-        loadFailed: 'PDF ファイルの読み込みに失敗しました。'
+        loadFailed: 'PDF ファイルの読み込みに失敗しました。',
+        showTextPanel: 'テキストパネルを表示',
+        hideTextPanel: 'テキストパネルを非表示',
+        fullscreenLeft: '左側をフルスクリーン表示',
+        exitFullscreen: 'フルスクリーンを終了',
+        pageLabel: '{page} ページ',
+        noTextForPage: 'このページで選択可能なテキストは検出されませんでした。',
+        noExtractedText: 'このドキュメントには抽出できるテキストがありません。',
+        markdownFailed: 'PDF を Markdown に変換できませんでした。'
     },
 
     about: {

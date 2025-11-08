@@ -605,6 +605,7 @@ export default {
     tabs: {
         todo: 'สิ่งที่ต้องทำ',
         youtube: 'YouTube',
+        pdfReader: 'เครื่องอ่าน PDF',
         about: 'เกี่ยวกับ',
         vocabularyReview: 'ทบทวนคำศัพท์',
         aiHistory: 'ประวัติ AI'
@@ -615,6 +616,14 @@ export default {
         changeButton: 'เปลี่ยน PDF',
         selectPrompt: 'เลือกไฟล์ PDF เพื่อเริ่มต้น',
         invalidType: 'โปรดเลือกไฟล์ PDF ที่ถูกต้อง',
-        loadFailed: 'ไม่สามารถโหลดไฟล์ PDF ได้'
+        loadFailed: 'ไม่สามารถโหลดไฟล์ PDF ได้',
+        showTextPanel: 'แสดงแผงข้อความ',
+        hideTextPanel: 'ซ่อนแผงข้อความ',
+        fullscreenLeft: 'แสดงด้านซ้ายเต็มหน้าจอ',
+        exitFullscreen: 'ออกจากโหมดเต็มหน้าจอ',
+        pageLabel: 'หน้า {page}',
+        noTextForPage: 'ไม่พบข้อความที่เลือกได้ในหน้านี้',
+        noExtractedText: 'เอกสารนี้ไม่มีข้อความสำหรับดึงข้อมูล',
+        markdownFailed: 'ไม่สามารถแปลง PDF เป็น Markdown ได้'
     }
 }

@@ -136,6 +136,7 @@
     }
   },
   "dependencies": {
+    "@opendocsg/pdf2md": "^0.2.2",
     "@smallwei/avue": "^2.13.2",
     "axios": "^0.19.2",
     "chart.js": "^4.5.0",
@@ -151,8 +152,8 @@
     "markdown-it": "^14.1.0",
     "marked": "^15.0.12",
     "nosleep.js": "^0.12.0",
-    "pdfjs-dist": "^4.6.82",
     "nprogress": "^0.2.0",
+    "pdfjs-dist": "2.16.105",
     "vue": "^2.7.16",
     "vue-axios": "^2.1.5",
     "vue-i18n": "^8.28.2",
