@@ -300,6 +300,22 @@ export default {
         AMBIGUOUS_ASSOCIATION_CORRECTION: 'input anything'
     },
 
+    // New: mode value to i18n translation key mapping (centralized)
+    MODE_TRANSLATION_KEYS: Object.freeze({
+        'detail': 'dictionary',
+        'directly-translation': 'directTranslation',
+        'translation-and-explanation': 'explanation',
+        'grammar-explanation': 'grammarExplanation',
+        'grammar-correction': 'grammarCorrection',
+        'vocabulary-explanation': 'vocabularyExplanation',
+        'synonym': 'synonym',
+        'antonym': 'antonym',
+        'vocabulary-association': 'vocabularyAssociation',
+        'phrases-association': 'phrasesAssociation',
+        'vocabulary-character-expansion': 'vocabularyCharacterExpansion',
+        'ambiguous-association-correction': 'ambiguousAssociationCorrection'
+    }),
+
     SUBTITLES_TYPE: {
         SMALL_AUTO_GENERATED_VTT_RETURN_STRING: "auto_generated_return_string",
         LARGE_AUTO_GENERATED_VTT_RETURN_LIST: "auto_generated_return_list",
@@ -323,6 +339,28 @@ export default {
     CLIPBOARD_DETECTION: {
         ENABLE: 'enable',
         DISABLE: 'disable'
-    }
+    },
+
+    // Centralized route paths and prefixes
+    ROUTE_PREFIX: Object.freeze({
+        TOOLS: '/index/tools/',
+        TOOLS_LAZY: '/lazy/tools/'
+    }),
+
+    ROUTES: Object.freeze({
+        DETAIL: '/index/tools/detail',
+        AI_RESPONSE_DETAIL: '/index/tools/aiResponseDetail',
+        AI_CALL_HISTORY: '/index/tools/aiCallHistory',
+        YOUTUBE: '/index/tools/youtube',
+        PDF_READER: '/index/tools/pdfReader'
+    }),
+
+    // Centralized API base prefixes
+    API_BASE: Object.freeze({
+        WORD_BIZ: '/wordBiz/word',
+        AI_BIZ: '/ai-biz/ai',
+        AUTH: '/auth/oauth',
+        LOG_ERROR: '/api/log-error'
+    }),
 
 }

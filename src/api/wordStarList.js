@@ -1,36 +1,28 @@
 import request from '@/router/axios'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
 
   getWordStarList () {
     return request({
-      url: '/wordBiz/word/star/list/getCurrentUserList',
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/getCurrentUserList`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'get'
     })
   },
 
   findAllWordId (listId) {
     return request({
-      url: `/wordBiz/word/star/list/findAllWordId/${listId}`,
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/findAllWordId/${listId}`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'get'
     })
   },
 
   putWordStarList (data) {
     return request({
-      url: '/wordBiz/word/star/list/putWordStarList',
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/putWordStarList`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'put',
       params: data
     })
@@ -38,11 +30,8 @@ export default {
 
   removeWordStarList (data) {
     return request({
-      url: '/wordBiz/word/star/list/removeWordStarList',
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/removeWordStarList`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'delete',
       params: data
     })
@@ -50,22 +39,16 @@ export default {
 
   getListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/star/list/getListItems/${page.size}/${page.current}/${listId}`,
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/getListItems/${page.size}/${page.current}/${listId}`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'get'
     })
   },
 
   updateById (data) {
     return request({
-      url: '/wordBiz/word/star/list/updateById',
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/updateById`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'put',
       params: data
     })
@@ -73,11 +56,8 @@ export default {
 
   save (data) {
     return request({
-      url: '/wordBiz/word/star/list/save',
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/save`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'post',
       params: data
     })
@@ -85,11 +65,8 @@ export default {
 
   delById (id) {
     return request({
-      url: `/wordBiz/word/star/list/del/${id}`,
-      headers: {
-        isToken: true,
-        'Content-Type': 'application/json'
-      },
+      url: `${kiwiConsts.API_BASE.WORD_BIZ}/star/list/del/${id}`,
+      headers: { isToken: true, 'Content-Type': 'application/json' },
       method: 'delete'
     })
   }

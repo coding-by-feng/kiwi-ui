@@ -145,6 +145,7 @@
 
 <script>
 import { getFavoriteChannels, getFavoriteVideos, favoriteChannel, unfavoriteChannel, favoriteVideo, unfavoriteVideo, favoriteVideoByUrl, unfavoriteVideoByUrl } from '@/api/ai'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'YoutubeFavorites',
@@ -299,7 +300,7 @@ export default {
       const dbId = row.id
       const favorited = !!row.favorited
       this.$router.push({
-        path: '/index/tools/detail',
+        path: kiwiConsts.ROUTES.DETAIL,
         query: {
           active: 'youtube',
           videoUrl: encodeURIComponent(url),

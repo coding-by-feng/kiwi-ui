@@ -1,5 +1,6 @@
 import webSite from '@/const/website'
 import review from '@/api/review'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
     isIos() {
@@ -125,7 +126,7 @@ export default {
 
     validateReviewAudio(audio, sourceId, type) {
         audio.volume = 1
-        let url = `/wordBiz/word/review/downloadReviewAudio/${sourceId}/${type}`
+        let url = `${kiwiConsts.API_BASE.WORD_BIZ}/review/downloadReviewAudio/${sourceId}/${type}`
         console.log('url ' + url)
         audio.src = url
         console.log('audio >>>')
@@ -135,7 +136,7 @@ export default {
 
     validateCharacterReviewAudio(audio, characterCode) {
         audio.volume = 1
-        let url = `/wordBiz/word/review/character/downloadReviewAudio/${characterCode}`
+        let url = `${kiwiConsts.API_BASE.WORD_BIZ}/review/character/downloadReviewAudio/${characterCode}`
         console.log('url ' + url)
         audio.src = url
         console.log('audio >>>')

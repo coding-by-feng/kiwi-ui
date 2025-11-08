@@ -149,7 +149,7 @@
 
 <script>
 import util from '@/util/util'
-import kiwiConsts from "@/const/kiwiConsts";
+import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it';
 import {getStore} from '@/util/store'
 import { callAiChatCompletion } from '@/api/ai'
@@ -650,7 +650,7 @@ export default {
       // Determine WebSocket URL
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`;
+      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`;
 
       // Init states
       item.apiLoading = true;
@@ -805,7 +805,7 @@ export default {
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`;
+      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`;
 
       console.log(`Connecting to ${type} WebSocket with token`);
       that[websocketKey] = new WebSocket(wsUrl);

@@ -8,6 +8,7 @@ import 'nprogress/nprogress.css'
 import store from '@/store'
 import axios from 'axios'
 import {baseUrl, isElectron} from '@/config/env'
+import kiwiConsts from '@/const/kiwiConsts'
 
 // Configure axios defaults
 axios.defaults.timeout = 100000
@@ -98,9 +99,9 @@ axios.interceptors.response.use(res => {
       store.dispatch('LogOut').then(() => {
         if (isElectron) {
           // In Electron, just navigate to login page
-          router.push('/index/tools/detail?active=login')
+          router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
         } else {
-          window.location.href = '/#/index/tools/detail?active=login'
+          window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
         }
       })
     }

@@ -188,12 +188,12 @@ export default {
     getRouterView() {
       console.log('getRouterView - current route path:', this.$route.path)
 
-      if (this.$route.path === '/index/tools/aiCallHistory') {
+      if (this.$route.path === kiwiConsts.ROUTES.AI_CALL_HISTORY) {
         console.log('Returning aiCallHistory router view')
         return kiwiConsts.ROUTER_VIEW_AI_HISTORY_MODE
       }
 
-      if (this.$route.path === '/index/tools/aiResponseDetail') {
+      if (this.$route.path === kiwiConsts.ROUTES.AI_RESPONSE_DETAIL) {
         console.log('Returning aiResponseDetail router view')
         return kiwiConsts.ROUTER_VIEW_AI_MODE
       }
@@ -255,22 +255,8 @@ export default {
     ...wordSearch,
 
     getModeTranslationKey(value) {
-      const modeKeys = {
-        'detail': 'dictionary',
-        'directly-translation': 'directTranslation',
-        'translation-and-explanation': 'explanation',
-        'grammar-explanation': 'grammarExplanation',
-        'grammar-correction': 'grammarCorrection',
-        'vocabulary-explanation': 'vocabularyExplanation',
-        'synonym': 'synonym',
-        'antonym': 'antonym',
-        'vocabulary-association': 'vocabularyAssociation',
-        'phrases-association': 'phrasesAssociation',
-        // New modes mapping
-        'vocabulary-character-expansion': 'vocabularyCharacterExpansion',
-        'ambiguous-association-correction': 'ambiguousAssociationCorrection'
-      };
-      return modeKeys[value] || value;
+      // Reuse centralized mapping from kiwiConsts to avoid duplication
+      return kiwiConsts.MODE_TRANSLATION_KEYS[value] || value;
     },
 
     onLanguageChanged(langCode) {
@@ -311,7 +297,7 @@ export default {
     viewAiHistory() {
       console.log('Navigating to AI call history')
       const target = {
-        path: '/index/tools/aiCallHistory',
+        path: kiwiConsts.ROUTES.AI_CALL_HISTORY,
         query: {
           active: 'search',
           selectedMode: this.selectedMode,
@@ -548,8 +534,8 @@ export default {
       }
       const isAi = AI_MODES.includes(item)
       const target = isAi
-        ? { path: '/index/tools/aiResponseDetail', query: baseQuery }
-        : { path: '/index/tools/detail', query: baseQuery }
+        ? { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: baseQuery }
+        : { path: kiwiConsts.ROUTES.DETAIL, query: baseQuery }
       this.navigateIfChanged(target)
     },
 
@@ -573,7 +559,7 @@ export default {
     onBack() {
       this.selectedMode = kiwiConsts.SEARCH_DEFAULT_MODE
       const target = {
-        path: '/index/tools/detail',
+        path: kiwiConsts.ROUTES.DETAIL,
         query: {
           ...this.$route.query,
           active: 'search',
@@ -591,7 +577,7 @@ export default {
       this.$refs.auto.close()
       const encodedOriginalText = encodeURIComponent(real)
       const target = {
-        path: '/index/tools/aiResponseDetail',
+        path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
         query: {
           ...this.$route.query,
           active: 'search',
@@ -699,8 +685,8 @@ export default {
 
       const isAi = AI_MODES.includes(this.selectedMode)
       const target = isAi
-        ? { path: '/index/tools/aiResponseDetail', query: baseQuery }
-        : { path: '/index/tools/detail', query: baseQuery }
+        ? { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: baseQuery }
+        : { path: kiwiConsts.ROUTES.DETAIL, query: baseQuery }
       this.navigateIfChanged(target, { ignoreKeys: ['now'] })
     },
 
@@ -710,7 +696,7 @@ export default {
         queryTmp = { originalText: this.originalText }
       }
       const target = {
-        path: '/index/tools/detail',
+        path: kiwiConsts.ROUTES.DETAIL,
         query: {
           active: 'search',
           ...queryTmp

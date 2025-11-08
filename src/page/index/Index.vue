@@ -117,7 +117,7 @@ export default {
             setTimeout(() => {
               if (this.$route.query.token || this.$route.query.user) {
                 this.$router.replace({
-                  path: '/index/tools/detail',
+                  path: website.noAuthPath.detail,
                   query: { active: 'search' }
                 })
               }

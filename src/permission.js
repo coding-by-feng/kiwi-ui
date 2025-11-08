@@ -1,6 +1,7 @@
 import router from '@/router/router'
 import {getStore} from '@/util/store'
 import website from '@/const/website'
+import kiwiConsts from '@/const/kiwiConsts'
 
 // Single consolidated router guard to prevent conflicts
 router.beforeEach((to, from, next) => {
@@ -13,13 +14,13 @@ router.beforeEach((to, from, next) => {
 
   // Whitelist search tool routes to avoid login loops
   const path = to.path || ''
-  const isToolRoute = path.startsWith('/index/tools/') || path.startsWith('/lazy/tools/')
+  const isToolRoute = path.startsWith(kiwiConsts.ROUTE_PREFIX.TOOLS) || path.startsWith(kiwiConsts.ROUTE_PREFIX.TOOLS_LAZY)
   const toolWhitelist = [
-    '/index/tools/detail',
-    '/index/tools/aiResponseDetail',
-    '/index/tools/aiCallHistory',
-    '/index/tools/youtube',
-    '/index/tools/pdfReader'
+    kiwiConsts.ROUTES.DETAIL,
+    kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
+    kiwiConsts.ROUTES.AI_CALL_HISTORY,
+    kiwiConsts.ROUTES.YOUTUBE,
+    kiwiConsts.ROUTES.PDF_READER
   ]
   if (isToolRoute && toolWhitelist.some(p => path.startsWith(p))) {
     next()

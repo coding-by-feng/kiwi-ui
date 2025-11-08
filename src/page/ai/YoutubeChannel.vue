@@ -190,6 +190,7 @@ import {
   favoriteVideoByUrl,
   unfavoriteVideoByUrl
 } from '@/api/ai'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'YoutubeChannel',
@@ -351,7 +352,7 @@ export default {
     openVideoUrl(url, id = null, favorited = null) {
       if (url) {
         this.$router.push({
-          path: '/index/tools/detail',
+          path: kiwiConsts.ROUTES.DETAIL,
           query: { active: 'youtube', videoUrl: encodeURIComponent(url), ytbMode: 'player',
                    ...(id ? { dbId: String(id) } : {}),
                    ...(favorited !== null && favorited !== undefined ? { favorited: String(!!favorited) } : {})

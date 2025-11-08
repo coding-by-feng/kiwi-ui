@@ -435,8 +435,6 @@ export default {
 
     searchAgain(record) {
       console.log('Searching again with record:', record);
-
-      // Navigate back to search with the same parameters
       const query = {
         active: 'search',
         selectedMode: record.promptMode,
@@ -445,14 +443,7 @@ export default {
         ytbMode: this.$route.query.ytbMode || kiwiConsts.YTB_MODE.CHANNEL,
         now: new Date().getTime()
       };
-
-      // Use router.resolve to generate the URL and open in new tab
-      const routeData = this.$router.resolve({
-        path: '/index/tools/aiResponseDetail',
-        query: query
-      });
-
-      // Open in new tab
+      const routeData = this.$router.resolve({ path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query });
       window.open(routeData.href, '_blank');
     },
 

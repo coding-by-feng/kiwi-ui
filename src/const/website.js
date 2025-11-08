@@ -1,3 +1,5 @@
+import kiwiConsts from '@/const/kiwiConsts'
+
 export default {
     title: 'kason English Tools',
     logo: 'kason English Tools',
@@ -30,13 +32,13 @@ export default {
     },
 
     noAuthPath: {
-        detail: '/index/tools/detail'
+        detail: kiwiConsts.ROUTES.DETAIL
     },
 
     auth: {
-        login: '/index/tools/detail?active=login',
+        login: `${kiwiConsts.ROUTES.DETAIL}?active=login`,
         path: [
-            '/index/tools/detail?active=starList'
+            `${kiwiConsts.ROUTES.DETAIL}?active=starList`
         ]
     },
 

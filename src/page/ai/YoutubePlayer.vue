@@ -342,11 +342,11 @@
 // import {defineComponent} from 'vue';
 import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
-import kiwiConsts from "@/const/kiwiConsts";
+import kiwiConsts from '@/const/kiwiConsts'
 import {getStore, setStore} from "@/util/store";
 import MarkdownIt from 'markdown-it';
 import NoSleep from 'nosleep.js';
-import AiSelectionPopup from '@/components/ai/AiSelectionPopup.vue'
+import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 
 const md = new MarkdownIt({
   html: true,
@@ -1514,28 +1514,12 @@ export default {
     onOpenAiTabFromPopup(payload) {
       const text = (payload && payload.text) ? String(payload.text).trim() : (this.selectedText || '').trim();
       if (!text) return;
-
-      // Close any inline AI stream from old dialog logic (if any)
       try { this.closeAiStream(true); } catch (_) {}
-
       const encodedOriginalText = encodeURIComponent(text);
       const selectedMode = kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value;
       const language = this.selectedLanguage || getStore({ name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE }) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese;
       const ytbMode = (this.$route && this.$route.query && this.$route.query.ytbMode) ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL;
-
-      // Single-step navigation directly to AI tab; pass selected text via URL only.
-      const toAi = {
-        path: '/index/tools/aiResponseDetail',
-        query: {
-          ...(this.$route?.query || {}),
-          active: 'search',
-          selectedMode,
-          language,
-          originalText: encodedOriginalText,
-          ytbMode
-        }
-      };
-
+      const toAi = { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: { ...(this.$route?.query || {}), active: 'search', selectedMode, language, originalText: encodedOriginalText, ytbMode } };
       this.$router.replace(toAi).finally(() => { this.showSelectionPopup = false; });
     },
 
@@ -1621,7 +1605,8 @@ export default {
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`;
+      const aiBase = kiwiConsts.API_BASE.AI_BIZ.replace(/^http(s)?:\/\//, '');
+      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`;
 
       try { this.closeAiStream(); } catch (_) {}
       try { this.aiWebsocket = new WebSocket(wsUrl); } catch (e) {

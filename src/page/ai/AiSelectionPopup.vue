@@ -226,7 +226,7 @@ export default {
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const host = window.location.host
-      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`
+      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
 
       try { this.stopStream(true) } catch (_) {}
       try { this.aiWebsocket = new WebSocket(wsUrl) } catch (e) {
@@ -294,7 +294,7 @@ export default {
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const host = window.location.host
-      const wsUrl = `${protocol}//${host}/ai-biz/ai/ws/stream?access_token=${encodeURIComponent(token)}`
+      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
 
       try { this.stopNestedStream(true) } catch (_) {}
       try { this.nestedAiWebsocket = new WebSocket(wsUrl) } catch (e) {

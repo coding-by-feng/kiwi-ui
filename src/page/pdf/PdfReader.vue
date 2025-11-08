@@ -142,7 +142,7 @@ import { getStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it'
 import pdf2md from '@opendocsg/pdf2md'
-import AiSelectionPopup from '@/components/ai/AiSelectionPopup.vue'
+import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 

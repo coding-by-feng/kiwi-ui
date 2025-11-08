@@ -13,15 +13,16 @@ import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
 import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
 import PdfReader from '@/page/pdf/PdfReader.vue'
+import kiwiConsts from '@/const/kiwiConsts'
 
 export default [{
     path: '/',
     name: '主页',
-    redirect: '/index/tools/detail'
+    redirect: kiwiConsts.ROUTES.DETAIL
 }, {
     path: '/lazy',
     name: '懒加载',
-    redirect: '/lazy/tools/detail'
+    redirect: kiwiConsts.ROUTE_PREFIX.TOOLS_LAZY + 'detail'
 }, {
     path: '/index',
     component: Index,
