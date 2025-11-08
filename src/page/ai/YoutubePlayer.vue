@@ -2045,7 +2045,7 @@ export default {
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
       } catch (_) {}
-      if this._onMouseMove) {
+      if (this._onMouseMove) {
         window.removeEventListener('mousemove', this._onMouseMove);
         this._onMouseMove = null;
       }

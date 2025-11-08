@@ -11,10 +11,23 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // Whitelist search tool routes to avoid login loops
+  const path = to.path || ''
+  const isToolRoute = path.startsWith('/index/tools/') || path.startsWith('/lazy/tools/')
+  const toolWhitelist = [
+    '/index/tools/detail',
+    '/index/tools/aiResponseDetail',
+    '/index/tools/aiCallHistory',
+    '/index/tools/youtube',
+    '/index/tools/pdfReader'
+  ]
+  if (isToolRoute && toolWhitelist.some(p => path.startsWith(p))) {
+    next()
+    return
+  }
+
   // Get access token for authentication check
-  let accessToken = getStore({
-    name: 'access_token'
-  })
+  let accessToken = getStore({ name: 'access_token' })
 
   // If no access token, handle authentication logic
   if (!accessToken) {
@@ -35,4 +48,3 @@ router.beforeEach((to, from, next) => {
   // Allow navigation
   next()
 })
-
