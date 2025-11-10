@@ -22,13 +22,6 @@
               :loading="loading">
             {{ $t('audio.cleanAudioData', { count: allDataSize }) }}
           </el-button>
-          <el-button
-              type="warning"
-              @click="clearWebsiteData"
-              class="management-button clean-cache-btn"
-              :loading="loading">
-            {{ $t('audio.cleanAllCache') }}
-          </el-button>
         </div>
       </div>
 
@@ -94,6 +87,7 @@ import kiwiConst from "@/const/kiwiConsts";
 import {getStore} from "@/util/store";
 import it from "element-ui/src/locale/lang/it";
 import msgUtil from '@/util/msg'
+import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
 
 let that
 
@@ -182,53 +176,17 @@ export default {
       }
       this.playBgm(this.currentPlayBgmIndex)
     },
-    clearWebsiteData() {
-      this.loading = true;
-
-      // Clear localStorage
-      localStorage.clear();
-
-      // Clear sessionStorage
-      sessionStorage.clear();
-
-      // Clear cookies
-      const cookies = document.cookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i];
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    async clearWebsiteData() {
+      this.loading = true
+      try {
+        await clearWebsiteDataUtil()
+        msgUtil.msgSuccess(this, this.$t('audio.cacheCleanedSuccess'))
+      } catch (error) {
+        console.error('Failed to clear website data:', error)
+        msgUtil.msgError(this, this.$t('messages.systemError'))
+      } finally {
+        this.loading = false
       }
-
-      // Clear indexedDB
-      const databases = indexedDB.databases ? indexedDB.databases() : [];
-      Promise.resolve(databases).then((dbs) => {
-        dbs.forEach((db) => {
-          indexedDB.deleteDatabase(db.name);
-        });
-      }).finally($ => {
-        that.loading = false
-        msgUtil.msgSuccess(that, this.$t('audio.cacheCleanedSuccess'))
-      });
-
-      // Clear Cache API (requires service worker)
-      if ('caches' in window) {
-        caches.keys().then((keyList) => {
-          return Promise.all(keyList.map((key) => {
-            return caches.delete(key);
-          }));
-        });
-      }
-
-      // Request clearing browser cache and storage
-      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          action: 'clearCache'
-        });
-      }
-
-      this.loading = false;
-      console.log("Website data cleared!");
     }
   }
 }
@@ -341,21 +299,6 @@ export default {
 
   &:focus {
     background: linear-gradient(135deg, #3a8ee6 0%, #5ca3f7 100%) !important;
-    color: white !important;
-  }
-}
-
-.clean-cache-btn {
-  background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%) !important;
-  color: white !important;
-
-  &:hover {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
-    color: white !important;
-  }
-
-  &:focus {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
     color: white !important;
   }
 }
