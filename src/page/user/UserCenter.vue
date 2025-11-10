@@ -441,6 +441,7 @@ export default {
           content: kiwiConst.ENABLE_BGM.ENABLE,
           type: 'local'
         })
+        this.user.bgm = kiwiConst.ENABLE_BGM.ENABLE
       }
       if (util.isEmptyStr(this.user.reviewType)) {
         setStore({
