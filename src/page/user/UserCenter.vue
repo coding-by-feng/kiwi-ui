@@ -11,7 +11,15 @@
         </div>
       </div>
       <div class="user-actions">
-        <el-button type="info" size="small" @click="handleLoginOut" class="logout-button">
+        <el-button
+            type="warning"
+            size="small"
+            @click="handleClearWebsiteData"
+            :loading="clearingWebsiteData"
+            class="action-button clear-data-button">
+          {{ $t('audio.cleanAllCache') }}
+        </el-button>
+        <el-button type="info" size="small" @click="handleLoginOut" class="action-button logout-button">
           <i class="el-icon-switch-button"></i> {{ $t('user.loginOut') }}
         </el-button>
       </div>
@@ -306,6 +314,8 @@ import { getStore, setStore } from '@/util/store'
 import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import util from '@/util/util'
+import msgUtil from '@/util/msg'
+import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
 import Bgm from '@/page/bgm/Index'
 import { setLanguage as setUiLanguage } from '@/i18n'
 
@@ -346,7 +356,8 @@ export default {
       hotkeyRows: [],
 
       // NEW: Feature tabs toggle local state
-      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS }
+      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS },
+      clearingWebsiteData: false
     }
   },
 
@@ -524,6 +535,19 @@ export default {
     },
 
     // Settings methods
+    async handleClearWebsiteData() {
+      this.clearingWebsiteData = true
+      try {
+        await clearWebsiteDataUtil()
+        msgUtil.msgSuccess(this, this.$t('audio.cacheCleanedSuccess'))
+      } catch (error) {
+        console.error('Failed to clear website data:', error)
+        msgUtil.msgError(this, this.$t('messages.systemError'))
+      } finally {
+        this.clearingWebsiteData = false
+      }
+    },
+
     handleLoginOut() {
       this.$store.dispatch('LogOut').then(() => {
         this.$router.push({ path: website.noAuthPath.detail, query: { active: 'search' } })
@@ -930,12 +954,11 @@ export default {
   .user-actions {
     display: flex;
     gap: 12px;
+    align-items: center;
   }
 }
 
-/* Logout Button Styling */
-.logout-button {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+.action-button {
   border: none !important;
   color: white !important;
   padding: 12px 20px !important;
@@ -945,10 +968,23 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 
   &:hover {
-    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-    color: white !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  &:active {
+    transform: translateY(0px) !important;
+  }
+}
+
+/* Logout Button Styling */
+.logout-button {
+  @extend .action-button;
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+    color: white !important;
   }
 
   &:focus {
@@ -956,9 +992,21 @@ export default {
     color: white !important;
     box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.3) !important;
   }
+}
 
-  &:active {
-    transform: translateY(0px) !important;
+.clear-data-button {
+  @extend .action-button;
+  background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%) !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
+    color: white !important;
+  }
+
+  &:focus {
+    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
+    color: white !important;
+    box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.3) !important;
   }
 }
 
