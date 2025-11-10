@@ -38,35 +38,32 @@
       </div>
 
       <div slot="footer" class="selection-dialog-footer">
-        <el-button size="small" @click="handleCloseSelectionDialog">Cancel</el-button>
-        <div class="selection-actions-right">
-          <el-button
-              size="small"
-              type="success"
-              plain
-              icon="el-icon-document-copy"
-              :disabled="!selectedText"
-              @click="copySelectedText"
-          >
-            Copy Selection
-          </el-button>
-          <el-button
-              size="small"
-              type="info"
-              @click="searchOnDictionary"
-              icon="el-icon-search"
-          >
-            Search on Dictionary
-          </el-button>
-          <el-button
-              size="small"
-              type="primary"
-              @click="explainSelectedText"
-              :loading="selectionApiLoading"
-          >
-            Explain Selection
-          </el-button>
-        </div>
+        <el-button
+            size="small"
+            type="success"
+            plain
+            icon="el-icon-document-copy"
+            :disabled="!selectedText"
+            @click="copySelectedText"
+        >
+          Copy Selection
+        </el-button>
+        <el-button
+            size="small"
+            type="info"
+            @click="searchOnDictionary"
+            icon="el-icon-search"
+        >
+          Search on Dictionary
+        </el-button>
+        <el-button
+            size="small"
+            type="primary"
+            @click="explainSelectedText"
+            :loading="selectionApiLoading"
+        >
+          Explain Selection
+        </el-button>
       </div>
     </el-dialog>
 
@@ -1713,46 +1710,24 @@ export default {
   color: white !important;
 }
 
-/* Cancel button styling */
-.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
-  background: #f8f9fa !important;
-  border: 1px solid #e9ecef !important;
-  color: #6c757d !important;
-}
-
-.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info):hover {
-  background: #e9ecef !important;
-  border-color: #dee2e6 !important;
-  color: #495057 !important;
-}
-
 /* Align footer buttons in Explain Selected Text dialog */
 .selection-dialog-footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: stretch;
+  justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
   width: 100%;
   padding: 6px 0;
 }
-.selection-actions-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-left: auto; /* push right on wide screens */
-}
 .selection-dialog-footer .el-button {
+  flex: 1 1 30%;
+  min-width: 140px;
   white-space: nowrap; /* prevent label wrapping */
 }
-/* New: provide consistent button widths */
-.selection-dialog-footer .el-button { min-width: 110px; }
-.selection-actions-right .el-button { min-width: 140px; }
 
 @media (max-width: 640px) {
   .selection-dialog-footer { flex-direction: column; align-items: stretch; gap: 8px; }
-  .selection-actions-right { width: 100%; justify-content: center; gap: 8px; }
   .selection-dialog-footer .el-button { width: 100%; min-width: 0; }
 }
 
