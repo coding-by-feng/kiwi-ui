@@ -21,7 +21,6 @@
       <div class="tiny-tip">Tip: select text inside this response to open a context-aware Explanation popup.</div>
     </div>
     <span slot="footer" class="dialog-footer">
-      <el-button @click="closeDialog">Close</el-button>
       <el-button type="primary" :loading="aiSearchLoading" :disabled="!localSelectedText" @click="aiSearchSelectedText">
         <i class="el-icon-search" style="margin-right:6px;"></i>Search
       </el-button>
@@ -67,6 +66,7 @@ import MarkdownIt from 'markdown-it'
 import kiwiConsts from '@/const/kiwiConsts'
 import { getStore } from '@/util/store'
 import msgUtil from '@/util/msg'
+import { buildAiTabQuery } from '@/util/aiNavigation'
 
 const md = new MarkdownIt({ html: true, breaks: false, linkify: true, typographer: true })
 
@@ -201,10 +201,11 @@ export default {
         this.aiLastError = 'No text selected'
         return
       }
+      const query = buildAiTabQuery({ text, route: this.$route })
       this.stopStream(true)
       // Close immediately to avoid any duplicate triggers on route changes
       this.dialogVisible = false
-      this.$emit('open-ai-tab', { text })
+      this.$emit('open-ai-tab', { text, query })
     },
 
     // WS streaming core (primary)
@@ -436,7 +437,14 @@ export default {
 .selected-text-preview { margin-bottom: 10px; color: #606266; }
 .ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: #fff; border: 1px solid #ebeef5; border-radius: 8px; }
 .inline-error { color: #f56c6c; background: #fdecea; border: 1px solid #f5c2c0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
-.dialog-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 0 4px;
+}
 .tiny-tip { margin-top: 6px; color: #909399; font-size: 12px; }
 .context-preview { white-space: pre-wrap; background: #f8f9fa; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px; color: #606266; max-height: 100px; overflow: auto; }
 </style>
