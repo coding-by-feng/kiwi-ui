@@ -274,6 +274,18 @@ export default {
       });
     },
 
+    getNativeLanguage() {
+      const routeNative = this.$route?.query?.nativeLanguage
+      if (!util.isEmptyStr(routeNative)) {
+        return routeNative
+      }
+      const stored = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG })
+      if (!util.isEmptyStr(stored)) {
+        return stored
+      }
+      return kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+    },
+
     navigateIfChanged(target, { ignoreKeys = ['now'] } = {}) {
       try {
         const current = { path: this.$route.path, query: { ...this.$route.query } }
@@ -302,6 +314,7 @@ export default {
           active: 'search',
           selectedMode: this.selectedMode,
           language: this.selectedLanguage,
+          nativeLanguage: this.getNativeLanguage(),
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
           originalText: this.$route.query.originalText || '',
           now: new Date().getTime()
@@ -529,6 +542,7 @@ export default {
         active: 'search',
         selectedMode: item,
         language: newLanguage,
+        nativeLanguage: this.getNativeLanguage(),
         originalText: encodedOriginalText,
         ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
       }
@@ -549,6 +563,7 @@ export default {
           active: 'search',
           selectedMode: this.selectedMode,
           language: item,
+          nativeLanguage: this.getNativeLanguage(),
           originalText: encodeURIComponent(this.originalText),
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
@@ -565,6 +580,7 @@ export default {
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_DEFAULT_MODE,
           originalText: '',
+          nativeLanguage: this.getNativeLanguage(),
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
       }
@@ -583,6 +599,7 @@ export default {
           active: 'search',
           selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
           language: this.selectedLanguage,
+          nativeLanguage: this.getNativeLanguage(),
           originalText: encodedOriginalText,
           ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL
         }
@@ -679,6 +696,7 @@ export default {
         originalText: encodedOriginalText,
         selectedMode: this.selectedMode,
         language: this.selectedLanguage,
+        nativeLanguage: this.getNativeLanguage(),
         ytbMode: this.$route.query.ytbMode ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL,
         now: new Date().getTime()
       }
@@ -699,6 +717,7 @@ export default {
         path: kiwiConsts.ROUTES.DETAIL,
         query: {
           active: 'search',
+          nativeLanguage: this.getNativeLanguage(),
           ...queryTmp
         }
       }
