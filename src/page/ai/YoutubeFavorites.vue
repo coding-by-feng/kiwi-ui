@@ -83,33 +83,9 @@
 
           <!-- Desktop/tablet table -->
           <el-table v-else-if="!isSmallScreen" :data="favoriteChannels" stripe style="width: 100%">
-            <el-table-column prop="channelName" label="Channel Name" min-width="200">
+            <el-table-column label="Channel" min-width="200">
               <template #default="scope">
-                <div class="channel-name">{{ scope.row.channelName }}</div>
-              </template>
-            </el-table-column>
-            <el-table-column label="Favorite" width="100">
-              <template #default="scope">
-                <el-button type="text"
-                           :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                           :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                           :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                           :disabled="!!pendingChannelFavorite[scope.row.channelId]"
-                           @click.stop="toggleChannelFavorite(scope.row)"></el-button>
-              </template>
-            </el-table-column>
-            <el-table-column width="120">
-              <template #default="scope">
-                <el-button type="text" size="small" @click="goToChannel(scope.row)">View</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <!-- Mobile stacked, multi-line items to avoid horizontal scroll -->
-          <el-table v-else :data="favoriteChannels" style="width: 100%">
-            <el-table-column label="Channel">
-              <template #default="scope">
-                <div class="channel-row-mobile">
+                <div class="channel-row-desktop clickable" @click="goToChannel(scope.row)">
                   <div class="row-top">
                     <div class="title-text">{{ scope.row.channelName }}</div>
                   </div>
@@ -120,7 +96,27 @@
                                :aria-pressed="scope.row.favorited ? 'true' : 'false'"
                                :disabled="!!pendingChannelFavorite[scope.row.channelId]"
                                @click.stop="toggleChannelFavorite(scope.row)"></el-button>
-                    <el-button type="text" size="small" class="ml-8" @click="goToChannel(scope.row)">View</el-button>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- Mobile stacked, multi-line items to avoid horizontal scroll -->
+          <el-table v-else :data="favoriteChannels" style="width: 100%">
+            <el-table-column label="Channel">
+              <template #default="scope">
+                <div class="channel-row-mobile clickable" @click="goToChannel(scope.row)">
+                  <div class="row-top">
+                    <div class="title-text">{{ scope.row.channelName }}</div>
+                  </div>
+                  <div class="row-bottom">
+                    <el-button type="text"
+                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
+                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
+                               :disabled="!!pendingChannelFavorite[scope.row.channelId]"
+                               @click.stop="toggleChannelFavorite(scope.row)"></el-button>
                   </div>
                 </div>
               </template>
@@ -312,7 +308,10 @@ export default {
     },
     goToChannel(row) {
       // Switch to channel mode and point to the channelId so YoutubeChannel can pick it up
-      this.$router.push({ path: this.$route.path, query: { ...this.$route.query, ytbMode: 'channel', channelId: row.channelId } })
+      this.$router.push({
+        path: this.$route.path,
+        query: { ...this.$route.query, ytbMode: 'channel', channelId: row.channelId }
+      })
     },
 
     // date utils
@@ -368,7 +367,10 @@ export default {
 .video-row-desktop .row-middle .rel, .video-row-mobile .row-middle .rel { font-weight: 500; }
 .video-row-desktop .row-middle .sep, .video-row-mobile .row-middle .sep { margin: 0 6px; color: #909399; }
 .video-row-desktop .row-bottom, .video-row-mobile .row-bottom { margin-top: 6px; display: flex; align-items: center; gap: 6px; }
-/* New: channel mobile row to avoid horizontal scroll */
+/* Channel rows */
+.channel-row-desktop { display: flex; flex-direction: column; padding: 8px 0; }
+.channel-row-desktop .row-top { display: flex; align-items: center; }
+.channel-row-desktop .row-bottom { margin-top: 6px; display: flex; align-items: center; gap: 6px; }
 .channel-row-mobile { display: flex; flex-direction: column; padding: 8px 0; }
 .channel-row-mobile .row-top { display: flex; align-items: center; }
 .channel-row-mobile .row-bottom { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
