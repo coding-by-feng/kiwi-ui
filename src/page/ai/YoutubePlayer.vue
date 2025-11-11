@@ -347,6 +347,8 @@ import {getStore, setStore} from "@/util/store";
 import MarkdownIt from 'markdown-it';
 import NoSleep from 'nosleep.js';
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
+import { buildAiTabQuery } from '@/util/aiNavigation'
+import { navigateIfChanged } from '@/util/routerUtil'
 
 const md = new MarkdownIt({
   html: true,
@@ -1515,12 +1517,20 @@ export default {
       const text = (payload && payload.text) ? String(payload.text).trim() : (this.selectedText || '').trim();
       if (!text) return;
       try { this.closeAiStream(true); } catch (_) {}
-      const encodedOriginalText = encodeURIComponent(text);
-      const selectedMode = kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value;
-      const language = this.selectedLanguage || getStore({ name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE }) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese;
-      const ytbMode = (this.$route && this.$route.query && this.$route.query.ytbMode) ? this.$route.query.ytbMode : kiwiConsts.YTB_MODE.CHANNEL;
-      const toAi = { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: { ...(this.$route?.query || {}), active: 'search', selectedMode, language, originalText: encodedOriginalText, ytbMode } };
-      this.$router.replace(toAi).finally(() => { this.showSelectionPopup = false; });
+      const overrides = {
+        ...(payload?.query || {}),
+        active: 'search',
+        selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
+        ytbMode: (this.$route && this.$route.query && this.$route.query.ytbMode)
+          ? this.$route.query.ytbMode
+          : kiwiConsts.YTB_MODE.CHANNEL
+      };
+      if (this.selectedLanguage) {
+        overrides.language = this.selectedLanguage;
+      }
+      const query = buildAiTabQuery({ text, route: this.$route, overrides, preserveKeys: ['source', 'ytbMode'] });
+      const target = { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query };
+      navigateIfChanged(this.$router, this.$route, target).finally(() => { this.showSelectionPopup = false; });
     },
 
     pauseVideo() {
