@@ -292,7 +292,8 @@ export default {
       const selectedMode = (q.selectedMode || '').toString()
       const language = (q.language || '').toString()
       const originalText = (q.originalText || '').toString()
-      return `${selectedMode}|${language}|${originalText}`
+      const nativeLanguage = (q.nativeLanguage || '').toString()
+      return `${selectedMode}|${language}|${nativeLanguage}|${originalText}`
     }
   },
   watch: {
@@ -300,8 +301,18 @@ export default {
       deep: true,
       handler(newQ, oldQ) {
         try {
-          const newKey = [String(newQ.selectedMode||''), String(newQ.language||''), String(newQ.originalText||'')].join('|')
-          const oldKey = [String(oldQ && oldQ.selectedMode||''), String(oldQ && oldQ.language||''), String(oldQ && oldQ.originalText||'')].join('|')
+          const newKey = [
+            String(newQ.selectedMode || ''),
+            String(newQ.language || ''),
+            String(newQ.nativeLanguage || ''),
+            String(newQ.originalText || '')
+          ].join('|')
+          const oldKey = [
+            String(oldQ && oldQ.selectedMode || ''),
+            String(oldQ && oldQ.language || ''),
+            String(oldQ && oldQ.nativeLanguage || ''),
+            String(oldQ && oldQ.originalText || '')
+          ].join('|')
           // Ignore route churn if core inputs haven’t changed
           if (newKey === oldKey) return
           // Otherwise, re-initialize once with new core inputs
@@ -407,7 +418,10 @@ export default {
 
       let originalText = this.$route.query.originalText;
       let targetLanguage = this.$route.query.language ? this.$route.query.language : this.defaultTargetLanguage;
-      let nativeLanguage = this.defaultNativeLanguage;
+      const routeNativeLanguage = this.$route?.query?.nativeLanguage
+      let nativeLanguage = !util.isEmptyStr(routeNativeLanguage)
+        ? routeNativeLanguage
+        : this.defaultNativeLanguage;
       // Validate selected mode to avoid INVALID_PROMPT_MODE
       let selectedMode = this.validSelectedMode;
 
@@ -1219,7 +1233,8 @@ export default {
       const originalText = q.originalText
       // Validate selected mode to keep compatibility with computed validSelectedMode
       const selectedMode = q.selectedMode || this.validSelectedMode
-      const language = q.language || this.defaultTargetLanguage
+      const language = (q.language || this.defaultTargetLanguage || '').toString()
+      const nativeLanguage = (q.nativeLanguage || this.defaultNativeLanguage || '').toString()
 
       // Decode entire content (whole content)
       const decoded = (() => {
@@ -1233,7 +1248,7 @@ export default {
 
       // New cache key format: mode-targetLang-searchingContent (whole content)
       // Use a recognizable namespace prefix; URI-encode the content to keep key safe
-      const key = `aiResponseCache:${selectedMode}-${language}-${encodeURIComponent(decoded)}`
+      const key = `aiResponseCache:${selectedMode}-${language}-${nativeLanguage}-${encodeURIComponent(decoded)}`
       if (remember) {
         this.lastCacheKey = key
       }
@@ -1245,8 +1260,8 @@ export default {
       const q = query || this.$route.query || {}
       const originalText = q.originalText
       const selectedMode = q.selectedMode || this.validSelectedMode
-      const language = q.language || this.defaultTargetLanguage
-      const native = this.defaultNativeLanguage
+      const language = (q.language || this.defaultTargetLanguage || '').toString()
+      const native = (q.nativeLanguage || this.defaultNativeLanguage || '').toString()
       const decoded = (() => {
         if (!originalText) return ''
         try {
