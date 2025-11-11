@@ -143,6 +143,8 @@ import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it'
 import pdf2md from '@opendocsg/pdf2md'
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
+import { buildAiTabQuery } from '@/util/aiNavigation'
+import { navigateIfChanged } from '@/util/routerUtil'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
@@ -672,14 +674,15 @@ export default {
     onOpenAiTabFromPopup(payload) {
       const text = (payload && payload.text) ? String(payload.text).trim() : (this.selectedText || '').trim()
       if (!text) return
-      const encodedText = encodeURIComponent(text)
-      const language = getStore({ name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE }) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
-      // Single-step navigation directly to AI tab; pass selected text via URL only.
-      const toAi = {
-        path: '/index/tools/aiResponseDetail',
-        query: { ...this.$route.query, active: 'search', selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value, language, originalText: encodedText, source: 'pdf' }
+      const overrides = {
+        ...(payload?.query || {}),
+        active: 'search',
+        selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
+        source: 'pdf'
       }
-      this.$router.replace(toAi).finally(() => { this.showSelectionPopup = false })
+      const query = buildAiTabQuery({ text, route: this.$route, overrides, preserveKeys: ['source'] })
+      const target = { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query }
+      navigateIfChanged(this.$router, this.$route, target).finally(() => { this.showSelectionPopup = false })
     },
     closePopup() {
       this.showSelectionPopup = false
