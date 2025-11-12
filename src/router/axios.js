@@ -3,7 +3,7 @@ import {getStore} from '@/util/store'
 import NProgress from 'nprogress'
 import responseCode from '@/const/responseCode'
 import router from '@/router/router'
-import {Message} from 'element-ui'
+import messageCenter from '@/util/msg'
 import 'nprogress/nprogress.css'
 import store from '@/store'
 import axios from 'axios'
@@ -88,10 +88,8 @@ axios.interceptors.response.use(res => {
   if (String(responseCode.UNAUTHORIZED) === status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
-        Message({
+        messageCenter.success({
           message: responseCode['autoLoginSuccess'],
-          type: 'success',
-          center: true,
           showClose: true
         })
       })
@@ -108,10 +106,8 @@ axios.interceptors.response.use(res => {
   }
 
   if (status.indexOf('2') !== 0 || (res.data && res.data.code === responseCode.ERROR)) {
-    Message({
-      message: message,
-      type: 'error',
-      center: true,
+    messageCenter.error({
+      message,
       showClose: true
     })
     return Promise.reject(new Error(message))
@@ -123,19 +119,15 @@ axios.interceptors.response.use(res => {
 
   // Handle network errors in Electron
   if (isElectron && (error && (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND'))) {
-    Message({
+    messageCenter.error({
       message: `Unable to connect to server at ${baseUrl}. Please check if your server is running and accessible.`,
-      type: 'error',
-      center: true,
-      showClose: true,
-      duration: 5000
+      duration: 5000,
+      showClose: true
     })
     console.error('Connection error:', error && error.message, 'Server URL:', baseUrl)
   } else {
-    Message({
+    messageCenter.error({
       message: responseCode['default'],
-      type: 'error',
-      center: true,
       showClose: true
     })
   }

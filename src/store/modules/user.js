@@ -1,7 +1,6 @@
 import { getStore, setStore } from '@/util/store'
 import { loginByUsername, logout, refreshToken } from '@/api/login'
 import { encryption } from '@/util/util'
-import { Message } from 'element-ui'
 import router from '@/router/router'
 
 const user = {
