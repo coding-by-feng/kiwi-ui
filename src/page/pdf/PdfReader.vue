@@ -14,25 +14,34 @@
       <span v-if="pdfName" class="pdf-reader__filename">
         {{ pdfName }}
       </span>
-      <!-- Removed Clear button -->
-      <!-- Zoom controls -->
-      <div v-if="pdfLoaded" class="pdf-reader__zoom-group">
+      <!-- Right controls: zoom + history -->
+      <div v-if="pdfLoaded" class="pdf-reader__right-controls">
+        <div class="pdf-reader__zoom-group">
+          <el-button
+            type="text"
+            icon="el-icon-zoom-out"
+            :disabled="!canZoomOut || loading"
+            @click="zoomOut"
+            :title="tOrFallback('pdf.zoomOut', 'Zoom Out')"
+          />
+          <span class="pdf-reader__zoom-indicator" :title="tOrFallback('pdf.zoom', 'Zoom')">
+            {{ zoomPercent }}
+          </span>
+          <el-button
+            type="text"
+            icon="el-icon-zoom-in"
+            :disabled="!canZoomIn || loading"
+            @click="zoomIn"
+            :title="tOrFallback('pdf.zoomIn', 'Zoom In')"
+          />
+        </div>
         <el-button
+          v-if="pdfName"
+          class="pdf-history-button"
           type="text"
-          icon="el-icon-zoom-out"
-          :disabled="!canZoomOut || loading"
-          @click="zoomOut"
-          :title="tOrFallback('pdf.zoomOut', 'Zoom Out')"
-        />
-        <span class="pdf-reader__zoom-indicator" :title="tOrFallback('pdf.zoom', 'Zoom')">
-          {{ zoomPercent }}
-        </span>
-        <el-button
-          type="text"
-          icon="el-icon-zoom-in"
-          :disabled="!canZoomIn || loading"
-          @click="zoomIn"
-          :title="tOrFallback('pdf.zoomIn', 'Zoom In')"
+          icon="el-icon-time"
+          @click="showHistoryDialog = true"
+          :title="'Open history (' + pdfHistoryCount + ')'"
         />
       </div>
     </div>
@@ -83,8 +92,19 @@
       ref="aiPopup"
       :visible.sync="showSelectionPopup"
       :selected-text.sync="selectedText"
+      :file-name="pdfName"
       :title="tOrFallback('pdf.explainSelection', 'Explain Selection')"
       @open-ai-tab="onOpenAiTabFromPopup"
+    />
+
+    <selection-history
+      v-if="pdfName"
+      :visible.sync="showHistoryDialog"
+      :resource-key="pdfName"
+      resource-type="pdf"
+      title="PDF Selection History"
+      @history-cleared="onHistoryCleared"
+      @history-item-deleted="onHistoryItemDeleted"
     />
   </div>
 </template>
@@ -96,6 +116,7 @@ import 'pdfjs-dist/web/pdf_viewer.css'
 import { EventBus, PDFLinkService, PDFViewer } from 'pdfjs-dist/legacy/web/pdf_viewer'
 import kiwiConsts from '@/const/kiwiConsts'
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
+import SelectionHistory from '@/components/SelectionHistory.vue'
 import { buildAiTabQuery } from '@/util/aiNavigation'
 import { navigateIfChanged } from '@/util/routerUtil'
 
@@ -121,7 +142,7 @@ const cachedPdfState = {
 
 export default {
   name: 'PdfReader',
-  components: { AiSelectionPopup },
+  components: { AiSelectionPopup, SelectionHistory },
   data() {
     const winW = window.innerWidth
     const isSmallScreen = winW <= MOBILE_BASE_MAX_WIDTH
@@ -144,6 +165,8 @@ export default {
       pdfEventBus: null,
       pdfLinkService: null,
       viewerHeight: 0,
+      showHistoryDialog: false,
+      historyVersion: 0,
     }
   },
   computed: {
@@ -161,6 +184,18 @@ export default {
     },
     canZoomOut() {
       return this.renderScale > MIN_RENDER_SCALE + 1e-6
+    },
+    pdfHistoryCount() {
+      // Depend on historyVersion to force recompute after deletions
+      void this.historyVersion
+      try {
+        const key = this.pdfName ? `pdf-ai-history:${this.pdfName}` : ''
+        if (!key) return 0
+        const raw = localStorage.getItem(key)
+        if (!raw) return 0
+        const arr = JSON.parse(raw)
+        return Array.isArray(arr) ? arr.length : 0
+      } catch (_) { return 0 }
     }
   },
   async mounted() {
@@ -482,7 +517,9 @@ export default {
       } catch (_) {}
     },
     async zoomIn() { await this.setZoom(this.renderScale + RENDER_STEP) },
-    async zoomOut() { await this.setZoom(this.renderScale - RENDER_STEP) }
+    async zoomOut() { await this.setZoom(this.renderScale - RENDER_STEP) },
+    onHistoryCleared() { this.showHistoryDialog = false; this.historyVersion++ },
+    onHistoryItemDeleted() { this.historyVersion++ },
   }
 }
 </script>
@@ -498,8 +535,8 @@ export default {
   &__controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
   &__file-input { display: none; }
   &__filename { font-size: 14px; color: #606266; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  &__clear { margin-left: auto; }
-  &__zoom-group { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+  &__right-controls { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  &__zoom-group { display: inline-flex; align-items: center; gap: 8px; }
   &__zoom-indicator { min-width: 46px; text-align: center; font-size: 13px; color: #606266; padding: 2px 8px; background: #f5f7fa; border: 1px solid #e4e7ed; border-radius: 8px; line-height: 20px; }
   &__alert { margin-bottom: 12px; }
   &__status { display: flex; align-items: center; gap: 8px; color: #606266; margin-bottom: 12px; }
@@ -532,7 +569,8 @@ export default {
 
 .pdf-reader--compact {
   .pdf-reader__controls { flex-direction: column; align-items: stretch; gap: 8px; }
-  .pdf-reader__controls .el-button { width: 100%; justify-content: center; }
+  .pdf-reader__right-controls { width: 100%; justify-content: center; order: 4; margin-left: 0; }
+  .pdf-reader__zoom-group { justify-content: center; }
   .pdf-reader__filename { width: 100%; text-align: center; }
   .pdf-reader__layout { flex-direction: column; gap: 14px; }
   .pdf-reader__page-column { width: 100%; padding: 12px; }
