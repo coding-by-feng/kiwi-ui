@@ -6,7 +6,14 @@
     :before-close="onBeforeClose"
   >
     <div class="ai-dialog-content">
-      <div class="selected-text-preview"><strong>Selected:</strong> "{{ localSelectedText }}"</div>
+      <div class="selected-text-preview">
+        <strong>Selected:</strong>
+        "<span ref="primarySelectionContent"
+              class="primary-selection-content"
+              @mouseup="handlePrimarySelection"
+              @touchend="handlePrimarySelection">{{ localSelectedText }}</span>"
+      </div>
+      <div class="sub-tip" v-if="localSelectedText && localSelectedText.length > 0">Tip: select a sub‑phrase in the original selection above to open an in‑context Explanation dialog.</div>
       <div v-if="aiLastError" class="inline-error">{{ aiLastError }}</div>
       <div v-show="aiIsStreaming" class="streaming-indicator">
         <i class="el-icon-loading"></i> Streaming response...
@@ -36,6 +43,8 @@
     :visible.sync="nestedDialogVisible"
     width="520px"
     :before-close="closeNestedDialog"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
   >
     <div class="ai-dialog-content">
       <div class="selected-text-preview"><strong>Context (from first selection):</strong></div>
@@ -107,7 +116,16 @@ export default {
       get() { return this.visible },
       set(v) {
         this.$emit('update:visible', v)
-        if (!v) this.stopStream(true)
+        if (v) {
+          // Auto-start translation on open if we have text
+          this.$nextTick(() => {
+            if (this.localSelectedText && !this.aiIsStreaming && !this.aiSearchLoading) {
+              try { this.aiSearchSelectedText() } catch (_) {}
+            }
+          })
+        } else {
+          this.stopStream(true)
+        }
       }
     },
     aiParsedResponseText() {
@@ -201,7 +219,7 @@ export default {
         this.aiLastError = 'No text selected'
         return
       }
-      const query = buildAiTabQuery({ text, route: this.$route })
+      const query = buildAiTabQuery({ text, route: this.$route, overrides: { selectedMode: 'directly-translation' } })
       this.stopStream(true)
       // Close immediately to avoid any duplicate triggers on route changes
       this.dialogVisible = false
@@ -447,4 +465,6 @@ export default {
 }
 .tiny-tip { margin-top: 6px; color: #909399; font-size: 12px; }
 .context-preview { white-space: pre-wrap; background: #f8f9fa; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px; color: #606266; max-height: 100px; overflow: auto; }
+.primary-selection-content { cursor: text; user-select: text; -webkit-user-select: text; }
+.sub-tip { margin-top: -4px; margin-bottom: 8px; font-size: 12px; color: #909399; }
 </style>

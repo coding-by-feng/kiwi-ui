@@ -305,7 +305,9 @@ export default {
         <span slot="label">
           <i class="el-icon-document"></i>
         </span>
-        <router-view name="pdfReader" v-if="activeName === 'pdfReader'"></router-view>
+        <keep-alive>
+          <router-view name="pdfReader" v-show="activeName === 'pdfReader'"></router-view>
+        </keep-alive>
       </el-tab-pane>
       <!-- New: AI History tab -->
       <el-tab-pane name="aiHistory" v-if="isLogin && enabledTabs.aiHistory">

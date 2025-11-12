@@ -14,15 +14,7 @@
       <span v-if="pdfName" class="pdf-reader__filename">
         {{ pdfName }}
       </span>
-      <el-button
-        v-if="pdfLoaded"
-        type="text"
-        icon="el-icon-delete"
-        class="pdf-reader__clear"
-        @click="clearPdf"
-      >
-        {{ $t('common.clear') || 'Clear' }}
-      </el-button>
+      <!-- Removed Clear button -->
       <!-- Zoom controls -->
       <div v-if="pdfLoaded" class="pdf-reader__zoom-group">
         <el-button
@@ -67,10 +59,11 @@
       </template>
       <template v-else>
         <div class="pdf-reader__layout">
-          <div class="pdf-reader__page-column-wrapper">
+          <div class="pdf-reader__page-column-wrapper" :style="{ height: viewerHeight + 'px' }">
             <div
               class="pdf-reader__page-column"
               ref="pageColumn"
+              :style="{ height: viewerHeight + 'px' }"
               @mouseup="handlePointerSelection"
               @touchend="handleTouchSelection"
             >
@@ -87,6 +80,7 @@
 
     <!-- Shared AI selection popup -->
     <ai-selection-popup
+      ref="aiPopup"
       :visible.sync="showSelectionPopup"
       :selected-text.sync="selectedText"
       :title="tOrFallback('pdf.explainSelection', 'Explain Selection')"
@@ -138,7 +132,8 @@ export default {
       isSmallScreen: window.innerWidth <= 768,
       pdfViewer: null,
       pdfEventBus: null,
-      pdfLinkService: null
+      pdfLinkService: null,
+      viewerHeight: 0,
     }
   },
   computed: {
@@ -161,13 +156,16 @@ export default {
   async mounted() {
     await this.$nextTick()
     this.initPdfViewer()
+    this.updateViewerHeight()
     document.addEventListener('click', this.handleDocumentClick)
     window.addEventListener('resize', this.handleResize)
+    window.addEventListener('resize', this.updateViewerHeight)
     await this.restoreCachedPdfIfNeeded()
   },
   beforeDestroy() {
     document.removeEventListener('click', this.handleDocumentClick)
     window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('resize', this.updateViewerHeight)
   },
   methods: {
     initPdfViewer() {
@@ -195,7 +193,14 @@ export default {
     },
     handleDocumentClick(e) {
       if (!this.showSelectionPopup) return
-      const inViewer = this.isNodeWithinElements(e.target, this.getPageWrappers())
+      // Ignore clicks inside Element UI dialogs or dropdowns
+      const target = e.target
+      const inDialog = target.closest && (target.closest('.el-dialog') || target.closest('.el-dialog__wrapper'))
+      const inDropdown = target.closest && (target.closest('.el-select-dropdown') || target.closest('.el-autocomplete-suggestion'))
+      if (inDialog || inDropdown) {
+        return
+      }
+      const inViewer = this.isNodeWithinElements(target, this.getPageWrappers())
       if (!inViewer) {
         this.closePopup()
       }
@@ -321,9 +326,9 @@ export default {
       this.$nextTick(() => this.processSelection(event))
     },
     handleTouchSelection(event) {
-      setTimeout(() => this.processSelection(event), 60)
+      setTimeout(() => this.processSelection(), 60)
     },
-    processSelection(event) {
+    processSelection() {
       const selection = window.getSelection()
       if (!selection || selection.isCollapsed) { this.closePopup(); return }
       const selectedText = selection.toString().trim()
@@ -340,6 +345,12 @@ export default {
 
       this.selectedText = normalized
       this.showSelectionPopup = true
+      this.$nextTick(() => {
+        const popup = this.$refs.aiPopup
+        if (popup && typeof popup.aiSearchSelectedText === 'function') {
+          try { popup.aiSearchSelectedText() } catch (_) {}
+        }
+      })
     },
     onOpenAiTabFromPopup(payload) {
       const text = (payload && payload.text) ? String(payload.text).trim() : (this.selectedText || '').trim()
@@ -347,7 +358,7 @@ export default {
       const overrides = {
         ...(payload?.query || {}),
         active: 'search',
-        selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
+        selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value,
         source: 'pdf'
       }
       const query = buildAiTabQuery({ text, route: this.$route, overrides, preserveKeys: ['source'] })
@@ -359,15 +370,6 @@ export default {
       this.selectedText = ''
       const selection = window.getSelection()
       if (selection && typeof selection.removeAllRanges === 'function') { try { selection.removeAllRanges() } catch (_) {} }
-    },
-    clearPdf() {
-      this.clearViewer()
-      this.pdfLoaded = false
-      this.pdfName = ''
-      this.resetError()
-      this.closePopup()
-      this.totalPages = 0
-      this.resetCachedPdfState()
     },
     clearViewer() {
       if (this.pdfViewer && typeof this.pdfViewer.setDocument === 'function') {
@@ -389,13 +391,47 @@ export default {
         viewer.innerHTML = ''
       }
     },
+    updateViewerHeight() {
+      try {
+        const controlsEl = this.$el.querySelector('.pdf-reader__controls')
+        const controlsHeight = controlsEl ? controlsEl.getBoundingClientRect().height : 0
+        const alertEl = this.$el.querySelector('.pdf-reader__alert')
+        const alertHeight = alertEl ? alertEl.getBoundingClientRect().height : 0
+        const statusEl = this.$el.querySelector('.pdf-reader__status')
+        const statusHeight = statusEl ? statusEl.getBoundingClientRect().height : 0
+        const verticalPadding = 32 // total padding/margins
+        const viewportH = window.innerHeight
+        // Calculate height leaving a small margin at bottom (avoid overflow)
+        const maxUsable = viewportH - controlsHeight - alertHeight - statusHeight - verticalPadding
+        this.viewerHeight = Math.max(420, Math.round(maxUsable))
+      } catch (e) {
+        this.viewerHeight = 720
+      }
+    },
     handleResize() {
       this.isSmallScreen = window.innerWidth <= 768
+      this.updateViewerHeight()
       this.closePopup()
     },
     resetError() {
       this.errorMessage = ''
-    }
+    },
+    // Zoom helpers
+    clampScale(scale) {
+      return Math.min(MAX_RENDER_SCALE, Math.max(MIN_RENDER_SCALE, Number(scale) || DEFAULT_RENDER_SCALE))
+    },
+    async setZoom(scale) {
+      if (!this.pdfLoaded || !this.pdfViewer) return
+      const newScale = this.clampScale(scale)
+      if (Math.abs(newScale - this.renderScale) < 1e-6) return
+      this.renderScale = newScale
+      cachedPdfState.renderScale = newScale
+      try {
+        this.pdfViewer.currentScale = newScale
+      } catch (_) {}
+    },
+    async zoomIn() { await this.setZoom(this.renderScale + RENDER_STEP) },
+    async zoomOut() { await this.setZoom(this.renderScale - RENDER_STEP) }
   }
 }
 </script>
@@ -432,11 +468,12 @@ export default {
     position: relative;
     min-width: 0;
     display: block;
-    height: 78vh;         /* ensure a suitable viewer height */
+    transition: height 0.25s ease;
   }
   &__page-column {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     overflow: auto; padding: 16px; background: #f5f7fa; border: 1px solid #e4e7ed; border-radius: 12px;
+    transition: height 0.25s ease;
   }
   &__page-loading { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 0; color: #606266; background: linear-gradient(180deg, rgba(245, 247, 250, 1) 0%, rgba(245, 247, 250, 0.85) 100%); }
   &__viewer { position: relative; display: flex; flex-direction: column; gap: 20px; width: 100%; min-height: 360px; align-items: center; user-select: text; -webkit-user-select: text; }
