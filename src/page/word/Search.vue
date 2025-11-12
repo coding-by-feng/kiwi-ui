@@ -7,7 +7,6 @@
             ref="auto"
             :type="getInputType"
             v-model="originalText"
-            :style="{width: searchInputWidth}"
             :fetch-suggestions="querySearch"
             :placeholder="$t('searchPlaceholders.dictionary')"
             size="mini"
@@ -151,7 +150,6 @@ export default {
   data() {
     return {
       originalText: this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText.trim()) : '',
-      searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE,
       searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map(mode => ({
@@ -786,30 +784,6 @@ export default {
 /* Force white font color when AI mode is selected */
 .ai-mode-text ::v-deep(.el-input__inner) {
   color: #ffffff !important;
-}
-
-/* Mobile-specific styles */
-@media (max-width: 768px) {
-  .el-row {
-    margin-bottom: 8px;
-  }
-
-  .el-dialog {
-    width: 95% !important;
-  }
-
-  /* Responsive select widths - only applied on mobile screens */
-  .mode-select {
-    width: 50% !important;
-  }
-
-  .language-select {
-    width: 40% !important;
-  }
-
-  .language-switcher {
-    margin-right: 5px;
-  }
 }
 
 /* Clipboard info dialog styles */
