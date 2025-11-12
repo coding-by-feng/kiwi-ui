@@ -138,8 +138,8 @@ export default {
       const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
-        // Also consider login-gated tabs
-        if (!allowed || ((act === 'starList' || act === 'youtube' || act === 'aiHistory') && !this.isLogin)) {
+        // Only starList requires login to view; youtube and aiHistory should be visible with hints when logged out
+        if (!allowed || (act === 'starList' && !this.isLogin)) {
           const preservedParams = { ...this.$route.query, active: 'search', now: new Date().getTime() }
           if (this.activeName !== 'search') {
             this.activeName = 'search'
@@ -252,6 +252,9 @@ export default {
   z-index: 1000;
 }
 
+/* Simple login hint spacing */
+.login-hint { padding: 16px; }
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .tab_nav {
@@ -295,11 +298,16 @@ export default {
         </span>
         <router-view name="todo" v-if="activeName === 'todo'"></router-view>
       </el-tab-pane>
-      <el-tab-pane name="youtube" v-if="isLogin && enabledTabs.youtube">
+      <el-tab-pane name="youtube" v-if="enabledTabs.youtube">
         <span slot="label">
           <i class="el-icon-video-camera"></i>
         </span>
-        <router-view name="youtube" v-if="activeName === 'youtube'"></router-view>
+        <router-view name="youtube" v-if="isLogin && activeName === 'youtube'"></router-view>
+        <div v-else-if="activeName === 'youtube'" class="login-hint">
+          <el-alert type="info" show-icon
+                    title="Please log in to use YouTube features."
+                    description="Login to load and manage videos and subtitles."></el-alert>
+        </div>
       </el-tab-pane>
       <el-tab-pane name="pdfReader" lazy v-if="enabledTabs.pdfReader">
         <span slot="label">
@@ -310,11 +318,16 @@ export default {
         </keep-alive>
       </el-tab-pane>
       <!-- New: AI History tab -->
-      <el-tab-pane name="aiHistory" v-if="isLogin && enabledTabs.aiHistory">
+      <el-tab-pane name="aiHistory" v-if="enabledTabs.aiHistory">
         <span slot="label">
           <i class="el-icon-time"></i>
         </span>
-        <router-view name="aiHistory"></router-view>
+        <router-view name="aiHistory" v-if="isLogin && activeName === 'aiHistory'"></router-view>
+        <div v-else-if="activeName === 'aiHistory'" class="login-hint">
+          <el-alert type="info" show-icon
+                    title="Please log in to view AI history."
+                    description="Login to review your previous AI calls."></el-alert>
+        </div>
       </el-tab-pane>
       <el-tab-pane name="userCenter" v-if="isLogin">
         <span slot="label">

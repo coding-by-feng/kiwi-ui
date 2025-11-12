@@ -1,3 +1,83 @@
+<template>
+  <div class="list-container" :style="{ marginTop: listContentTop + 'px' }">
+    <!-- Paraphrase items list -->
+    <el-collapse v-if="listItems && listItems.length" class="kiwi-collapse">
+      <el-collapse-item
+        v-for="(item, idx) in listItems"
+        :key="item.paraphraseId || idx"
+        :title="item.wordName || $t('word.unknownWord')"
+        :name="item.paraphraseId || idx">
+        <div class="collapse-content">
+          <div class="paraphrase-translation">
+            <!-- We can't rely on list item fields; fetch detail on demand -->
+            <span>{{ $t('word.clickToViewDefinition') }}</span>
+          </div>
+          <div class="collapse-actions">
+            <el-button
+              class="collapse-action-button"
+              type="text"
+              size="mini"
+              @click="showDetail(item.paraphraseId, idx)"
+              :title="$t('word.showDetails')">
+              <i class="el-icon-more-outline"></i>
+            </el-button>
+            <el-button
+              class="collapse-action-button danger"
+              type="text"
+              size="mini"
+              @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"
+              :title="$t('word.removeFromCollection')">
+              <i class="el-icon-remove-outline"></i>
+            </el-button>
+          </div>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+
+    <!-- Empty state -->
+    <div v-else class="empty-state">{{ $t('common.noData') }}</div>
+
+    <!-- Pagination -->
+    <el-pagination
+      class="list-pagination"
+      small
+      :page-size.sync="page.size"
+      :current-page.sync="page.current"
+      :page-count="page.pages"
+      :pager-count="5"
+      :page-sizes="[10,20,50,100]"
+      layout="prev,pager,next,jumper"
+      @size-change="pageChange"
+      @current-change="pageChange"
+      :total="page.total">
+    </el-pagination>
+
+    <!-- Detail dialog -->
+    <el-dialog
+      :visible.sync="detail.dialogVisible"
+      width="80%"
+      :close-on-click-modal="true"
+      :append-to-body="true">
+      <template v-slot:title>
+        <span>{{ detail.paraphraseVO.wordName || $t('word.details') }}</span>
+      </template>
+      <div class="detail-body">
+        <div class="detail-row">
+          <div class="label">{{ $t('word.paraphraseEnglish') }}</div>
+          <div class="value">{{ detail.paraphraseVO.paraphraseEnglish || '-' }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="label">{{ $t('word.meaningChinese') }}</div>
+          <div class="value">{{ detail.paraphraseVO.meaningChinese || '-' }}</div>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="detail.dialogVisible = false">{{ $t('common.close') }}</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
 <script>
 import {getStore} from '@/util/store'
 import msgUtil from '@/util/msg'
@@ -247,7 +327,11 @@ export default {
       countdownMode: false,          // Whether countdown timer is active
       countdownTime: new Date().getTime(),  // End time for countdown
       countdownMin: 60,              // Duration in minutes
-      countdownText: '1小时'         // Display text for countdown
+      countdownText: '1小时',         // Display text for countdown
+
+      // dynamic top spacing to avoid overlap with fixed control bar
+      controlBarHeight: 0,
+      controlBarOffsetTop: 0
     }
   },
   beforeCreate: function () {
@@ -257,6 +341,12 @@ export default {
   async mounted() {
     await this.init()
     this.listenerMinBrowser()
+    // measure control bar after render
+    this.$nextTick(() => {
+      this.updateControlBarMetrics()
+      window.addEventListener('resize', this.updateControlBarMetrics, { passive: true })
+      window.addEventListener('orientationchange', this.updateControlBarMetrics, { passive: true })
+    })
   },
   destroyed() {
     if (this.detail.audioPlayer) {
@@ -265,6 +355,8 @@ export default {
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
     }
+    window.removeEventListener('resize', this.updateControlBarMetrics)
+    window.removeEventListener('orientationchange', this.updateControlBarMetrics)
   },
   watch: {
     'listId'() {
@@ -348,6 +440,10 @@ export default {
     isListItemsNotEmpty() {
       return this.listItems && this.listItems.length > 0
     },
+    // total top margin for the list to clear the fixed control bar
+    listContentTop() {
+      return Math.max(80, Math.ceil(this.controlBarOffsetTop + this.controlBarHeight + 12))
+    }
   },
   methods: {
     // These methods track consecutive identical words to optimize the audio sequence
@@ -387,6 +483,27 @@ export default {
 
     ...paraphraseStarList,
     ...msgUtil,
+    // Measure the fixed control bar and compute offset to push content below it
+    updateControlBarMetrics() {
+      this.$nextTick(() => {
+        const bar = document.querySelector('.control-bar')
+        if (!bar) {
+          // fallback margin when control bar not found
+          this.controlBarHeight = 0
+          this.controlBarOffsetTop = 68
+          return
+        }
+        const rect = bar.getBoundingClientRect()
+        const height = Math.ceil((rect && rect.height) || 0)
+        const computed = window.getComputedStyle(bar)
+        let topPx = 0
+        if (computed && computed.top && computed.top.endsWith('px')) {
+          topPx = parseFloat(computed.top) || 0
+        }
+        this.controlBarHeight = height
+        this.controlBarOffsetTop = topPx
+      })
+    },
     listenerMinBrowser() {
       document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
@@ -986,3 +1103,91 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.list-container {
+  margin: 20px 0 10px;
+}
+
+/* Collapse card styling aligned with other detail pages */
+::v-deep .kiwi-collapse .el-collapse-item {
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__header {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  color: #fff;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__header:hover {
+  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+}
+
+::v-deep .kiwi-collapse .el-collapse-item.is-active > .el-collapse-item__header {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__wrap {
+  background: #fff;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__content {
+  padding: 18px 20px;
+  color: #2c3e50;
+}
+
+.collapse-content { line-height: 1.7; }
+.paraphrase-translation {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  color: #495057;
+}
+
+.collapse-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.collapse-action-button {
+  color: #fff !important;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  transition: all 0.3s ease;
+}
+
+.collapse-action-button.danger {
+  background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%) !important;
+}
+
+.list-pagination { margin-top: 16px; }
+
+.empty-state { color: #909399; text-align: center; padding: 24px 0; }
+
+.detail-body { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 8px; align-items: baseline; }
+.label { color: #606266; font-weight: 600; }
+.value { color: #2c3e50; }
+
+@media (max-width: 768px) {
+  ::v-deep .kiwi-collapse .el-collapse-item__header { padding: 12px 14px; font-size: 14px; }
+  ::v-deep .kiwi-collapse .el-collapse-item__content { padding: 14px 16px; }
+}
+</style>
