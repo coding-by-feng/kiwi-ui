@@ -25,6 +25,20 @@ a{
   outline: none;
 }
 
+// Centralised hooks for Element UI toast/notification styling controlled via messageCenter
+.kiwi-message-toast {
+  font-weight: 500;
+}
+
+.kiwi-message-notify {
+  font-weight: 500;
+}
+
+.kiwi-confirm-button,
+.kiwi-cancel-button {
+  font-weight: 500;
+}
+
 // AI-aligned shared container for consistent centered layout
 .ai-container {
   max-width: 980px;
