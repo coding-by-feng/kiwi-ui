@@ -264,7 +264,7 @@ export default {
             selectedMode,
             language: routeQuery.language || storedLanguage || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
             nativeLanguage: routeQuery.nativeLanguage || storedNativeLanguage || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
-            originalText: originalText ? encodeURI(originalText) : '',
+            originalText: originalText ? encodeURIComponent(originalText) : '',
             now: new Date().getTime()
           }
           this.$router.push({
