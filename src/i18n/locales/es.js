@@ -309,7 +309,8 @@ export default {
         pageLabel: 'Página {page}',
         noTextForPage: 'No se detectó texto seleccionable en esta página.',
         noExtractedText: 'No hay texto extraído disponible para este documento.',
-        markdownFailed: 'No se pudo convertir el PDF a Markdown.'
+        markdownFailed: 'No se pudo convertir el PDF a Markdown.',
+        explainSelection: 'Explicar selección'
     },
 
     about: {

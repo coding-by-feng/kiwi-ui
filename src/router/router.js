@@ -25,6 +25,10 @@ let Router = new VueRouter({
 
 AvueRouter.install(Router, Store)
 Router.$avueRouter.formatRoutes(Store.state.user.menu, true)
-Router.addRoutes([...PageRouter])
+if (typeof Router.addRoutes === 'function') {
+    Router.addRoutes([...PageRouter])
+} else if (typeof Router.addRoute === 'function') {
+    [...PageRouter].forEach(r => Router.addRoute(r))
+}
 
 export default Router

@@ -320,7 +320,7 @@ export default {
         unknown: '未知',
         explainSelectedText: '解釋所選文字',
         selectedText: '所選文字',
-        explainSelection: '解釋選擇',
+        explainSelection: '解釋選取內容',
         searchOnDictionary: '在字典中搜尋',
         // 新增：剪貼簿提示
         useClipboardContent: '使用剪貼簿內容：「{text}」？',
@@ -354,7 +354,8 @@ export default {
         pageLabel: '第 {page} 頁',
         noTextForPage: '此頁未偵測到可選文字。',
         noExtractedText: '本文件沒有可提取的文字。',
-        markdownFailed: '無法將 PDF 轉換為 Markdown。'
+        markdownFailed: '無法將 PDF 轉換為 Markdown。',
+        explainSelection: '解釋選取內容'
     },
 
     // About section (supplemented)

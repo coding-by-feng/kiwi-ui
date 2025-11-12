@@ -342,7 +342,8 @@ export default {
         pageLabel: 'Seite {page}',
         noTextForPage: 'Für diese Seite wurde kein auswählbarer Text gefunden.',
         noExtractedText: 'Für dieses Dokument stehen keine extrahierten Texte zur Verfügung.',
-        markdownFailed: 'PDF konnte nicht in Markdown umgewandelt werden.'
+        markdownFailed: 'PDF konnte nicht in Markdown umgewandelt werden.',
+        explainSelection: 'Auswahl erklären'
     },
 
     about: {

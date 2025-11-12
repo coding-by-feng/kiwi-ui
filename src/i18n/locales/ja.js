@@ -344,7 +344,8 @@ export default {
         pageLabel: '{page} ページ',
         noTextForPage: 'このページで選択可能なテキストは検出されませんでした。',
         noExtractedText: 'このドキュメントには抽出できるテキストがありません。',
-        markdownFailed: 'PDF を Markdown に変換できませんでした。'
+        markdownFailed: 'PDF を Markdown に変換できませんでした。',
+        explainSelection: '選択部分を説明'
     },
 
     about: {

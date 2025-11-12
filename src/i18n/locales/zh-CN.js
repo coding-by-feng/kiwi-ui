@@ -88,7 +88,8 @@ export default {
         pageLabel: '第 {page} 页',
         noTextForPage: '本页未检测到可选文本。',
         noExtractedText: '当前文档没有可提取的文本。',
-        markdownFailed: '无法将 PDF 转换为 Markdown。'
+        markdownFailed: '无法将 PDF 转换为 Markdown。',
+        explainSelection: '解释选中内容'
     },
 
     // Navigation
