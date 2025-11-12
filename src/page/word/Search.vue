@@ -16,25 +16,29 @@
             :clearable="true"
             :autosize="true"
             @select="querySelect">
-          <el-button slot="prepend"
-                     size="mini"
-                     v-if="lazy"
-                     icon="el-icon-switch-button"
-                     @click="closeLazy"></el-button>
-          <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode" slot="prepend"
-                     size="mini"
-                     :style="selectWidthStyle"
-                     :class="{ 'ai-mode-text': isAiModeSelected }"
-                     @change="selectedModeChange">
-            <el-option
-                v-for="item in searchModes"
-                :key="item.value"
-                :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
-                :value="item.value">
-            </el-option>
-          </el-select>
-          <el-button id="search-submit-btn" slot="append" size="mini" icon="el-icon-search"
-                     @click="onSubmit()"></el-button>
+          <template #prefix>
+            <el-button
+              v-if="lazy"
+              size="mini"
+              icon="el-icon-switch-button"
+              @click="closeLazy"
+              style="border:none;background:transparent"></el-button>
+            <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode"
+                       size="mini"
+                       :style="selectWidthStyle"
+                       :class="{ 'ai-mode-text': isAiModeSelected }"
+                       @change="selectedModeChange">
+              <el-option
+                  v-for="item in searchModes"
+                  :key="item.value"
+                  :label="getModeLabel(item)"
+                  :value="item.value">
+              </el-option>
+            </el-select>
+          </template>
+          <template #suffix>
+            <el-button id="search-submit-btn" size="mini" icon="el-icon-search" @click="onSubmit()"></el-button>
+          </template>
         </el-autocomplete>
       </el-col>
     </el-row>
@@ -49,7 +53,7 @@
         <el-option
             v-for="item in searchModes"
             :key="item.value"
-            :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
+            :label="getModeLabel(item)"
             :value="item.value">
         </el-option>
       </el-select>
@@ -268,6 +272,25 @@ export default {
   },
   methods: {
     ...wordSearch,
+    // Added getModeLabel method
+    getModeLabel(item) {
+      // Accept either a mode object or a raw mode value string
+      try {
+        const isObj = item && typeof item === 'object'
+        const value = isObj ? item.value : item
+        const labelRaw = isObj ? item.label : null
+        const key = isObj && item.labelKey
+          ? item.labelKey
+          : (labelRaw ? labelRaw.toLowerCase().replace(/\s+/g, '') : (value || ''))
+        let translated = (this.$t && key) ? this.$t(`searchModes.${key}`) : ''
+        if (!translated || translated === `searchModes.${key}`) {
+          translated = labelRaw || value || key || ''
+        }
+        return translated
+      } catch (e) {
+        return (item && item.label) || (item && item.value) || String(item || '')
+      }
+    },
 
     getModeTranslationKey(value) {
       // Reuse centralized mapping from kiwiConsts to avoid duplication
@@ -501,9 +524,16 @@ export default {
       const newMode = this.$route.query.selectedMode || this.selectedMode;
       if (newMode !== this.selectedMode) {
         this.selectedMode = newMode;
-        // selectedLanguage will be updated by the watcher
       }
-      // Update language from route if provided, otherwise use mode-specific stored language
+      // Normalize mode if not found in searchModes (recent bug: blank label)
+      const exists = this.searchModes.some(m => m.value === this.selectedMode);
+      if (!exists) {
+        // Default to direct translation for AI context, else dictionary
+        const direct = require('@/const/kiwiConsts').default.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value;
+        const dictionary = require('@/const/kiwiConsts').default.SEARCH_DEFAULT_MODE;
+        this.selectedMode = this.$route.path === require('@/const/kiwiConsts').default.ROUTES.AI_RESPONSE_DETAIL ? direct : dictionary;
+      }
+      // Update language
       this.selectedLanguage = this.$route.query.language || getLanguageForMode(this.selectedMode);
     },
 
