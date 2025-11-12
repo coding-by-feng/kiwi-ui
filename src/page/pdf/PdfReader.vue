@@ -65,7 +65,7 @@
               ref="pageColumn"
               :style="{ height: viewerHeight + 'px' }"
               @mouseup="handlePointerSelection"
-              @touchend="handleTouchSelection"
+              @touchend.passive="handleTouchSelection"
             >
               <div v-if="loading" class="pdf-reader__page-loading">
                 <i class="el-icon-loading"></i>
@@ -102,9 +102,14 @@ import { navigateIfChanged } from '@/util/routerUtil'
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 const DEFAULT_RENDER_SCALE = 1.2
-const MIN_RENDER_SCALE = 0.5
+const MIN_RENDER_SCALE = 0.2 // lowered from 0.5 to allow <50% zoom
 const MAX_RENDER_SCALE = 3
 const RENDER_STEP = 0.1
+const MOBILE_BASE_MAX_WIDTH = 768
+// Dynamic small-screen baseline scales (approx 30%, 25%, 22%)
+const MOBILE_DEFAULT_RENDER_SCALE = 0.3
+const MOBILE_NARROW_RENDER_SCALE = 0.25
+const MOBILE_ULTRA_NARROW_RENDER_SCALE = 0.22
 
 // Simplified cache state (removed right/left layout and markdown fields)
 const cachedPdfState = {
@@ -118,6 +123,12 @@ export default {
   name: 'PdfReader',
   components: { AiSelectionPopup },
   data() {
+    const winW = window.innerWidth
+    const isSmallScreen = winW <= MOBILE_BASE_MAX_WIDTH
+    // Pick a baseline scale for phones based on width tiers
+    let mobileScale = MOBILE_DEFAULT_RENDER_SCALE
+    if (winW <= 380) mobileScale = MOBILE_ULTRA_NARROW_RENDER_SCALE
+    else if (winW <= 430) mobileScale = MOBILE_NARROW_RENDER_SCALE
     return {
       loading: false,
       pdfLoaded: false,
@@ -125,11 +136,10 @@ export default {
       errorMessage: '',
       selectedText: '',
       showSelectionPopup: false,
-      renderScale: DEFAULT_RENDER_SCALE,
+      renderScale: isSmallScreen ? mobileScale : DEFAULT_RENDER_SCALE,
       currentPdfData: null,
       totalPages: 0,
-      // Removed markdown-related and layout toggle fields
-      isSmallScreen: window.innerWidth <= 768,
+      isSmallScreen,
       pdfViewer: null,
       pdfEventBus: null,
       pdfLinkService: null,
@@ -196,11 +206,13 @@ export default {
     },
     handleDocumentClick(e) {
       if (!this.showSelectionPopup) return
-      // Ignore clicks inside Element UI dialogs or dropdowns
       const target = e.target
+      // Ignore clicks inside Element UI dialogs or dropdowns or the floating history button
       const inDialog = target.closest && (target.closest('.el-dialog') || target.closest('.el-dialog__wrapper'))
       const inDropdown = target.closest && (target.closest('.el-select-dropdown') || target.closest('.el-autocomplete-suggestion'))
-      if (inDialog || inDropdown) {
+      const inAiPopupWrapper = target.closest && target.closest('.ai-selection-popup-wrapper')
+      const inAiHistoryFloating = target.closest && target.closest('.ai-history-floating')
+      if (inDialog || inDropdown || inAiPopupWrapper || inAiHistoryFloating) {
         return
       }
       const inViewer = this.isNodeWithinElements(target, this.getPageWrappers())
@@ -329,7 +341,7 @@ export default {
     handlePointerSelection(event) {
       this.$nextTick(() => this.processSelection(event))
     },
-    handleTouchSelection(event) {
+    handleTouchSelection() {
       setTimeout(() => this.processSelection(), 60)
     },
     processSelection() {
@@ -349,12 +361,7 @@ export default {
 
       this.selectedText = normalized
       this.showSelectionPopup = true
-      this.$nextTick(() => {
-        const popup = this.$refs.aiPopup
-        if (popup && typeof popup.aiSearchSelectedText === 'function') {
-          try { popup.aiSearchSelectedText() } catch (_) {}
-        }
-      })
+      // Removed manual popup.aiSearchSelectedText() to prevent duplicate auto calls; AiSelectionPopup handles auto search on open
     },
     onOpenAiTabFromPopup(payload) {
       const text = (payload && payload.text) ? String(payload.text).trim() : (this.selectedText || '').trim()
@@ -417,6 +424,45 @@ export default {
       this.updateViewerHeight()
       this.autoFitForSmallScreens()
       this.closePopup()
+    },
+    autoFitForSmallScreens() {
+      try {
+        if (!this.pdfViewer) return
+        if (this.isSmallScreen) {
+          // Do not force page-width; keep user scale, but ensure it is clamped and if still at desktop default, switch to mobile baseline.
+          if (this.renderScale > 0.6 || this.renderScale === DEFAULT_RENDER_SCALE) {
+            // If user hasn't adjusted yet, adopt mobile baseline for current width tier
+            this.renderScale = this.getMobileBaseScale()
+          }
+          const desired = this.clampScale(this.renderScale || this.getMobileBaseScale())
+          if (Math.abs(desired - this.pdfViewer.currentScale) > 1e-6) {
+            this.pdfViewer.currentScale = desired
+          }
+          // Sync back (PDF.js may normalize slightly)
+          const actual = this.clampScale(this.pdfViewer.currentScale)
+          if (Math.abs(actual - this.renderScale) > 1e-6) {
+            this.renderScale = actual
+            cachedPdfState.renderScale = actual
+          }
+        } else {
+          // Larger screens: honor stored scale but clamp
+            const clamped = this.clampScale(this.renderScale)
+            if (Math.abs(clamped - this.pdfViewer.currentScale) > 1e-6) {
+              this.pdfViewer.currentScale = clamped
+            }
+            const actual = this.clampScale(this.pdfViewer.currentScale)
+            if (Math.abs(actual - this.renderScale) > 1e-6) {
+              this.renderScale = actual
+              cachedPdfState.renderScale = actual
+            }
+        }
+      } catch (_) {
+        // Ignore lifecycle timing issues
+      }
+    },
+    getMobileBaseScale() {
+      const w = window.innerWidth
+      if (w <= 380) return MOBILE_ULTRA_NARROW_RENDER_SCALE
     },
     resetError() {
       this.errorMessage = ''

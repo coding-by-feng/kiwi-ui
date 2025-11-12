@@ -1,86 +1,105 @@
 <template>
-  <el-dialog
-    :title="title"
-    :visible.sync="dialogVisible"
-    width="600px"
-    :before-close="onBeforeClose"
-    :close-on-click-modal="true"
-    :close-on-press-escape="true"
-  >
-    <div class="ai-dialog-content">
-      <div class="selected-text-preview">
-        <strong>Selected:</strong>
-        "<span ref="primarySelectionContent"
-              class="primary-selection-content"
-              @mouseup="handlePrimarySelection"
-              @touchend="handlePrimarySelection">{{ localSelectedText }}</span>"
-      </div>
-      <div class="sub-tip" v-if="localSelectedText && localSelectedText.length > 0">Tip: select a sub‑phrase in the original selection above to add a context‑aware Explanation below.</div>
-      <div v-if="aiLastError" class="inline-error">{{ aiLastError }}</div>
-      <div v-show="aiIsStreaming" class="streaming-indicator">
-        <i class="el-icon-loading"></i> Streaming response...
-      </div>
-      <div
-        class="ai-response"
-        ref="aiResponseRef"
-        v-html="aiParsedResponseText"
-        @mouseup="handlePopupSelection"
-        @touchend="handlePopupSelection"
-      ></div>
-      <div class="tiny-tip">Tip: select text inside this response or the original selection to add more context-aware Explanations.</div>
-
-      <!-- Inline contextual explanations (do not replace the first selection) -->
-      <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
-        <h3 class="selection-response-title">
-          <i class="el-icon-chat-dot-square"></i>
-          Explanation for Selected Text
-          <span class="selection-title-controls">
-            <el-button
-              class="fold-selection-button"
-              type="text"
-              :icon="item.collapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
-              @click="toggleItemCollapsed(item)"
-              :disabled="item.loading"
-              :title="item.collapsed ? 'Expand explanation' : 'Collapse explanation'"
-            />
-            <el-button
-              class="close-selection-button"
-              type="text"
-              icon="el-icon-close"
-              @click="closeItem(item)"
-              :disabled="item.loading"
-              title="Close explanation"
-            />
-          </span>
-        </h3>
-        <div class="selected-text-reference">
-          <strong>Selected:</strong> "{{ item.selectedText }}"
-        </div>
-        <div
-          v-show="!item.collapsed"
-          class="selection-response-content"
-          v-loading="item.loading && !item.isStreaming"
-          :ref="'explanationContent_' + item.id"
-        >
-          <div v-show="item.isStreaming" class="streaming-indicator">
-            <i class="el-icon-loading"></i> Generating explanation...
-          </div>
-          <div v-if="item.error" class="inline-error">{{ item.error }}</div>
-          <div v-html="renderMarkdown(item.responseText)"></div>
-        </div>
-      </div>
+  <div class="ai-selection-popup-wrapper">
+    <!-- Floating reopen button (top-right) for reviewing history -->
+    <div
+      v-if="!dialogVisible && hasHistory"
+      class="ai-history-floating"
+    >
+      <el-tooltip content="Open AI Selection History" placement="left">
+        <el-button
+          circle
+          type="primary"
+          size="mini"
+          icon="el-icon-time"
+          @click="openHistory"
+          aria-label="Open AI Selection History"
+        />
+      </el-tooltip>
     </div>
 
-    <span slot="footer" class="dialog-footer">
-      <el-button type="primary" :loading="aiSearchLoading" :disabled="!localSelectedText" @click="aiSearchSelectedText">
-        <i class="el-icon-search" style="margin-right:6px;"></i>Search
-      </el-button>
-      <el-button type="success" plain :disabled="!localSelectedText" @click="emitOpenInAiTab">
-        <i class="el-icon-s-operation" style="margin-right:6px;"></i>Open in AI Tab
-      </el-button>
-      <el-button plain @click="closeDialog">Close</el-button>
-    </span>
-  </el-dialog>
+    <el-dialog
+      :title="title"
+      :visible.sync="dialogVisible"
+      width="600px"
+      :before-close="onBeforeClose"
+      :close-on-click-modal="true"
+      :close-on-press-escape="true"
+    >
+      <div class="ai-dialog-content">
+        <div class="selected-text-preview" v-if="!reviewMode">
+          <strong>Selected:</strong>
+          "<span ref="primarySelectionContent"
+                class="primary-selection-content"
+                @mouseup="handlePrimarySelection"
+                @touchend.passive="handlePrimarySelection">{{ localSelectedText }}</span>"
+        </div>
+        <div class="sub-tip" v-if="!reviewMode && localSelectedText && localSelectedText.length > 0">Tip: select a sub‑phrase in the original selection above to add a context‑aware Explanation below.</div>
+        <div v-if="aiLastError" class="inline-error">{{ aiLastError }}</div>
+        <div v-show="aiIsStreaming" class="streaming-indicator">
+          <i class="el-icon-loading"></i> Streaming response...
+        </div>
+        <div
+          class="ai-response"
+          ref="aiResponseRef"
+          v-html="aiParsedResponseText"
+          @mouseup="handlePopupSelection"
+          @touchend.passive="handlePopupSelection"
+        ></div>
+        <div class="tiny-tip" v-if="!reviewMode">Tip: select text inside this response or the original selection to add more context-aware Explanations.</div>
+
+        <!-- Inline contextual explanations (do not replace the first selection) -->
+        <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
+          <h3 class="selection-response-title">
+            <i class="el-icon-chat-dot-square"></i>
+            Explanation for Selected Text
+            <span class="selection-title-controls">
+              <el-button
+                class="fold-selection-button"
+                type="text"
+                :icon="item.collapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
+                @click.stop="toggleItemCollapsed(item)"
+                :disabled="item.loading"
+                :title="item.collapsed ? 'Expand explanation' : 'Collapse explanation'"
+              />
+              <el-button
+                class="close-selection-button"
+                type="text"
+                icon="el-icon-close"
+                @click.stop="closeItem(item)"
+                :disabled="item.loading"
+                title="Close explanation"
+              />
+            </span>
+          </h3>
+          <div class="selected-text-reference">
+            <strong>Selected:</strong> "{{ item.selectedText }}"
+          </div>
+          <div
+            v-show="!item.collapsed"
+            class="selection-response-content"
+            v-loading="item.loading && !item.isStreaming"
+            :ref="'explanationContent_' + item.id"
+          >
+            <div v-show="item.isStreaming" class="streaming-indicator">
+              <i class="el-icon-loading"></i> Generating explanation...
+            </div>
+            <div v-if="item.error" class="inline-error">{{ item.error }}</div>
+            <div v-html="renderMarkdown(item.responseText)"></div>
+          </div>
+        </div>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" :loading="aiSearchLoading" :disabled="reviewMode || !localSelectedText" @click="aiSearchSelectedText">
+          <i class="el-icon-search" style="margin-right:6px;"></i>Search
+        </el-button>
+        <el-button type="success" plain :disabled="reviewMode || !localSelectedText" @click="emitOpenInAiTab">
+          <i class="el-icon-s-operation" style="margin-right:6px;"></i>Open in AI Tab
+        </el-button>
+        <el-button plain @click="closeDialog">Close</el-button>
+      </span>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
@@ -109,14 +128,36 @@ export default {
       aiLastError: '',
       localSelectedText: this.selectedText,
       // Inline contextual explanations list
-      nestedItems: []
+      nestedItems: [],
+      // Review-only reopen mode
+      reviewMode: false,
+      aiStarted: false,
+      aiConnectAttempts: 0,
+      aiMaxConnectAttempts: 2,
+      aiRetryTimer: null
     }
   },
   watch: {
+    // Update local selection whenever parent prop changes to a new non-empty value
     selectedText(val) {
-      // Only set initially; do not override once user starts adding nested items
       const trimmed = (val || '').trim()
-      if (!this.localSelectedText) this.localSelectedText = trimmed
+      if (!trimmed) return
+      // If we don't yet have a primary selection, set it and auto search
+      if (!this.localSelectedText) {
+        this.localSelectedText = trimmed
+        this.aiResponseText = ''
+        this.aiLastError = ''
+        this.$nextTick(() => {
+          if (this.visible && !this.reviewMode && !this.aiIsStreaming && !this.aiSearchLoading) {
+            try { this.aiSearchSelectedText() } catch (_) {}
+          }
+        })
+        return
+      }
+      // If same as primary or already exists in nested, ignore
+      if (trimmed === this.localSelectedText || (this.nestedItems || []).some(i => i.selectedText === trimmed)) return
+      // Add as nested explanation without replacing primary
+      this.addNestedItem(trimmed)
     }
   },
   computed: {
@@ -125,9 +166,9 @@ export default {
       set(v) {
         this.$emit('update:visible', v)
         if (v) {
-          // Auto-start translation on open if we have text
+          // Auto-start translation on open if we have text and not in review-only mode
           this.$nextTick(() => {
-            if (this.localSelectedText && !this.aiIsStreaming && !this.aiSearchLoading) {
+            if (!this.reviewMode && this.localSelectedText && !this.aiIsStreaming && !this.aiSearchLoading) {
               try { this.aiSearchSelectedText() } catch (_) {}
             }
           })
@@ -140,6 +181,9 @@ export default {
     aiParsedResponseText() {
       const text = this.unescapeContent(this.aiResponseText || '')
       return md.render(text)
+    },
+    hasHistory() {
+      return (!!(this.aiResponseText && this.aiResponseText.trim()) || (this.nestedItems && this.nestedItems.length > 0))
     }
   },
   methods: {
@@ -147,11 +191,13 @@ export default {
     renderMarkdown(text) { return md.render(this.unescapeContent(text || '')) },
 
     // Public API-like methods
-    closeDialog() { this.dialogVisible = false },
-    onBeforeClose() { this.dialogVisible = false },
+    closeDialog() { this.reviewMode = false; this.dialogVisible = false },
+    onBeforeClose() { this.reviewMode = false; this.dialogVisible = false },
+    openHistory() { this.reviewMode = true; this.dialogVisible = true },
 
-    // Handle sub-selection inside the original selected text (append new item)
+    // Handle selection inside the primary selection span: now replaces the main selection instead of adding nested item
     handlePrimarySelection() {
+      if (this.reviewMode) return
       try {
         const container = this.$refs.primarySelectionContent
         if (!container) return
@@ -161,12 +207,15 @@ export default {
         if (!container.contains(range.commonAncestorContainer)) return
         const text = (sel.toString() || '').trim()
         if (!text) return
+        if (text === this.localSelectedText || (this.nestedItems || []).some(i => i.selectedText === text)) return
+        // Add as nested instead of replacing main selection
         this.addNestedItem(text)
       } catch (_) { /* ignore */ }
     },
 
-    // Also allow selection inside the main AI response to add contextual items
+    // Selection inside the AI response still adds a contextual explanation
     handlePopupSelection() {
+      if (this.reviewMode) return
       try {
         const container = this.$refs.aiResponseRef
         if (!container) return
@@ -182,7 +231,9 @@ export default {
 
     addNestedItem(text) {
       const selected = (text || '').trim()
-      if (!selected || !this.localSelectedText) return
+      if (!selected) return
+      // Prevent duplicates
+      if (selected === this.localSelectedText || (this.nestedItems || []).some(i => i.selectedText === selected)) return
       const id = this.generateRequestId()
       const item = {
         id,
@@ -318,10 +369,18 @@ export default {
 
     // WS streaming core (primary)
     startAiStreaming({ prompt, promptMode, targetLanguage, nativeLanguage }) {
+      // Clear any pending retry timer
+      if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer); this.aiRetryTimer = null }
+      this.aiStarted = false
       this.aiLastError = ''
       this.aiResponseText = ''
       this.aiSearchLoading = true
       this.aiIsStreaming = true
+      // Increment attempt counter; reset if first attempt of new request
+      if (!this.aiRequestId || this.localSelectedText !== prompt) {
+        this.aiConnectAttempts = 0
+      }
+      this.aiConnectAttempts += 1
       this.aiRequestId = this.generateRequestId()
 
       const token = getStore({name: 'access_token'})
@@ -339,21 +398,13 @@ export default {
 
       try { this.stopStream(true) } catch (_) {}
       try { this.aiWebsocket = new WebSocket(wsUrl) } catch (e) {
-        this.aiSearchLoading = false
-        this.aiIsStreaming = false
-        this.aiLastError = 'Failed to open WebSocket'
-        msgUtil.msgError(this, this.aiLastError)
+        this.handleAiStreamError('Failed to open WebSocket')
         return
       }
 
       this.aiWebsocket.onopen = () => {
-        const request = {
-          prompt, promptMode, targetLanguage, nativeLanguage, aiUrl: wsUrl,
-          timestamp: Date.now(), requestId: this.aiRequestId
-        }
-        try { this.aiWebsocket.send(JSON.stringify(request)) } catch (e) {
-          this.handleAiStreamError('Failed to send request')
-        }
+        const request = { prompt, promptMode, targetLanguage, nativeLanguage, aiUrl: wsUrl, timestamp: Date.now(), requestId: this.aiRequestId }
+        try { this.aiWebsocket.send(JSON.stringify(request)) } catch (e) { this.handleAiStreamError('Failed to send request') }
       }
 
       this.aiWebsocket.onmessage = (event) => {
@@ -361,7 +412,7 @@ export default {
         try { response = JSON.parse(event.data) } catch (error) { this.handleAiStreamError('Failed to parse response'); return }
         switch (response.type) {
           case 'connected': break
-          case 'started': this.aiIsStreaming = true; break
+          case 'started': this.aiStarted = true; this.aiIsStreaming = true; break
           case 'chunk': if (response.chunk) this.aiResponseText += response.chunk; break
           case 'completed': {
             this.aiIsStreaming = false
@@ -381,10 +432,35 @@ export default {
       }
 
       this.aiWebsocket.onerror = () => this.handleAiStreamError('WebSocket connection error')
-      this.aiWebsocket.onclose = () => { this.aiSearchLoading = false; this.aiIsStreaming = false }
+      this.aiWebsocket.onclose = () => {
+        // Early close before any chunk: retry automatically if attempts remain
+        if (!this.aiStarted && this.aiConnectAttempts < this.aiMaxConnectAttempts && this.aiSearchLoading) {
+          this.scheduleAiRetry({ prompt, promptMode, targetLanguage, nativeLanguage })
+          return
+        }
+        // Normal close (after completion or user stop)
+        this.aiSearchLoading = false
+        this.aiIsStreaming = false
+      }
     },
-
+    scheduleAiRetry(params) {
+      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
+      this.aiWebsocket = null
+      this.aiIsStreaming = false
+      // Keep loading state to indicate retry in progress
+      this.aiLastError = 'Connection failed, retrying...' // transient message
+      if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer) }
+      this.aiRetryTimer = setTimeout(() => {
+        this.aiRetryTimer = null
+        this.startAiStreaming(params)
+      }, 400)
+    },
     handleAiStreamError(message) {
+      // If not started yet and we have retries left, attempt retry silently
+      if (!this.aiStarted && this.aiConnectAttempts < this.aiMaxConnectAttempts) {
+        this.scheduleAiRetry({ prompt: this.localSelectedText.trim(), promptMode: this.isSingleWord(this.localSelectedText) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value, targetLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese, nativeLanguage: getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese })
+        return
+      }
       this.aiSearchLoading = false
       this.aiIsStreaming = false
       this.aiLastError = message || 'AI streaming error'
@@ -392,12 +468,13 @@ export default {
       this.aiWebsocket = null
       msgUtil.msgError(this, this.aiLastError)
     },
-
     stopStream(silent) {
+      if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer); this.aiRetryTimer = null }
       try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
       this.aiWebsocket = null
       this.aiSearchLoading = false
       this.aiIsStreaming = false
+      this.aiStarted = false
       if (!silent) this.aiLastError = ''
     },
 
@@ -475,6 +552,9 @@ export default {
 .tiny-tip { margin-top: 6px; color: #909399; font-size: 12px; }
 .primary-selection-content { cursor: text; user-select: text; -webkit-user-select: text; }
 .sub-tip { margin-top: -4px; margin-bottom: 8px; font-size: 12px; color: #909399; }
+
+/* Floating history reopen button */
+.ai-history-floating { position: fixed; top: 16px; right: 16px; z-index: 3000; }
 
 /* Contextual explanations styling (inspired by AiResponseDetail) */
 .selection-response-container { margin-top: 16px; border: 1px solid #ebeef5; border-radius: 10px; background: #fff; }

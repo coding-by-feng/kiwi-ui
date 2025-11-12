@@ -7,6 +7,7 @@
             ref="auto"
             :type="getInputType"
             v-model="originalText"
+            :style="{width: searchInputWidth}"
             :fetch-suggestions="querySearch"
             :placeholder="$t('searchPlaceholders.dictionary')"
             size="mini"
@@ -15,29 +16,28 @@
             :clearable="true"
             :autosize="true"
             @select="querySelect">
-          <template #prefix>
-            <el-button
-              v-if="lazy"
-              size="mini"
-              icon="el-icon-switch-button"
-              @click="closeLazy"
-              style="border:none;background:transparent"></el-button>
-            <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode"
-                       size="mini"
-                       :style="selectWidthStyle"
-                       :class="{ 'ai-mode-text': isAiModeSelected }"
-                       @change="selectedModeChange">
-              <el-option
-                  v-for="item in searchModes"
-                  :key="item.value"
-                  :label="getModeLabel(item)"
-                  :value="item.value">
-              </el-option>
-            </el-select>
-          </template>
-          <template #suffix>
-            <el-button id="search-submit-btn" size="mini" icon="el-icon-search" @click="onSubmit()"></el-button>
-          </template>
+          <!-- Use ElementUI input-group slots -->
+          <el-button
+            slot="prepend"
+            v-if="lazy"
+            size="mini"
+            icon="el-icon-switch-button"
+            @click="closeLazy"
+            style="border:none;background:transparent"></el-button>
+          <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode"
+                     slot="prepend"
+                     size="mini"
+                     :style="selectWidthStyle"
+                     :class="{ 'ai-mode-text': isAiModeSelected }"
+                     @change="selectedModeChange">
+            <el-option
+                v-for="item in searchModes"
+                :key="item.value"
+                :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
+                :value="item.value">
+            </el-option>
+          </el-select>
+          <el-button id="search-submit-btn" slot="append" size="mini" icon="el-icon-search" @click="onSubmit()"></el-button>
         </el-autocomplete>
       </el-col>
     </el-row>
@@ -150,6 +150,7 @@ export default {
   data() {
     return {
       originalText: this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText.trim()) : '',
+      searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE,
       searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map(mode => ({
