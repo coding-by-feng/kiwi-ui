@@ -250,15 +250,21 @@ export default {
           if (this.shouldSkipDetailInit()) {
             return
           }
-          let originalText = this.$route?.query?.originalText ? decodeURIComponent(this.$route.query.originalText) : ''
-          // Preserve all existing URL parameters when navigating to AI response detail
-          // but ensure we use a valid AI mode instead of 'detail' mode
+          const routeQuery = this.$route?.query || {}
+          const originalText = routeQuery.originalText ? decodeURIComponent(routeQuery.originalText) : ''
+          const aiModes = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
+          const selectedMode = aiModes.includes(routeQuery.selectedMode)
+            ? routeQuery.selectedMode
+            : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+          const storedLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE})
+          const storedNativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG})
           const preservedQuery = {
-            ...this.$route.query, // Preserve all existing parameters
+            ...routeQuery,
             active: 'search',
-            selectedMode: kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value, // Always use valid AI mode
-            language: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) ? getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
-            originalText: encodeURI(originalText.toLowerCase()),
+            selectedMode,
+            language: routeQuery.language || storedLanguage || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+            nativeLanguage: routeQuery.nativeLanguage || storedNativeLanguage || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese,
+            originalText: originalText ? encodeURI(originalText) : '',
             now: new Date().getTime()
           }
           this.$router.push({
