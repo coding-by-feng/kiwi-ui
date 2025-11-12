@@ -143,7 +143,7 @@ export default {
         return true
       }
 
-      if (typeof selectedMode !== 'undefined' && selectedMode !== 'detail') {
+      if (selectedMode && selectedMode !== 'detail') {
         return true
       }
 
