@@ -199,9 +199,6 @@ export default {
       // Original text collapse state
       originalTextCollapsed: false,
 
-      // Cache bookkeeping
-      lastCacheKey: '',
-
       // New: inline error message
       lastErrorMessage: '',
 
@@ -226,11 +223,7 @@ export default {
     }
     this._initializedOnce = true
 
-    // Try restore from cache first
-    const restored = this.tryRestoreFromCache()
-    if (!restored) {
-      await this.init();
-    }
+    await this.init();
   },
   computed: {
     // Ensure only valid AI modes are used; fallback to a safe default
@@ -324,10 +317,7 @@ export default {
     }
   },
   beforeDestroy() {
-    // Persist current state to cache so we can restore when user comes back
-    const key = this.computeCacheKeyFromQuery(this.$route.query)
-    this.saveStateToCache(key)
-
+    // Clean up active websocket connections when leaving the page
     this.closeWebSocket('main');
     // Close all selection websockets
     this.closeSelectionResponse();
@@ -402,11 +392,7 @@ export default {
       // Sync the selected mode from the current route
       this.selectedMode = this.$route?.query?.selectedMode;
 
-      // Attempt to restore cached content; otherwise trigger a fresh init
-      const restored = this.tryRestoreFromCache();
-      if (!restored) {
-        await this.init();
-      }
+      await this.init();
     },
 
     async init() {
@@ -1207,206 +1193,21 @@ export default {
           });
     },
 
-    // New: regenerate response by recalling WS AI and replacing cache
+    // Regenerate response by recalling WS AI
     regenerateResponse() {
       if (this.apiLoading || this.isStreaming) return;
-      try {
-        const key = this.computeCacheKeyFromQuery(this.$route.query);
-        localStorage.removeItem(key);
-      } catch (e) { /* ignore */ }
-
       // Reset main response state and errors
       this.lastErrorMessage = '';
       this.aiResponseVO.responseText = '';
       this.closeWebSocket('main');
-      this.persistNow(); // persist cleared state
 
       // Re-initiate the AI call with current inputs
       this.init();
     },
 
-    // Compute a stable cache key based on core inputs
-    computeCacheKeyFromQuery(query, options = {}) {
-      const { remember = true } = options
-      // Prefer passed query strictly; only fallback to current route if not provided
-      const q = query || this.$route.query || {}
-      const originalText = q.originalText
-      // Validate selected mode to keep compatibility with computed validSelectedMode
-      const selectedMode = q.selectedMode || this.validSelectedMode
-      const language = (q.language || this.defaultTargetLanguage || '').toString()
-      const nativeLanguage = (q.nativeLanguage || this.defaultNativeLanguage || '').toString()
-
-      // Decode entire content (whole content)
-      const decoded = (() => {
-        if (!originalText) return ''
-        try {
-          let t = originalText
-          while (t !== decodeURIComponent(t)) t = decodeURIComponent(t)
-          return t
-        } catch (e) { return originalText }
-      })()
-
-      // New cache key format: mode-targetLang-searchingContent (whole content)
-      // Use a recognizable namespace prefix; URI-encode the content to keep key safe
-      const key = `aiResponseCache:${selectedMode}-${language}-${nativeLanguage}-${encodeURIComponent(decoded)}`
-      if (remember) {
-        this.lastCacheKey = key
-      }
-      return key
-    },
-
-    // Keep legacy hash-based key computation for backward compatibility restore
-    computeLegacyCacheKeyFromQuery(query) {
-      const q = query || this.$route.query || {}
-      const originalText = q.originalText
-      const selectedMode = q.selectedMode || this.validSelectedMode
-      const language = (q.language || this.defaultTargetLanguage || '').toString()
-      const native = (q.nativeLanguage || this.defaultNativeLanguage || '').toString()
-      const decoded = (() => {
-        if (!originalText) return ''
-        try {
-          let t = originalText
-          while (t !== decodeURIComponent(t)) t = decodeURIComponent(t)
-          return t
-        } catch (e) { return originalText }
-      })()
-      const payload = `${selectedMode}::${language}::${native}::${decoded}`
-      const hash = this.simpleHash(payload)
-      const key = `aiResponseCache:${hash}`
-      return key
-    },
-
-    hasMeaningfulCacheInRaw(raw) {
-      if (!raw) return false
-      try {
-        const obj = JSON.parse(raw)
-        const cachedText = (obj.aiResponseText || '').toString().trim()
-        if (cachedText.length > 0) return true
-        const cachedExps = Array.isArray(obj.selectionExplanations) ? obj.selectionExplanations : []
-        return cachedExps.some(it => ((it.responseText || '').toString().trim().length > 0))
-      } catch (_) {
-        return false
-      }
-    },
-
-    hasMeaningfulCacheForQuery(query) {
-      try {
-        if (typeof localStorage === 'undefined') return false
-        const primaryKey = this.computeCacheKeyFromQuery(query, { remember: false })
-        if (primaryKey && this.hasMeaningfulCacheInRaw(localStorage.getItem(primaryKey))) {
-          return true
-        }
-        const legacyKey = this.computeLegacyCacheKeyFromQuery(query)
-        if (legacyKey && this.hasMeaningfulCacheInRaw(localStorage.getItem(legacyKey))) {
-          return true
-        }
-      } catch (e) {
-        console.warn('Cache inspection failed:', e)
-      }
-      return false
-    },
-
-    simpleHash(str) {
-      // djb2 hashing
-      let hash = 5381
-      for (let i = 0; i < (str || '').length; i++) {
-        hash = ((hash << 5) + hash) + str.charCodeAt(i)
-        hash = hash & hash
-      }
-      return (hash >>> 0).toString(36)
-    },
-
-    saveStateToCache(key) {
-      try {
-        if (!key) key = this.computeCacheKeyFromQuery(this.$route.query)
-        const data = {
-          aiResponseText: this.aiResponseVO.responseText || '',
-          selectionExplanations: (this.selectionExplanations || []).map(it => ({
-            id: it.id,
-            selectedText: it.selectedText,
-            contextText: it.contextText,
-            responseText: it.responseText,
-            collapsed: !!it.collapsed
-          })),
-          originalTextCollapsed: !!this.originalTextCollapsed,
-          timestamp: Date.now()
-        }
-        // Persist to localStorage for longer-lived cache
-        localStorage.setItem(key, JSON.stringify(data))
-        // Keep a pointer to last used key for quick restore
-        localStorage.setItem('aiResponseCache:lastKey', key)
-        this.lastCacheKey = key
-      } catch (e) {
-        console.warn('Failed to save AI state cache:', e)
-      }
-    },
-
-    tryRestoreFromCache() {
-      try {
-        // When wsOnly flag is present, bypass cache restoration to force a live WS call
-        if (this.isWsOnly) {
-          return false
-        }
-        const newKey = this.computeCacheKeyFromQuery(this.$route.query)
-        let raw = localStorage.getItem(newKey)
-
-        // If no new-format cache exists, try legacy key for backward compatibility
-        if (!raw) {
-          const legacyKey = this.computeLegacyCacheKeyFromQuery(this.$route.query)
-          const legacyRaw = legacyKey ? localStorage.getItem(legacyKey) : null
-          if (legacyRaw) {
-            // Migrate to new key format for future lookups
-            try { localStorage.setItem(newKey, legacyRaw) } catch (_) {}
-            raw = legacyRaw
-          }
-        }
-
-        if (!raw) return false
-        const obj = JSON.parse(raw)
-
-        const cachedText = (obj.aiResponseText || '').toString()
-        const cachedExps = Array.isArray(obj.selectionExplanations) ? obj.selectionExplanations : []
-        const hasMeaningfulCache = (cachedText && cachedText.trim().length > 0) ||
-                                   cachedExps.some(it => (it.responseText || '').toString().trim().length > 0)
-        if (!hasMeaningfulCache) {
-          console.log('Cache exists but empty; skip restore and allow fetch')
-          return false
-        }
-
-        // If current UI already has non-empty content, prefer keeping it rather than overwriting with cache
-        if ((this.aiResponseVO.responseText || '').toString().trim().length > 0) {
-          console.log('Current content is non-empty; skip overwriting from cache')
-          return true
-        }
-
-        // Restore main response
-        this.aiResponseVO.responseText = cachedText
-        // Restore stacked explanations (no sockets, no loading)
-        this.selectionExplanations = cachedExps.map(it => ({
-          id: it.id || this.generateRequestId(),
-          selectedText: it.selectedText || '',
-          contextText: it.contextText || '',
-          responseText: it.responseText || '',
-          apiLoading: false,
-          isStreaming: false,
-          collapsed: !!it.collapsed,
-          websocket: null,
-          requestId: ''
-        }))
-        this.originalTextCollapsed = !!obj.originalTextCollapsed
-        console.log('Restored AI state from cache:', newKey)
-        this.lastCacheKey = newKey
-        return true
-      } catch (e) {
-        console.warn('Failed to restore AI state cache:', e)
-        return false
-      }
-    },
-
-    // Persist on meaningful changes
+    // Persist on meaningful changes (no-op after cache removal)
     persistNow() {
-      const key = this.computeCacheKeyFromQuery(this.$route.query)
-      this.saveStateToCache(key)
+      // Caching removed; method retained to avoid refactoring callers.
     }
   }
 }
