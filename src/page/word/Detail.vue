@@ -120,6 +120,9 @@ export default {
   },
   watch: {
     '$route'() {
+      if (this.shouldSkipDetailInit()) {
+        return
+      }
       this.initTabActivate()
       if (this.isTabActivate) {
         this.init()
@@ -132,6 +135,17 @@ export default {
     ...wordStarList,
     ...paraphraseStarList,
     ...exampleStarList,
+    shouldSkipDetailInit() {
+      const currentPath = this.$route?.path
+      const selectedMode = this.$route?.query?.selectedMode
+      if (currentPath === kiwiConsts.ROUTES.AI_RESPONSE_DETAIL) {
+        return true
+      }
+      if (selectedMode && selectedMode !== 'detail') {
+        return true
+      }
+      return false
+    },
     async initTabActivate() {
       // 标记当前Tab被激活显示
       let active = this.$route.query.active
@@ -139,6 +153,9 @@ export default {
       this.showWordSelect = false
     },
     async init() {
+      if (this.shouldSkipDetailInit()) {
+        return
+      }
       try {
         // clean data
         this.showCharacterId = 0
@@ -188,6 +205,9 @@ export default {
       }
     },
     async initDetail(w) {
+      if (this.shouldSkipDetailInit()) {
+        return
+      }
       let word = w
       if (this.$route.query.originalText) {
         word = decodeURIComponent(this.$route.query.originalText)
@@ -235,10 +255,12 @@ export default {
             originalText: encodeURI(originalText.toLowerCase()),
             now: new Date().getTime()
           }
-          this.$router.push({
-            path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
-            query: preservedQuery
-          })
+          if (!this.shouldSkipDetailInit()) {
+            this.$router.push({
+              path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
+              query: preservedQuery
+            })
+          }
         }
         this.keyword = word
       }).catch(e => {
