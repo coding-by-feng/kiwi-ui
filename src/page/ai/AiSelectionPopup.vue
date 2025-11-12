@@ -393,6 +393,14 @@ export default {
       msgUtil.msgError(this, this.aiLastError)
     },
 
+    stopStream(silent) {
+      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
+      this.aiWebsocket = null
+      this.aiSearchLoading = false
+      this.aiIsStreaming = false
+      if (!silent) this.aiLastError = ''
+    },
+
     // Utils
     generateRequestId() { return 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) },
     sanitizePotentialJsonString(str) {
