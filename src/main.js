@@ -16,6 +16,7 @@ import {i18n, setLanguage} from '@/i18n'
 // Hotkeys storage
 import {getStore} from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
+import messageCenter from '@/util/msg'
 
 Vue.config.devtools = true
 
@@ -262,6 +263,24 @@ Vue.use(ElementUI, {
     menuType: 'text',
     i18n: (key, value) => i18n.t(key, value)
 })
+
+// Centralise Element UI message + notification handling so every toast respects user preferences
+const wrappedMessage = (payload, overrides) => messageCenter.toast(payload, overrides)
+wrappedMessage.success = (payload, overrides) => messageCenter.success(payload, overrides)
+wrappedMessage.warning = (payload, overrides) => messageCenter.warning(payload, overrides)
+wrappedMessage.info = (payload, overrides) => messageCenter.info(payload, overrides)
+wrappedMessage.error = (payload, overrides) => messageCenter.error(payload, overrides)
+wrappedMessage.closeAll = () => messageCenter.closeMessages()
+
+const wrappedNotify = (payload, overrides) => messageCenter.popup(payload, overrides)
+wrappedNotify.success = (payload, overrides) => messageCenter.popupSuccess(payload, overrides)
+wrappedNotify.warning = (payload, overrides) => messageCenter.popupWarning(payload, overrides)
+wrappedNotify.info = (payload, overrides) => messageCenter.popupInfo(payload, overrides)
+wrappedNotify.error = (payload, overrides) => messageCenter.popupError(payload, overrides)
+wrappedNotify.closeAll = () => messageCenter.closeNotifications()
+
+Vue.prototype.$message = wrappedMessage
+Vue.prototype.$notify = wrappedNotify
 
 Vue.config.productionTip = false
 

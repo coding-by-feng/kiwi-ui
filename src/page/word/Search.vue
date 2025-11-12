@@ -136,7 +136,7 @@ import wordSearch from '@/api/wordSearch'
 import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
 import {setStore, getStore} from "@/util/store";
-import { Notification, Message } from 'element-ui';
+import messageCenter from '@/util/msg';
 import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
@@ -233,7 +233,12 @@ export default {
     this.setupClipboardHandling();
 
     // Do NOT bind renderer keydown listeners; global hotkeys are handled in Electron main
-    window.addEventListener('hotkeys-updated', () => Message({ message: this.$t ? this.$t('messages.operationSuccess') : 'Hotkeys updated', type: 'success', duration: 1000 }))
+    window.addEventListener('hotkeys-updated', () => {
+      messageCenter.success({
+        message: this.$t ? this.$t('messages.operationSuccess') : 'Hotkeys updated',
+        duration: 1000
+      })
+    })
   },
   beforeDestroy() {
     this.cleanupClipboardHandling();
@@ -432,18 +437,15 @@ export default {
             this.clipboardNotification.close();
           }
 
-          this.clipboardNotification = Notification({
+          this.clipboardNotification = messageCenter.popupInfo({
             title: this.$t('messages.clipboardContentDetected'),
             message: this.$t('messages.useClipboardContent', {
               text: this.copiedTextFromClipboard.substring(0, 50) + (this.copiedTextFromClipboard.length > 50 ? '...' : '')
             }),
-            position: 'top-right',
             duration: 8000,
-            showClose: true,
-            type: 'info',
             onClick: () => {
               this.showModeSelectionDialog = true;
-              this.clipboardNotification.close();
+              this.clipboardNotification && this.clipboardNotification.close();
             },
             onClose: () => {
               this.copiedTextFromClipboard = '';
@@ -641,17 +643,15 @@ export default {
             console.log('Successfully read clipboard content:', real.substring(0, 50) + '...');
 
             // Show user feedback
-            Message({
+            messageCenter.success({
               message: this.$t('messages.usingClipboardContent', { text: real.substring(0, 50) + (real.length > 50 ? '...' : '') }),
-              type: 'success',
               duration: 2000
             });
           } else {
             // No clipboard content available
             console.log('No clipboard content found');
-            Message({
+            messageCenter.warning({
               message: this.$t('messages.enterTextToSearch'),
-              type: 'warning',
               duration: 3000
             });
             return;
@@ -670,9 +670,8 @@ export default {
             errorMessage += this.$t('messages.unableToAccessClipboard');
           }
 
-          Message({
+          messageCenter.warning({
             message: errorMessage,
-            type: 'warning',
             duration: 4000
           });
           return;
