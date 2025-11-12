@@ -157,15 +157,18 @@ export default {
     await this.$nextTick()
     this.initPdfViewer()
     this.updateViewerHeight()
+    this.autoFitForSmallScreens()
     document.addEventListener('click', this.handleDocumentClick)
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('resize', this.updateViewerHeight)
+    window.addEventListener('resize', this.autoFitForSmallScreens)
     await this.restoreCachedPdfIfNeeded()
   },
   beforeDestroy() {
     document.removeEventListener('click', this.handleDocumentClick)
     window.removeEventListener('resize', this.handleResize)
     window.removeEventListener('resize', this.updateViewerHeight)
+    window.removeEventListener('resize', this.autoFitForSmallScreens)
   },
   methods: {
     initPdfViewer() {
@@ -262,7 +265,8 @@ export default {
       if (this.pdfViewer && this.pdfLinkService) {
         this.pdfLinkService.setDocument(pdf, null)
         this.pdfViewer.setDocument(pdf)
-        this.pdfViewer.currentScale = this.renderScale
+        // Ensure scale is appropriate for the current screen size
+        this.autoFitForSmallScreens()
       }
     },
     getPageWrappers() {
@@ -401,16 +405,17 @@ export default {
         const statusHeight = statusEl ? statusEl.getBoundingClientRect().height : 0
         const verticalPadding = 32 // total padding/margins
         const viewportH = window.innerHeight
-        // Calculate height leaving a small margin at bottom (avoid overflow)
         const maxUsable = viewportH - controlsHeight - alertHeight - statusHeight - verticalPadding
-        this.viewerHeight = Math.max(420, Math.round(maxUsable))
+        const minH = this.isSmallScreen ? 320 : 420
+        this.viewerHeight = Math.max(minH, Math.round(maxUsable))
       } catch (e) {
-        this.viewerHeight = 720
+        this.viewerHeight = this.isSmallScreen ? 360 : 720
       }
     },
     handleResize() {
       this.isSmallScreen = window.innerWidth <= 768
       this.updateViewerHeight()
+      this.autoFitForSmallScreens()
       this.closePopup()
     },
     resetError() {

@@ -4,6 +4,8 @@
     :visible.sync="dialogVisible"
     width="600px"
     :before-close="onBeforeClose"
+    :close-on-click-modal="true"
+    :close-on-press-escape="true"
   >
     <div class="ai-dialog-content">
       <div class="selected-text-preview">
@@ -13,7 +15,7 @@
               @mouseup="handlePrimarySelection"
               @touchend="handlePrimarySelection">{{ localSelectedText }}</span>"
       </div>
-      <div class="sub-tip" v-if="localSelectedText && localSelectedText.length > 0">Tip: select a sub‑phrase in the original selection above to open an in‑context Explanation dialog.</div>
+      <div class="sub-tip" v-if="localSelectedText && localSelectedText.length > 0">Tip: select a sub‑phrase in the original selection above to add a context‑aware Explanation below.</div>
       <div v-if="aiLastError" class="inline-error">{{ aiLastError }}</div>
       <div v-show="aiIsStreaming" class="streaming-indicator">
         <i class="el-icon-loading"></i> Streaming response...
@@ -25,8 +27,50 @@
         @mouseup="handlePopupSelection"
         @touchend="handlePopupSelection"
       ></div>
-      <div class="tiny-tip">Tip: select text inside this response to open a context-aware Explanation popup.</div>
+      <div class="tiny-tip">Tip: select text inside this response or the original selection to add more context-aware Explanations.</div>
+
+      <!-- Inline contextual explanations (do not replace the first selection) -->
+      <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
+        <h3 class="selection-response-title">
+          <i class="el-icon-chat-dot-square"></i>
+          Explanation for Selected Text
+          <span class="selection-title-controls">
+            <el-button
+              class="fold-selection-button"
+              type="text"
+              :icon="item.collapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
+              @click="toggleItemCollapsed(item)"
+              :disabled="item.loading"
+              :title="item.collapsed ? 'Expand explanation' : 'Collapse explanation'"
+            />
+            <el-button
+              class="close-selection-button"
+              type="text"
+              icon="el-icon-close"
+              @click="closeItem(item)"
+              :disabled="item.loading"
+              title="Close explanation"
+            />
+          </span>
+        </h3>
+        <div class="selected-text-reference">
+          <strong>Selected:</strong> "{{ item.selectedText }}"
+        </div>
+        <div
+          v-show="!item.collapsed"
+          class="selection-response-content"
+          v-loading="item.loading && !item.isStreaming"
+          :ref="'explanationContent_' + item.id"
+        >
+          <div v-show="item.isStreaming" class="streaming-indicator">
+            <i class="el-icon-loading"></i> Generating explanation...
+          </div>
+          <div v-if="item.error" class="inline-error">{{ item.error }}</div>
+          <div v-html="renderMarkdown(item.responseText)"></div>
+        </div>
+      </div>
     </div>
+
     <span slot="footer" class="dialog-footer">
       <el-button type="primary" :loading="aiSearchLoading" :disabled="!localSelectedText" @click="aiSearchSelectedText">
         <i class="el-icon-search" style="margin-right:6px;"></i>Search
@@ -34,38 +78,7 @@
       <el-button type="success" plain :disabled="!localSelectedText" @click="emitOpenInAiTab">
         <i class="el-icon-s-operation" style="margin-right:6px;"></i>Open in AI Tab
       </el-button>
-    </span>
-  </el-dialog>
-
-  <!-- Nested selection dialog: Explain selection within first selection context -->
-  <el-dialog
-    title="Explain Selection in Context"
-    :visible.sync="nestedDialogVisible"
-    width="520px"
-    :before-close="closeNestedDialog"
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-  >
-    <div class="ai-dialog-content">
-      <div class="selected-text-preview"><strong>Context (from first selection):</strong></div>
-      <div class="context-preview">{{ localSelectedText }}</div>
-      <div style="height:8px"></div>
-      <div class="selected-text-preview"><strong>Selected:</strong> "{{ nestedSelectedText }}"</div>
-      <div v-if="nestedLastError" class="inline-error">{{ nestedLastError }}</div>
-      <div v-show="nestedIsStreaming" class="streaming-indicator">
-        <i class="el-icon-loading"></i> Generating explanation...
-      </div>
-      <div
-        class="ai-response"
-        ref="nestedResponseRef"
-        v-html="nestedParsedResponseText"
-        @mouseup="handleNestedPopupSelection"
-        @touchend="handleNestedPopupSelection"
-      ></div>
-      <div class="tiny-tip">Tip: select text again here to refine within the same context.</div>
-    </div>
-    <span slot="footer" class="dialog-footer">
-      <el-button @click="closeNestedDialog">Close</el-button>
+      <el-button plain @click="closeDialog">Close</el-button>
     </span>
   </el-dialog>
 </template>
@@ -95,20 +108,15 @@ export default {
       aiResponseText: '',
       aiLastError: '',
       localSelectedText: this.selectedText,
-      // Nested (second selection) states
-      nestedDialogVisible: false,
-      nestedSelectedText: '',
-      nestedAiWebsocket: null,
-      nestedLoading: false,
-      nestedIsStreaming: false,
-      nestedRequestId: '',
-      nestedResponseText: '',
-      nestedLastError: ''
+      // Inline contextual explanations list
+      nestedItems: []
     }
   },
   watch: {
     selectedText(val) {
-      this.localSelectedText = (val || '').trim()
+      // Only set initially; do not override once user starts adding nested items
+      const trimmed = (val || '').trim()
+      if (!this.localSelectedText) this.localSelectedText = trimmed
     }
   },
   computed: {
@@ -125,22 +133,159 @@ export default {
           })
         } else {
           this.stopStream(true)
+          this.stopAllNested()
         }
       }
     },
     aiParsedResponseText() {
       const text = this.unescapeContent(this.aiResponseText || '')
       return md.render(text)
-    },
-    nestedParsedResponseText() {
-      const text = this.unescapeContent(this.nestedResponseText || '')
-      return md.render(text)
     }
   },
   methods: {
+    // Render helper for nested items
+    renderMarkdown(text) { return md.render(this.unescapeContent(text || '')) },
+
     // Public API-like methods
     closeDialog() { this.dialogVisible = false },
     onBeforeClose() { this.dialogVisible = false },
+
+    // Handle sub-selection inside the original selected text (append new item)
+    handlePrimarySelection() {
+      try {
+        const container = this.$refs.primarySelectionContent
+        if (!container) return
+        const sel = window.getSelection && window.getSelection()
+        if (!sel || sel.rangeCount === 0) return
+        const range = sel.getRangeAt(0)
+        if (!container.contains(range.commonAncestorContainer)) return
+        const text = (sel.toString() || '').trim()
+        if (!text) return
+        this.addNestedItem(text)
+      } catch (_) { /* ignore */ }
+    },
+
+    // Also allow selection inside the main AI response to add contextual items
+    handlePopupSelection() {
+      try {
+        const container = this.$refs.aiResponseRef
+        if (!container) return
+        const sel = window.getSelection && window.getSelection()
+        if (!sel || sel.rangeCount === 0) return
+        const range = sel.getRangeAt(0)
+        if (!container.contains(range.commonAncestorContainer)) return
+        const text = (sel.toString() || '').trim()
+        if (!text) return
+        this.addNestedItem(text)
+      } catch (_) { /* ignore */ }
+    },
+
+    addNestedItem(text) {
+      const selected = (text || '').trim()
+      if (!selected || !this.localSelectedText) return
+      const id = this.generateRequestId()
+      const item = {
+        id,
+        selectedText: selected,
+        responseText: '',
+        isStreaming: false,
+        loading: true,
+        error: '',
+        collapsed: false,
+        ws: null,
+        requestId: id
+      }
+      this.nestedItems.push(item)
+      this.$nextTick(() => this.startNestedForItem(item))
+    },
+
+    toggleItemCollapsed(item) { item.collapsed = !item.collapsed },
+    closeItem(item) { this.stopItem(item, true); this.nestedItems = this.nestedItems.filter(i => i.id !== item.id) },
+
+    // Core: start per-item WS using first selection as context
+    startNestedForItem(item) {
+      const promptSelection = item.selectedText
+      const context = (this.localSelectedText || '').trim()
+      if (!promptSelection || !context) { item.loading = false; return }
+
+      const token = getStore({name: 'access_token'})
+      if (!token) {
+        item.loading = false
+        item.isStreaming = false
+        item.error = 'Authentication token not found. Please login again.'
+        msgUtil.msgError(this, item.error)
+        return
+      }
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = window.location.host
+      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
+
+      // Build contextual prompt using the same tags as AiResponseDetail
+      const prompt = `${kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION}${promptSelection}${kiwiConsts.AI_MODE_TAG.SPLITTER}${context}`
+      const promptMode = 'selection-explanation'
+      const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+      const nativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+
+      // Ensure any prior ws is closed
+      this.stopItem(item, true)
+      try { item.ws = new WebSocket(wsUrl) } catch (e) {
+        item.loading = false
+        item.isStreaming = false
+        item.error = 'Failed to open WebSocket'
+        msgUtil.msgError(this, item.error)
+        return
+      }
+
+      item.ws.onopen = () => {
+        const request = { prompt, promptMode, targetLanguage, nativeLanguage, aiUrl: wsUrl, timestamp: Date.now(), requestId: item.requestId }
+        try { item.ws.send(JSON.stringify(request)) } catch (e) { this.handleItemError(item, 'Failed to send request') }
+      }
+      item.ws.onmessage = (event) => {
+        let response
+        try { response = JSON.parse(event.data) } catch (error) { this.handleItemError(item, 'Failed to parse response'); return }
+        switch (response.type) {
+          case 'connected': break
+          case 'started': item.isStreaming = true; break
+          case 'chunk': if (response.chunk) item.responseText += response.chunk; break
+          case 'completed': {
+            item.isStreaming = false
+            item.loading = false
+            try {
+              const finalPayload = (response.fullResponse && response.fullResponse.length > 0) ? response.fullResponse : item.responseText
+              const extracted = this.extractResponseTextFromPayload(finalPayload)
+              item.responseText = (typeof extracted === 'string' && extracted.length > 0) ? extracted : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload))
+            } catch (_) { if (response.fullResponse) item.responseText = response.fullResponse }
+            try { item.ws && item.ws.close() } catch (_) {}
+            item.ws = null
+            break
+          }
+          case 'error': this.handleItemError(item, (response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : '')); break
+          default: break
+        }
+      }
+      item.ws.onerror = () => this.handleItemError(item, 'WebSocket connection error')
+      item.ws.onclose = () => { item.loading = false; item.isStreaming = false }
+    },
+
+    handleItemError(item, message) {
+      item.loading = false
+      item.isStreaming = false
+      item.error = message || 'AI streaming error'
+      try { item.ws && item.ws.close() } catch (_) {}
+      item.ws = null
+      msgUtil.msgError(this, item.error)
+    },
+
+    stopItem(item, silent) {
+      try { if (item && item.ws) { item.ws.close() } } catch (_) {}
+      if (item) {
+        item.ws = null
+        item.loading = false
+        item.isStreaming = false
+        if (!silent) item.error = ''
+      }
+    },
+    stopAllNested() { (this.nestedItems || []).forEach(i => this.stopItem(i, true)) },
 
     // Search primary action (auto mode by content length)
     aiSearchSelectedText() {
@@ -158,61 +303,6 @@ export default {
       this.startAiStreaming({ prompt: text, promptMode, targetLanguage, nativeLanguage })
     },
 
-    // Primary popup: selecting inside response opens a nested dialog and runs context-aware Explanation
-    handlePopupSelection() {
-      try {
-        const container = this.$refs.aiResponseRef
-        if (!container) return
-        const sel = window.getSelection && window.getSelection()
-        if (!sel || sel.rangeCount === 0) return
-        const range = sel.getRangeAt(0)
-        if (!container.contains(range.commonAncestorContainer)) return
-        const text = (sel.toString() || '').trim()
-        if (!text) return
-        this.openNestedDialogWith(text)
-      } catch (_) { /* ignore */ }
-    },
-
-    openNestedDialogWith(text) {
-      this.nestedSelectedText = (text || '').trim()
-      if (!this.nestedSelectedText) return
-      this.nestedResponseText = ''
-      this.nestedLastError = ''
-      this.nestedDialogVisible = true
-      this.$nextTick(() => this.startNestedStreaming())
-    },
-
-    // Nested selection => Explanation mode with first selection as context
-    startNestedStreaming() {
-      const promptSelection = this.nestedSelectedText
-      const context = (this.localSelectedText || '').trim()
-      if (!promptSelection) return
-      // Build contextual prompt using the same tags as AiResponseDetail
-      const prompt = `${kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION}${promptSelection}${kiwiConsts.AI_MODE_TAG.SPLITTER}${context}`
-      const promptMode = 'selection-explanation'
-      const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
-      const nativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
-      this.startNestedWs({ prompt, promptMode, targetLanguage, nativeLanguage })
-    },
-
-    handleNestedPopupSelection() {
-      try {
-        const container = this.$refs.nestedResponseRef
-        if (!container) return
-        const sel = window.getSelection && window.getSelection()
-        if (!sel || sel.rangeCount === 0) return
-        const range = sel.getRangeAt(0)
-        if (!container.contains(range.commonAncestorContainer)) return
-        const text = (sel.toString() || '').trim()
-        if (!text) return
-        // Update nested selection and restart streaming within the same first-context
-        this.nestedSelectedText = text
-        this.nestedResponseText = ''
-        this.nestedLastError = ''
-        this.startNestedStreaming()
-      } catch (_) { /* ignore */ }
-    },
-
     emitOpenInAiTab() {
       const text = (this.localSelectedText || '').trim()
       if (!text) {
@@ -221,7 +311,7 @@ export default {
       }
       const query = buildAiTabQuery({ text, route: this.$route, overrides: { selectedMode: 'directly-translation' } })
       this.stopStream(true)
-      // Close immediately to avoid any duplicate triggers on route changes
+      this.stopAllNested()
       this.dialogVisible = false
       this.$emit('open-ai-tab', { text, query })
     },
@@ -294,69 +384,6 @@ export default {
       this.aiWebsocket.onclose = () => { this.aiSearchLoading = false; this.aiIsStreaming = false }
     },
 
-    // WS streaming core (nested)
-    startNestedWs({ prompt, promptMode, targetLanguage, nativeLanguage }) {
-      this.nestedLastError = ''
-      this.nestedResponseText = ''
-      this.nestedLoading = true
-      this.nestedIsStreaming = true
-      this.nestedRequestId = this.generateRequestId()
-
-      const token = getStore({name: 'access_token'})
-      if (!token) {
-        this.nestedLoading = false
-        this.nestedIsStreaming = false
-        this.nestedLastError = 'Authentication token not found. Please login again.'
-        msgUtil.msgError(this, this.nestedLastError)
-        return
-      }
-
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const host = window.location.host
-      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
-
-      try { this.stopNestedStream(true) } catch (_) {}
-      try { this.nestedAiWebsocket = new WebSocket(wsUrl) } catch (e) {
-        this.nestedLoading = false
-        this.nestedIsStreaming = false
-        this.nestedLastError = 'Failed to open WebSocket'
-        msgUtil.msgError(this, this.nestedLastError)
-        return
-      }
-
-      this.nestedAiWebsocket.onopen = () => {
-        const request = { prompt, promptMode, targetLanguage, nativeLanguage, aiUrl: wsUrl, timestamp: Date.now(), requestId: this.nestedRequestId }
-        try { this.nestedAiWebsocket.send(JSON.stringify(request)) } catch (e) { this.handleNestedStreamError('Failed to send request') }
-      }
-
-      this.nestedAiWebsocket.onmessage = (event) => {
-        let response
-        try { response = JSON.parse(event.data) } catch (error) { this.handleNestedStreamError('Failed to parse response'); return }
-        switch (response.type) {
-          case 'connected': break
-          case 'started': this.nestedIsStreaming = true; break
-          case 'chunk': if (response.chunk) this.nestedResponseText += response.chunk; break
-          case 'completed': {
-            this.nestedIsStreaming = false
-            this.nestedLoading = false
-            try {
-              const finalPayload = (response.fullResponse && response.fullResponse.length > 0) ? response.fullResponse : this.nestedResponseText
-              const extracted = this.extractResponseTextFromPayload(finalPayload)
-              this.nestedResponseText = (typeof extracted === 'string' && extracted.length > 0) ? extracted : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload))
-            } catch (_) { if (response.fullResponse) this.nestedResponseText = response.fullResponse }
-            try { this.nestedAiWebsocket && this.nestedAiWebsocket.close() } catch (_) {}
-            this.nestedAiWebsocket = null
-            break
-          }
-          case 'error': this.handleNestedStreamError((response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : '')); break
-          default: break
-        }
-      }
-
-      this.nestedAiWebsocket.onerror = () => this.handleNestedStreamError('WebSocket connection error')
-      this.nestedAiWebsocket.onclose = () => { this.nestedLoading = false; this.nestedIsStreaming = false }
-    },
-
     handleAiStreamError(message) {
       this.aiSearchLoading = false
       this.aiIsStreaming = false
@@ -364,32 +391,6 @@ export default {
       try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
       this.aiWebsocket = null
       msgUtil.msgError(this, this.aiLastError)
-    },
-    handleNestedStreamError(message) {
-      this.nestedLoading = false
-      this.nestedIsStreaming = false
-      this.nestedLastError = message || 'AI streaming error'
-      try { this.nestedAiWebsocket && this.nestedAiWebsocket.close() } catch (_) {}
-      this.nestedAiWebsocket = null
-      msgUtil.msgError(this, this.nestedLastError)
-    },
-    stopStream(silent) {
-      try { if (this.aiWebsocket) { this.aiWebsocket.close() } } catch (_) {}
-      this.aiWebsocket = null
-      this.aiSearchLoading = false
-      this.aiIsStreaming = false
-      if (!silent) this.aiLastError = ''
-    },
-    stopNestedStream(silent) {
-      try { if (this.nestedAiWebsocket) { this.nestedAiWebsocket.close() } } catch (_) {}
-      this.nestedAiWebsocket = null
-      this.nestedLoading = false
-      this.nestedIsStreaming = false
-      if (!silent) this.nestedLastError = ''
-    },
-    closeNestedDialog() {
-      this.stopNestedStream(true)
-      this.nestedDialogVisible = false
     },
 
     // Utils
@@ -464,7 +465,13 @@ export default {
   padding: 8px 0 4px;
 }
 .tiny-tip { margin-top: 6px; color: #909399; font-size: 12px; }
-.context-preview { white-space: pre-wrap; background: #f8f9fa; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px; color: #606266; max-height: 100px; overflow: auto; }
 .primary-selection-content { cursor: text; user-select: text; -webkit-user-select: text; }
 .sub-tip { margin-top: -4px; margin-bottom: 8px; font-size: 12px; color: #909399; }
+
+/* Contextual explanations styling (inspired by AiResponseDetail) */
+.selection-response-container { margin-top: 16px; border: 1px solid #ebeef5; border-radius: 10px; background: #fff; }
+.selection-response-title { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; margin: 0; font-size: 14px; background: #f5f7fa; border-bottom: 1px solid #ebeef5; border-top-left-radius: 10px; border-top-right-radius: 10px; }
+.selection-title-controls { display: inline-flex; gap: 4px; }
+.selected-text-reference { padding: 8px 10px; color: #606266; }
+.selection-response-content { padding: 10px; text-align: justify; }
 </style>
