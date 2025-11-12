@@ -83,7 +83,7 @@
             <div class="mode-info">
               <el-tag
                   :type="getModeTagType(record.promptMode)"
-                  :class="getModeClass(record.promptMode)"
+                  :class="getModeClass()"
                   size="small">
                 {{ getModeLabel(record.promptMode) }}
               </el-tag>
@@ -190,7 +190,7 @@
       <div v-if="selectedRecord" class="detail-content">
         <el-form label-position="left" label-width="120px">
           <el-form-item label="Mode:">
-            <el-tag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass(selectedRecord.promptMode)">
+            <el-tag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
               {{ getModeLabel(selectedRecord.promptMode) }}
             </el-tag>
           </el-form-item>
@@ -365,14 +365,27 @@ export default {
     },
 
     getModeTagType(modeValue) {
-      // Use a consistent green style for all modes
-      return 'success';
+      // Map each AI mode to a distinct, readable tag color (avoid green/success)
+      const map = {
+        [kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value]: 'primary',
+        [kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value]: 'info',
+        [kiwiConsts.SEARCH_AI_MODES.GRAMMAR_EXPLANATION.value]: 'warning',
+        [kiwiConsts.SEARCH_AI_MODES.GRAMMAR_CORRECTION.value]: 'danger',
+        [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value]: 'primary',
+        [kiwiConsts.SEARCH_AI_MODES.SYNONYM.value]: 'info',
+        [kiwiConsts.SEARCH_AI_MODES.ANTONYM.value]: 'warning',
+        [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_ASSOCIATION.value]: 'primary',
+        [kiwiConsts.SEARCH_AI_MODES.PHRASES_ASSOCIATION.value]: 'info',
+        // New modes
+        [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_CHARACTER_EXPANSION.value]: 'warning',
+        [kiwiConsts.SEARCH_AI_MODES.AMBIGUOUS_ASSOCIATION_CORRECTION.value]: 'danger'
+      };
+      return map[modeValue] || 'primary';
     },
 
-    // Add a custom class to fine-tune Grammar Correction styling
-    getModeClass(modeValue) {
-      // No special class; keep all tags consistent in color/style
-      return '';
+    getModeClass() {
+      // All AI modes share the same class to enforce white font color
+      return 'ai-mode-tag';
     },
 
     getLanguageLabel(languageCode) {
@@ -979,5 +992,12 @@ export default {
   .detail-dialog {
     width: 95% !important;
   }
+}
+
+.ai-mode-tag { /* force white font for all AI mode tags */
+  color: #ffffff !important;
+}
+.ai-mode-tag ::v-deep(*) {
+  color: #ffffff !important;
 }
 </style>

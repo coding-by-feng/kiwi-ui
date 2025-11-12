@@ -624,6 +624,7 @@ export default {
         pageLabel: 'หน้า {page}',
         noTextForPage: 'ไม่พบข้อความที่เลือกได้ในหน้านี้',
         noExtractedText: 'เอกสารนี้ไม่มีข้อความสำหรับดึงข้อมูล',
-        markdownFailed: 'ไม่สามารถแปลง PDF เป็น Markdown ได้'
+        markdownFailed: 'ไม่สามารถแปลง PDF เป็น Markdown ได้',
+        explainSelection: 'อธิบายข้อความที่เลือก'
     }
 }

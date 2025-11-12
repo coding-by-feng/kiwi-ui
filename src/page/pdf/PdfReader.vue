@@ -88,22 +88,24 @@
       </template>
       <template v-else>
         <div class="pdf-reader__layout">
-          <div
-            class="pdf-reader__page-column"
-            ref="pageColumn"
-            @mouseup="handlePointerSelection"
-            @touchend="handleTouchSelection"
-          >
+          <div class="pdf-reader__page-column-wrapper">
             <div
-              v-if="loading"
-              class="pdf-reader__page-loading"
+              class="pdf-reader__page-column"
+              ref="pageColumn"
+              @mouseup="handlePointerSelection"
+              @touchend="handleTouchSelection"
             >
-              <i class="el-icon-loading"></i>
+              <div
+                v-if="loading"
+                class="pdf-reader__page-loading"
+              >
+                <i class="el-icon-loading"></i>
+              </div>
+              <div
+                ref="viewerContainer"
+                class="pdf-reader__viewer pdfViewer"
+              ></div>
             </div>
-            <div
-              ref="viewerContainer"
-              class="pdf-reader__viewer pdfViewer"
-            ></div>
           </div>
           <div
             v-if="!rightCollapsed"
@@ -733,11 +735,20 @@ export default {
     height: 100%;
   }
 
-  &__page-column {
+  &__page-column-wrapper {
     flex: 1 1 60%;
     position: relative;
-    overflow: auto;
     min-width: 0;
+    display: block;
+  }
+
+  &__page-column {
+    position: absolute; /* required by pdf.js BaseViewer */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
     padding: 16px;
     background: #f5f7fa;
     border: 1px solid #e4e7ed;
@@ -758,6 +769,7 @@ export default {
   }
 
   &__viewer {
+    position: relative; /* ensure container is positioned for PDF.js viewer absolute children */
     display: flex;
     flex-direction: column;
     gap: 20px;

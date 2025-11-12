@@ -310,7 +310,8 @@ export default {
         pageLabel: '{page}쪽',
         noTextForPage: '이 페이지에서 선택 가능한 텍스트가 없습니다.',
         noExtractedText: '이 문서에서 추출 가능한 텍스트가 없습니다.',
-        markdownFailed: 'PDF를 Markdown으로 변환하지 못했습니다.'
+        markdownFailed: 'PDF를 Markdown으로 변환하지 못했습니다.',
+        explainSelection: '선택한 내용 설명'
     },
 
     about: {

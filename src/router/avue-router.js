@@ -137,7 +137,11 @@ RouterPlugin.install = function (router, store) {
             }
             if (first) {
                 if (!this.routerList.includes(aRouter[0][propsDefault.path])) {
-                    this.safe.$router.addRoutes(aRouter)
+                    if (this.safe.$router && typeof this.safe.$router.addRoutes === 'function') {
+                        this.safe.$router.addRoutes(aRouter)
+                    } else if (this.safe.$router && typeof this.safe.$router.addRoute === 'function') {
+                        aRouter.forEach(r => this.safe.$router.addRoute(r))
+                    }
                     this.routerList.push(aRouter[0][propsDefault.path])
                 }
             } else {

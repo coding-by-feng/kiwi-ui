@@ -24,6 +24,7 @@
           <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode" slot="prepend"
                      size="mini"
                      :style="selectWidthStyle"
+                     :class="{ 'ai-mode-text': isAiModeSelected }"
                      @change="selectedModeChange">
             <el-option
                 v-for="item in searchModes"
@@ -43,6 +44,7 @@
                  size="mini"
                  id="mode-select"
                  class="select-base mode-select"
+                 :class="{ 'ai-mode-text': isAiModeSelected }"
                  @change="selectedModeChange">
         <el-option
             v-for="item in searchModes"
@@ -226,6 +228,14 @@ export default {
     isClipboardDetectionEnabled() {
       const clipboardDetectionSetting = getStore({ name: kiwiConsts.CONFIG_KEY.CLIPBOARD_DETECTION });
       return clipboardDetectionSetting === kiwiConsts.CLIPBOARD_DETECTION.ENABLE;
+    },
+    isAiModeSelected() {
+      try {
+        const aiValues = Object.values(require('@/const/kiwiConsts').default.SEARCH_AI_MODES).map(m => m.value)
+        return aiValues.includes(this.selectedMode)
+      } catch (e) {
+        return false
+      }
     }
   },
   mounted() {
@@ -741,6 +751,11 @@ export default {
 .select-base {
   margin-right: 10px;
   margin-bottom: 10px;
+}
+
+/* Force white font color when AI mode is selected */
+.ai-mode-text ::v-deep(.el-input__inner) {
+  color: #ffffff !important;
 }
 
 /* Mobile-specific styles */

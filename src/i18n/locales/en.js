@@ -88,7 +88,8 @@ export default {
         pageLabel: 'Page {page}',
         noTextForPage: 'No selectable text detected on this page.',
         noExtractedText: 'No extracted text available for this document.',
-        markdownFailed: 'Failed to convert PDF to Markdown.'
+        markdownFailed: 'Failed to convert PDF to Markdown.',
+        explainSelection: 'Explain Selection'
     },
 
     // Navigation
