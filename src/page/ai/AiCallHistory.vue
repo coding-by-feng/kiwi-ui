@@ -226,7 +226,7 @@
 
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
-import { Message } from 'element-ui';
+import messageCenter from '@/util/msg';
 import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai'; // Removed callAiChatCompletion
 
 export default {
@@ -318,11 +318,11 @@ export default {
           console.log('Loaded AI call history successfully:', this.historyData);
         } else {
           console.error('API returned error:', response.data);
-          Message.error(response.data.msg || 'Failed to load AI call history');
+          messageCenter.error(response.data.msg || 'Failed to load AI call history');
         }
       } catch (error) {
         console.error('Error loading AI call history:', error);
-        Message.error('Failed to load AI call history: ' + (error.message || 'Unknown error'));
+        messageCenter.error('Failed to load AI call history: ' + (error.message || 'Unknown error'));
       } finally {
         this.loading = false;
       }
@@ -450,10 +450,10 @@ export default {
     copyPrompt(prompt) {
       navigator.clipboard.writeText(prompt)
           .then(() => {
-            Message.success('Prompt copied to clipboard!');
+            messageCenter.success('Prompt copied to clipboard!');
           })
           .catch(() => {
-            Message.error('Failed to copy prompt');
+            messageCenter.error('Failed to copy prompt');
           });
     },
 
@@ -469,16 +469,16 @@ export default {
       try {
         const response = await archiveAiCallHistory(id);
         if (response.data.code === 1) {
-          Message.success(response.data.data || 'Item archived successfully');
+          messageCenter.success(response.data.data || 'Item archived successfully');
           // Reload the history to reflect changes
           this.loadHistory();
         } else {
-          Message.error(response.data.msg || 'Failed to archive item');
+          messageCenter.error(response.data.msg || 'Failed to archive item');
         }
       } catch (error) {
         console.error('Archive failed:', error);
         const errorMessage = error.response?.data?.msg || 'Failed to archive item';
-        Message.error(errorMessage);
+        messageCenter.error(errorMessage);
       } finally {
         this.archivingIds = this.archivingIds.filter(i => i !== id);
       }
@@ -501,16 +501,16 @@ export default {
       try {
         const response = await deleteAiCallHistory(id);
         if (response.data.code === 1) {
-          Message.success(response.data.data || 'Item deleted successfully');
+          messageCenter.success(response.data.data || 'Item deleted successfully');
           // Reload the history to reflect changes
           this.loadHistory();
         } else {
-          Message.error(response.data.msg || 'Failed to delete item');
+          messageCenter.error(response.data.msg || 'Failed to delete item');
         }
       } catch (error) {
         console.error('Delete failed:', error);
         const errorMessage = error.response?.data?.msg || 'Failed to delete item';
-        Message.error(errorMessage);
+        messageCenter.error(errorMessage);
       } finally {
         this.deletingIds = this.deletingIds.filter(i => i !== id);
       }

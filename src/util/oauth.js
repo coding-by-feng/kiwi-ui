@@ -1,6 +1,6 @@
 // src/util/oauth.js - Enhanced OAuth utility for mobile compatibility
 import {getStore, setStore} from '@/util/store'
-import {Message} from 'element-ui'
+import messageCenter from '@/util/msg'
 
 // Flag to prevent multiple OAuth processing
 let isProcessingOAuth = false
@@ -52,12 +52,10 @@ export const handleGoogleOAuthCallback = () => {
 
     if (error) {
         console.error(' [OAUTH] Google OAuth error:', error)
-        Message({
+        messageCenter.error({
             message: `Login failed: ${error}`,
-            type: 'error',
-            center: true,
-            showClose: true,
-            duration: 5000
+            duration: 5000,
+            showClose: true
         })
         return false
     }
@@ -108,10 +106,8 @@ export const handleGoogleOAuthCallback = () => {
             window.location.href = window.location.origin + window.location.pathname
 
             console.log(' [OAUTH] Showing success message')
-            Message({
+            messageCenter.success({
                 message: `Welcome back, ${decodedUser}!`,
-                type: 'success',
-                center: true,
                 duration: 3000
             })
 
@@ -127,10 +123,8 @@ export const handleGoogleOAuthCallback = () => {
             console.error(' [OAUTH] Error during OAuth processing:', error)
             isProcessingOAuth = false
 
-            Message({
+            messageCenter.error({
                 message: 'Login processing failed. Please try again.',
-                type: 'error',
-                center: true,
                 duration: 5000
             })
 
