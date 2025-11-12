@@ -404,7 +404,7 @@ export default {
       } else if (command.mode === 'totalReviewChToEn') {
         this.list.isChToEn = true
         this.totalReview(command.id, command.mode)
-      } else if (command.mode === kiwiConst.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO) {
+      } else if (command.mode === kiwiConsts.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO) {
         this.list.isChToEn = true
         this.totalReview(command.id, command.mode)
       }

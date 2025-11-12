@@ -767,6 +767,7 @@ export default {
 </script>
 
 <style scoped>
+/* --- existing styles start --- */
 .dialog-footer {
   text-align: center;
 }
@@ -783,10 +784,10 @@ export default {
   margin-bottom: 10px;
 }
 
-/* Force white font color when AI mode is selected */
-.ai-mode-text ::v-deep(.el-input__inner) {
+/* Remove forced white font color to avoid blank current item when background matches */
+/* .ai-mode-text ::v-deep(.el-input__inner) {
   color: #ffffff !important;
-}
+} */
 
 /* Mobile-specific styles */
 @media (max-width: 768px) {
@@ -832,4 +833,5 @@ export default {
   border-color: #f56c6c;
   color: white;
 }
+/* --- existing styles end --- */
 </style>
