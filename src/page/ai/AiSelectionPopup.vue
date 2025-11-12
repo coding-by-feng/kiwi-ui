@@ -1,22 +1,5 @@
 <template>
   <div class="ai-selection-popup-wrapper">
-    <!-- Floating reopen button (top-right) for reviewing history -->
-    <div
-      v-if="!dialogVisible && hasHistory"
-      class="ai-history-floating"
-    >
-      <el-tooltip content="Open AI Selection History" placement="left">
-        <el-button
-          circle
-          type="primary"
-          size="mini"
-          icon="el-icon-time"
-          @click="openHistory"
-          aria-label="Open AI Selection History"
-        />
-      </el-tooltip>
-    </div>
-
     <el-dialog
       :title="title"
       :visible.sync="dialogVisible"
@@ -26,28 +9,7 @@
       :close-on-press-escape="true"
     >
       <div class="ai-dialog-content">
-        <div class="selected-text-preview" v-if="!reviewMode">
-          <strong>Selected:</strong>
-          "<span ref="primarySelectionContent"
-                class="primary-selection-content"
-                @mouseup="handlePrimarySelection"
-                @touchend.passive="handlePrimarySelection">{{ localSelectedText }}</span>"
-        </div>
-        <div class="sub-tip" v-if="!reviewMode && localSelectedText && localSelectedText.length > 0">Tip: select a sub‑phrase in the original selection above to add a context‑aware Explanation below.</div>
-        <div v-if="aiLastError" class="inline-error">{{ aiLastError }}</div>
-        <div v-show="aiIsStreaming" class="streaming-indicator">
-          <i class="el-icon-loading"></i> Streaming response...
-        </div>
-        <div
-          class="ai-response"
-          ref="aiResponseRef"
-          v-html="aiParsedResponseText"
-          @mouseup="handlePopupSelection"
-          @touchend.passive="handlePopupSelection"
-        ></div>
-        <div class="tiny-tip" v-if="!reviewMode">Tip: select text inside this response or the original selection to add more context-aware Explanations.</div>
-
-        <!-- Inline contextual explanations (do not replace the first selection) -->
+        <!-- All selections rendered as explanation cards -->
         <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
           <h3 class="selection-response-title">
             <i class="el-icon-chat-dot-square"></i>
@@ -71,14 +33,28 @@
               />
             </span>
           </h3>
-          <div class="selected-text-reference">
+          <div
+            class="selected-text-reference"
+            :ref="'selectedRef_' + item.id"
+            @mouseup="handleReferenceSelection(item)"
+            @touchend.passive="handleReferenceSelection(item)"
+          >
             <strong>Selected:</strong> "{{ item.selectedText }}"
+            <span v-if="item.contextSelectedText && item.contextSelectedText !== item.selectedText" style="color:#909399;">
+              &nbsp;in context of "{{ item.contextSelectedText }}"
+            </span>
+            <span v-if="item.promptMode && item.promptMode !== 'selection-explanation'" style="color:#b88230;">
+              &nbsp;({{ item.promptMode }})
+            </span>
           </div>
           <div
             v-show="!item.collapsed"
             class="selection-response-content"
             v-loading="item.loading && !item.isStreaming"
             :ref="'explanationContent_' + item.id"
+            @mouseup="handleItemSelection(item)"
+            @touchend.passive="handleItemSelection(item)"
+            @contextmenu.prevent
           >
             <div v-show="item.isStreaming" class="streaming-indicator">
               <i class="el-icon-loading"></i> Generating explanation...
@@ -99,6 +75,39 @@
         <el-button plain @click="closeDialog">Close</el-button>
       </span>
     </el-dialog>
+
+    <!-- Selection options dialog for text selected inside explanation content -->
+    <el-dialog
+      title="Explain Selected Text"
+      :visible.sync="selectionDialogVisible"
+      width="500px"
+      :before-close="handleCloseSelectionDialog"
+    >
+      <div class="selection-dialog-content">
+        <div class="selected-text-preview" v-if="selectionSelectedText">
+          <strong>Selected Text:</strong>
+          <div class="selected-text">{{ selectionSelectedText }}</div>
+        </div>
+      </div>
+
+      <div slot="footer" class="selection-dialog-footer">
+        <el-button
+          size="small"
+          type="info"
+          icon="el-icon-search"
+          @click="searchOnDictionaryFromDialog"
+        >
+          Search on Dictionary
+        </el-button>
+        <el-button
+          size="small"
+          type="primary"
+          @click="explainSelectionFromDialog"
+        >
+          Explain Selection
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -116,7 +125,8 @@ export default {
   props: {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
-    title: { type: String, default: 'AI Search' }
+    title: { type: String, default: 'AI Search' },
+    fileName: { type: String, default: '' }
   },
   data() {
     return {
@@ -127,37 +137,35 @@ export default {
       aiResponseText: '',
       aiLastError: '',
       localSelectedText: this.selectedText,
-      // Inline contextual explanations list
+      // Explanation items (each selection is an item)
       nestedItems: [],
       // Review-only reopen mode
       reviewMode: false,
       aiStarted: false,
       aiConnectAttempts: 0,
       aiMaxConnectAttempts: 2,
-      aiRetryTimer: null
+      aiRetryTimer: null,
+      // Selection dialog state for in-explanation selections
+      selectionDialogVisible: false,
+      selectionSelectedText: '',
+      selectionSourceItemId: ''
     }
   },
   watch: {
-    // Update local selection whenever parent prop changes to a new non-empty value
+    // Every time parent selection changes, add a new explanation item
     selectedText(val) {
       const trimmed = (val || '').trim()
       if (!trimmed) return
-      // If we don't yet have a primary selection, set it and auto search
-      if (!this.localSelectedText) {
-        this.localSelectedText = trimmed
-        this.aiResponseText = ''
-        this.aiLastError = ''
-        this.$nextTick(() => {
-          if (this.visible && !this.reviewMode && !this.aiIsStreaming && !this.aiSearchLoading) {
-            try { this.aiSearchSelectedText() } catch (_) {}
-          }
-        })
-        return
+      this.localSelectedText = trimmed
+      const isFirst = (this.nestedItems || []).length === 0
+      if (isFirst) {
+        const mode = this.isSingleWord(trimmed) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+        this.addNestedItemWithContext(trimmed, null, mode)
+      } else {
+        const last = this.nestedItems[this.nestedItems.length - 1]
+        const ctx = last ? last.selectedText : null
+        this.addNestedItemWithContext(trimmed, ctx, 'selection-explanation')
       }
-      // If same as primary or already exists in nested, ignore
-      if (trimmed === this.localSelectedText || (this.nestedItems || []).some(i => i.selectedText === trimmed)) return
-      // Add as nested explanation without replacing primary
-      this.addNestedItem(trimmed)
     }
   },
   computed: {
@@ -166,78 +174,126 @@ export default {
       set(v) {
         this.$emit('update:visible', v)
         if (v) {
-          // Auto-start translation on open if we have text and not in review-only mode
+          // On open, if we have an initial selected text and no items yet, add it as an item
           this.$nextTick(() => {
-            if (!this.reviewMode && this.localSelectedText && !this.aiIsStreaming && !this.aiSearchLoading) {
-              try { this.aiSearchSelectedText() } catch (_) {}
+            const t = (this.localSelectedText || '').trim()
+            if (!this.reviewMode && t && (!this.nestedItems || this.nestedItems.length === 0)) {
+              try {
+                const mode = this.isSingleWord(t) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+                this.addNestedItemWithContext(t, null, mode)
+              } catch (_) {}
             }
           })
         } else {
-          this.stopStream(true)
-          this.stopAllNested()
+          this.clearAllCurrent()
         }
       }
-    },
-    aiParsedResponseText() {
-      const text = this.unescapeContent(this.aiResponseText || '')
-      return md.render(text)
-    },
-    hasHistory() {
-      return (!!(this.aiResponseText && this.aiResponseText.trim()) || (this.nestedItems && this.nestedItems.length > 0))
     }
   },
   methods: {
-    // Render helper for nested items
+    // Render helper for items
     renderMarkdown(text) { return md.render(this.unescapeContent(text || '')) },
 
     // Public API-like methods
     closeDialog() { this.reviewMode = false; this.dialogVisible = false },
     onBeforeClose() { this.reviewMode = false; this.dialogVisible = false },
-    openHistory() { this.reviewMode = true; this.dialogVisible = true },
 
-    // Handle selection inside the primary selection span: now replaces the main selection instead of adding nested item
-    handlePrimarySelection() {
+    // Handle selection inside any explanation content -> open selection options dialog
+    handleItemSelection(item) {
       if (this.reviewMode) return
       try {
-        const container = this.$refs.primarySelectionContent
+        const container = this.$refs['explanationContent_' + item.id]
         if (!container) return
         const sel = window.getSelection && window.getSelection()
         if (!sel || sel.rangeCount === 0) return
         const range = sel.getRangeAt(0)
-        if (!container.contains(range.commonAncestorContainer)) return
+        const containerEl = Array.isArray(container) ? container[0] : container
+        if (!containerEl || !containerEl.contains(range.commonAncestorContainer)) return
         const text = (sel.toString() || '').trim()
         if (!text) return
-        if (text === this.localSelectedText || (this.nestedItems || []).some(i => i.selectedText === text)) return
-        // Add as nested instead of replacing main selection
-        this.addNestedItem(text)
+        // Open the dialog showing options
+        this.selectionSelectedText = text
+        this.selectionSourceItemId = item.id
+        this.selectionDialogVisible = true
       } catch (_) { /* ignore */ }
     },
 
-    // Selection inside the AI response still adds a contextual explanation
-    handlePopupSelection() {
+    // Reference selection handling
+    handleReferenceSelection(item) {
       if (this.reviewMode) return
       try {
-        const container = this.$refs.aiResponseRef
-        if (!container) return
+        const ref = this.$refs['selectedRef_' + item.id]
+        const el = Array.isArray(ref) ? ref[0] : ref
+        if (!el) return
         const sel = window.getSelection && window.getSelection()
         if (!sel || sel.rangeCount === 0) return
         const range = sel.getRangeAt(0)
-        if (!container.contains(range.commonAncestorContainer)) return
+        if (!el.contains(range.commonAncestorContainer)) return
         const text = (sel.toString() || '').trim()
         if (!text) return
-        this.addNestedItem(text)
+        this.selectionSelectedText = text
+        this.selectionSourceItemId = item.id
+        this.selectionDialogVisible = true
       } catch (_) { /* ignore */ }
     },
 
-    addNestedItem(text) {
-      const selected = (text || '').trim()
+    // Selection dialog actions
+    handleCloseSelectionDialog() {
+      this.selectionDialogVisible = false
+      this.selectionSelectedText = ''
+      this.selectionSourceItemId = ''
+      try { window.getSelection && window.getSelection().removeAllRanges() } catch (_) {}
+    },
+    searchOnDictionaryFromDialog() {
+      const text = (this.selectionSelectedText || '').trim()
+      if (!text) { msgUtil.msgError(this, 'No text selected'); return }
+      const encodedText = encodeURIComponent(text)
+      const nativeLanguage = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
+      const queryParams = new URLSearchParams({
+        active: 'search',
+        selectedMode: 'detail',
+        language: nativeLanguage,
+        originalText: encodedText,
+        now: String(Date.now())
+      })
+      const dictionaryUrl = `https://kason.app/#/lazy/tools/detail?${queryParams.toString()}`
+      try { window.open(dictionaryUrl, '_blank') } catch (_) {}
+      this.handleCloseSelectionDialog()
+    },
+    explainSelectionFromDialog() {
+      const text = (this.selectionSelectedText || '').trim()
+      if (!text) { msgUtil.msgError(this, 'No text selected'); return }
+      const srcId = this.selectionSourceItemId
+      const srcItem = (this.nestedItems || []).find(i => i.id === srcId)
+      const context = srcItem ? srcItem.selectedText : ((this.nestedItems[this.nestedItems.length - 1] || {}).selectedText || '')
+      this.addNestedItemWithContext(text, context || null, 'selection-explanation')
+      this.handleCloseSelectionDialog()
+      // Smooth scroll into view after render
+      this.$nextTick(() => {
+        try {
+          const newItem = this.nestedItems[this.nestedItems.length - 1]
+          const refName = newItem ? ('explanationContent_' + newItem.id) : ''
+          const ref = refName ? this.$refs[refName] : null
+          const el = Array.isArray(ref) ? ref[0] : ref
+          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } catch (_) {}
+      })
+    },
+
+    // Add item with optional context and mode; if context is empty, fall back to the selection itself for explanation mode
+    addNestedItemWithContext(selectedText, contextText, promptMode) {
+      const selected = (selectedText || '').trim()
       if (!selected) return
-      // Prevent duplicates
-      if (selected === this.localSelectedText || (this.nestedItems || []).some(i => i.selectedText === selected)) return
+      const mode = promptMode || 'selection-explanation'
+      const context = mode === 'selection-explanation' ? ((contextText || '').trim() || selected) : ''
+      // Prevent duplicates by selected+context+mode triple
+      if ((this.nestedItems || []).some(i => i.selectedText === selected && (i.contextSelectedText || '') === context && i.promptMode === mode)) return
       const id = this.generateRequestId()
       const item = {
         id,
         selectedText: selected,
+        contextSelectedText: context,
+        promptMode: mode,
         responseText: '',
         isStreaming: false,
         loading: true,
@@ -253,11 +309,11 @@ export default {
     toggleItemCollapsed(item) { item.collapsed = !item.collapsed },
     closeItem(item) { this.stopItem(item, true); this.nestedItems = this.nestedItems.filter(i => i.id !== item.id) },
 
-    // Core: start per-item WS using first selection as context
+    // Core: start per-item WS using that item's context/mode
     startNestedForItem(item) {
       const promptSelection = item.selectedText
-      const context = (this.localSelectedText || '').trim()
-      if (!promptSelection || !context) { item.loading = false; return }
+      const context = (item.contextSelectedText || '').trim()
+      if (!promptSelection) { item.loading = false; return }
 
       const token = getStore({name: 'access_token'})
       if (!token) {
@@ -271,9 +327,14 @@ export default {
       const host = window.location.host
       const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
 
-      // Build contextual prompt using the same tags as AiResponseDetail
-      const prompt = `${kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION}${promptSelection}${kiwiConsts.AI_MODE_TAG.SPLITTER}${context}`
-      const promptMode = 'selection-explanation'
+      // Build prompt by mode
+      let prompt = ''
+      let promptMode = item.promptMode || 'selection-explanation'
+      if (promptMode === 'selection-explanation') {
+        prompt = `${kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION}${promptSelection}${kiwiConsts.AI_MODE_TAG.SPLITTER}${context}`
+      } else {
+        prompt = promptSelection
+      }
       const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
       const nativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
 
@@ -308,6 +369,15 @@ export default {
             } catch (_) { if (response.fullResponse) item.responseText = response.fullResponse }
             try { item.ws && item.ws.close() } catch (_) {}
             item.ws = null
+            // Persist history for this file
+            this.saveHistoryItem({
+              id: item.id,
+              selectedText: item.selectedText,
+              contextSelectedText: item.contextSelectedText,
+              promptMode: item.promptMode,
+              responseText: item.responseText,
+              timestamp: Date.now()
+            })
             break
           }
           case 'error': this.handleItemError(item, (response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : '')); break
@@ -336,22 +406,23 @@ export default {
         if (!silent) item.error = ''
       }
     },
-    stopAllNested() { (this.nestedItems || []).forEach(i => this.stopItem(i, true)) },
 
-    // Search primary action (auto mode by content length)
+    // Primary search action: if first item, vocabulary/direct; else explanation with last item's selection as context
     aiSearchSelectedText() {
       const text = (this.localSelectedText || '').trim()
       if (!text) {
         this.aiLastError = 'No text selected'
         return
       }
-      const isSingle = this.isSingleWord(text)
-      const promptMode = isSingle
-        ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value
-        : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-      const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
-      const nativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
-      this.startAiStreaming({ prompt: text, promptMode, targetLanguage, nativeLanguage })
+      const isFirst = (this.nestedItems || []).length === 0
+      if (isFirst) {
+        const mode = this.isSingleWord(text) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+        this.addNestedItemWithContext(text, null, mode)
+      } else {
+        const last = this.nestedItems[this.nestedItems.length - 1]
+        const ctx = last ? last.selectedText : null
+        this.addNestedItemWithContext(text, ctx, 'selection-explanation')
+      }
     },
 
     emitOpenInAiTab() {
@@ -361,124 +432,65 @@ export default {
         return
       }
       const query = buildAiTabQuery({ text, route: this.$route, overrides: { selectedMode: 'directly-translation' } })
-      this.stopStream(true)
-      this.stopAllNested()
+      this.clearAllCurrent()
       this.dialogVisible = false
       this.$emit('open-ai-tab', { text, query })
     },
 
-    // WS streaming core (primary)
-    startAiStreaming({ prompt, promptMode, targetLanguage, nativeLanguage }) {
-      // Clear any pending retry timer
+    clearAllCurrent() {
       if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer); this.aiRetryTimer = null }
+      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
+      this.aiWebsocket = null
+      this.aiSearchLoading = false
+      this.aiIsStreaming = false
       this.aiStarted = false
       this.aiLastError = ''
-      this.aiResponseText = ''
-      this.aiSearchLoading = true
-      this.aiIsStreaming = true
-      // Increment attempt counter; reset if first attempt of new request
-      if (!this.aiRequestId || this.localSelectedText !== prompt) {
-        this.aiConnectAttempts = 0
+      const items = Array.isArray(this.nestedItems) ? this.nestedItems : []
+      for (const it of items) {
+        try { if (it.ws) it.ws.close() } catch (_) {}
+        it.ws = null
+        it.isStreaming = false
+        it.loading = false
       }
-      this.aiConnectAttempts += 1
-      this.aiRequestId = this.generateRequestId()
-
-      const token = getStore({name: 'access_token'})
-      if (!token) {
-        this.aiSearchLoading = false
-        this.aiIsStreaming = false
-        this.aiLastError = 'Authentication token not found. Please login again.'
-        msgUtil.msgError(this, this.aiLastError)
-        return
-      }
-
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const host = window.location.host
-      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
-
-      try { this.stopStream(true) } catch (_) {}
-      try { this.aiWebsocket = new WebSocket(wsUrl) } catch (e) {
-        this.handleAiStreamError('Failed to open WebSocket')
-        return
-      }
-
-      this.aiWebsocket.onopen = () => {
-        const request = { prompt, promptMode, targetLanguage, nativeLanguage, aiUrl: wsUrl, timestamp: Date.now(), requestId: this.aiRequestId }
-        try { this.aiWebsocket.send(JSON.stringify(request)) } catch (e) { this.handleAiStreamError('Failed to send request') }
-      }
-
-      this.aiWebsocket.onmessage = (event) => {
-        let response
-        try { response = JSON.parse(event.data) } catch (error) { this.handleAiStreamError('Failed to parse response'); return }
-        switch (response.type) {
-          case 'connected': break
-          case 'started': this.aiStarted = true; this.aiIsStreaming = true; break
-          case 'chunk': if (response.chunk) this.aiResponseText += response.chunk; break
-          case 'completed': {
-            this.aiIsStreaming = false
-            this.aiSearchLoading = false
-            try {
-              const finalPayload = (response.fullResponse && response.fullResponse.length > 0) ? response.fullResponse : this.aiResponseText
-              const extracted = this.extractResponseTextFromPayload(finalPayload)
-              this.aiResponseText = (typeof extracted === 'string' && extracted.length > 0) ? extracted : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload))
-            } catch (_) { if (response.fullResponse) this.aiResponseText = response.fullResponse }
-            try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
-            this.aiWebsocket = null
-            break
-          }
-          case 'error': this.handleAiStreamError((response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : '')); break
-          default: break
-        }
-      }
-
-      this.aiWebsocket.onerror = () => this.handleAiStreamError('WebSocket connection error')
-      this.aiWebsocket.onclose = () => {
-        // Early close before any chunk: retry automatically if attempts remain
-        if (!this.aiStarted && this.aiConnectAttempts < this.aiMaxConnectAttempts && this.aiSearchLoading) {
-          this.scheduleAiRetry({ prompt, promptMode, targetLanguage, nativeLanguage })
-          return
-        }
-        // Normal close (after completion or user stop)
-        this.aiSearchLoading = false
-        this.aiIsStreaming = false
-      }
-    },
-    scheduleAiRetry(params) {
-      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
-      this.aiWebsocket = null
-      this.aiIsStreaming = false
-      // Keep loading state to indicate retry in progress
-      this.aiLastError = 'Connection failed, retrying...' // transient message
-      if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer) }
-      this.aiRetryTimer = setTimeout(() => {
-        this.aiRetryTimer = null
-        this.startAiStreaming(params)
-      }, 400)
-    },
-    handleAiStreamError(message) {
-      // If not started yet and we have retries left, attempt retry silently
-      if (!this.aiStarted && this.aiConnectAttempts < this.aiMaxConnectAttempts) {
-        this.scheduleAiRetry({ prompt: this.localSelectedText.trim(), promptMode: this.isSingleWord(this.localSelectedText) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value, targetLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese, nativeLanguage: getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese })
-        return
-      }
-      this.aiSearchLoading = false
-      this.aiIsStreaming = false
-      this.aiLastError = message || 'AI streaming error'
-      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
-      this.aiWebsocket = null
-      msgUtil.msgError(this, this.aiLastError)
-    },
-    stopStream(silent) {
-      if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer); this.aiRetryTimer = null }
-      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
-      this.aiWebsocket = null
-      this.aiSearchLoading = false
-      this.aiIsStreaming = false
-      this.aiStarted = false
-      if (!silent) this.aiLastError = ''
+      this.nestedItems = []
+      this.localSelectedText = ''
     },
 
-    // Utils
+    // History helpers (write only)
+    getHistoryKey() {
+      const name = (this.fileName || '').trim()
+      if (!name) return ''
+      return `pdf-ai-history:${name}`
+    },
+    loadHistory() {
+      try {
+        const key = this.getHistoryKey()
+        if (!key) return []
+        const raw = localStorage.getItem(key)
+        if (!raw) return []
+        const arr = JSON.parse(raw)
+        return Array.isArray(arr) ? arr : []
+      } catch (_) { return [] }
+    },
+    saveHistoryItem(entry) {
+      try {
+        const key = this.getHistoryKey()
+        if (!key) return
+        const arr = this.loadHistory()
+        arr.push({
+          id: entry.id || this.generateRequestId(),
+          selectedText: entry.selectedText,
+          contextSelectedText: entry.contextSelectedText,
+          promptMode: entry.promptMode,
+          responseText: entry.responseText,
+          timestamp: entry.timestamp || Date.now()
+        })
+        localStorage.setItem(key, JSON.stringify(arr))
+      } catch (_) { /* ignore */ }
+    },
+    formatTime(ts) {
+      try { return new Date(ts).toLocaleString() } catch (_) { return '' }
+    },
     generateRequestId() { return 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) },
     sanitizePotentialJsonString(str) {
       if (typeof str !== 'string') return ''
@@ -523,7 +535,7 @@ export default {
       return content
         .replace(/\\n/g, '\n')
         .replace(/\\t/g, '\t')
-        .replace(/\\"/g, '"')
+        .replace(/\\\"/g, '"')
         .replace(/\\\\/g, '\\')
     },
     isSingleWord(text) {
@@ -538,8 +550,13 @@ export default {
 
 <style scoped>
 .ai-dialog-content { padding: 10px 0; }
-.selected-text-preview { margin-bottom: 10px; color: #606266; }
-.ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: #fff; border: 1px solid #ebeef5; border-radius: 8px; }
+/* Removed primary selection preview and main response; using only explanation cards */
+
+/* Ensure markdown blocks stay left-aligned */
+.selection-response-content p,
+.selection-response-content ul,
+.selection-response-content ol,
+.selection-response-content li { text-align: left !important; }
 .inline-error { color: #f56c6c; background: #fdecea; border: 1px solid #f5c2c0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
 .dialog-footer {
   display: flex;
@@ -549,17 +566,22 @@ export default {
   gap: 12px;
   padding: 8px 0 4px;
 }
-.tiny-tip { margin-top: 6px; color: #909399; font-size: 12px; }
-.primary-selection-content { cursor: text; user-select: text; -webkit-user-select: text; }
-.sub-tip { margin-top: -4px; margin-bottom: 8px; font-size: 12px; color: #909399; }
 
-/* Floating history reopen button */
-.ai-history-floating { position: fixed; top: 16px; right: 16px; z-index: 3000; }
-
-/* Contextual explanations styling (inspired by AiResponseDetail) */
+/* Contextual explanations styling */
 .selection-response-container { margin-top: 16px; border: 1px solid #ebeef5; border-radius: 10px; background: #fff; }
 .selection-response-title { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; margin: 0; font-size: 14px; background: #f5f7fa; border-bottom: 1px solid #ebeef5; border-top-left-radius: 10px; border-top-right-radius: 10px; }
 .selection-title-controls { display: inline-flex; gap: 4px; }
 .selected-text-reference { padding: 8px 10px; color: #606266; }
-.selection-response-content { padding: 10px; text-align: justify; }
+.selection-response-content { padding: 10px; text-align: left; }
+
+/* Disable native mobile select/callout while keeping selection */
+.selection-response-content { -webkit-touch-callout: none; user-select: text; -webkit-user-select: text; }
+
+/* Selection dialog styles (minimal) */
+.selection-dialog-content { padding: 10px 0; }
+.selected-text-preview { margin-bottom: 12px; }
+.selected-text { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 10px; margin-top: 6px; font-style: italic; color: #495057; line-height: 1.6; max-height: 120px; overflow-y: auto; }
+.selection-dialog-footer { display: flex; align-items: stretch; justify-content: center; gap: 10px; flex-wrap: wrap; width: 100%; padding: 6px 0; }
+.selection-dialog-footer .el-button { flex: 1 1 0; min-width: 0; white-space: normal; word-break: break-word; }
+@media (max-width: 640px) { .selection-dialog-footer { flex-direction: column; align-items: stretch; gap: 8px; } .selection-dialog-footer .el-button { width: 100%; } }
 </style>

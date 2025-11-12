@@ -1,83 +1,3 @@
-<template>
-  <div class="list-container" :style="{ marginTop: listContentTop + 'px' }">
-    <!-- Paraphrase items list -->
-    <el-collapse v-if="listItems && listItems.length" class="kiwi-collapse">
-      <el-collapse-item
-        v-for="(item, idx) in listItems"
-        :key="item.paraphraseId || idx"
-        :title="item.wordName || $t('word.unknownWord')"
-        :name="item.paraphraseId || idx">
-        <div class="collapse-content">
-          <div class="paraphrase-translation">
-            <!-- We can't rely on list item fields; fetch detail on demand -->
-            <span>{{ $t('word.clickToViewDefinition') }}</span>
-          </div>
-          <div class="collapse-actions">
-            <el-button
-              class="collapse-action-button"
-              type="text"
-              size="mini"
-              @click="showDetail(item.paraphraseId, idx)"
-              :title="$t('word.showDetails')">
-              <i class="el-icon-more-outline"></i>
-            </el-button>
-            <el-button
-              class="collapse-action-button danger"
-              type="text"
-              size="mini"
-              @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"
-              :title="$t('word.removeFromCollection')">
-              <i class="el-icon-remove-outline"></i>
-            </el-button>
-          </div>
-        </div>
-      </el-collapse-item>
-    </el-collapse>
-
-    <!-- Empty state -->
-    <div v-else class="empty-state">{{ $t('common.noData') }}</div>
-
-    <!-- Pagination -->
-    <el-pagination
-      class="list-pagination"
-      small
-      :page-size.sync="page.size"
-      :current-page.sync="page.current"
-      :page-count="page.pages"
-      :pager-count="5"
-      :page-sizes="[10,20,50,100]"
-      layout="prev,pager,next,jumper"
-      @size-change="pageChange"
-      @current-change="pageChange"
-      :total="page.total">
-    </el-pagination>
-
-    <!-- Detail dialog -->
-    <el-dialog
-      :visible.sync="detail.dialogVisible"
-      width="80%"
-      :close-on-click-modal="true"
-      :append-to-body="true">
-      <template v-slot:title>
-        <span>{{ detail.paraphraseVO.wordName || $t('word.details') }}</span>
-      </template>
-      <div class="detail-body">
-        <div class="detail-row">
-          <div class="label">{{ $t('word.paraphraseEnglish') }}</div>
-          <div class="value">{{ detail.paraphraseVO.paraphraseEnglish || '-' }}</div>
-        </div>
-        <div class="detail-row">
-          <div class="label">{{ $t('word.meaningChinese') }}</div>
-          <div class="value">{{ detail.paraphraseVO.meaningChinese || '-' }}</div>
-        </div>
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="detail.dialogVisible = false">{{ $t('common.close') }}</el-button>
-      </span>
-    </el-dialog>
-  </div>
-</template>
-
 <script>
 import {getStore} from '@/util/store'
 import msgUtil from '@/util/msg'
@@ -281,24 +201,24 @@ export default {
 
       // Core object containing all review state and UI state
       detail: {
-        reviewLoading: false,
-        paraphraseVO: {},
-        dialogVisible: false,
-        showTranslation: !getStore({name: kiwiConsts.CONFIG_KEY.IS_EN_TO_EN}),
-        showWord: true,
-        hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',
-        playIndex: 0,
-        showIndex: 0,
-        isSleepMode: false,
-        listId: null,
-        firstReviewWord: null,
-        secondReviewWord: null,
-        apiKey: null,
-        audioPlayerUrls: [],
-        audioPlayerMap: new Map(),
-        audioPlayer: null,
-        audioPlayerToken: null,
-        isUnfoldOperateIcon: false,
+        reviewLoading: false,        // Loading state specifically for review operations
+        paraphraseVO: {},            // Current word's paraphrase data from API
+        dialogVisible: false,        // Controls visibility of the word detail dialog
+        showTranslation: !getStore({name: kiwiConsts.CONFIG_KEY.IS_EN_TO_EN}),  // Whether to show translations
+        showWord: true,              // Whether to show the word (hidden in Chinese->English mode)
+        hideTranslationPrompt: '释义已隐藏，点击灰暗区域隐藏/显示',  // Message when translations are hidden
+        playIndex: 0,                // Current index in the audio sequence
+        showIndex: 0,                // Current index in the word list display
+        isSleepMode: false,          // Whether sleep mode is active (minimal UI)
+        listId: null,                // ID of the current list being reviewed
+        firstReviewWord: null,       // Previous word (for detecting repeated words)
+        secondReviewWord: null,      // Current word (for detecting repeated words)
+        apiKey: null,                // API key for external services
+        audioPlayerUrls: [],         // Array of all audio URLs in the current sequence
+        audioPlayerMap: new Map(),   // Map of URL to Audio objects for reuse
+        audioPlayer: null,           // Current active audio player
+        audioPlayerToken: null,      // Token to track audio session validity
+        isUnfoldOperateIcon: false,  // Controls visibility of operation icons
         isEnableNoSleepMode: false,  // Whether NoSleep is active (prevents device sleep)
         skippedCount: 0,             // Tracks how many times skip has been used (affects skip behavior)
       },
@@ -327,11 +247,7 @@ export default {
       countdownMode: false,          // Whether countdown timer is active
       countdownTime: new Date().getTime(),  // End time for countdown
       countdownMin: 60,              // Duration in minutes
-      countdownText: '1小时',         // Display text for countdown
-
-      // dynamic top spacing to avoid overlap with fixed control bar
-      controlBarHeight: 0,
-      controlBarOffsetTop: 0
+      countdownText: '1小时'         // Display text for countdown
     }
   },
   beforeCreate: function () {
@@ -341,12 +257,6 @@ export default {
   async mounted() {
     await this.init()
     this.listenerMinBrowser()
-    // measure control bar after render
-    this.$nextTick(() => {
-      this.updateControlBarMetrics()
-      window.addEventListener('resize', this.updateControlBarMetrics, { passive: true })
-      window.addEventListener('orientationchange', this.updateControlBarMetrics, { passive: true })
-    })
   },
   destroyed() {
     if (this.detail.audioPlayer) {
@@ -355,8 +265,6 @@ export default {
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
     }
-    window.removeEventListener('resize', this.updateControlBarMetrics)
-    window.removeEventListener('orientationchange', this.updateControlBarMetrics)
   },
   watch: {
     'listId'() {
@@ -388,7 +296,7 @@ export default {
     showWordSpelling() {
       return this.detail.showWord ? this.detail.paraphraseVO.wordName : '点击切换是否显示单词'
     },
-    isDownloadReviewAudioModel() {
+    isDownloadReviewAudio() {
       return this.reviewMode === kiwiConsts.REVIEW_MODEL.DOWNLOAD_REVIEW_AUDIO
     },
     isStockReviewModel() {
@@ -403,12 +311,7 @@ export default {
       return (this.isReview && !this.detail.isSleepMode && !this.isFirstIncome) || !this.isReview
     },
     enableShowDetailIcon() {
-      return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConsts.REVIEW_MODEL.STOCK_REVIEW
-          || this.reviewMode === kiwiConsts.REVIEW_MODEL.STOCK_READ)
-    },
-    enableShowEnhanceDetailIcon() {
-      return this.detail.paraphraseVO.paraphraseId && (this.reviewMode === kiwiConsts.REVIEW_MODEL.ENHANCE_REVIEW
-          || this.reviewMode === kiwiConsts.REVIEW_MODEL.ENHANCE_READ)
+      return !this.detail.isUnfoldOperateIcon && !this.detail.dialogVisible && this.detail.paraphraseVO.paraphraseId
     },
     enableStopwatchIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview
@@ -420,7 +323,7 @@ export default {
       return !this.detail.isUnfoldOperateIcon
     },
     enableSleepModeIcon() {
-      return this.detail && !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible
+      return !this.detail.isUnfoldOperateIcon && this.isReview && this.detail.dialogVisible
     },
     enableStopPlayingIcon() {
       return !this.detail.isUnfoldOperateIcon && this.isReview && !this.isReviewStop
@@ -440,10 +343,6 @@ export default {
     isListItemsNotEmpty() {
       return this.listItems && this.listItems.length > 0
     },
-    // total top margin for the list to clear the fixed control bar
-    listContentTop() {
-      return Math.max(80, Math.ceil(this.controlBarOffsetTop + this.controlBarHeight + 12))
-    }
   },
   methods: {
     // These methods track consecutive identical words to optimize the audio sequence
@@ -483,27 +382,6 @@ export default {
 
     ...paraphraseStarList,
     ...msgUtil,
-    // Measure the fixed control bar and compute offset to push content below it
-    updateControlBarMetrics() {
-      this.$nextTick(() => {
-        const bar = document.querySelector('.control-bar')
-        if (!bar) {
-          // fallback margin when control bar not found
-          this.controlBarHeight = 0
-          this.controlBarOffsetTop = 68
-          return
-        }
-        const rect = bar.getBoundingClientRect()
-        const height = Math.ceil((rect && rect.height) || 0)
-        const computed = window.getComputedStyle(bar)
-        let topPx = 0
-        if (computed && computed.top && computed.top.endsWith('px')) {
-          topPx = parseFloat(computed.top) || 0
-        }
-        this.controlBarHeight = height
-        this.controlBarOffsetTop = topPx
-      })
-    },
     listenerMinBrowser() {
       document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
@@ -1073,43 +951,491 @@ export default {
             return
           }
         }
+        console.log('kason skipping... lastIndexPerPage', lastIndexPerPage)
         if (lastIndexPerPage) {
           this.page.current++
           await this.init()
         } else {
           if (this.isReview) {
             await this.ignoreCurrentReview(true)
-            if (this.playWordIndex < this.listItems.length - 1) {
-              this.playWordIndex++
-              await this.initNextReviseDetail(true)
-              if (!this.isDownloadReviewAudio && this.detail.audioPlayer) {
-                this.detail.audioPlayer.play()
-              }
-            }
+            // 每个单词播放前要计算播放audio数量，词组和单词不一样
+            await this.initNextReviseDetail(true)
+                .then(() => {
+                  if (that.isDownloadReviewAudio) {
+                    ++that.playWordIndex
+                  } else {
+                    that.detail.audioPlayer.play()
+                  }
+                }).catch(e => {
+                  this.msgError(that, '初始化下一个释义详情异常!')
+                  console.error('initNextReviseDetail error')
+                  console.error(e)
+                })
+            await this.showDetailNotLoadData()
           } else {
-            if (this.detail.showIndex < this.listItems.length - 1) {
-              this.detail.showIndex++
-              await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
-            } else {
-              this.page.current++
-              await this.init()
-            }
+            await this.showDetail(this.listItems[this.detail.showIndex].paraphraseId, this.detail.showIndex)
           }
         }
       } catch (e) {
+        alert('skipCurrent error.')
         console.error(e)
       }
     },
+    async refreshReviseDetail() {
+      this.notifySuccess(this, '操作提示', '正在刷新当前复习资源')
+      await this.cleanDetailRevising()
+      this.prepareReview()
+      await this.recursiveReview()
+    },
+    async cleanRevising() {
+      this.reviseAudioCandidates = []
+      this.detail.firstReviewWord = null
+      this.detail.secondReviewWord = null
+      this.detail.paraphraseVO = {}
+      this.detail.dialogVisible = false
+      this.detail.audioPlayerToken = new Date().getTime()
+      this.detail.audioPlayerMap.clear()
+    },
+    async cleanInitRevising() {
+      // stop playing
+      await this.stopPlaying()
+      await this.cleanRevising()
+      this.detail.showIndex = 0
+      this.playWordIndex = 0
+      this.listItems = []
+      if (this.isChToEn) {
+        this.detail.showWord = false
+      }
+    },
+    prepareReview() {
+      this.isReviewStop = false
+    },
+    async cleanDetailRevising() {
+      await this.stopPlaying()
+      await this.cleanRevising()
+    },
+    extractReviewAudioUrls: function () {
+      console.log('this.isLastReviewWordSame() in extractReviewAudioUrls', this.isLastReviewWordSame())
+      let paraphraseId = this.detail.paraphraseVO.paraphraseId
+      let wordId = this.detail.paraphraseVO.wordId
+      let wordCharacter = this.detail.paraphraseVO.wordCharacter
+      let ukPronunciationUrl = this.assemblePronunciationUrl(false)
+      let usPronunciationUrl = this.assemblePronunciationUrl(true)
+
+      // Choose appropriate audio sequence based on mode
+      if (this.isDownloadReviewAudio) {
+        let ch2EnUrls = audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        let en2ChUrls = audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList)
+        return util.mergeAndFilter(ch2EnUrls, en2ChUrls)
+      } else {
+        if (this.isChToEn) {
+          return audioUtil.extractedCh2EnUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+        } else {
+          return audioUtil.extractedEn2ChUrls(this.isLastReviewWordSame(), paraphraseId, wordId, ukPronunciationUrl, usPronunciationUrl, wordCharacter, this.detail.paraphraseVO.exampleVOList);
+        }
+      }
+    },
+    getCurrentAudioPlayer: function (index) {
+      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[index ? index : this.detail.playIndex])
+    },
+    setSoundListener: function (sound, token) {
+      sound.addEventListener('ended', async function () {
+        that.isReviewPlaying = false
+        if (that.isChToEn) {
+          let sleepMs = audioUtil.acquireCh2EnIndexSleepMsMap().get(that.detail.playIndex)
+          if (sleepMs) {
+            that.notifySuccess(that, '倒计时提示', '停留3秒时间，请在脑海联想对应的单词或句子')
+            await util.sleep(sleepMs)
+                .then(() => {
+                  if (that.detail.playIndex === 1) {
+                    that.detail.showWord = true
+                  }
+                })
+          }
+        }
+
+        // Crucial part - check if we should continue playback
+        if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
+          return
+        }
+        console.log('kason 1 that.detail.playIndex++ ' + that.detail.playIndex)
+        console.log('that.detail.audioPlayerMap', that.detail.audioPlayerMap)
+        console.log('that.detail.audioPlayerUrls', that.detail.audioPlayerUrls)
+        if (++that.detail.playIndex < that.detail.audioPlayerUrls.length) {
+          that.detail.audioPlayer = that.getCurrentAudioPlayer()
+          console.log('that.detail.audioPlayer', that.detail.audioPlayer)
+          that.detail.audioPlayer.play()
+        } else {
+          ++that.playWordIndex
+          console.log('kason 2 that.playWordIndex++ ' + that.playWordIndex)
+        }
+      })
+      sound.addEventListener('play', function () {
+        // console.log('onplay: ' + urls[that.detail.playIndex])
+        // that.notifySuccess(that, 'play ' + i)
+        that.isReviewPlaying = true
+        that.detail.reviewLoading = false
+      })
+      sound.addEventListener('pause', function () {
+        that.isReviewPlaying = false
+      })
+      sound.addEventListener('error', function () {
+        // that.notifySuccess(that, 'error ' + i)
+        that.isReviewPlaying = false
+        that.detail.reviewLoading = false
+      })
+    },
+    async createReviseQueue(token) {
+      if (token !== this.detail.audioPlayerToken) {
+        return []
+      }
+
+      if (this.isDownloadReviewAudio) {
+        this.msgSuccess(this, `${this.detail.paraphraseVO.wordName} audio resources is downloading`, 4000);
+      }
+
+      let urls = this.extractReviewAudioUrls()
+      console.log('extracting urls', urls)
+      await audioUtil.rebuildUrls(urls)
+      console.log('rebuildUrls', urls)
+
+      this.detail.audioPlayerUrls = urls
+
+      if (this.isDownloadReviewAudio) {
+        let msg = `${this.detail.paraphraseVO.wordName} audio resources successfully downloaded`;
+        this.msgSuccess(this, msg, 4000)
+        console.log(msg)
+      }
+
+      this.detail.playIndex = 0
+      for (let i = 0; i < this.detail.audioPlayerUrls.length; i++) {
+        // noinspection JSUnusedGlobalSymbols
+        let sound = this.detail.audioPlayerMap.get(urls[i]);
+        console.log('this.detail.audioPlayerMap', this.detail.audioPlayerMap)
+        console.log('this.detail.audioPlayerMap sound', sound)
+        if (sound === null || sound === undefined) {
+          sound = new Audio(urls[i])
+          if (!this.isChToEn) {
+            if (!this.isLastReviewWordSame() && i < audioVolumesEn2Ch.length) {
+              sound.volume = audioVolumesEn2Ch[i]
+            } else if (this.isLastReviewWordSame() && i < audioVolumesEn2ChWhenLastIsSame.length) {
+              sound.volume = audioVolumesEn2ChWhenLastIsSame[i]
+            }
+          }
+          sound.loop = false;
+          this.setSoundListener(sound, token)
+
+          console.log('this.detail.audioPlayerMap.set(urls[i], sound)', urls[i], sound)
+          this.detail.audioPlayerMap.set(urls[i], sound)
+        }
+      }
+    },
+
   }
 }
 </script>
+
+<template>
+  <div class="list-container" v-loading="loading">
+    <div style="z-index: 1;">
+      <el-card v-if="isReview" class="box-card timer-card">
+        <div>
+          <el-dropdown
+              size="mini"
+              split-button type="info" @command="countdownSelectHandle">
+            <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
+            <template v-slot:dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
+                <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
+                <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
+                <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
+                <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+        <div v-if="countdownMode">
+          <br/>
+          <Countdown :endTime="countdownTime"
+                     @endFun="countdownEndFun"></Countdown>
+        </div>
+      </el-card>
+      <el-collapse v-for="(item, index) in listItems" :key="item.paraphraseId || index" accordion class="kiwi-collapse">
+        <el-collapse-item :title="item.wordName" :name="item.wordId">
+          <div class="collapse-content">
+            <p class="paraphrase-english">
+              {{ item.paraphraseEnglish }}
+            </p>
+            <div class="paraphrase-translation">
+              {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏' }}
+            </div>
+            <div class="collapse-actions">
+              <el-button class="collapse-action-button info"
+                         type="text"
+                         size="mini"
+                         @click="showDetail(item.paraphraseId, index)"
+                         title="查看详情">
+                <i class="el-icon-more-outline"></i>
+              </el-button>
+              <el-button class="collapse-action-button danger"
+                         type="text"
+                         size="mini"
+                         @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"
+                         title="从收藏移除">
+                <i class="el-icon-remove-outline"></i>
+              </el-button>
+            </div>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+      <el-pagination
+          v-if="isShowPagination"
+          class="list-pagination"
+          small
+          :page-size.sync="page.size"
+          :current-page.sync="page.current"
+          :page-count="page.pages"
+          :pager-count="5"
+          :page-sizes="[10,20,50,100]"
+          layout="prev,pager,next,jumper"
+          @size-change="pageChange"
+          @current-change="pageChange"
+          :total="page.total">
+      </el-pagination>
+
+      <!--释义详情弹窗-->
+      <el-dialog
+          ref="detailDialog"
+          :visible.sync="detail.dialogVisible"
+          fullscreen
+          width="100%">
+        <div slot="title" class="dialog-title-bar">
+          <v-touch
+              @click.stop="autoPlayDialogVisible++"
+              @swipeup="stopPlaying"
+              @swipedown="showNext(true)"
+              @swipeleft="rememberInSleepMode(false)"
+              @swiperight="showNext(false)">
+            <div v-if="detail.isSleepMode"
+                 @click="refreshReviseDetail"
+                 :style="{height: innerHeightSleepModePx, background: '#909399'}">
+              <br/>
+              <span class="sleep-tip-badge"><i class="el-icon-right"/>&nbsp;右滑跳过</span>
+              <br/>
+              <span class="sleep-tip-badge"><i class="el-icon-back"/>&nbsp;左滑记住</span>
+              <br/>
+              <span class="sleep-tip-badge"><i class="el-icon-thumb"/>&nbsp;单击从头开始听当前单词/当音频卡住时也可用
+              </span>
+              <br/>
+              <span class="sleep-tip-badge"><i class="el-icon-top"/>&nbsp;上滑暂停当前播放单词</span>
+              <br/>
+              <span class="sleep-tip-badge"><i class="el-icon-bottom"/>&nbsp;下滑跳过spelling</span>
+              <br/>
+              <span class="sleep-tip-badge"><i class="el-icon-document-copy"/>&nbsp;滑动两边或者底部白色区域可以下拉或者上拉
+              </span>
+            </div>
+          </v-touch>
+          <el-divider v-if="detail.isSleepMode"></el-divider>
+          <span class="word-spelling" @click="detail.showWord = !detail.showWord">
+            {{ showWordSpelling }}
+          </span>
+          &nbsp
+          <el-button type="info"
+                     v-if="isReview && detail.isSleepMode"
+                     @click="switchSleepMode"
+                     size="mini">
+            <i class="el-icon-thumb"></i>
+          </el-button>
+        </div>
+
+        <!-- Detail content card (lightweight, custom styled) -->
+        <div class="detail-card">
+          <!-- Meta tags row -->
+          <div class="detail-meta" v-if="detail.paraphraseVO.paraphraseId">
+            <span class="meta-tag" v-if="detail.paraphraseVO.wordCharacter">{{ detail.paraphraseVO.wordCharacter }}</span>
+            <span class="meta-tag" v-if="detail.paraphraseVO.wordLabel && detail.paraphraseVO.wordLabel !== ''">
+              {{ detail.paraphraseVO.wordLabel }}
+            </span>
+          </div>
+
+          <!-- Pronunciations -->
+          <div class="pronunciations" v-if="!detail.paraphraseVO.isOverlength && detail.paraphraseVO.pronunciationVOList">
+            <span class="pronunciation-badge"
+                  v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList"
+                  :key="wordPronunciationVO.pronunciationId"
+                  @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+              {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+              <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="!isUKPronunciationPlaying" class="el-icon-video-play"></i>
+              <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="!isUSPronunciationPlaying" class="el-icon-video-play"></i>
+              <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="isUKPronunciationPlaying" class="el-icon-loading"></i>
+              <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="isUSPronunciationPlaying" class="el-icon-loading"></i>
+            </span>
+          </div>
+          <div v-if="detail.paraphraseVO.isOverlength && detail.paraphraseVO.pronunciationVOList">
+            <div class="pronunciations" v-for="wordPronunciationVO in detail.paraphraseVO.pronunciationVOList" :key="wordPronunciationVO.pronunciationId">
+              <span class="pronunciation-badge"
+                    @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
+                {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
+                <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="!isUKPronunciationPlaying" class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="!isUSPronunciationPlaying" class="el-icon-video-play"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'UK'" v-show="isUKPronunciationPlaying" class="el-icon-loading"></i>
+                <i v-if="wordPronunciationVO.soundmarkType === 'US'" v-show="isUSPronunciationPlaying" class="el-icon-loading"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Paraphrase main content & translation (click to toggle) -->
+          <div class="paraphrase-content" @click="detail.showTranslation = !detail.showTranslation">
+            <div class="phrase-list" v-if="detail.paraphraseVO.phraseList && detail.paraphraseVO.phraseList.length">
+              <span v-for="(phrase, idx) in detail.paraphraseVO.phraseList" :key="idx" class="phrase-chip">{{ phrase }}</span>
+            </div>
+            <p class="paraphrase-codes" v-if="detail.paraphraseVO.codes">{{ this.detail.paraphraseVO.codes }}</p>
+            <div class="paraphrase-english-text">
+              {{ this.detail.paraphraseVO.paraphraseEnglish }}
+            </div>
+            <div class="translation-box">
+              {{ detail.showTranslation ? detail.paraphraseVO.meaningChinese : detail.hideTranslationPrompt }}
+            </div>
+          </div>
+
+          <!-- Examples -->
+          <div v-if="enableParaphraseExamples" class="info-notice">该释义暂时没有例句</div>
+
+          <div v-for="wordParaphraseExampleVO in this.detail.paraphraseVO.exampleVOList"
+               :key="wordParaphraseExampleVO.exampleId || wordParaphraseExampleVO.exampleSentence"
+               class="example-item"
+               @click="detail.showTranslation = !detail.showTranslation">
+            <div class="example-title">{{ wordParaphraseExampleVO.exampleSentence }}</div>
+            <div class="example-translation">
+              {{ detail.showTranslation ? wordParaphraseExampleVO.exampleTranslate : '释义已经隐藏，点击该区域显示/隐藏' }}
+            </div>
+          </div>
+
+          <div style="margin-top: 100px"></div>
+        </div>
+      </el-dialog>
+      <el-dialog
+          :title="isChToEn ? '汉英模式' : '英汉模式（默认）'"
+          v-if="!isDownloadReviewAudio"
+          :visible="enableFirstIncomeReviewMode"
+          :show-close="false"
+          width="300px">
+        <el-alert
+            :closable="false"
+            type="warning">
+          复习期间如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
+        </el-alert>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
+        </div>
+      </el-dialog>
+    </div>
+    <div v-if="enableOperationIcon"
+         style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
+      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
+                 @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
+        <i class="el-icon-document"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="enableSleepModeIcon"
+                 @click="switchSleepMode"
+                 size="mini">
+        <i class="el-icon-thumb"></i>
+      </el-button>
+      <el-button type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
+        <i class="el-icon-d-arrow-left"></i>
+      </el-button>
+      <el-button v-if="showNextPageIcon"
+                 type="info" size="mini" @click="nextPageFun">
+        <i class="el-icon-d-arrow-right"></i>
+      </el-button>
+
+      <br/>
+      <el-button v-if="enableSkipSomeAudioIcon" type="info" size="mini"
+                 @click="showNext(true)">
+        <i class="el-icon-finished"></i>
+      </el-button>
+      <el-button v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
+        <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
+        <i class="el-icon-switch-button" v-if="countdownMode"></i>
+      </el-button>
+      <el-button v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
+        <i class="el-icon-arrow-left"></i>
+      </el-button>
+      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
+        <i class="el-icon-arrow-right"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="enableStopPlayingIcon"
+                 @click="stopPlaying"
+                 size="mini">
+        <i class="el-icon-video-pause"></i>
+      </el-button>
+      <el-button type="info"
+                 v-if="enableRefreshReviseDetailIcon"
+                 @click="refreshReviseDetail"
+                 size="mini">
+        <i class="el-icon-brush"></i>
+      </el-button>
+
+      <br/>
+
+      <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
+                 type="info" size="mini" @click="rememberOneFun">
+        <i class="el-icon-success"></i>
+      </el-button>
+      <el-button
+          v-if="isEnhanceReviewModel && !detail.isUnfoldOperateIcon"
+          type="info" size="mini" @click="keepInMindFun">
+        <i class="el-icon-medal"></i>
+      </el-button>
+      <el-button type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
+                 size="mini" @click="handleShowDetail">
+        <i class="el-icon-open"></i>
+      </el-button>
+      <el-button
+          v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
+          type="info" size="mini" @click="forgetOneFun">
+        <i class="el-icon-question"></i>
+      </el-button>
+      <el-button type="info" size="mini"
+                 @click="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon">
+        <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
+        <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>
+      </el-button>
+
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .list-container {
   margin: 20px 0 10px;
 }
 
-/* Collapse card styling aligned with other detail pages */
+/* Ensure any top buttons/toolbar doesn't overlap the list */
+.list-container .kiwi-collapse:first-of-type {
+  margin-top: 6px;
+}
+
+/* Dialog title bar spacing to avoid overlap with content */
+.dialog-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Timer card aligned with AiResponseDetail aesthetic */
+.timer-card {
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 14px;
+}
+
+/* Collapse card styling aligned with AiResponseDetail */
 ::v-deep .kiwi-collapse .el-collapse-item {
   border: 1px solid #e4e7ed;
   border-radius: 12px;
@@ -1148,7 +1474,16 @@ export default {
   color: #2c3e50;
 }
 
-.collapse-content { line-height: 1.7; }
+.collapse-content {
+  line-height: 1.7;
+}
+
+.paraphrase-english {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  color: #2c3e50;
+}
+
 .paraphrase-translation {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
@@ -1161,7 +1496,7 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 6px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .collapse-action-button {
@@ -1173,21 +1508,184 @@ export default {
   transition: all 0.3s ease;
 }
 
+.collapse-action-button.info {
+  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+}
+
 .collapse-action-button.danger {
   background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%) !important;
 }
 
-.list-pagination { margin-top: 16px; }
+.collapse-action-button:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
 
-.empty-state { color: #909399; text-align: center; padding: 24px 0; }
+.list-pagination {
+  margin-top: 16px;
+}
 
-.detail-body { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 8px; align-items: baseline; }
-.label { color: #606266; font-weight: 600; }
-.value { color: #2c3e50; }
+/* Detail dialog content styles (aligned with AiResponseDetail) */
+.detail-card {
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 16px 16px 40px 16px;
+}
+
+.detail-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  background: #8c939d;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.meta-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.pronunciations {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  background: #8c939d;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.pronunciation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef5ff;
+  color: #2c3e50;
+  border: 1px solid #d6e4ff;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.paraphrase-content {
+  margin-top: 6px;
+}
+
+.phrase-list {
+  margin-bottom: 8px;
+}
+
+.phrase-chip {
+  display: inline-block;
+  background: #eef2f7;
+  border: 1px solid #e1e5ea;
+  color: #4a5568;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin: 0 6px 6px 0;
+}
+
+.paraphrase-codes {
+  color: #6c757d;
+  font-size: 13px;
+  margin: 4px 0 6px 0;
+}
+
+.paraphrase-english-text {
+  word-wrap: break-word;
+  overflow: hidden;
+  color: #2c3e50;
+  line-height: 1.7;
+}
+
+.translation-box {
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  color: #495057;
+}
+
+.info-notice {
+  margin-top: 12px;
+  background: #f8f9fa;
+  border: 1px dashed #d4edda;
+  color: #2f855a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.example-item {
+  margin-top: 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.example-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.example-translation {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 10px;
+  color: #495057;
+}
+
+.word-spelling {
+  font-size: larger;
+  font-weight: bolder;
+  font-family: sans-serif;
+  color: #606266;
+  cursor: pointer;
+}
+
+.sleep-tip-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
 
 @media (max-width: 768px) {
-  ::v-deep .kiwi-collapse .el-collapse-item__header { padding: 12px 14px; font-size: 14px; }
-  ::v-deep .kiwi-collapse .el-collapse-item__content { padding: 14px 16px; }
+  ::v-deep .kiwi-collapse .el-collapse-item__header {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  ::v-deep .kiwi-collapse .el-collapse-item__content {
+    padding: 14px 16px;
+  }
+
+  .paraphrase-english {
+    font-size: 14px;
+  }
+
+  .detail-card {
+    padding: 12px 12px 24px 12px;
+  }
 }
 </style>
