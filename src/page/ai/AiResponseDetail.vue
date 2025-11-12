@@ -1736,14 +1736,15 @@ export default {
   padding: 6px 0;
 }
 .selection-dialog-footer .el-button {
-  flex: 1 1 30%;
-  min-width: 140px;
-  white-space: nowrap; /* prevent label wrapping */
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
 }
 
 @media (max-width: 640px) {
   .selection-dialog-footer { flex-direction: column; align-items: stretch; gap: 8px; }
-  .selection-dialog-footer .el-button { width: 100%; min-width: 0; }
+  .selection-dialog-footer .el-button { width: 100%; }
 }
 
 .inline-error {
