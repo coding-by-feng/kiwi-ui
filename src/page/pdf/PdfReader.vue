@@ -88,18 +88,22 @@
       </template>
       <template v-else>
         <div class="pdf-reader__layout">
-          <div class="pdf-reader__page-column" ref="pageColumn">
+          <div
+            class="pdf-reader__page-column"
+            ref="pageColumn"
+            @mouseup="handlePointerSelection"
+            @touchend="handleTouchSelection"
+          >
             <div
-              v-for="pageNumber in totalPages"
-              :key="pageNumber"
-              class="pdf-reader__page-viewer"
-              ref="pageContainers"
-              :data-page-number="pageNumber"
+              v-if="loading"
+              class="pdf-reader__page-loading"
             >
-              <div v-if="loading" class="pdf-reader__page-loading">
-                <i class="el-icon-loading"></i>
-              </div>
+              <i class="el-icon-loading"></i>
             </div>
+            <div
+              ref="viewerContainer"
+              class="pdf-reader__viewer pdfViewer"
+            ></div>
           </div>
           <div
             v-if="!rightCollapsed"
@@ -138,6 +142,7 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
 import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry'
 import 'pdfjs-dist/web/pdf_viewer.css'
+import { EventBus, PDFLinkService, PDFViewer } from 'pdfjs-dist/legacy/web/pdf_viewer'
 import { getStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it'
@@ -177,10 +182,6 @@ export default {
       errorMessage: '',
       selectedText: '',
       showSelectionPopup: false,
-      popupPosition: {
-        top: 0,
-        left: 0
-      },
       renderScale: DEFAULT_RENDER_SCALE,
       currentPdfData: null,
       totalPages: 0,
@@ -191,16 +192,13 @@ export default {
       leftFullscreen: false,
       isSmallScreen: window.innerWidth <= 768,
       userAdjustedLayout: false,
-      markdownRenderer: null
+      markdownRenderer: null,
+      pdfViewer: null,
+      pdfEventBus: null,
+      pdfLinkService: null
     }
   },
   computed: {
-    popupStyle() {
-      return {
-        top: `${this.popupPosition.top}px`,
-        left: `${this.popupPosition.left}px`
-      }
-    },
     readerClass() {
       return {
         'pdf-reader--right-collapsed': this.rightCollapsed,
@@ -220,6 +218,8 @@ export default {
     }
   },
   async mounted() {
+    await this.$nextTick()
+    this.initPdfViewer()
     document.addEventListener('click', this.handleDocumentClick)
     window.addEventListener('resize', this.handleResize)
     await this.restoreCachedPdfIfNeeded()
@@ -230,10 +230,34 @@ export default {
     window.removeEventListener('resize', this.handleResize)
   },
   methods: {
+    initPdfViewer() {
+      if (this.pdfViewer) return
+      const container = this.$refs.pageColumn
+      const viewer = this.$refs.viewerContainer
+      if (!container || !viewer) return
+
+      this.pdfEventBus = new EventBus()
+      this.pdfLinkService = new PDFLinkService({ eventBus: this.pdfEventBus })
+      this.pdfViewer = new PDFViewer({
+        container,
+        viewer,
+        eventBus: this.pdfEventBus,
+        linkService: this.pdfLinkService,
+        textLayerMode: 2,
+        useOnlyCssZoom: true
+      })
+      this.pdfLinkService.setViewer(this.pdfViewer)
+      this.pdfEventBus.on('pagesinit', () => {
+        if (this.pdfViewer) {
+          this.pdfViewer.currentScale = this.renderScale
+        }
+      })
+    },
     handleDocumentClick(e) {
       if (!this.showSelectionPopup) return
       const inTextPanel = this.isNodeWithinElements(e.target, this.getMarkdownElements())
-      if (!inTextPanel) {
+      const inViewer = this.isNodeWithinElements(e.target, this.getPageWrappers())
+      if (!inTextPanel && !inViewer) {
         this.closePopup()
       }
     },
@@ -291,75 +315,18 @@ export default {
       }
     },
     async renderPdf(source) {
+      this.initPdfViewer()
       const typedArray = source instanceof Uint8Array ? source : new Uint8Array(source)
       const loadingTask = pdfjsLib.getDocument({ data: typedArray })
       const pdf = await loadingTask.promise
 
       this.clearViewer()
       this.totalPages = pdf.numPages
-      await this.$nextTick()
-
-      const renderedPages = []
-
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        const page = await pdf.getPage(pageNumber)
-        const viewport = page.getViewport({ scale: this.renderScale })
-
-        const pageContainer = document.createElement('div')
-        pageContainer.className = 'pdf-page'
-        pageContainer.style.width = `${viewport.width}px`
-        pageContainer.style.height = `${viewport.height}px`
-
-        const canvas = document.createElement('canvas')
-        const context = canvas.getContext('2d')
-        canvas.height = viewport.height
-        canvas.width = viewport.width
-        canvas.style.width = `${viewport.width}px`
-        canvas.style.height = `${viewport.height}px`
-
-        pageContainer.appendChild(canvas)
-
-        const textLayerDiv = document.createElement('div')
-        textLayerDiv.className = 'textLayer'
-        textLayerDiv.style.height = `${viewport.height}px`
-        textLayerDiv.style.width = `${viewport.width}px`
-        textLayerDiv.setAttribute('data-page-number', pageNumber)
-        pageContainer.appendChild(textLayerDiv)
-
-        await page.render({ canvasContext: context, viewport }).promise
-        const textContent = await page.getTextContent()
-        const renderTask = pdfjsLib.renderTextLayer
-          ? pdfjsLib.renderTextLayer({
-            textContent,
-            container: textLayerDiv,
-            viewport,
-            textDivs: [],
-            enhanceTextSelection: true
-          })
-          : null
-
-        if (renderTask) {
-          if (typeof renderTask.promise?.then === 'function') {
-            await renderTask.promise
-          } else if (typeof renderTask.then === 'function') {
-            await renderTask
-          }
-        } else {
-          this.fallbackRenderText(textLayerDiv, textContent, viewport)
-        }
-
-        renderedPages.push({ pageNumber, fragment: pageContainer })
+      if (this.pdfViewer && this.pdfLinkService) {
+        this.pdfLinkService.setDocument(pdf, null)
+        this.pdfViewer.setDocument(pdf)
+        this.pdfViewer.currentScale = this.renderScale
       }
-
-      await this.$nextTick()
-
-      renderedPages.forEach(({ pageNumber, fragment }) => {
-        const wrapper = this.getPageWrapper(pageNumber)
-        if (wrapper) {
-          wrapper.innerHTML = ''
-          wrapper.appendChild(fragment)
-        }
-      })
     },
     async generateMarkdown(source) {
       const buffer = source instanceof Uint8Array ? source : new Uint8Array(source)
@@ -440,28 +407,6 @@ export default {
       }
       return this.markdownRenderer
     },
-    fallbackRenderText(container, textContent, viewport) {
-      if (!textContent?.items) return
-      textContent.items.forEach(item => {
-        const span = document.createElement('span')
-        span.textContent = item.str
-        span.style.position = 'absolute'
-        span.style.whiteSpace = 'pre'
-        const transformFn = pdfjsLib?.Util?.transform
-        if (typeof transformFn === 'function') {
-          const transformed = transformFn(viewport.transform, item.transform)
-          span.style.left = `${transformed[4]}px`
-          span.style.top = `${transformed[5] - transformed[3]}px`
-          span.style.fontSize = `${Math.abs(transformed[3])}px`
-        } else {
-          span.style.left = `${item.transform?.[4] || 0}px`
-          span.style.top = `${item.transform?.[5] || 0}px`
-          span.style.fontSize = `${Math.abs(item.transform?.[3] || 12)}px`
-        }
-        span.style.transformOrigin = '0 0'
-        container.appendChild(span)
-      })
-    },
     handlePointerSelection(event) {
       this.$nextTick(() => this.processSelection(event))
     },
@@ -494,38 +439,20 @@ export default {
     },
     async setZoom(scale) {
       if (!this.pdfLoaded || !this.currentPdfData) return
-      const oldScale = this.renderScale
       const newScale = this.clampScale(scale)
-      if (Math.abs(newScale - oldScale) < 1e-6) return
+      if (Math.abs(newScale - this.renderScale) < 1e-6) return
       this.renderScale = newScale
       cachedPdfState.renderScale = newScale
-      await this.rerenderWithScale(oldScale, newScale)
+      if (this.pdfViewer) {
+        this.pdfViewer.currentScale = newScale
+      }
+      this.cacheCurrentPdfState(this.currentPdfData)
     },
     async zoomIn() {
       await this.setZoom(this.renderScale + RENDER_STEP)
     },
     async zoomOut() {
       await this.setZoom(this.renderScale - RENDER_STEP)
-    },
-    async rerenderWithScale(oldScale, newScale) {
-      try {
-        this.loading = true
-        // Preserve approximate scroll position
-        const col = this.$refs.pageColumn
-        const prevScrollTop = col && typeof col.scrollTop === 'number' ? col.scrollTop : 0
-        await this.renderPdf(this.currentPdfData)
-        await this.$nextTick()
-        if (col && typeof prevScrollTop === 'number') {
-          const ratio = newScale && oldScale ? (newScale / oldScale) : 1
-          col.scrollTop = Math.round(prevScrollTop * ratio)
-        }
-        // Update cache with other states
-        this.cacheCurrentPdfState(this.currentPdfData)
-      } catch (e) {
-        console.error('[PdfReader] Rerender on zoom failed:', e)
-      } finally {
-        this.loading = false
-      }
     },
     updateCachedLayoutState() {
       cachedPdfState.rightCollapsed = this.rightCollapsed
@@ -553,19 +480,14 @@ export default {
       }
     },
     getPageWrappers() {
-      const refs = this.$refs.pageContainers
-      if (!refs) return []
-      return Array.isArray(refs) ? refs : [refs]
+      const viewer = this.$refs.viewerContainer
+      if (!viewer) return []
+      return Array.from(viewer.querySelectorAll('.page'))
     },
     getMarkdownElements() {
       const pane = this.$refs.markdownPane
       if (!pane) return []
       return Array.isArray(pane) ? pane : [pane]
-    },
-    getPageWrapper(pageNumber) {
-      return this.getPageWrappers().find(
-        el => Number(el?.dataset?.pageNumber) === Number(pageNumber)
-      )
     },
     isNodeWithinElements(node, elements) {
       if (!node || !elements?.length) return false
@@ -652,21 +574,12 @@ export default {
       const container = range.commonAncestorContainer
       const inViewer = this.isNodeWithinElements(container, this.getPageWrappers())
       const inTextPanel = this.isNodeWithinElements(container, this.getMarkdownElements())
-      if (inViewer && !inTextPanel) { this.closePopup(); return }
-      if (!inTextPanel) { this.closePopup(); return }
+      if (!inViewer && !inTextPanel) { this.closePopup(); return }
 
       const normalized = selectedText.replace(/\s+/g, ' ').trim()
       if (!normalized) { this.closePopup(); return }
 
       this.selectedText = normalized
-      // Position calculation kept but no custom bubble UI now; component is centered by Element UI
-      let rect = range.getBoundingClientRect()
-      if (!rect || (rect.top === 0 && rect.bottom === 0 && rect.left === 0 && rect.right === 0)) {
-        if (event && typeof event.clientX === 'number' && typeof event.clientY === 'number') {
-          rect = { left: event.clientX, right: event.clientX, top: event.clientY, bottom: event.clientY, width: 0, height: 0 }
-        }
-      }
-      this.popupPosition = { top: (rect?.bottom || event?.clientY || 0) + 12, left: (rect?.left || event?.clientX || 0) + ((rect?.width || 0) / 2) }
       this.showSelectionPopup = true
 
       // No on-screen positioning correction required for the component dialog
@@ -707,11 +620,24 @@ export default {
       this.applyResponsiveDefaults()
     },
     clearViewer() {
-      this.getPageWrappers().forEach(wrapper => {
-        if (wrapper) {
-          wrapper.innerHTML = ''
+      if (this.pdfViewer && typeof this.pdfViewer.setDocument === 'function') {
+        try {
+          this.pdfViewer.setDocument(null)
+        } catch (error) {
+          console.warn('[PdfReader] Unable to detach PDF document:', error)
         }
-      })
+      }
+      if (this.pdfLinkService && typeof this.pdfLinkService.setDocument === 'function') {
+        try {
+          this.pdfLinkService.setDocument(null)
+        } catch (error) {
+          console.warn('[PdfReader] Unable to reset PDF link service:', error)
+        }
+      }
+      const viewer = this.$refs.viewerContainer
+      if (viewer) {
+        viewer.innerHTML = ''
+      }
     },
     resetError() {
       this.errorMessage = ''
@@ -809,37 +735,37 @@ export default {
 
   &__page-column {
     flex: 1 1 60%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    position: relative;
     overflow: auto;
     min-width: 0;
-    padding-right: 4px;
-  }
-
-  &__page-viewer {
-    position: relative;
+    padding: 16px;
     background: #f5f7fa;
     border: 1px solid #e4e7ed;
     border-radius: 12px;
-    padding: 16px;
-    min-height: 360px;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    user-select: text;
-    -webkit-user-select: text;
-    min-width: 0;
   }
 
   &__page-loading {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    color: #606266;
     gap: 6px;
+    padding: 12px 0;
+    color: #606266;
+    background: linear-gradient(180deg, rgba(245, 247, 250, 1) 0%, rgba(245, 247, 250, 0.85) 100%);
+  }
+
+  &__viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    min-height: 360px;
+    align-items: center;
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   &__markdown-pane {
@@ -917,13 +843,6 @@ export default {
 
   .pdf-reader__page-column {
     width: 100%;
-    gap: 14px;
-    padding-right: 0;
-  }
-
-  .pdf-reader__page-viewer {
-    width: 100%;
-    min-height: 260px;
     padding: 12px;
   }
 
@@ -952,24 +871,25 @@ export default {
   .pdf-reader__page-column {
     flex: 1 1 100%;
   }
-
-  .pdf-reader__page-viewer {
-    min-height: calc(100vh - 220px);
-  }
 }
 
-.pdf-page {
+::v-deep(.pdf-reader__viewer .page) {
   position: relative;
   margin: 0 auto;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-radius: 4px;
-  overflow: hidden;
+  width: 100%;
   max-width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
 
-  canvas {
-    display: block;
-  }
+::v-deep(.pdf-reader__viewer .page:last-child) {
+  margin-bottom: 0;
+}
+
+::v-deep(.pdf-reader__viewer .page .canvasWrapper) {
+  background: #fff;
 }
 
 /* Remove old pdf-selection-popup bubble (unused now) */
