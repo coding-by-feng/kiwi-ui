@@ -138,12 +138,15 @@ export default {
     shouldSkipDetailInit() {
       const currentPath = this.$route?.path
       const selectedMode = this.$route?.query?.selectedMode
+
       if (currentPath === kiwiConsts.ROUTES.AI_RESPONSE_DETAIL) {
         return true
       }
-      if (selectedMode && selectedMode !== 'detail') {
+
+      if (typeof selectedMode !== 'undefined' && selectedMode !== 'detail') {
         return true
       }
+
       return false
     },
     async initTabActivate() {
@@ -244,6 +247,9 @@ export default {
           this.total = response.data.data.total
           this.isForceRequest = false
         } else {
+          if (this.shouldSkipDetailInit()) {
+            return
+          }
           let originalText = this.$route?.query?.originalText ? decodeURIComponent(this.$route.query.originalText) : ''
           // Preserve all existing URL parameters when navigating to AI response detail
           // but ensure we use a valid AI mode instead of 'detail' mode
@@ -255,12 +261,10 @@ export default {
             originalText: encodeURI(originalText.toLowerCase()),
             now: new Date().getTime()
           }
-          if (!this.shouldSkipDetailInit()) {
-            this.$router.push({
-              path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
-              query: preservedQuery
-            })
-          }
+          this.$router.push({
+            path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
+            query: preservedQuery
+          })
         }
         this.keyword = word
       }).catch(e => {
