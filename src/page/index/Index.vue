@@ -302,8 +302,11 @@ export default {
         <span slot="label">
           <i class="el-icon-video-camera"></i>
         </span>
-        <router-view name="youtube" v-if="isLogin && activeName === 'youtube'"></router-view>
-        <div v-else-if="activeName === 'youtube'" class="login-hint">
+        <!-- Preserve youtube player/component state across tab switches -->
+        <keep-alive>
+          <router-view name="youtube" v-if="isLogin" v-show="activeName === 'youtube'"></router-view>
+        </keep-alive>
+        <div v-if="activeName === 'youtube' && !isLogin" class="login-hint">
           <el-alert type="info" show-icon
                     title="Please log in to use YouTube features."
                     description="Login to load and manage videos and subtitles."></el-alert>

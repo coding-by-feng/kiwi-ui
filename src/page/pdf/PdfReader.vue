@@ -75,6 +75,7 @@
               :style="{ height: viewerHeight + 'px' }"
               @mouseup="handlePointerSelection"
               @touchend.passive="handleTouchSelection"
+              @click="handleViewerClick"
             >
               <div v-if="loading" class="pdf-reader__page-loading">
                 <i class="el-icon-loading"></i>
@@ -172,7 +173,8 @@ export default {
   computed: {
     readerClass() {
       return {
-        'pdf-reader--compact': this.isSmallScreen
+        'pdf-reader--compact': this.isSmallScreen,
+        'pdf-reader--no-select': this.useClickToSearch
       }
     },
     // Zoom helpers
@@ -196,6 +198,19 @@ export default {
         const arr = JSON.parse(raw)
         return Array.isArray(arr) ? arr.length : 0
       } catch (_) { return 0 }
+    },
+    // Detect if device is mobile/tablet; prefer UA + touch capabilities to include iPadOS
+    isMobileDevice() {
+      try {
+        const ua = (navigator.userAgent || navigator.vendor || '').toLowerCase()
+        const isIpadOS13Plus = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+        const isMobileUA = /(iphone|ipod|ipad|android|bb10|blackberry|mini|windows phone|silk|kindle|mobile)/i.test(ua)
+        return isIpadOS13Plus || isMobileUA
+      } catch (_) { return false }
+    },
+    // On mobile devices, disable selection and use click-to-search
+    useClickToSearch() {
+      return this.isMobileDevice
     }
   },
   async mounted() {
@@ -374,10 +389,25 @@ export default {
       return fallback
     },
     handlePointerSelection(event) {
+      // On mobile/tablet we disable selection and use click-to-search instead
+      if (this.useClickToSearch) return
       this.$nextTick(() => this.processSelection(event))
     },
     handleTouchSelection() {
+      // On mobile/tablet we disable selection and use click-to-search instead
+      if (this.useClickToSearch) return
       setTimeout(() => this.processSelection(), 60)
+    },
+    // New: click/tap to pick the sentence under finger on mobile devices
+    handleViewerClick(event) {
+      if (!this.useClickToSearch) return
+      if (!this.pdfLoaded) return
+      const sentence = this.detectSentenceAtPoint(event)
+      if (sentence) {
+        this.selectedText = sentence
+        this.showSelectionPopup = true
+        // AiSelectionPopup will auto-run search on open with the provided selectedText
+      }
     },
     processSelection() {
       const selection = window.getSelection()
@@ -498,6 +528,8 @@ export default {
     getMobileBaseScale() {
       const w = window.innerWidth
       if (w <= 380) return MOBILE_ULTRA_NARROW_RENDER_SCALE
+      if (w <= 430) return MOBILE_NARROW_RENDER_SCALE
+      return MOBILE_DEFAULT_RENDER_SCALE
     },
     resetError() {
       this.errorMessage = ''
@@ -520,6 +552,199 @@ export default {
     async zoomOut() { await this.setZoom(this.renderScale - RENDER_STEP) },
     onHistoryCleared() { this.showHistoryDialog = false; this.historyVersion++ },
     onHistoryItemDeleted() { this.historyVersion++ },
+
+    // ========== Click-to-sentence detection (mobile) ==========
+    detectSentenceAtPoint(event) {
+      try {
+        const x = event.clientX
+        const y = event.clientY
+        const el = document.elementFromPoint(x, y)
+        if (!el) return null
+        // Ensure click is within PDF page
+        const pageEls = this.getPageWrappers()
+        if (!this.isNodeWithinElements(el, pageEls)) return null
+
+        // Find the page element and its text layer (canvas sibling)
+        const pageEl = el.closest && el.closest('.page')
+        if (!pageEl) return null
+        const textLayer = pageEl.querySelector('.textLayer') || pageEl.querySelector('.pdf-text-layer')
+        if (!textLayer) return null
+
+        // Get a caret range at the point if possible
+        let range = this.getCaretRangeAtClientPoint(x, y)
+        if (!range || !textLayer.contains(range.startContainer)) {
+          // Fallback: find the span under the point
+          const spans = Array.from(textLayer.querySelectorAll('span'))
+          let hitSpan = null
+          for (const s of spans) {
+            const r = s.getBoundingClientRect()
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) { hitSpan = s; break }
+          }
+          if (!hitSpan) return null
+          if (!hitSpan.firstChild || hitSpan.firstChild.nodeType !== Node.TEXT_NODE) return null
+          const r2 = document.createRange()
+          r2.setStart(hitSpan.firstChild, 0)
+          r2.collapse(true)
+          range = r2
+        }
+        return this.extractSentenceAroundRange(range, textLayer)
+      } catch (_) {
+        return null
+      }
+    },
+    getCaretRangeAtClientPoint(x, y) {
+      const doc = document
+      if (doc.caretRangeFromPoint) {
+        return doc.caretRangeFromPoint(x, y)
+      }
+      if (doc.caretPositionFromPoint) {
+        const pos = doc.caretPositionFromPoint(x, y)
+        if (pos && pos.offsetNode) {
+          const r = doc.createRange()
+          r.setStart(pos.offsetNode, pos.offset || 0)
+          r.collapse(true)
+          return r
+        }
+      }
+      return null
+    },
+    isBoundaryChar(ch) {
+      if (!ch) return false
+      return /[.!?。！？]/.test(ch)
+    },
+    prevTextNode(node, root) {
+      // Walk to previous text node within root
+      let n = node
+      while (n && n !== root) {
+        if (n.previousSibling) {
+          n = n.previousSibling
+          while (n && n.lastChild) n = n.lastChild
+        } else {
+          n = n.parentNode
+        }
+        if (!n) break
+        if (n.nodeType === Node.TEXT_NODE && n.data && n.data.length) return n
+      }
+      return null
+    },
+    nextTextNode(node, root) {
+      // Walk to next text node within root
+      let n = node
+      while (n && n !== root) {
+        if (n.nextSibling) {
+          n = n.nextSibling
+          while (n && n.firstChild) n = n.firstChild
+        } else {
+          n = n.parentNode
+        }
+        if (!n) break
+        if (n.nodeType === Node.TEXT_NODE && n.data && n.data.length) return n
+      }
+      return null
+    },
+    extractSentenceAroundRange(range, root) {
+      try {
+        // Ensure we start from a text node
+        let startNode = range.startContainer
+        let startOffset = range.startOffset || 0
+        if (startNode.nodeType !== Node.TEXT_NODE) {
+          // Try to find a nearby text node
+          const candidate = (startNode.childNodes && startNode.childNodes.length)
+            ? startNode.childNodes[Math.min(0, startNode.childNodes.length - 1)]
+            : this.nextTextNode(startNode, root) || this.prevTextNode(startNode, root)
+          if (!candidate || candidate.nodeType !== Node.TEXT_NODE) return null
+          startNode = candidate
+          startOffset = 0
+        }
+        if (!root.contains(startNode)) return null
+
+        // Scan left to boundary
+        let leftNode = startNode
+        let leftIndex = Math.max(0, Math.min(startOffset, leftNode.data.length))
+        let foundLeft = false
+        let scanned = 0
+        const SCAN_LIMIT = 600
+        while (leftNode && scanned < SCAN_LIMIT) {
+          for (let i = leftIndex - 1; i >= 0; i--) {
+            scanned++
+            const ch = leftNode.data.charAt(i)
+            if (this.isBoundaryChar(ch)) {
+              leftIndex = i + 1
+              foundLeft = true
+              break
+            }
+          }
+          if (foundLeft) break
+          const prev = this.prevTextNode(leftNode, root)
+          if (!prev) break
+          leftNode = prev
+          leftIndex = leftNode.data.length
+        }
+
+        // Scan right to boundary
+        let rightNode = startNode
+        let rightIndex = Math.max(0, Math.min(startOffset, rightNode.data.length))
+        let foundRight = false
+        scanned = 0
+        while (rightNode && scanned < SCAN_LIMIT) {
+          for (let i = rightIndex; i < rightNode.data.length; i++) {
+            scanned++
+            const ch = rightNode.data.charAt(i)
+            if (this.isBoundaryChar(ch)) {
+              rightIndex = i + 1
+              foundRight = true
+              break
+            }
+          }
+          if (foundRight) break
+          const next = this.nextTextNode(rightNode, root)
+          if (!next) break
+          rightNode = next
+          rightIndex = 0
+        }
+
+        // Collect text between [leftNode:leftIndex, rightNode:rightIndex)
+        const parts = []
+        let n = leftNode
+        while (n) {
+          if (n === leftNode && n === rightNode) {
+            parts.push(n.data.slice(leftIndex, rightIndex))
+            break
+          }
+          if (n === leftNode) {
+            parts.push(n.data.slice(leftIndex))
+          } else if (n === rightNode) {
+            parts.push(n.data.slice(0, rightIndex))
+            break
+          } else {
+            parts.push(n.data)
+          }
+          n = this.nextTextNode(n, root)
+        }
+
+        let text = parts.join(' ')
+        text = this.sanitizeSentence(text)
+        if (!text) return null
+        return text
+      } catch (e) {
+        return null
+      }
+    },
+    sanitizeSentence(text) {
+      if (!text) return ''
+      let t = String(text)
+      // Collapse whitespace and trim
+      t = t.replace(/\s+/g, ' ').trim()
+      // Remove dangling quotes/brackets at edges
+      t = t.replace(/^[\s"'“‘（【\[]+/, '').replace(/[\s"'”’）】\]]+$/, '')
+      // Avoid overly long selections; keep within 20..300 chars typical sentence
+      if (t.length > 360) {
+        // Cut at next boundary after 300 if possible
+        const m = t.slice(0, 340).match(/[.!?。！？](?=[^.!?。！？]*$)/)
+        t = m ? t.slice(0, m.index + 1) : t.slice(0, 340)
+      }
+      return t
+    }
   }
 }
 </script>
@@ -574,6 +799,17 @@ export default {
   .pdf-reader__filename { width: 100%; text-align: center; }
   .pdf-reader__layout { flex-direction: column; gap: 14px; }
   .pdf-reader__page-column { width: 100%; padding: 12px; }
+}
+
+/* Disable native text selection on mobile click-to-search mode, but keep textLayer clickable */
+.pdf-reader--no-select {
+  ::v-deep(.textLayer) {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: auto;
+  }
 }
 
 ::v-deep(.pdf-reader__viewer .page) { position: relative; margin: 0 auto; width: 100%; max-width: 100%; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); border-radius: 6px; overflow: hidden; background: #fff; }

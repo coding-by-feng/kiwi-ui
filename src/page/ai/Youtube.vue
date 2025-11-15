@@ -9,10 +9,14 @@
       </el-radio-group>
     </div>
 
-    <!-- Conditionally render Channel manager or Player based on route ytbMode -->
-    <youtube-favorites v-if="currentMode === modes.FAVORITES" />
-    <youtube-channel v-else-if="currentMode === modes.CHANNEL" />
-    <youtube-player v-else :video-url="selectedVideoUrl" />
+    <!-- Persist all sub-modes to avoid remounting when switching -->
+    <keep-alive>
+      <div>
+        <youtube-favorites v-show="currentMode === modes.FAVORITES" />
+        <youtube-channel v-show="currentMode === modes.CHANNEL" @play-video="openVideoFromChannel" />
+        <youtube-player v-show="currentMode === modes.PLAYER" :video-url="selectedVideoUrl" />
+      </div>
+    </keep-alive>
   </div>
 </template>
 
@@ -21,6 +25,8 @@ import YoutubePlayer from '@/page/ai/YoutubePlayer.vue'
 import YoutubeChannel from '@/page/ai/YoutubeChannel.vue'
 import YoutubeFavorites from '@/page/ai/YoutubeFavorites.vue'
 import kiwiConsts from '@/const/kiwiConsts'
+
+const STORAGE_KEY = 'ytb_state'
 
 export default {
   name: 'YoutubePage',
@@ -33,10 +39,13 @@ export default {
     return {
       modes: kiwiConsts.YTB_MODE,
       currentMode: kiwiConsts.YTB_MODE.CHANNEL,
-      selectedVideoUrl: null
+      selectedVideoUrl: null,
+      restoring: false
     }
   },
   created() {
+    // Attempt restoration from local storage first (before route normalization)
+    this.restoreLocalState()
     this.initFromRoute()
 
     // Keep in sync with route changes
@@ -47,23 +56,29 @@ export default {
   watch: {
     '$route.query'(newQuery) {
       // Update video url when present
-      if (newQuery && newQuery.videoUrl) {
-        try { this.selectedVideoUrl = decodeURIComponent(newQuery.videoUrl) } catch (_) { this.selectedVideoUrl = newQuery.videoUrl }
+      if (newQuery && (newQuery.videoUrl || newQuery.video)) {
+        const raw = newQuery.videoUrl || newQuery.video
+        this.selectedVideoUrl = this.safeDecode(raw)
+        this.persistLocalState()
       }
     }
   },
   methods: {
+    safeDecode(v) {
+      if (!v) return v
+      try { return decodeURIComponent(v) } catch (_) { return v }
+    },
     initFromRoute() {
       const q = this.$route.query || {}
       // Determine mode from query, default to channel
       const allowed = [this.modes.PLAYER, this.modes.CHANNEL, this.modes.FAVORITES]
-      const mode = allowed.includes(q.ytbMode) ? q.ytbMode : this.modes.CHANNEL
+      const mode = allowed.includes(q.ytbMode) ? q.ytbMode : (this.currentMode || this.modes.CHANNEL)
 
       // Only normalize URL to include ytbMode when YouTube tab is active to avoid interfering with other tabs
       if (!q.ytbMode && this.$route.query.active === 'youtube') {
         this.$router.replace({
           path: this.$route.path,
-          query: { ...q, ytbMode: mode }
+            query: { ...q, ytbMode: mode }
         })
       }
 
@@ -73,18 +88,56 @@ export default {
       if (this.currentMode === this.modes.PLAYER) {
         const videoUrl = q.videoUrl || q.video
         if (videoUrl) {
-          try { this.selectedVideoUrl = decodeURIComponent(videoUrl) } catch (_) { this.selectedVideoUrl = videoUrl }
+          this.selectedVideoUrl = this.safeDecode(videoUrl)
         }
       }
+
+      this.persistLocalState()
     },
 
     // Handle UI toggle to switch modes and persist to URL
     handleModeChange(val) {
       const q = { ...(this.$route.query || {}) }
+      this.currentMode = val
+      this.persistLocalState()
       this.$router.replace({
         path: this.$route.path,
-        query: { ...q, active: 'youtube', ytbMode: val }
+        query: { ...q, active: 'youtube', ytbMode: val, videoUrl: q.videoUrl || this.selectedVideoUrl }
       })
+    },
+
+    openVideoFromChannel(url) {
+      // Fired when child channel component emits a play request
+      if (!url) return
+      this.selectedVideoUrl = this.safeDecode(url)
+      // Switch to player mode but keep previous components cached
+      this.currentMode = this.modes.PLAYER
+      const q = { ...(this.$route.query || {}) }
+      this.$router.replace({
+        path: this.$route.path,
+        query: { ...q, active: 'youtube', ytbMode: this.modes.PLAYER, videoUrl: encodeURIComponent(this.selectedVideoUrl) }
+      })
+      this.persistLocalState()
+    },
+
+    persistLocalState() {
+      try {
+        const payload = {
+          mode: this.currentMode,
+          videoUrl: this.selectedVideoUrl
+        }
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+      } catch (e) { /* ignore */ }
+    },
+    restoreLocalState() {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY)
+        if (!raw) return
+        const parsed = JSON.parse(raw)
+        if (parsed.mode) this.currentMode = parsed.mode
+        if (parsed.videoUrl) this.selectedVideoUrl = parsed.videoUrl
+        this.restoring = true
+      } catch (e) { /* ignore */ }
     }
   }
 }
