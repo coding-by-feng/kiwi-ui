@@ -214,7 +214,8 @@ async function main() {
   const imagesToOptimize = [
     { input: path.join(PUBLIC_DIR, 'wechat.png'), output: path.join(PUBLIC_DIR, 'wechat.png') },
     { input: path.join(PUBLIC_DIR, 'icon.png'), output: path.join(PUBLIC_DIR, 'icon.png') },
-    { input: path.join(PUBLIC_DIR, 'favicon.ico'), output: path.join(PUBLIC_DIR, 'favicon.ico') }
+    // Removed legacy favicon.ico; using icon.icns.png as the unified site icon
+    { input: path.join(PUBLIC_DIR, 'icon.icns.png'), output: path.join(PUBLIC_DIR, 'icon.icns.png') }
   ];
 
   for (const image of imagesToOptimize) {

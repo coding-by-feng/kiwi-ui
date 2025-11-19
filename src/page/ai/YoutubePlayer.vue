@@ -462,7 +462,11 @@ export default {
       aiIsStreaming: false,
       aiRequestId: '',
       aiResponseText: '',
-      aiLastError: ''
+      aiLastError: '',
+      // Init guards & timeouts
+      isInitializing: false,
+      _suppressVideoIdWatcher: false,
+      playerInitTimeout: null
     };
   },
   computed: {
@@ -516,10 +520,28 @@ export default {
     }
   },
   watch: {
-    // When player video id changes, re-init the iframe
+    // When player video id changes, re-init the iframe (guarded)
     playerVideoId(newVideoId, oldVideoId) {
+      if (this._suppressVideoIdWatcher) return;
       if (newVideoId && oldVideoId && newVideoId !== oldVideoId) {
-        this.reinitializePlayer();
+        if (this.player && this.youtubeApiReady) {
+          console.log('[YoutubePlayer] watcher loadVideoById', newVideoId);
+          this.isLoading = true;
+          this.videoReady = false;
+          this.statusMessage = 'Initializing player...';
+          this.stopMiniLoaderPoll();
+          this.startMiniLoaderPoll();
+          try {
+            this.player.loadVideoById(newVideoId);
+            this.setPlayerInitTimeout();
+          } catch (e) {
+            console.warn('[YoutubePlayer] loadVideoById failed in watcher, reinitializing', e);
+            this.reinitializePlayer().then(() => { this.isLoading = false; });
+          }
+        } else {
+          console.log('[YoutubePlayer] watcher reinitializePlayer', newVideoId);
+          this.reinitializePlayer().then(() => { this.isLoading = false; });
+        }
       }
     },
     '$route.query.videoUrl': {
@@ -713,20 +735,18 @@ export default {
     },
 
     cleanup() {
+      // Global cleanup (component destroy)
       this.stopSubtitleSync();
       this.disconnectWebSocket();
-      this.clearTimeouts();
-
+      this.clearPlayerInitTimeout && this.clearPlayerInitTimeout();
       if (this.player) {
-        this.player.destroy();
+        try { this.player.destroy(); } catch(_) {}
         this.player = null;
       }
-
       if (this.miniLoaderInterval) {
         clearInterval(this.miniLoaderInterval);
         this.miniLoaderInterval = null;
       }
-
       document.removeEventListener('click', this.handleClickOutside);
       window.removeEventListener('resize', this.checkScreenSize);
       window.removeEventListener('resize', this.updateDisplayStyle);
@@ -735,35 +755,43 @@ export default {
       window.removeEventListener('pageshow', this.onPageShow);
       window.removeEventListener('online', this.onOnline);
       window.removeEventListener('offline', this.onOffline);
-
       this.clearWsTimers();
       this.disableNoSleep();
-
-      // Close inline AI WS if any
       this.closeAiStream();
     },
 
-    clearTimeouts() {
-      if (this.scrollTimeout) {
-        clearTimeout(this.scrollTimeout);
-        this.scrollTimeout = null;
+    // Player-only cleanup used per video load
+    cleanupPlayer() {
+      this.stopSubtitleSync();
+      this.clearPlayerInitTimeout && this.clearPlayerInitTimeout();
+      if (this.player) {
+        try { this.player.destroy(); } catch(_) {}
+        this.player = null;
       }
-      if (this.progressUpdateInterval) {
-        clearInterval(this.progressUpdateInterval);
-        this.progressUpdateInterval = null;
+      if (this.miniLoaderInterval) {
+        clearInterval(this.miniLoaderInterval);
+        this.miniLoaderInterval = null;
+      }
+      this.stopMiniLoaderPoll && this.stopMiniLoaderPoll();
+    },
+
+    clearPlayerInitTimeout() {
+      if (this.playerInitTimeout) {
+        clearTimeout(this.playerInitTimeout);
+        this.playerInitTimeout = null;
       }
     },
 
-    clearWsTimers() {
-      if (this.wsHeartbeatInterval) {
-        clearInterval(this.wsHeartbeatInterval);
-        this.wsHeartbeatInterval = null;
-      }
-      if (this.wsReconnectTimer) {
-        clearTimeout(this.wsReconnectTimer);
-        this.wsReconnectTimer = null;
-      }
-      this.wsReconnectAttempts = 0;
+    setPlayerInitTimeout() {
+      this.clearPlayerInitTimeout();
+      this.playerInitTimeout = setTimeout(() => {
+        if (!this.videoReady) {
+          console.warn('[YoutubePlayer] Player init timeout');
+          this.statusMessage = 'Player init timeout';
+          this.isLoading = false;
+          this.stopMiniLoaderPoll && this.stopMiniLoaderPoll();
+        }
+      }, 10000);
     },
 
     // Simple debounce helper
@@ -1185,30 +1213,29 @@ export default {
 
     async initializePlayer() {
       return new Promise((resolve) => {
+        console.log('[YoutubePlayer] initializePlayer videoId=', this.playerVideoId);
         this.player = new YT.Player('youtube-player-container', {
           height: '100%',
           width: '100%',
           videoId: this.playerVideoId,
-          playerVars: {
-            playsinline: 1,
-            rel: 0,
-            autoplay: 0
-          },
+          playerVars: { playsinline: 1, rel: 0, autoplay: 0 },
           events: {
-            onReady: (event) => {
-              this.onPlayerReady(event);
-              resolve();
-            },
+            onReady: (event) => { this.onPlayerReady(event); resolve(); },
             onStateChange: this.onPlayerStateChange
           }
         });
+        this.setPlayerInitTimeout();
       });
     },
 
     onPlayerReady(event) {
+      console.log('[YoutubePlayer] onPlayerReady');
       this.videoReady = true;
       this.isBuffering = false;
-      this.stopMiniLoaderPoll();
+      this.stopMiniLoaderPoll && this.stopMiniLoaderPoll();
+      this.clearPlayerInitTimeout && this.clearPlayerInitTimeout();
+      this.statusMessage = '';
+      this.isLoading = false;
       msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
     },
 
@@ -1235,26 +1262,27 @@ export default {
 
     // Optimized content loading
     async loadContent() {
+      if (this.isInitializing) {
+        console.log('[YoutubePlayer] loadContent skipped: already initializing');
+        return;
+      }
+      this.isInitializing = true;
+      this._suppressVideoIdWatcher = true;
       this.resetStates();
-
       try {
-        // Normalize current videoUrl again in case it's still encoded
+        console.log('[YoutubePlayer] loadContent start videoUrl=', this.videoUrl);
         const normalizedUrl = this.normalizeVideoUrl(this.videoUrl) || null;
         if (normalizedUrl) this.videoUrl = normalizedUrl;
-
-        // Extract YouTube ID strictly from URL or allow raw 11-char id
         const extractedId = this.videoUrl ? this.extractVideoId(this.videoUrl) : (this.isLikelyYoutubeId(this.videoUrl) ? this.videoUrl : null);
+        const prevId = this.playerVideoId;
         this.playerVideoId = extractedId || this.playerVideoId;
-
         if (!this.playerVideoId) {
           this.statusMessage = 'Invalid YouTube URL';
           this.isLoading = false;
           return;
         }
-
-        // Keep the browser URL in sync with the new input
         try {
-          const isYoutubeActive = (this.$route && this.$route.query && this.$route.query.active === 'youtube')
+          const isYoutubeActive = (this.$route && this.$route.query && this.$route.query.active === 'youtube');
           if (isYoutubeActive) {
             const q = { ...(this.$route.query || {}) };
             const encoded = encodeURIComponent(this.videoUrl);
@@ -1262,40 +1290,41 @@ export default {
               this.$router.replace({ path: this.$route.path, query: { ...q, videoUrl: encoded } });
             }
           }
-        } catch (_) { /* no-op if router unavailable */ }
-
-        // Check favorite status in background; don't block player init
+        } catch (_) {}
         this.checkFavoriteStatus();
-
         this.statusMessage = 'Initializing player...';
-        this.startMiniLoaderPoll();
-
-        // Ensure the YouTube IFrame API is ready before creating the player
+        this.startMiniLoaderPoll && this.startMiniLoaderPoll();
         await this.ensureYouTubeAPIReady();
-
-        await this.initializePlayer();
-
-        this.isLoading = false;
-        this.statusMessage = '';
-
-        // Load subtitles in background if we have a usable URL
-        if (this.videoUrl) {
-          this.loadSubtitlesInBackground();
+        if (this.player && prevId && prevId !== this.playerVideoId) {
+          console.log('[YoutubePlayer] Reuse existing player loadVideoById', this.playerVideoId);
+          try { this.player.loadVideoById(this.playerVideoId); this.setPlayerInitTimeout(); }
+          catch(e) { console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e); await this.initializePlayer(); }
+        } else if (!this.player) {
+          await this.initializePlayer();
         }
-
+        this.isLoading = false; // may already be false after onReady
+        if (!this.videoReady) {
+          // onReady not fired yet; keep status if still initializing
+          console.log('[YoutubePlayer] waiting for onReady...');
+        } else {
+          this.statusMessage = ''; // ensure cleared
+        }
+        if (this.videoUrl) this.loadSubtitlesInBackground();
+        console.log('[YoutubePlayer] loadContent success');
       } catch (error) {
         console.error('Error loading content:', error);
         this.statusMessage = error && error.message ? error.message : 'Failed to load content';
         this.isLoading = false;
+      } finally {
+        this.isInitializing = false;
+        this._suppressVideoIdWatcher = false;
       }
     },
 
     resetStates() {
-      this.cleanup();
+      this.cleanupPlayer && this.cleanupPlayer();
       this.isLoading = true;
       this.videoReady = false;
-      // Do NOT clear backendVideoId
-      // this.backendVideoId = null;
       this.subtitles = [];
       this.translatedSubtitles = '';
       this.scrollingSubtitles = '';

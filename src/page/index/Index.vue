@@ -17,13 +17,17 @@ export default {
       enabledTabs: this.loadEnabledTabs(),
       lastSearchRoute: (this.$route.query.active || 'search') === 'search'
         ? { path: this.$route.path, query: { ...this.$route.query } }
-        : null
+        : null,
+      // Track if a tab has been visited so we only mount its component after first activation
+      visitedTabs: { [this.$route.query.active || 'search']: true }
     }
   },
   watch: {
     $route: function () {
       // Keep a safe fallback so the tab content never disappears
       this.activeName = this.$route.query.active || 'search'
+      // Mark visited when route changes
+      this.markVisited(this.activeName)
       // Keep local snapshot in sync so comparisons in tabClick remain accurate
       this.query = { ...this.$route.query }
       // Also check for OAuth callback when route changes
@@ -62,13 +66,6 @@ export default {
 
     // Validate active tab initially against settings
     this.ensureActiveTabValid()
-
-    // Your existing mounted logic...
-    // window.onresize = () => {
-    //   return (() => {
-    //     this.tabsWidth = window.innerWidth - 20 + 'px'
-    //   })()
-    // }
   },
   beforeDestroy() {
     try { window.removeEventListener('enabled-tabs-updated', this.refreshEnabledTabs) } catch (_) {}
@@ -88,6 +85,10 @@ export default {
       // After updating, ensure active is still valid
       this.ensureActiveTabValid()
     },
+    // Mark a tab as visited (first time user activates it)
+    markVisited(tabName) {
+      if (!this.visitedTabs[tabName]) this.$set(this.visitedTabs, tabName, true)
+    },
 
     // Add this new method to check for OAuth callback
     checkOAuthCallback() {
@@ -105,15 +106,8 @@ export default {
           // Update the user data in component after successful OAuth
           this.$nextTick(() => {
             this.user.userName = getStore({name: 'user_name'})
-            
-            // Force reactivity update without full page reload
             this.$forceUpdate()
-            
-            // Instead of window.location.reload(), just update the component state
-            // This is much safer for mobile Safari
             console.log('🔄 [INDEX] Component state updated')
-            
-            // Optionally navigate to ensure clean state
             setTimeout(() => {
               if (this.$route.query.token || this.$route.query.user) {
                 this.$router.replace({
@@ -129,8 +123,7 @@ export default {
       }
     },
 
-    handleSelectMenu() {
-    },
+    handleSelectMenu() {},
 
     ensureActiveTabValid() {
       const act = this.activeName
@@ -139,6 +132,7 @@ export default {
         const preservedParams = { ...this.$route.query, active: 'login', now: new Date().getTime() }
         if (this.activeName !== 'login') {
           this.activeName = 'login'
+          this.markVisited('login')
           this.$router.replace({ path: website.noAuthPath.detail, query: preservedParams })
           return
         }
@@ -147,6 +141,7 @@ export default {
       if (act === 'login' && this.isLogin) {
         const preservedParams = { ...this.$route.query, active: 'userCenter', now: new Date().getTime() }
         this.activeName = 'userCenter'
+        this.markVisited('userCenter')
         this.$router.replace({ path: website.noAuthPath.detail, query: preservedParams })
         return
       }
@@ -160,6 +155,7 @@ export default {
           const preservedParams = { ...this.$route.query, active: 'search', now: new Date().getTime() }
           if (this.activeName !== 'search') {
             this.activeName = 'search'
+            this.markVisited('search')
             this.$router.replace({ path: website.noAuthPath.detail, query: preservedParams })
           }
         }
@@ -167,6 +163,9 @@ export default {
     },
 
     tabClick(tab, event) {
+      // Mark visited immediately on click
+      this.markVisited(tab.name)
+
       if (tab.name === 'search') {
         const fallbackPath = website.noAuthPath.detail
         const targetRoute = this.lastSearchRoute || { path: fallbackPath, query: { ...this.$route.query, active: 'search' } }
@@ -182,31 +181,18 @@ export default {
         return
       }
 
-      // Preserve ALL existing query parameters when switching tabs
       const preservedParams = {
-        ...this.$route.query, // Start with all existing parameters
+        ...this.$route.query,
         active: tab.name,
         now: new Date().getTime()
       }
-
-      // Ensure essential parameters are present with defaults if missing
-      if (!preservedParams.selectedMode && this.$route.query.selectedMode) {
-        preservedParams.selectedMode = this.$route.query.selectedMode
-      }
-      if (!preservedParams.language && this.$route.query.language) {
-        preservedParams.language = this.$route.query.language
-      }
-      if (!preservedParams.ytbMode && this.$route.query.ytbMode) {
-        preservedParams.ytbMode = this.$route.query.ytbMode
-      }
-      if (!preservedParams.videoUrl && this.$route.query.videoUrl) {
-        preservedParams.videoUrl = this.$route.query.videoUrl
-      }
+      if (!preservedParams.selectedMode && this.$route.query.selectedMode) preservedParams.selectedMode = this.$route.query.selectedMode
+      if (!preservedParams.language && this.$route.query.language) preservedParams.language = this.$route.query.language
+      if (!preservedParams.ytbMode && this.$route.query.ytbMode) preservedParams.ytbMode = this.$route.query.ytbMode
+      if (!preservedParams.videoUrl && this.$route.query.videoUrl) preservedParams.videoUrl = this.$route.query.videoUrl
 
       let isActiveChange = JSON.stringify(this.query) === JSON.stringify(preservedParams)
       if (!isActiveChange) {
-        // Always use replace to avoid creating history entries for tab switches
-        // and preserve all parameters regardless of which tab we're switching to
         this.$router.replace({
           path: website.noAuthPath.detail,
           query: preservedParams
@@ -216,7 +202,6 @@ export default {
 
     onLanguageChanged(langCode) {
       console.log('Language changed to:', langCode)
-      // You could emit this to parent or handle globally
       this.$emit('language-changed', langCode)
     }
   }
@@ -297,77 +282,74 @@ export default {
 <template>
   <div class="tab_nav" :style="{width: tabsWidth}">
     <el-tabs id="main-tabs" type="border-card" :active-name="activeName" @tab-click="tabClick">
-      <el-tab-pane name="search">
-        <span slot="label">
-          <i class="el-icon-search"></i>
-        </span>
-        <router-view name="search"></router-view>
+      <el-tab-pane name="search" lazy>
+        <span slot="label"><i class="el-icon-search"></i></span>
+        <keep-alive>
+          <router-view name="search" v-if="visitedTabs.search" v-show="activeName==='search'"></router-view>
+        </keep-alive>
       </el-tab-pane>
-      <el-tab-pane name="starList" v-if="isLogin && enabledTabs.starList">
-        <span slot="label">
-          <i class="el-icon-tickets"></i>
-        </span>
-        <router-view name="starList" v-if="isAdmin"></router-view>
+
+      <el-tab-pane name="starList" lazy v-if="enabledTabs.starList && isLogin">
+        <span slot="label"><i class="el-icon-tickets"></i></span>
+        <keep-alive>
+          <router-view name="starList" v-if="visitedTabs.starList && isAdmin" v-show="activeName==='starList'"></router-view>
+        </keep-alive>
       </el-tab-pane>
+
       <el-tab-pane name="todo" lazy v-if="enabledTabs.todo">
-        <span slot="label">
-          <i class="el-icon-check"></i>
-        </span>
-        <router-view name="todo" v-if="activeName === 'todo'"></router-view>
-      </el-tab-pane>
-      <el-tab-pane name="youtube" v-if="enabledTabs.youtube">
-        <span slot="label">
-          <i class="el-icon-video-camera"></i>
-        </span>
-        <!-- Preserve youtube player/component state across tab switches -->
+        <span slot="label"><i class="el-icon-check"></i></span>
         <keep-alive>
-          <router-view name="youtube" v-if="isLogin" v-show="activeName === 'youtube'"></router-view>
+          <router-view name="todo" v-if="visitedTabs.todo" v-show="activeName==='todo'"></router-view>
         </keep-alive>
-        <div v-if="activeName === 'youtube' && !isLogin" class="login-hint">
-          <el-alert type="info" show-icon
-                    title="Please log in to use YouTube features."
-                    description="Login to load and manage videos and subtitles."></el-alert>
+      </el-tab-pane>
+
+      <el-tab-pane name="youtube" lazy v-if="enabledTabs.youtube">
+        <span slot="label"><i class="el-icon-video-camera"></i></span>
+        <keep-alive>
+          <router-view name="youtube" v-if="visitedTabs.youtube && isLogin" v-show="activeName==='youtube'"></router-view>
+        </keep-alive>
+        <div v-if="activeName==='youtube' && !isLogin" class="login-hint">
+          <el-alert type="info" show-icon title="Please log in to use YouTube features." description="Login to load and manage videos and subtitles."></el-alert>
         </div>
       </el-tab-pane>
+
       <el-tab-pane name="pdfReader" lazy v-if="enabledTabs.pdfReader">
-        <span slot="label">
-          <i class="el-icon-document"></i>
-        </span>
+        <span slot="label"><i class="el-icon-document"></i></span>
         <keep-alive>
-          <router-view name="pdfReader" v-show="activeName === 'pdfReader'"></router-view>
+          <router-view name="pdfReader" v-if="visitedTabs.pdfReader" v-show="activeName==='pdfReader'"></router-view>
         </keep-alive>
       </el-tab-pane>
-      <!-- New: AI History tab -->
-      <el-tab-pane name="aiHistory" v-if="enabledTabs.aiHistory">
-        <span slot="label">
-          <i class="el-icon-time"></i>
-        </span>
-        <router-view name="aiHistory" v-if="isLogin && activeName === 'aiHistory'"></router-view>
-        <div v-else-if="activeName === 'aiHistory'" class="login-hint">
-          <el-alert type="info" show-icon
-                    title="Please log in to view AI history."
-                    description="Login to review your previous AI calls."></el-alert>
+
+      <el-tab-pane name="aiHistory" lazy v-if="enabledTabs.aiHistory">
+        <span slot="label"><i class="el-icon-time"></i></span>
+        <keep-alive>
+          <router-view name="aiHistory" v-if="visitedTabs.aiHistory && isLogin" v-show="activeName==='aiHistory'"></router-view>
+        </keep-alive>
+        <div v-if="activeName==='aiHistory' && !isLogin" class="login-hint">
+          <el-alert type="info" show-icon title="Please log in to view AI history." description="Login to review your previous AI calls."></el-alert>
         </div>
       </el-tab-pane>
-      <el-tab-pane name="userCenter" v-if="isLogin">
-        <span slot="label">
-          <i class="el-icon-user"></i>
-        </span>
-        <router-view name="userCenter"></router-view>
+
+      <el-tab-pane name="userCenter" lazy v-if="isLogin">
+        <span slot="label"><i class="el-icon-user"></i></span>
+        <keep-alive>
+          <router-view name="userCenter" v-if="visitedTabs.userCenter" v-show="activeName==='userCenter'"></router-view>
+        </keep-alive>
       </el-tab-pane>
-      <el-tab-pane name="login" v-if="!isLogin">
-        <span slot="label">
-          <i class="el-icon-user"></i>
-        </span>
-        <router-view name="userLogin"></router-view>
+
+      <el-tab-pane name="login" lazy v-if="!isLogin">
+        <span slot="label"><i class="el-icon-user"></i></span>
+        <keep-alive>
+          <router-view name="userLogin" v-if="visitedTabs.login" v-show="activeName==='login'"></router-view>
+        </keep-alive>
       </el-tab-pane>
-      <el-tab-pane name="about" v-if="enabledTabs.about">
-        <span slot="label">
-          <i class="el-icon-postcard"></i>
-        </span>
-        <router-view name="about"></router-view>
+
+      <el-tab-pane name="about" lazy v-if="enabledTabs.about">
+        <span slot="label"><i class="el-icon-postcard"></i></span>
+        <keep-alive>
+          <router-view name="about" v-if="visitedTabs.about" v-show="activeName==='about'"></router-view>
+        </keep-alive>
       </el-tab-pane>
-      <!-- Removed BGM tab: content now lives under User Center -->
     </el-tabs>
   </div>
 </template>
