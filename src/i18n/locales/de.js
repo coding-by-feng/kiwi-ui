@@ -100,7 +100,11 @@ export default {
             title: 'Kason English Learning Platform',
             subtitle: 'Intelligente Englisch-Lernplattform'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0'
+        copyright: '©2025 Kason English Learning Platform v2.0',
+        username: 'Benutzername',
+        password: 'Passwort',
+        signIn: 'Anmelden',
+        or: 'ODER'
     },
 
     // Search modes

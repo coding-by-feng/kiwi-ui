@@ -69,29 +69,39 @@
             </div>
           </div>
 
-          <!-- Dev-only: Manual Token Input -->
-          <div v-if="isDevEnvironment" class="manual-token-card">
-            <div class="manual-token-header">
-              <i class="el-icon-key"></i>
-              <span>Manual Token (Dev)</span>
-            </div>
-            <div class="manual-token-body">
-              <p class="manual-token-tip">
-                Paste your token JSON. Example:
-                { "dataType": "string", "content": "YOUR_TOKEN", "type": "local", "datatime": 1761035999863 }
-              </p>
-              <el-input
-                type="textarea"
-                :autosize="{ minRows: 3, maxRows: 8 }"
-                placeholder='{"dataType":"string","content":"<token>","type":"local","datatime":<ts>}'
-                v-model="manualTokenJson"
-              />
-              <div class="manual-token-actions">
-                <el-button type="primary" size="mini" @click="applyManualToken">Use token</el-button>
-                <el-button size="mini" @click="clearManualToken">Clear</el-button>
-              </div>
-            </div>
+          <!-- Divider -->
+          <div class="or-divider">
+            <span>{{ $t('auth.or') || 'OR' }}</span>
           </div>
+
+          <!-- Username / Password Login -->
+          <el-form ref="upForm" :model="upForm" :rules="upRules" label-position="top" class="up-login-form" @submit.native.prevent="handleUsernamePasswordLogin">
+            <el-form-item prop="username" :label="$t('auth.username') || 'Username'">
+              <el-input
+                v-model.trim="upForm.username"
+                autocomplete="username"
+                placeholder="Username"
+                clearable
+                @keyup.enter.native="handleUsernamePasswordLogin"
+              />
+            </el-form-item>
+            <el-form-item prop="password" :label="$t('auth.password') || 'Password'">
+              <el-input
+                v-model="upForm.password"
+                :type="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
+                placeholder="Password"
+                show-password
+                @keyup.enter.native="handleUsernamePasswordLogin"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" :loading="upLoading" :disabled="upLoading" class="full-width" @click="handleUsernamePasswordLogin">
+                <span v-if="!upLoading">{{ $t('auth.signIn') || 'Sign In' }}</span>
+                <span v-else>{{ $t('auth.processing') || 'Processing...' }}</span>
+              </el-button>
+            </el-form-item>
+          </el-form>
         </div>
       </div>
 
@@ -122,8 +132,23 @@ export default {
       // Store Google user info for potential account linking
       pendingGoogleUser: null,
 
-      // Dev manual token
-      manualTokenJson: ''
+      // Username/Password form
+      upLoading: false,
+      upForm: {
+        username: '',
+        password: ''
+      },
+      upRules: {
+        username: [
+          { required: true, message: 'Username is required', trigger: 'blur' },
+          { min: 2, message: 'Too short', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: 'Password is required', trigger: 'blur' },
+          { min: 4, message: 'Too short', trigger: 'blur' }
+        ]
+      },
+      showPassword: false
     }
   },
 
@@ -132,44 +157,10 @@ export default {
     console.log('📊 [LOGIN] Initial state:', {
       website: this.website
     })
-    // Remove any previously stored empty token envelope to avoid confusion
-    this.sanitizeStoredToken()
   },
 
   computed: {
-    ...mapGetters(['website']),
-    isDevEnvironment() {
-      // Visible when:
-      // 1) Build env is development or VUE_APP_ENABLE_MANUAL_TOKEN=true
-      // 2) Host is localhost/127.0.0.1 OR a private LAN IP OR *.local
-      // 3) Running in Electron
-      // 4) URL has ?enableManualToken=1 (one-time) or localStorage has 'enable_manual_token'
-      try {
-        if (process && process.env) {
-          if (process.env.NODE_ENV === 'development') return true
-          if (String(process.env.VUE_APP_ENABLE_MANUAL_TOKEN || '') === 'true') return true
-        }
-      } catch (e) {}
-      try {
-        const loc = window.location || {}
-        const { hostname = '', port = '', search = '' } = loc
-        const params = new URLSearchParams(search || '')
-        if (params.get('enableManualToken') === '1' || params.get('debug') === '1') return true
-
-        const ua = (navigator && navigator.userAgent) || ''
-        const isElectron = (window && window.process && window.process.type) || ua.includes('Electron')
-        if (isElectron) return true
-
-        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
-        const isPrivateIp = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)
-        const isDotLocal = /\.local$/.test(hostname)
-        if ((isLocalhost || isPrivateIp || isDotLocal) && (port || isElectron)) return true
-      } catch (e) {}
-      try {
-        if (localStorage.getItem('enable_manual_token') === '1' || localStorage.getItem('enable_manual_token') === 'true') return true
-      } catch (e) {}
-      return false
-    }
+    ...mapGetters(['website'])
   },
 
   methods: {
@@ -178,6 +169,49 @@ export default {
       // Web-only: read from process.env
       try { if (process && process.env && process.env[key] !== undefined) return process.env[key] } catch (_) {}
       return undefined
+    },
+
+    // Username/Password login
+    handleUsernamePasswordLogin() {
+      if (this.upLoading) return
+      const form = this.$refs.upForm
+      if (form && form.validate) {
+        form.validate(async (valid) => {
+          if (!valid) return
+          try {
+            this.upLoading = true
+            this.pageLoading = true
+            this.loadingText = this.$t('auth.processing') || 'Processing...'
+
+            const payload = {
+              username: (this.upForm.username || '').trim(),
+              password: this.upForm.password || ''
+            }
+
+            const resp = await this.$http.post(`${kiwiConsts.API_BASE.AUTH}/username-password/login`, payload, { headers: { isToken: false } })
+            const body = (resp && resp.data) || {}
+            const code = body.code
+            const tokens = body.data || body.result || body
+            const hasTokenFields = !!(tokens && (tokens.access_token || tokens.accessToken || tokens.token))
+
+            if (code === 0 || code === 200 || code === true || hasTokenFields) {
+              this.storeAuthTokens(tokens)
+              try { this.$message.success(this.$t('auth.loginSuccess') || 'Login successful') } catch (_) {}
+              this.redirectAfterLogin()
+            } else {
+              const msg = (body && (body.msg || body.message)) || this.$t('auth.loginFailed') || 'Login failed'
+              this.$message.error(msg)
+            }
+          } catch (e) {
+            console.error('❌ [AUTH] Username/Password login error:', e)
+            const msg = (e && e.message) || this.$t('auth.loginFailed') || 'Login failed'
+            try { this.$message.error(msg) } catch (_) {}
+          } finally {
+            this.upLoading = false
+            this.pageLoading = false
+          }
+        })
+      }
     },
 
     // Dynamically ensure gapi.auth2 is available; fallback gracefully
@@ -248,7 +282,7 @@ export default {
           console.log('📡 [GOOGLE] Backend response:', response && response.data)
           const data = response && response.data
           const code = data && (data.code !== undefined ? data.code : data.status)
-          if (code === 1 || code === 200 || code === true) {
+          if (code === 0 || code === 1 || code === 200 || code === true) {
             const url = data.data && (data.data.authorizationUrl || data.data.url)
             if (url) {
               console.log('🔀 [GOOGLE] Redirecting to Google OAuth:', url)
@@ -335,7 +369,7 @@ export default {
         const res = loginResponse && loginResponse.data
         const code = res && res.code
 
-        if (code === 1 || code === 200) {
+        if (code === 0 || code === 1 || code === 200) {
           console.log('✅ [GOOGLE] Google login successful')
           this.$message.success(this.$t('auth.loginSuccess'))
           // Support multiple token field names from backend
@@ -421,103 +455,6 @@ export default {
       this.$nextTick(() => {
         try { this.$forceUpdate() } catch (_) {}
       })
-    },
-
-    // Dev-only: apply manual token
-    applyManualToken() {
-      try {
-        let token = ''
-        let refresh = ''
-        let expiresIn = ''
-        const raw = (this.manualTokenJson || '').trim()
-        if (!raw) {
-          this.$message.error('Please paste a token JSON or token string.')
-          return
-        }
-
-        if (raw.startsWith('{')) {
-          // Try to parse as JSON
-          const obj = JSON.parse(raw)
-
-          // Case A: User pasted a full storage envelope {dataType, content, type, datatime}
-          const looksLikeEnvelope = obj && typeof obj === 'object' && 'dataType' in obj && 'content' in obj && 'datatime' in obj
-          if (looksLikeEnvelope) {
-            const contentStr = (obj.content || '').toString().trim()
-            if (!contentStr) {
-              // Ensure any existing empty envelope is removed right away
-              this.sanitizeStoredToken()
-              this.$message.error("The 'content' field is empty. Please paste a token value in 'content'.")
-              return
-            }
-
-            token = contentStr
-            // Also read optional fields if present beside the envelope
-            refresh = obj.refresh_token || obj.refreshToken || ''
-            expiresIn = obj.expires_in || obj.expiresIn || ''
-          } else {
-            // Case B: Plain token JSON with common fields
-            token = obj.content || obj.token || obj.access_token || obj.accessToken || ''
-            refresh = obj.refresh_token || obj.refreshToken || ''
-            expiresIn = obj.expires_in || obj.expiresIn || ''
-          }
-        } else {
-          // Case C: Raw token string
-          token = raw
-        }
-
-        token = (token || '').toString().trim()
-        if (!token) {
-          // Ensure any existing empty envelope is removed right away
-          this.sanitizeStoredToken()
-          this.$message.error('Token not found. Provide a token string or JSON with a non-empty "content".')
-          return
-        }
-
-        // Persist via setStore (prefix-aware) to match axios/getStore consumers
-        setStore({ name: 'access_token', content: token, type: 'local' })
-        if (refresh) setStore({ name: 'refresh_token', content: refresh, type: 'local' })
-        if (expiresIn) setStore({ name: 'expires_in', content: expiresIn, type: 'local' })
-        // Also set raw keys for any direct access sites
-        try {
-          localStorage.setItem('access_token', token)
-          if (refresh) localStorage.setItem('refresh_token', refresh)
-        } catch (e) {}
-
-        this.$message.success('Token applied. Redirecting...')
-        this.redirectAfterLogin()
-      } catch (e) {
-        console.error('Failed to apply manual token:', e)
-        this.$message.error('Invalid JSON/token. Please check the format.')
-      }
-    },
-
-    clearManualToken() {
-      this.manualTokenJson = ''
-    },
-
-    sanitizeStoredToken() {
-      try {
-        const prefix = (this.website && this.website.key) ? this.website.key : 'kason-tools'
-        const realKey = `${prefix}-access_token`
-        const raw = localStorage.getItem(realKey)
-        if (!raw) return
-        try {
-          const obj = JSON.parse(raw)
-          const looksLikeEnvelope = obj && typeof obj === 'object' && 'dataType' in obj && 'content' in obj && 'datatime' in obj
-          if (looksLikeEnvelope) {
-            const contentStr = (obj.content || '').toString().trim()
-            if (!contentStr) {
-              console.warn(`[AUTH] Removing empty token envelope at ${realKey}`)
-              localStorage.removeItem(realKey)
-              try { localStorage.removeItem('access_token') } catch (e) {}
-            }
-          }
-        } catch (e) {
-          // not JSON; ignore
-        }
-      } catch (e) {
-        // ignore
-      }
     }
   }
 }
@@ -808,6 +745,34 @@ export default {
   }
 }
 
+/* OR Divider */
+.or-divider {
+  display: flex;
+  align-items: center;
+  margin: 14px 0;
+  color: #9ca3af;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+  }
+  span {
+    margin: 0 10px;
+  }
+}
+
+/* Username/Password form */
+.up-login-form {
+  margin-top: 4px;
+  .full-width {
+    width: 100%;
+  }
+}
+
 // Loading Overlay
 .loading-overlay {
   position: absolute;
@@ -837,98 +802,6 @@ export default {
     margin: 0;
     font-size: 16px;
     font-weight: 500;
-  }
-}
-
-/* Dev-only manual token styles */
-.manual-token-card {
-  margin-top: 16px;
-  padding: 10px;
-  border: 1px dashed #c0c4cc;
-  border-radius: 8px;
-  background: #fafafa;
-}
-.manual-token-header {
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  color: #606266;
-  margin-bottom: 6px;
-  i { margin-right: 6px; }
-}
-.manual-token-body {
-  .manual-token-tip {
-    font-size: 12px;
-    color: #909399;
-    margin: 0 0 6px 0;
-    word-break: break-all;
-  }
-  .manual-token-actions {
-    margin-top: 6px;
-  }
-}
-
-// Responsive Design - Small width: hide brand panel to avoid scroll
-@media (max-width: 968px) {
-  .login-container {
-    margin-top: var(--header-height);
-    min-height: calc(100vh - var(--header-height));
-  }
-  .login-wrapper {
-    flex-direction: column;
-    max-width: 520px;
-    height: 100%;
-  }
-
-  .login-left {
-    display: none; // hide to keep page compact
-  }
-
-  .login-right {
-    flex: 1;
-    padding: 20px;
-  }
-
-  .login-card {
-    padding: 24px 18px;
-    max-width: 460px;
-  }
-}
-
-// Responsive Design - Short viewport height: hide brand panel and tighten spacings
-@media (max-height: 760px) {
-  .login-container {
-    margin-top: var(--header-height);
-    min-height: calc(100vh - var(--header-height));
-  }
-  .login-left { display: none; }
-  .login-right { padding: 16px; }
-  .brand-title { font-size: 24px; }
-  .brand-subtitle { font-size: 14px; margin-bottom: 16px; }
-  .feature-item { margin-bottom: 10px; font-size: 14px; }
-  .login-card { padding: 20px 16px; }
-}
-
-@media (max-width: 480px) {
-  .login-container {
-    margin-top: var(--header-height);
-    min-height: calc(100vh - var(--header-height));
-    padding: 0; // full-bleed
-  }
-
-  .login-wrapper {
-    margin: 0;
-    border-radius: 12px;
-  }
-
-  .login-card {
-    padding: 18px 14px;
-  }
-
-  .social-login-button {
-    span {
-      font-size: 14px;
-    }
   }
 }
 </style>

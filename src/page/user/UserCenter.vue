@@ -189,7 +189,7 @@
         </div>
 
         <!-- NEW: Feature Tabs Visibility -->
-        <div class="setting-item">
+        <div class="setting-item setting-item--feature-tabs">
           <div class="setting-label">
             <span>{{ $t('user.featureTabs') || 'Feature Tabs' }}</span>
             <el-tooltip :content="$t('user.featureTabsTip') || 'Show or hide tabs in the toolbar'" placement="top" effect="dark">
@@ -275,6 +275,9 @@ export default {
         rememberCount: 0,
         reviewCount: 0
       },
+
+      // Ensure this object exists before the first render to avoid runtime errors in v-model bindings
+      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS },
 
       languageCodes: kiwiConst.TRANSLATION_LANGUAGE_CODE,
 
@@ -880,6 +883,45 @@ export default {
       }
     }
   }
+
+  /* Feature Tabs: left-aligned, responsive layout */
+  .setting-item--feature-tabs {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    grid-column: 1 / -1; /* span full width of the grid */
+
+    .setting-label {
+      margin-bottom: 10px;
+    }
+
+    .feature-toggles {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px 16px;
+      justify-items: start; /* left align items */
+
+      &.feature-toggles--stacked {
+        /* keep same responsive grid but allow easy override if needed */
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      }
+    }
+
+    .feature-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 4px 0;
+
+      .feature-label {
+        min-width: 120px;
+        color: #2c3e50;
+        font-weight: 500;
+      }
+    }
+  }
 }
 
 /* Custom Dropdown Styling */
@@ -1112,6 +1154,21 @@ export default {
 
     .setting-label {
       justify-content: center;
+    }
+  }
+
+  /* Feature tabs: 1 column on small screens */
+  .setting-item--feature-tabs {
+    align-items: stretch;
+
+    .feature-toggles {
+      grid-template-columns: 1fr !important;
+      justify-items: start;
+    }
+
+    .setting-label {
+      justify-content: flex-start !important;
+      text-align: left;
     }
   }
 

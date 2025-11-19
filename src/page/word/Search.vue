@@ -241,6 +241,8 @@ export default {
   mounted() {
     console.log('Search component mounted')
     this.setupClipboardHandling();
+    // Auto-focus the search input once mounted
+    this.focusSearchInput();
   },
   beforeDestroy() {
     this.cleanupClipboardHandling();
@@ -249,6 +251,8 @@ export default {
     $route: function () {
       console.log('Route changed in Search component:', this.$route.path)
       this.updateFromRoute()
+      // Re-focus input after route-driven updates so users can paste/type immediately
+      this.focusSearchInput();
     },
     selectedMode: function(newMode, oldMode) {
       // Update selected language when mode changes
@@ -259,6 +263,40 @@ export default {
   },
   methods: {
     ...wordSearch,
+    // Added: focus helper to reliably target inner input of el-autocomplete
+    focusSearchInput() {
+      // Use nextTick + small delay to ensure input is in DOM and rendered
+      this.$nextTick(() => {
+        const tryFocus = () => {
+          try {
+            const auto = this.$refs && this.$refs.auto
+            if (!auto) return
+            // Try component method first (ElementUI exposes focus on Input, sometimes on Autocomplete)
+            if (typeof auto.focus === 'function') {
+              auto.focus()
+              return
+            }
+            // Then try inner el-input ref
+            if (auto.$refs && auto.$refs.input && typeof auto.$refs.input.focus === 'function') {
+              auto.$refs.input.focus()
+              return
+            }
+            // Finally query the native input inside the component root
+            const root = auto.$el || auto
+            const inputEl = root && root.querySelector ? root.querySelector('input') : document.querySelector('#search-input input')
+            if (inputEl && typeof inputEl.focus === 'function') {
+              inputEl.focus()
+            }
+          } catch (e) {
+            console.warn('Failed to focus search input:', e)
+          }
+        }
+        // Try now and once more shortly after in case of late rendering
+        tryFocus()
+        setTimeout(tryFocus, 150)
+      })
+    },
+
     // Added getModeLabel method
     getModeLabel(item) {
       // Accept either a mode object or a raw mode value string

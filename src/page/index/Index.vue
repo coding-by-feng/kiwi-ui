@@ -134,6 +134,23 @@ export default {
 
     ensureActiveTabValid() {
       const act = this.activeName
+      // If userCenter requested while not logged in, redirect to login tab
+      if (act === 'userCenter' && !this.isLogin) {
+        const preservedParams = { ...this.$route.query, active: 'login', now: new Date().getTime() }
+        if (this.activeName !== 'login') {
+          this.activeName = 'login'
+          this.$router.replace({ path: website.noAuthPath.detail, query: preservedParams })
+          return
+        }
+      }
+      // If login tab requested while already logged in, go to userCenter
+      if (act === 'login' && this.isLogin) {
+        const preservedParams = { ...this.$route.query, active: 'userCenter', now: new Date().getTime() }
+        this.activeName = 'userCenter'
+        this.$router.replace({ path: website.noAuthPath.detail, query: preservedParams })
+        return
+      }
+
       // Tabs governed by enabledTabs
       const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
       if (governed.includes(act)) {
