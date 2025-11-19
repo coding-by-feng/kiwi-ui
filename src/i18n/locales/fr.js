@@ -100,7 +100,11 @@ export default {
             title: 'Plateforme d\'apprentissage anglais Kason',
             subtitle: 'Plateforme d\'apprentissage anglais intelligente'
         },
-        copyright: '©2025 Plateforme d\'apprentissage anglais Kason v2.0'
+        copyright: '©2025 Plateforme d\'apprentissage anglais Kason v2.0',
+        username: 'Nom d\'utilisateur',
+        password: 'Mot de passe',
+        signIn: 'Se connecter',
+        or: 'OU'
     },
 
     // Search modes

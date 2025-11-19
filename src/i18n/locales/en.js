@@ -130,7 +130,11 @@ export default {
             title: 'Kason English Tools',
             subtitle: 'Smart English Learning Platform'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0'
+        copyright: '©2025 Kason English Learning Platform v2.0',
+        username: 'Username',
+        password: 'Password',
+        signIn: 'Sign In',
+        or: 'OR'
     },
 
     // Search modes

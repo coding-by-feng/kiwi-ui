@@ -130,7 +130,11 @@ export default {
             title: 'Kason英语学习平台',
             subtitle: '智能英语学习平台'
         },
-        copyright: '©2025 Kason英语学习平台 v2.0'
+        copyright: '©2025 Kason英语学习平台 v2.0',
+        username: '用户名',
+        password: '密码',
+        signIn: '登录',
+        or: '或'
     },
 
     // New: complete login block

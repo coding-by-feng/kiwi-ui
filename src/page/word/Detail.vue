@@ -21,7 +21,6 @@ export default {
     return {
       loading: false,
       windowInnerHeight: window.innerHeight,
-      dialogHelpVisible: false,
       isShowParaphrase: !getStore({name: kiwiConsts.CONFIG_KEY.IS_EN_TO_EN}),
       isShowExample: true,
       isUKPronunciationPlaying: false,
@@ -663,10 +662,6 @@ export default {
             </el-button>
           </div>
           <div class="floating-controls floating-controls-bottom">
-            <el-button @click="dialogHelpVisible = !dialogHelpVisible" size="mini">
-              <i class="el-icon-warning"></i>
-            </el-button>
-            &nbsp;
             <el-dropdown size="mini" @command="selectShowCharacter" placement="top">
               <el-button size="mini" class="el-icon-s-operation"></el-button>
               <el-dropdown-menu slot="dropdown">
@@ -921,19 +916,6 @@ export default {
     <el-button type="info" @click="stockReviewStart">确定</el-button>
   </span>
     </el-dialog>
-
-    <el-dialog :visible.sync="dialogHelpVisible" custom-class="help-dialog">
-      <div>
-        <img width="100%" src="/wordCharacter1.png" alt="Word character legend 1"/>
-        <img width="100%" src="/wordCharacter2.png" alt="Word character legend 2"/>
-        <img width="100%" src="/wordCharacter3.png" alt="Word character legend 3"/>
-        <img width="100%" src="/wordCharacter4.png" alt="Word character legend 4"/>
-        <img width="100%" src="/wordCharacter5.png" alt="Word character legend 5"/>
-        <img width="100%" src="/wordCharacter6.png" alt="Word character legend 6"/>
-        <img width="100%" src="/wordCharacter7.png" alt="Word character legend 7"/>
-      </div>
-    </el-dialog>
-
   </el-container>
 </template>
 
@@ -1068,11 +1050,10 @@ export default {
 /* Divider spacing */
 .word-detail >>> .el-divider { margin: 14px 0; }
 
-/* Dialog polish: word select, star list, confirm, help */
+/* Dialog polish: word select, star list, confirm */
 .word-select-dialog >>> .el-dialog__header,
 .star-list-dialog >>> .el-dialog__header,
-.confirm-dialog >>> .el-dialog__header,
-.help-dialog >>> .el-dialog__header {
+.confirm-dialog >>> .el-dialog__header {
   background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
   color: #fff;
   border-bottom: none;
@@ -1080,12 +1061,10 @@ export default {
 }
 .word-select-dialog >>> .el-dialog__title,
 .star-list-dialog >>> .el-dialog__title,
-.confirm-dialog >>> .el-dialog__title,
-.help-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
+.confirm-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
 .word-select-dialog >>> .el-dialog__headerbtn .el-dialog__close,
 .star-list-dialog >>> .el-dialog__headerbtn .el-dialog__close,
-.confirm-dialog >>> .el-dialog__headerbtn .el-dialog__close,
-.help-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
+.confirm-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
 .word-select-dialog >>> .el-dialog__body { padding-top: 10px; }
 
 /* Collapse in word-select dialog */

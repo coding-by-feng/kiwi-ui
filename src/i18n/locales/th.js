@@ -96,7 +96,11 @@ export default {
             title: 'แพลตฟอร์มเรียนภาษาอังกฤษ Kason',
             subtitle: 'แพลตฟอร์มเรียนภาษาอังกฤษอัจฉริยะ'
         },
-        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason v2.0'
+        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason v2.0',
+        username: 'ชื่อผู้ใช้',
+        password: 'รหัสผ่าน',
+        signIn: 'เข้าสู่ระบบ',
+        or: 'หรือ'
     },
 
     // Search modes

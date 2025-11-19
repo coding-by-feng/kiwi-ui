@@ -45,6 +45,14 @@ export default {
         welcome: 'Bienvenido de vuelta',
         loginWith: 'Iniciar sesión con',
         google: 'Iniciar sesión con cuenta de Google',
+        connecting: 'Conectando con Google...',
+        processing: 'Procesando...',
+        loginFailed: 'Error de inicio de sesión con Google, inténtelo de nuevo',
+        accountNotFound: 'Cuenta no encontrada, contacte al administrador',
+        loginSuccess: 'Inicio de sesión exitoso',
+        logout: 'Cerrar sesión',
+        autoLoginSuccess: 'Inicio de sesión automático exitoso',
+        guestLogin: '¡Usuario invitado por favor inicie sesión!',
         brand: {
             title: 'Herramientas de Inglés Kason',
             subtitle: 'Plataforma inteligente de aprendizaje de inglés'
@@ -57,7 +65,11 @@ export default {
             bilingualEnEn: 'Inglés a inglés con explicaciones en chino',
             youtubePlayer: 'Aprendizaje con reproductor de YouTube',
             todoGamified: 'Tareas y estudio gamificado'
-        }
+        },
+        username: 'Usuario',
+        password: 'Contraseña',
+        signIn: 'Iniciar sesión',
+        or: 'O'
     },
 
     ui: {

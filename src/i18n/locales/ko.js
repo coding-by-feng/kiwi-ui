@@ -50,6 +50,14 @@ export default {
         welcome: '다시 오신 것을 환영합니다',
         loginWith: '로그인 방법',
         google: 'Google 계정으로 로그인',
+        connecting: 'Google에 연결 중...',
+        processing: '처리 중...',
+        loginFailed: 'Google 로그인 실패, 다시 시도해 주세요',
+        accountNotFound: '계정을 찾을 수 없습니다. 관리자에게 문의하세요',
+        loginSuccess: '로그인 성공',
+        logout: '로그아웃',
+        autoLoginSuccess: '자동 로그인 성공!',
+        guestLogin: '게스트 유저는 로그인해 주세요!',
         brand: {
             title: 'Kason 영어 학습 도구',
             subtitle: '스마트 영어 학습 플랫폼'
@@ -59,7 +67,11 @@ export default {
             bilingualEnEn: '중국어 설명이 포함된 영영 해석',
             youtubePlayer: 'YouTube 플레이어 학습',
             todoGamified: '할 일과 게이미피케이션 학습'
-        }
+        },
+        username: '사용자명',
+        password: '비밀번호',
+        signIn: '로그인',
+        or: '또는'
     },
 
     ui: {
