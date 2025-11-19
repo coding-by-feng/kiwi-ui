@@ -350,5 +350,13 @@ export default {
     },
 
     about: {
+        downloads: 'Télécharger les clients',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'Télécharger pour macOS',
+        downloadForWindows: 'Télécharger pour Windows',
+        downloadForLinux: 'Télécharger pour Linux',
+        gdriveNote: 'Les téléchargements sont hébergés sur Google Drive. Si le lien ne s’ouvre pas, copiez-le et ouvrez-le dans un nouvel onglet.'
     }
 }

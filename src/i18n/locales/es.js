@@ -326,6 +326,13 @@ export default {
     },
 
     about: {
-        // ...existing code...
+        downloads: 'Descargar clientes',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'Descargar para macOS',
+        downloadForWindows: 'Descargar para Windows',
+        downloadForLinux: 'Descargar para Linux',
+        gdriveNote: 'Las descargas están alojadas en Google Drive. Si el enlace no se abre, cópielo y ábralo en una nueva pestaña.'
     }
 }

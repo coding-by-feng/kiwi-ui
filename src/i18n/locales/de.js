@@ -351,5 +351,13 @@ export default {
     },
 
     about: {
+        downloads: 'Clients herunterladen',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'Für macOS herunterladen',
+        downloadForWindows: 'Für Windows herunterladen',
+        downloadForLinux: 'Für Linux herunterladen',
+        gdriveNote: 'Downloads werden auf Google Drive gehostet. Öffnet sich der Link nicht, kopieren Sie ihn und öffnen Sie ihn in einem neuen Tab.'
     }
 }

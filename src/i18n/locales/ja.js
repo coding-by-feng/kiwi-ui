@@ -349,5 +349,13 @@ export default {
     },
 
     about: {
+        downloads: 'クライアントのダウンロード',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'macOS 版をダウンロード',
+        downloadForWindows: 'Windows 版をダウンロード',
+        downloadForLinux: 'Linux 版をダウンロード',
+        gdriveNote: 'ダウンロードは Google ドライブでホストされています。開けない場合は、リンクをコピーして新しいタブで開いてください。'
     }
 }

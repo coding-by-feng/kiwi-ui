@@ -470,7 +470,16 @@ export default {
         // Tour keys removed
         // 新增 Discord 相关
         discord: 'Discord',
-        joinDiscord: 'Join Discord'
+        joinDiscord: 'Join Discord',
+        // Downloads section
+        downloads: 'Download Clients',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'Download for macOS',
+        downloadForWindows: 'Download for Windows',
+        downloadForLinux: 'Download for Linux',
+        gdriveNote: 'Downloads are hosted on Google Drive. If the link does not open, please copy and paste it into a new tab.'
     },
 
     // Messages and notifications

@@ -327,5 +327,13 @@ export default {
     },
 
     about: {
+        downloads: '클라이언트 다운로드',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'macOS 버전 다운로드',
+        downloadForWindows: 'Windows 버전 다운로드',
+        downloadForLinux: 'Linux 버전 다운로드',
+        gdriveNote: '다운로드는 Google 드라이브에 호스팅됩니다. 열리지 않으면 링크를 복사해 새 탭에서 열어주세요.'
     }
 }
