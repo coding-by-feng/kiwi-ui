@@ -79,7 +79,7 @@
             <el-button size="small" type="text" class="dropdown-button">
               {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
-            <el-dropdown-menu slot="dropdown">
+            <el-dropdown-menu v-slot:dropdown>
               <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
@@ -93,7 +93,7 @@
             <el-button size="small" type="text" class="dropdown-button">
               {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
-            <el-dropdown-menu slot="dropdown">
+            <el-dropdown-menu v-slot:dropdown>
               <el-dropdown-item
                   v-for="(code, language) in languageCodes"
                   :key="code"
@@ -188,30 +188,6 @@
           </el-switch>
         </div>
 
-        <!-- NEW: Search Mode Hotkeys -->
-        <div class="setting-item">
-          <div class="setting-label">
-            <span>{{ $t('user.searchModeHotkeys') || 'Search Mode Hotkeys' }}</span>
-            <el-tooltip
-                :content="$t('user.searchModeHotkeysTip') || 'Use Ctrl/Cmd + Shift + Number to switch modes'"
-                placement="top"
-                effect="dark">
-              <i class="el-icon-question help-icon"></i>
-            </el-tooltip>
-          </div>
-          <el-tooltip :content="$t('common.configure') || 'Configure'" placement="top" effect="dark">
-            <el-button
-              size="mini"
-              type="text"
-              class="hotkeys-icon-btn"
-              @click="openHotkeysDialog"
-              :aria-label="$t('common.configure') || 'Configure'"
-              :title="$t('common.configure') || 'Configure'">
-              <i class="el-icon-setting"></i>
-            </el-button>
-          </el-tooltip>
-        </div>
-
         <!-- NEW: Feature Tabs Visibility -->
         <div class="setting-item">
           <div class="setting-label">
@@ -257,54 +233,6 @@
       </h4>
       <Bgm />
     </div>
-
-    <!-- Hotkeys Config Dialog -->
-    <el-dialog
-        :title="$t('user.searchModeHotkeys') || 'Search Mode Hotkeys'"
-        :visible.sync="hotkeysDialogVisible"
-        width="560px"
-        center>
-      <div class="hotkeys-tip">
-        {{ $t('user.searchModeHotkeysTip') || 'Press a combination (e.g., Ctrl+Shift+K or Cmd+Shift+2) to bind a mode' }}
-      </div>
-      <div class="hotkeys-actions">
-        <el-button size="mini" type="primary" @click="addHotkeyRow">
-          <i class="el-icon-plus"></i> {{ $t('common.add') || 'Add' }}
-        </el-button>
-      </div>
-      <el-form label-position="left" label-width="140px">
-        <div class="hotkeys-grid">
-          <div v-for="(row, idx) in hotkeyRows" :key="row.id" class="hotkey-row">
-            <div class="hotkey-label">{{ $t('user.hotkey') || 'Hotkey' }}</div>
-            <el-input
-              class="combo-input"
-              :value="row.combo"
-              :placeholder="$t('user.pressKeys') || 'Press keys...'"
-              size="small"
-              readonly
-              @keydown.native.stop.prevent="onComboKeydown(idx, $event)"
-              @focus.native="onComboFocus(idx)"
-              @blur.native="onComboBlur(idx)"
-            ></el-input>
-            <el-select v-model="row.mode" size="small" class="hotkey-select" :placeholder="$t('searchModes.selectMode')">
-              <el-option
-                  v-for="opt in searchModeOptions"
-                  :key="opt.value"
-                  :label="$t(`searchModes.${opt.labelKey}`)"
-                  :value="opt.value"/>
-            </el-select>
-            <el-button type="text" size="mini" @click="removeHotkeyRow(idx)" :title="$t('common.delete') || 'Delete'">
-              <i class="el-icon-delete"></i>
-            </el-button>
-          </div>
-        </div>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="resetHotkeysToDefaults">{{ $t('user.resetToDefaults') || 'Reset to defaults' }}</el-button>
-        <el-button @click="hotkeysDialogVisible = false">{{ $t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="saveHotkeys">{{ $t('common.save') || 'Save' }}</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
@@ -350,13 +278,6 @@ export default {
 
       languageCodes: kiwiConst.TRANSLATION_LANGUAGE_CODE,
 
-      // NEW: hotkeys dialog state
-      hotkeysDialogVisible: false,
-      // Work in rows to make editing easier
-      hotkeyRows: [],
-
-      // NEW: Feature tabs toggle local state
-      enabledTabsLocal: { ...kiwiConst.DEFAULT_ENABLED_TABS },
       clearingWebsiteData: false
     }
   },
@@ -389,32 +310,6 @@ export default {
     clipboardDetectionEnabled: {
       get() { return this.user.clipboardDetection === kiwiConst.CLIPBOARD_DETECTION.ENABLE },
       set(val) { this.user.clipboardDetection = val ? kiwiConst.CLIPBOARD_DETECTION.ENABLE : kiwiConst.CLIPBOARD_DETECTION.DISABLE }
-    },
-    isMac() {
-      try { return navigator.platform.toUpperCase().includes('MAC') } catch (e) { return false }
-    },
-    searchModeOptions() {
-      // Build selectable options from SEARCH_MODES_DATA with translation keys aligned to Search.vue
-      const data = kiwiConst.SEARCH_MODES_DATA
-      const toKey = (value) => {
-        const map = {
-          'detail': 'dictionary',
-          'directly-translation': 'directTranslation',
-          'translation-and-explanation': 'explanation',
-          'grammar-explanation': 'grammarExplanation',
-          'grammar-correction': 'grammarCorrection',
-          'vocabulary-explanation': 'vocabularyExplanation',
-          'synonym': 'synonym',
-          'antonym': 'antonym',
-          'vocabulary-association': 'vocabularyAssociation',
-          'phrases-association': 'phrasesAssociation',
-          // New modes
-          'vocabulary-character-expansion': 'vocabularyCharacterExpansion',
-          'ambiguous-association-correction': 'ambiguousAssociationCorrection'
-        }
-        return map[value] || value
-      }
-      return Object.values(data).map(m => ({ value: m.value, labelKey: toKey(m.value) }))
     }
   },
 
@@ -522,7 +417,7 @@ export default {
         'wechat': 'success',
         'qq': 'warning'
       }
-      return types[source] || 'info'
+      return types[source] ? types[source] : 'info'
     },
 
     getSourceText(source) {
@@ -710,189 +605,6 @@ export default {
           .catch(error => {
             console.error('Error loading review count:', error)
           })
-    },
-
-    // NEW: Hotkeys config methods
-    openHotkeysDialog() {
-      try {
-        const stored = getStore({ name: kiwiConst.CONFIG_KEY.SEARCH_MODE_HOTKEYS })
-
-        let comboMap = {}
-        if (stored && typeof stored === 'object') {
-          const keys = Object.keys(stored)
-          const isCombo = keys.some(k => k.includes('+'))
-          if (isCombo) {
-            comboMap = { ...stored }
-          } else {
-            // Migrate legacy digits to a reasonable default combo (Ctrl+Shift+digit)
-            comboMap = Object.keys(stored).reduce((acc, d) => {
-              const mode = stored[d]
-              if (mode) acc[`Ctrl+Shift+${d}`] = mode
-              return acc
-            }, {})
-          }
-        } else {
-          comboMap = {}
-        }
-
-        this.hotkeyRows = Object.entries(comboMap).map(([combo, mode], i) => ({
-          id: `${combo}-${i}-${Date.now()}`,
-          combo,
-          mode
-        }))
-        // Ensure at least one row exists for UX
-        if (this.hotkeyRows.length === 0) {
-          this.hotkeyRows.push({ id: 'new-0', combo: '', mode: Object.values(kiwiConst.SEARCH_MODES_DATA)[0].value })
-        }
-        this.hotkeysDialogVisible = true
-      } catch (e) {
-        const firstMode = (Object.values(kiwiConst.SEARCH_MODES_DATA)[0] || {}).value || 'detail'
-        this.hotkeyRows = [{ id: `error-${Date.now()}`, combo: '', mode: firstMode }]
-        this.hotkeysDialogVisible = true
-      }
-    },
-
-    addHotkeyRow() {
-      const firstMode = (Object.values(kiwiConst.SEARCH_MODES_DATA)[0] || {}).value || 'detail'
-      this.hotkeyRows.push({ id: `new-${Date.now()}`, combo: '', mode: firstMode })
-    },
-
-    removeHotkeyRow(index) {
-      this.hotkeyRows.splice(index, 1)
-    },
-
-    // Normalize KeyboardEvent to combo string, e.g., "Ctrl+Shift+1", "Meta+K", "Alt+S"
-    normalizeEventToCombo(e) {
-      const key = (e.key || '').toString()
-      const isModifierKey = ['Shift', 'Control', 'Alt', 'Meta'].includes(key)
-      if (isModifierKey) return null
-
-      const parts = []
-      if (e.metaKey) parts.push('Meta')
-      if (e.ctrlKey) parts.push('Ctrl')
-      if (e.altKey) parts.push('Alt')
-      if (e.shiftKey) parts.push('Shift')
-      if (parts.length === 0) return null // require at least one modifier
-
-      let keyLabel = ''
-      if (key.length === 1) {
-        keyLabel = key.toUpperCase()
-      } else {
-        const map = {
-          'Escape': 'Esc',
-          ' ': 'Space',
-          'Spacebar': 'Space',
-          'ArrowUp': 'ArrowUp',
-          'ArrowDown': 'ArrowDown',
-          'ArrowLeft': 'ArrowLeft',
-          'ArrowRight': 'ArrowRight',
-          'Enter': 'Enter',
-          'Tab': 'Tab',
-          'Backspace': 'Backspace',
-          'Delete': 'Delete',
-          'Home': 'Home',
-          'End': 'End',
-          'PageUp': 'PageUp',
-          'PageDown': 'PageDown'
-        }
-        if (map[key]) keyLabel = map[key]
-        else if (/^F\d{1,2}$/.test(key)) keyLabel = key
-        else if (/^[0-9]$/.test(key)) keyLabel = key
-        else keyLabel = key.charAt(0).toUpperCase() + key.slice(1)
-      }
-      return [...parts, keyLabel].join('+')
-    },
-
-    onComboFocus(index) {
-      // Could show hint or visual state, reserved for future
-    },
-    onComboBlur(index) {
-      // Reserved for future
-    },
-
-    onComboKeydown(index, event) {
-      const combo = this.normalizeEventToCombo(event)
-      if (!combo) return
-
-      // Prevent duplicates by warning and replacing existing if necessary
-      const duplicateIndex = this.hotkeyRows.findIndex((r, i) => r.combo === combo && i !== index)
-      if (duplicateIndex !== -1) {
-        this.$message.warning(this.$t('messages.duplicateHotkey') || 'This hotkey is already in use')
-        // Still allow user to override by assigning here and clearing the other
-        this.hotkeyRows[duplicateIndex].combo = ''
-      }
-
-      this.$set(this.hotkeyRows[index], 'combo', combo)
-    },
-
-    resetHotkeysToDefaults() {
-      const firstMode = (Object.values(kiwiConst.SEARCH_MODES_DATA)[0] || {}).value || 'detail'
-      this.hotkeyRows = [{ id: `reset-${Date.now()}`, combo: '', mode: firstMode }]
-    },
-
-    async saveHotkeys() {
-      try {
-        // Build map and validate
-        const map = {}
-        const allowed = new Set(Object.values(kiwiConst.SEARCH_MODES_DATA).map(m => m.value))
-
-        for (const row of this.hotkeyRows) {
-          const combo = (row.combo || '').trim()
-          const mode = row.mode
-          if (!combo) continue // allow empty rows
-          if (!combo.includes('+')) {
-            this.$message.error(this.$t('messages.invalidHotkey') || 'Hotkey must include at least one modifier')
-            return
-          }
-          if (!allowed.has(mode)) {
-            this.$message.error(this.$t('messages.invalidConfig') || 'Invalid mode selection')
-            return
-          }
-          if (map[combo]) {
-            this.$message.error(this.$t('messages.duplicateHotkey') || 'Duplicate hotkey found')
-            return
-          }
-          map[combo] = mode
-        }
-
-        if (Object.keys(map).length === 0) {
-          this.$message.warning(this.$t('messages.noHotkeysConfigured') || 'No hotkeys configured')
-        }
-
-        setStore({ name: kiwiConst.CONFIG_KEY.SEARCH_MODE_HOTKEYS, content: map, type: 'local' })
-        const hasHotkeys = Object.keys(map).length > 0
-        let registrationResult = null
-        try {
-          if (window.electronAPI) {
-            if (hasHotkeys && typeof window.electronAPI.registerGlobalHotkeys === 'function') {
-              registrationResult = await window.electronAPI.registerGlobalHotkeys({ modes: map })
-            } else if (!hasHotkeys && typeof window.electronAPI.unregisterGlobalHotkeys === 'function') {
-              registrationResult = await window.electronAPI.unregisterGlobalHotkeys()
-            }
-          }
-        } catch (ipcError) {
-          console.warn('Failed to sync global hotkeys with Electron:', ipcError)
-        }
-
-        const failedCombos = []
-        if (registrationResult && registrationResult.failed) {
-          failedCombos.push(...(registrationResult.failed.tabs || []))
-          failedCombos.push(...(registrationResult.failed.modes || []))
-        }
-        if (failedCombos.length > 0) {
-          this.$message.warning(
-              (this.$t && this.$t('messages.hotkeyRegistrationFailed'))
-                  || `Unable to register some shortcuts: ${failedCombos.join(', ')}`
-          )
-        }
-
-        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
-        this.hotkeysDialogVisible = false
-        try { window.dispatchEvent(new Event('hotkeys-updated')) } catch (_) {}
-      } catch (e) {
-        console.error('Failed to save hotkeys:', e)
-        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
-      }
     }
   }
 }
@@ -1413,19 +1125,6 @@ export default {
     justify-content: center;
     text-align: center;
   }
-
-  /* Hotkeys button fix: consistent height/spacing and no wrap */
-  .hotkeys-btn {
-    width: 100%;
-    height: 40px;
-    line-height: 38px;
-    border-radius: 8px;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 16px;
-  }
 }
 
 /* Animation for better user experience */
@@ -1500,71 +1199,5 @@ export default {
   &::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
   }
-}
-
-/* Hotkeys dialog styles */
-.hotkeys-tip {
-  margin-bottom: 12px;
-  color: #606266;
-}
-.hotkeys-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-.hotkey-row {
-  display: grid;
-  grid-template-columns: 140px 1fr 1fr auto;
-  align-items: center;
-  gap: 8px;
-}
-.combo-input {
-  user-select: none;
-}
-
-/* Icon-only hotkeys configure button */
-.hotkeys-icon-btn {
-  color: #909399 !important; /* grey */
-  padding: 4px 6px !important;
-  line-height: 1 !important;
-  min-width: auto !important;
-}
-.hotkeys-icon-btn:hover {
-  color: #606266 !important;
-}
-.hotkeys-icon-btn i {
-  font-size: 16px;
-}
-
-/* Feature Toggles Styling */
-.feature-toggles {
-  width: 100%;
-}
-.feature-toggles--stacked {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.feature-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* label left, switch right */
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(64,158,255,0.06) 0%, rgba(103,194,58,0.06) 100%);
-}
-.feature-label {
-  font-size: 13px;
-  color: #2c3e50;
-  font-weight: 500;
-}
-.feature-toggle .custom-switch {
-  margin-left: 12px;
-}
-@media (max-width: 768px) {
-  .feature-toggles--stacked { gap: 6px; }
-  .feature-toggle { padding: 5px 8px; }
-  .feature-label { font-size: 12px; }
 }
 </style>

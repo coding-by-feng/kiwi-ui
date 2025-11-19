@@ -1,7 +1,6 @@
-import { getStore, setStore } from '@/util/store'
-import { loginByUsername, logout, refreshToken } from '@/api/login'
-import { encryption } from '@/util/util'
-import router from '@/router/router'
+import {getStore, setStore} from '@/util/store'
+import {loginByUsername, logout, refreshToken} from '@/api/login'
+import {encryption} from '@/util/util'
 
 const user = {
   store: {
@@ -23,6 +22,9 @@ const user = {
     }) || '',
     refresh_token: getStore({
       name: 'refresh_token'
+    }) || '',
+    token_issue_at: getStore({
+      name: 'token_issue_at'
     }) || ''
   },
   actions: {
@@ -38,6 +40,7 @@ const user = {
           commit('setAccessToken', data.access_token)
           commit('setRefreshToken', data.refresh_token)
           commit('setExpiresIn', data.expires_in)
+          commit('setTokenIssueAt', Date.now())
           commit('setUserName', data.user_name)
           commit('clearLock')
           resolve()
@@ -54,12 +57,14 @@ const user = {
           commit('setAccessToken', data.access_token)
           commit('setRefreshToken', data.refresh_token)
           commit('setExpiresIn', data.expires_in)
+          commit('setTokenIssueAt', Date.now())
           commit('clearLock')
           resolve()
         }).catch(error => {
           commit('setAccessToken', '')
           commit('setRefreshToken', '')
           commit('setExpiresIn', '')
+          commit('setTokenIssueAt', '')
           commit('setUserName', '')
           commit('clearLock')
           window.location.reload()
@@ -73,6 +78,7 @@ const user = {
           commit('setAccessToken', '')
           commit('setRefreshToken', '')
           commit('setExpiresIn', '')
+          commit('setTokenIssueAt', '')
           commit('setUserName', '')
           commit('clearLock')
           setStore({
@@ -156,6 +162,14 @@ const user = {
           content: state.user_name,
           type: 'local'
         })
+    },
+    setTokenIssueAt: (state, token_issue_at) => {
+      state.token_issue_at = token_issue_at
+      setStore({
+        name: 'token_issue_at',
+        content: state.token_issue_at,
+        type: 'local'
+      })
     }
 
   }

@@ -175,18 +175,8 @@ export default {
   methods: {
     // Resolve env var possibly from build-time or Electron preload
     getEnvVar(key) {
-      try {
-        if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.getEnvVar === 'function') {
-          const v = window.electronAPI.getEnvVar(key)
-          if (v !== undefined && v !== null && v !== '') return v
-        }
-      } catch (_) {}
-      try {
-        if (process && process.env && process.env[key] !== undefined) return process.env[key]
-      } catch (_) {}
-      try {
-        if (typeof window !== 'undefined' && window[key] !== undefined) return window[key]
-      } catch (_) {}
+      // Web-only: read from process.env
+      try { if (process && process.env && process.env[key] !== undefined) return process.env[key] } catch (_) {}
       return undefined
     },
 

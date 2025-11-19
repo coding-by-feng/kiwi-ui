@@ -2,46 +2,39 @@ const path = require('path');
 const webpack = require('webpack')
 const CompressionWebpackPlugin = require('compression-webpack-plugin')
 
-// Detect if running via webpack dev server (vue-cli-service serve)
+// Web-only: remove Electron detection logic
 const isDevServer = (
     process.env.WEBPACK_DEV_SERVER === 'true' ||
     process.env.npm_lifecycle_event === 'serve' ||
     (process.argv && process.argv.join(' ').includes('serve'))
 )
-
-// Determine if running packaged Electron (not dev server)
-const isElectron = !isDevServer && (process.env.IS_ELECTRON === 'true' || process.env.npm_lifecycle_event === 'electron-prod')
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Backend URL handling
-// Use a localhost default for the dev-server proxy; do not inject a default for production web builds
+// Backend URL handling (web only)
 const devProxyTarget = process.env.VUE_APP_API_URL || 'http://localhost:9991'
 const definedApiEnv = isDevServer
-    ? devProxyTarget // during serve, allow overriding proxy target via env
-    : (process.env.VUE_APP_API_URL || '') // for build, only inject if explicitly provided; else same-origin
+    ? devProxyTarget
+    : (process.env.VUE_APP_API_URL || '')
 
-console.log(`Building for ${isElectron ? 'Electron' : 'Web'} in ${isProduction ? 'Production' : 'Development'} mode.${isDevServer ? ' (Dev Server)' : ''}`);
+console.log(`Building Web in ${isProduction ? 'Production' : 'Development'} mode.${isDevServer ? ' (Dev Server)' : ''}`);
 console.log(`API URL set to: ${definedApiEnv || '(relative, same-origin)'}`);
-console.log(`Public path set to: ${isElectron ? './' : '/'} (devServer=${isDevServer})`);
+console.log(`Public path set to: '/' (web-only)`);
 
-// Use absolute path for web/dev-server, relative for packaged Electron
-let publicPath = isDevServer ? '/' : (isElectron ? './' : '/')
+// Always absolute path for web
+let publicPath = '/'
 
 module.exports = {
     publicPath: publicPath,
-    lintOnSave: false, // Disable linting in production builds for speed
-    productionSourceMap: false, // MUST be false for production
-
+    lintOnSave: false,
+    productionSourceMap: false,
     transpileDependencies: [
         '@smallwei/avue',
         'chart.js',
         '@opendocsg/pdf2md',
         'unpdf'
     ],
-
     configureWebpack: {
-        devtool: false, // No source maps in production
-
+        devtool: false,
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, './src'),
@@ -50,26 +43,15 @@ module.exports = {
             },
             extensions: ['.js', '.vue', '.json']
         },
-
-        // Externalize heavy libraries if they're loaded from CDN
-        externals: isProduction ? {
-            // Only if you're loading these from CDN
-            // 'axios': 'axios',
-        } : {},
-
+        externals: isProduction ? {} : {},
         plugins: [
-            // Ignore all locale files of moment.js
             new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-
-            // Define plugin for environment variables
             new webpack.DefinePlugin({
                 'process.env': {
                     NODE_ENV: JSON.stringify(process.env.NODE_ENV),
                     VUE_APP_API_URL: JSON.stringify(definedApiEnv)
                 }
             }),
-
-            // Only compress in production
             ...(isProduction ? [
                 new CompressionWebpackPlugin({
                     filename: '[path][base].gz',
@@ -81,20 +63,16 @@ module.exports = {
                 })
             ] : [])
         ],
-
         optimization: {
             runtimeChunk: false,
             moduleIds: 'hashed',
-
             splitChunks: {
                 chunks: 'all',
-                maxAsyncRequests: 8, // Increased for better chunk distribution
-                maxInitialRequests: 6, // Increased for better initial loading
-                minSize: 15000, // Reduced for more granular chunks
-                maxSize: 120000, // Reduced max size for better iOS compatibility
-
+                maxAsyncRequests: 8,
+                maxInitialRequests: 6,
+                minSize: 15000,
+                maxSize: 120000,
                 cacheGroups: {
-                    // Split Element UI into more granular chunks
                     elementUICore: {
                         test: /[\\/]node_modules[\\/]element-ui[\\/]lib[\\/](utils|mixins|transitions|locale)[\\/]/,
                         name: 'element-ui-core',
@@ -120,7 +98,7 @@ module.exports = {
                         name: 'element-ui-components',
                         priority: 24,
                         chunks: 'all',
-                        maxSize: 100000 // Keep individual component chunks smaller
+                        maxSize: 100000
                     },
                     elementUIStyles: {
                         test: /[\\/]node_modules[\\/]element-ui[\\/].*\.css$/,
@@ -132,7 +110,7 @@ module.exports = {
                         test: /[\\/]node_modules[\\/](vue|vue-router|vuex|vue-i18n)[\\/]/,
                         name: 'vue-core',
                         priority: 20,
-                        maxSize: 80000 // Keep Vue core small
+                        maxSize: 80000
                     },
                     avue: {
                         test: /[\\/]node_modules[\\/]@smallwei[\\/]avue[\\/]/,
@@ -140,7 +118,6 @@ module.exports = {
                         priority: 18,
                         maxSize: 120000
                     },
-                    // Split large vendors more granularly
                     vendorLarge: {
                         test: /[\\/]node_modules[\\/](axios|moment|lodash|pdf)[\\/]/,
                         name: 'vendor-large',
@@ -152,7 +129,7 @@ module.exports = {
                         name: 'vendor',
                         priority: 10,
                         minSize: 15000,
-                        maxSize: 100000 // Smaller vendor chunks for iOS Safari
+                        maxSize: 100000
                     },
                     common: {
                         name: 'common',
@@ -169,33 +146,25 @@ module.exports = {
                     }
                 }
             },
-
             minimize: isProduction
         },
-
         performance: {
-            maxEntrypointSize: 250000, // Reduced for better performance
-            maxAssetSize: 200000, // Reduced for better performance
+            maxEntrypointSize: 250000,
+            maxAssetSize: 200000,
             hints: isProduction ? 'warning' : false,
             assetFilter: function(assetFilename) {
                 return assetFilename.endsWith('.js') || assetFilename.endsWith('.css');
             }
         }
     },
-
     chainWebpack: config => {
-        // Remove prefetch plugin to reduce initial load
         config.plugins.delete('prefetch')
-
-        // Ensure .mjs in selected node_modules are transpiled and parsed correctly
         config.module
             .rule('mjs-fix')
             .test(/\.mjs$/)
             .include.add(/node_modules\/(?:@opendocsg\/pdf2md|unpdf)/)
             .end()
             .type('javascript/auto')
-
-        // Optimize preload for critical resources
         config.plugin('preload').tap(args => {
             args[0] = {
                 rel: 'preload',
@@ -209,12 +178,10 @@ module.exports = {
                 },
                 include: 'initial',
                 fileBlacklist: [/\.map$/, /hot-update\./, /runtime\./],
-                crossorigin: 'anonymous' // Add crossorigin for external resources
+                crossorigin: 'anonymous'
             }
             return args
         })
-
-        // Add resource hints for local external assets
         config.plugin('resource-hints')
             .use(require('webpack').DefinePlugin, [{
                 __EXTERNAL_ASSETS__: JSON.stringify({
@@ -222,14 +189,12 @@ module.exports = {
                     voiceRssImage: '/assets/external/info_dark_brown.gif'
                 })
             }])
-
-        // Optimize images with better compression and caching
         config.module
             .rule('images')
             .use('url-loader')
             .loader('url-loader')
             .tap(options => Object.assign(options || {}, {
-                limit: 8192, // Reduced limit to avoid large inline images
+                limit: 8192,
                 fallback: {
                     loader: 'file-loader',
                     options: {
@@ -239,8 +204,6 @@ module.exports = {
                     }
                 }
             }))
-
-        // Enhanced font handling - revert to standard Element UI font handling
         config.module
             .rule('fonts')
             .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
@@ -250,8 +213,6 @@ module.exports = {
                 limit: 10000,
                 name: 'fonts/[name].[hash:7].[ext]'
             })
-
-        // Add rule for external assets to ensure proper caching
         config.module
             .rule('external-assets')
             .test(/[\\/]assets[\\/]external[\\/].*\.(js|gif|png|jpg|jpeg)$/i)
@@ -261,24 +222,15 @@ module.exports = {
                 name: 'assets/external/[name].[contenthash:8].[ext]',
                 publicPath: '/',
                 outputPath: 'assets/external/',
-                // Add cache control headers
                 postTransformPublicPath: (p) => `${p}?cache=1y`
             })
-
-        // Production optimizations
         if (isProduction) {
-            // Enable tree shaking for Element UI
             config.resolve.alias.set('element-ui$', 'element-ui/lib/index.js')
-
-            // Minimize and optimize
             config.optimization.minimize(true)
-
-            // Add long-term caching for chunks
             config.optimization.splitChunks({
                 ...config.optimization.get('splitChunks'),
                 cacheGroups: {
                     ...config.optimization.get('splitChunks').cacheGroups,
-                    // Ensure Element UI fonts get proper caching
                     elementFonts: {
                         test: /[\\/]node_modules[\\/]element-ui[\\/].*\.(woff2?|eot|ttf|otf)$/,
                         name: 'element-fonts',
@@ -288,8 +240,6 @@ module.exports = {
                     }
                 }
             })
-
-            // Bundle analyzer for debugging
             if (process.env.ANALYZE) {
                 config.plugin('webpack-bundle-analyzer')
                     .use(require('webpack-bundle-analyzer').BundleAnalyzerPlugin, [{
@@ -300,29 +250,18 @@ module.exports = {
             }
         }
     },
-
     css: {
-        extract: false, // Temporarily disable CSS extraction to fix build issue
+        extract: false,
         sourceMap: false,
         loaderOptions: {
-            sass: {
-                sassOptions: {
-                    precision: 5
-                }
-            },
-            scss: {
-                sassOptions: {
-                    precision: 5
-                }
-            }
+            sass: { sassOptions: { precision: 5 } },
+            scss: { sassOptions: { precision: 5 } }
         }
     },
-
     devServer: {
         port: 8080,
         hot: true,
         compress: true,
-        // Always enable proxy during dev-server to avoid hitting the dev server with API paths directly
         proxy: {
             '/auth': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
             '/wordBiz': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },

@@ -3,6 +3,16 @@ import {getStore} from '@/util/store'
 import website from '@/const/website'
 import kiwiConsts from '@/const/kiwiConsts'
 
+function redirectToLogin() {
+  try {
+    const target = `${kiwiConsts.ROUTES.DETAIL}?active=login`
+    // Prefer router navigation to avoid full reload
+    router.push(target).catch(() => {})
+  } catch (e) {
+    try { window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login` } catch (_) {}
+  }
+}
+
 // Single consolidated router guard to prevent conflicts
 router.beforeEach((to, from, next) => {
   // First check if route exists to prevent navigation to non-existent routes
@@ -29,17 +39,28 @@ router.beforeEach((to, from, next) => {
 
   // Get access token for authentication check
   let accessToken = getStore({ name: 'access_token' })
+  const expiresIn = parseInt(getStore({ name: 'expires_in' }) || '0', 10)
+  const tokenIssueAt = parseInt(getStore({ name: 'token_issue_at' }) || '0', 10)
+  let isExpired = false
+  try {
+    if (accessToken && expiresIn > 0 && tokenIssueAt > 0) {
+      const safetyWindowMs = 5000
+      const expiryMs = tokenIssueAt + (expiresIn * 1000) - safetyWindowMs
+      if (Date.now() >= expiryMs) {
+        isExpired = true
+      }
+    }
+  } catch (e) { /* ignore */ }
 
-  // If no access token, handle authentication logic
-  if (!accessToken) {
-    // Check if trying to access a protected route
+  if ((!accessToken || isExpired)) {
+    if (isExpired) {
+      console.warn('Token detected as expired in navigation guard; redirecting to login.')
+    }
     if (to.path !== website.noAuthPath?.detail) {
-      // Check if current path is in auth whitelist
       if (website.auth?.path && website.auth.path.indexOf(to.path) < 0) {
-        // Redirect to login if not in whitelist
         if (website.auth?.login && to.path !== website.auth.login) {
           console.log('Redirecting to login:', website.auth.login)
-          next({ path: website.auth.login })
+          redirectToLogin()
           return
         }
       }

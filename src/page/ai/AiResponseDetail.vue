@@ -116,8 +116,8 @@
       </div>
       <div v-if="lastErrorMessage" class="inline-error">{{ lastErrorMessage }}</div>
       <div
+        class="main-response-content"
         v-html="parsedResponseText"
-        style="text-align: justify; margin-bottom: 40px;"
         v-loading="apiLoading && !isStreaming"
         ref="mainResponseRef"
         @mouseup="handleTextSelectionFromMainResponse"
@@ -1556,4 +1556,6 @@ export default {
   padding: 10px 12px;
   margin-bottom: 12px;
 }
+
+.main-response-content { text-align: left; margin-bottom: 40px; }
 </style>

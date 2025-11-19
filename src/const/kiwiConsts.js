@@ -168,8 +168,6 @@ export default {
         UI_LANGUAGE: 'ui_language', // Add UI language key
         CLIPBOARD_DETECTION: 'clipboard_detection',
         SUBTITLES_AUTO_CENTER: 'subtitles_auto_center', // New: persist subtitles auto-center preference
-        // New: hotkey configuration keys
-        SEARCH_MODE_HOTKEYS: 'search_mode_hotkeys',
         // New: feature tabs enable/disable map
         ENABLED_TABS: 'enabled_tabs'
         // Removed: ONBOARDING_TOUR_DONE, TOUR_ENABLED, SHOW_TOUR_ICON
