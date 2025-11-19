@@ -4,6 +4,7 @@ node_modules
 # Build archives
 /dist.zip
 dist.zip
+./dist.zip
 
 # local env files
 .env.local
