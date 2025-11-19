@@ -1,139 +1,21 @@
 {
-  "name": "kason-tools-desktop",
+  "name": "kason-tools-web",
   "version": "0.1.0",
-  "description": "Kason Tools Learning Desktop Application",
-  "main": "public/electron.js",
+  "description": "Kason Tools Learning Web Application",
   "homepage": "./",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --verbose",
-    "build:web": "node scripts/pre-build.js && vue-cli-service build --verbose",
-    "build": "npm run build:web",
-    "build:electron": "cross-env IS_ELECTRON=true npm run build:web",
+    "build": "node scripts/pre-build.js && vue-cli-service build --verbose",
     "build:quick": "vue-cli-service build --verbose",
     "lint": "vue-cli-service lint",
-    "electron": "electron .",
-    "electron-dev": "concurrently \"npm run serve\" \"wait-on http://localhost:8080 && electron .\"",
-    "electron-prod": "cross-env NODE_ENV=production electron .",
-    "electron-pack": "npm run build:electron && electron-builder",
-    "dist": "npm run build:electron && electron-builder --publish=never",
-    "dist-mac": "npm run build:electron && electron-builder --mac",
-    "dist-win": "npm run build:electron && electron-builder --win",
-    "dist-linux": "npm run build:electron && electron-builder --linux",
-    "dist-all": "npm run build:electron && electron-builder --mac --win --linux",
-    "pack-mac": "npm run build:electron && npx electron-packager . \"Kason Tools\" --platform=darwin --arch=x64,arm64 --out=dist_electron --overwrite --ignore=\"node_modules/canvas\" --ignore=\"node_modules/sharp\"",
-    "pack-win": "npm run build:electron && npx electron-packager . \"Kason Tools\" --platform=win32 --arch=x64 --out=dist_electron --overwrite --ignore=\"node_modules/canvas\" --ignore=\"node_modules/sharp\"",
-    "pack-linux": "npm run build:electron && npx electron-packager . \"Kason Tools\" --platform=linux --arch=x64 --out=dist_electron --overwrite --ignore=\"node_modules/canvas\" --ignore=\"node_modules/sharp\"",
     "generate-icons": "node scripts/generate-icons.js",
-    "build-electron": "node scripts/build-electron.js",
-    "build-electron-mac": "node scripts/build-electron.js mac",
-    "build-electron-win": "node scripts/build-electron.js win",
-    "build-electron-all": "node scripts/build-electron.js all",
-    "postinstall": "electron-builder install-app-deps",
-    "clean": "rimraf dist dist_electron node_modules/.cache",
+    "clean": "rimraf dist node_modules/.cache",
     "rebuild": "npm run clean && npm install",
     "find:unused-api": "node scripts/remove-unused-api.js",
     "fix:unused-api": "node scripts/remove-unused-api.js --write",
     "optimize:resources": "node scripts/pre-build.js",
     "optimize:images": "node scripts/image-optimizer.js"
-  },
-  "build": {
-    "appId": "com.kiwivocabulary.desktop",
-    "productName": "Kason Tools",
-    "directories": {
-      "output": "dist_electron",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "node_modules/**/*",
-      "public/electron.js",
-      "public/preload.js",
-      "config/electron.env*",
-      "!node_modules/canvas/**/*",
-      "!node_modules/sharp/**/*"
-    ],
-    "buildDependenciesFromSource": false,
-    "nodeGypRebuild": false,
-    "afterPack": "scripts/afterPack.js",
-    "extraResources": [
-      {
-        "from": "public/assets",
-        "to": "assets",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "mac": {
-      "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "public/icon.png",
-      "category": "public.app-category.education",
-      "hardenedRuntime": true,
-      "entitlements": "build/entitlements.mac.plist",
-      "extendInfo": {
-        "NSBluetoothAlwaysUsageDescription": "Kason Tools uses Bluetooth to discover nearby passkey devices for sign-in (WebAuthn/caBLE).",
-        "NSBluetoothPeripheralUsageDescription": "Kason Tools uses Bluetooth to communicate with nearby passkey devices for sign-in."
-      }
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ],
-      "icon": "public/icon.ico",
-      "publisherName": "Kason Tools"
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "public/icon.png",
-      "category": "Education"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "your-username",
-      "repo": "kason-tools",
-      "private": false
-    }
   },
   "dependencies": {
     "@opendocsg/pdf2md": "^0.2.2",
@@ -143,7 +25,6 @@
     "core-js": "^3.1.2",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.5",
-    "electron-updater": "^5.3.0",
     "element-ui": "^2.15.14",
     "howler": "^2.2.4",
     "jquery": "^3.7.1",
@@ -171,20 +52,12 @@
     "@vue/cli-plugin-babel": "^4.5.19",
     "@vue/cli-service": "^4.5.19",
     "compression-webpack-plugin": "^3.1.0",
-    "concurrently": "^7.6.0",
-    "cross-env": "^7.0.3",
-    "dmg-license": "^1.0.11",
-    "electron": "^22.3.27",
-    "electron-builder": "^24.6.4",
-    "electron-is-dev": "^2.0.0",
-    "electron-packager": "^17.1.2",
     "rimraf": "^3.0.2",
     "sass": "^1.81.0",
     "sass-loader": "^8.0.2",
     "sharp": "^0.32.6",
     "sharp-ico": "^0.1.5",
     "vue-template-compiler": "^2.7.16",
-    "wait-on": "^7.0.1",
     "webpack-cli": "^3.3.12"
   },
   "postcss": {

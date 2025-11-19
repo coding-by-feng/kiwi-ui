@@ -1028,6 +1028,11 @@ export default {
       let errorMessage = response.message || 'Translation failed';
       if (response.errorCode === 'AUTHENTICATION_ERROR' || response.errorCode === 'UNAUTHORIZED') {
         errorMessage = 'Authentication failed. Please login again.';
+        try {
+          const kiwiConsts = require('@/const/kiwiConsts').default
+          const target = `${kiwiConsts.ROUTES.DETAIL}?active=login`
+          this.$router.replace(target).catch(()=>{})
+        } catch (e) { /* ignore */ }
       } else if (response.errorCode === 'RATE_LIMIT_EXCEEDED') {
         errorMessage = 'Rate limit exceeded. Please try again later.';
       }

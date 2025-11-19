@@ -172,9 +172,6 @@ export default {
 
       // Desktop clipboard notification
       clipboardNotification: null,
-
-      // Remove renderer hotkeys state
-      userHotkeysEnabled: false
     }
   },
 
@@ -244,18 +241,9 @@ export default {
   mounted() {
     console.log('Search component mounted')
     this.setupClipboardHandling();
-
-    // Do NOT bind renderer keydown listeners; global hotkeys are handled in Electron main
-    window.addEventListener('hotkeys-updated', () => {
-      messageCenter.success({
-        message: this.$t ? this.$t('messages.operationSuccess') : 'Hotkeys updated',
-        duration: 1000
-      })
-    })
   },
   beforeDestroy() {
     this.cleanupClipboardHandling();
-    window.removeEventListener('hotkeys-updated', this.refreshModeHotkeys);
   },
   watch: {
     $route: function () {

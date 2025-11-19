@@ -84,6 +84,28 @@ axios.interceptors.response.use(res => {
   const serverMsg = res && res.data && (res.data.msg || res.data.message)
   const message = serverMsg || responseCode[status] || responseCode['default']
   let refreshToken = getStore({ name: 'refresh_token' })
+  // New: check token expiry (if expires_in & token_issue_at exist)
+  try {
+    const expiresIn = parseInt(getStore({ name: 'expires_in' }) || '0', 10)
+    const tokenIssueAt = parseInt(getStore({ name: 'token_issue_at' }) || '0', 10)
+    const now = Date.now()
+    if (expiresIn > 0 && tokenIssueAt > 0) {
+      // Consider token expired slightly earlier (5s safety window)
+      const safetyWindowMs = 5000
+      const expiryMs = tokenIssueAt + (expiresIn * 1000) - safetyWindowMs
+      if (now >= expiryMs) {
+        console.warn('Access token expired (local check); forcing logout redirect.')
+        store.dispatch('LogOut').finally(() => {
+          if (isElectron) {
+            router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
+          } else {
+            window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
+          }
+        })
+        return Promise.reject(new Error('Token expired'))
+      }
+    }
+  } catch (e) { /* ignore expiry check errors */ }
 
   if (String(responseCode.UNAUTHORIZED) === status) {
     if (refreshToken) {
@@ -105,6 +127,24 @@ axios.interceptors.response.use(res => {
     }
   }
 
+  // New: handle payload-level auth error codes when HTTP status isn't 401
+  try {
+    const payloadCode = (res.data && (res.data.errorCode || res.data.code || res.data.error)) || ''
+    const normalizedPayloadCode = String(payloadCode).toUpperCase()
+    const authCodes = ['AUTHENTICATION_ERROR','UNAUTHORIZED','TOKEN_EXPIRED','INVALID_TOKEN']
+    if (authCodes.includes(normalizedPayloadCode)) {
+      console.warn('Detected auth failure in payload, redirecting to login:', normalizedPayloadCode)
+      store.dispatch('LogOut').finally(() => {
+        if (isElectron) {
+          router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
+        } else {
+          window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
+        }
+      })
+      return Promise.reject(new Error('Authentication failed'))
+    }
+  } catch (e) { /* ignore */ }
+
   if (status.indexOf('2') !== 0 || (res.data && res.data.code === responseCode.ERROR)) {
     messageCenter.error({
       message,
@@ -116,6 +156,25 @@ axios.interceptors.response.use(res => {
   return res
 }, error => {
   NProgress.done()
+  // New: if error response indicates auth failure, force redirect
+  try {
+    const resp = error && error.response
+    const status = resp && resp.status
+    const errPayload = resp && resp.data
+    const payloadCode = (errPayload && (errPayload.errorCode || errPayload.code || errPayload.error)) || ''
+    const normalizedPayloadCode = String(payloadCode).toUpperCase()
+    const authCodes = ['AUTHENTICATION_ERROR','UNAUTHORIZED','TOKEN_EXPIRED','INVALID_TOKEN']
+    if (status === responseCode.UNAUTHORIZED || authCodes.includes(normalizedPayloadCode)) {
+      console.warn('Authentication error in error handler, redirecting to login.')
+      store.dispatch('LogOut').finally(() => {
+        if (isElectron) {
+          router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
+        } else {
+          window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
+        }
+      })
+    }
+  } catch (e) { /* ignore */ }
 
   // Handle network errors in Electron
   if (isElectron && (error && (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND'))) {
