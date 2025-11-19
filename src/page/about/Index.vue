@@ -29,6 +29,66 @@
 
       <el-divider class="custom-divider"></el-divider>
 
+      <!-- Download Clients Section -->
+      <div class="download-section">
+        <h4 class="section-title">
+          <i class="el-icon-download"></i>
+          {{ $t('about.downloads') }}
+        </h4>
+        <div class="download-grid">
+          <!-- macOS -->
+          <div class="download-item mac-item">
+            <div class="download-header">
+              <i class="el-icon-monitor"></i>
+              <span class="download-title">{{ $t('about.mac') }}</span>
+            </div>
+            <div class="download-content">
+              <a :href="downloadLinks.mac" target="_blank" rel="noopener" class="download-link">
+                <div class="download-button mac">
+                  <i class="el-icon-download"></i>
+                  <span class="download-text">{{ $t('about.downloadForMac') }}</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Windows -->
+          <div class="download-item windows-item">
+            <div class="download-header">
+              <i class="el-icon-monitor"></i>
+              <span class="download-title">{{ $t('about.windows') }}</span>
+            </div>
+            <div class="download-content">
+              <a :href="downloadLinks.windows" target="_blank" rel="noopener" class="download-link">
+                <div class="download-button windows">
+                  <i class="el-icon-download"></i>
+                  <span class="download-text">{{ $t('about.downloadForWindows') }}</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Linux -->
+          <div class="download-item linux-item">
+            <div class="download-header">
+              <i class="el-icon-monitor"></i>
+              <span class="download-title">{{ $t('about.linux') }}</span>
+            </div>
+            <div class="download-content">
+              <a :href="downloadLinks.linux" target="_blank" rel="noopener" class="download-link">
+                <div class="download-button linux">
+                  <i class="el-icon-download"></i>
+                  <span class="download-text">{{ $t('about.downloadForLinux') }}</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <p class="download-note">{{ $t('about.gdriveNote') }}</p>
+      </div>
+
+      <el-divider class="custom-divider"></el-divider>
+
       <!-- Contact Information Section -->
       <div class="contact-section">
         <h4 class="section-title">
@@ -151,7 +211,17 @@
 <script>
 // Guided Tour imports removed
 export default {
-  name: 'about'
+  name: 'about',
+  data() {
+    return {
+      // Replace with Google Drive links for each platform
+      downloadLinks: {
+        mac: 'https://drive.google.com/file/d/1IyRlcxnYsWlMoWZGZMQl7z84uZ0xlpFi/view?usp=sharing', // e.g., https://drive.google.com/file/d/XXXXX/view?usp=sharing
+        windows: 'https://drive.google.com/file/d/1rXRJs4BaCILVagnukYQD9_tn1TthjQWe/view?usp=sharing', // e.g., https://drive.google.com/file/d/YYYYY/view?usp=sharing
+        linux: 'https://drive.google.com/file/d/1lq3KXYOdpLUdsNm7lBQaaGy3NZKYWCvd/view?usp=sharing', // e.g., https://drive.google.com/file/d/ZZZZZ/view?usp=sharing
+      }
+    }
+  }
 }
 </script>
 
@@ -198,7 +268,8 @@ export default {
 }
 
 .about-section,
-.contact-section {
+.contact-section,
+.download-section {
   margin-bottom: 24px;
   background: white;
   border-radius: 12px;
@@ -260,7 +331,15 @@ export default {
   gap: 16px;
 }
 
-.contact-item {
+/* Download grid */
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.contact-item,
+.download-item {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   border: 1px solid rgba(64, 158, 255, 0.2);
   border-radius: 12px;
@@ -274,31 +353,41 @@ export default {
   }
 }
 
-.contact-header {
+.contact-header,
+.download-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.contact-title {
+.contact-title,
+.download-title {
   font-weight: 600;
   color: #2c3e50;
   font-size: 14px;
 }
 
-.contact-header i {
+.contact-header i,
+.download-header i {
   color: #409eff;
   font-size: 16px;
 }
 
-.contact-content {
+.contact-content,
+.download-content {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .social-link {
+  text-decoration: none;
+  display: block;
+}
+
+/* Download link/button */
+.download-link {
   text-decoration: none;
   display: block;
 }
@@ -322,6 +411,54 @@ export default {
 
   i {
     font-size: 16px;
+  }
+}
+
+/* Reuse base button style for downloads */
+.download-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 14px;
+  justify-content: center;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  i {
+    font-size: 16px;
+  }
+}
+
+/* Platform-specific colors */
+.download-button.mac {
+  background: linear-gradient(135deg, #000000 0%, #4a4a4a 100%);
+
+  &:hover {
+    background: linear-gradient(135deg, #1a1a1a 0%, #3a3a3a 100%);
+  }
+}
+
+.download-button.windows {
+  background: linear-gradient(135deg, #00A4EF 0%, #2B88D8 100%);
+
+  &:hover {
+    background: linear-gradient(135deg, #0091d1 0%, #2374b8 100%);
+  }
+}
+
+.download-button.linux {
+  background: linear-gradient(135deg, #FFB000 0%, #F48C06 100%);
+
+  &:hover {
+    background: linear-gradient(135deg, #e09b00 0%, #d97b05 100%);
   }
 }
 
@@ -458,6 +595,15 @@ export default {
   transition: all 0.3s ease;
 }
 
+/* Download note */
+.download-note {
+  margin-top: 10px;
+  color: #6c757d;
+  font-size: 12px;
+  text-align: right;
+  font-style: italic;
+}
+
 .copyright-section {
   background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
   margin: 20px -20px -20px -20px;
@@ -503,6 +649,10 @@ export default {
   animation: fadeInUp 0.6s ease 0.1s both;
 }
 
+.download-section {
+  animation: fadeInUp 0.6s ease 0.15s both;
+}
+
 .contact-section {
   animation: fadeInUp 0.6s ease 0.2s both;
 }
@@ -530,12 +680,14 @@ export default {
   }
 
   .about-section,
-  .contact-section {
+  .contact-section,
+  .download-section {
     padding: 16px;
     margin-bottom: 16px;
   }
 
-  .contact-grid {
+  .contact-grid,
+  .download-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }

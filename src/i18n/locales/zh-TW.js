@@ -383,6 +383,15 @@ export default {
         visitWebsite: '造訪官網',
         copyright: '©2025 Kason 英語學習平台。保留所有權利。',
         github: 'GitHub',
-        followOnGitHub: '在 GitHub 上關注'
+        followOnGitHub: '在 GitHub 上關注',
+        // 新增：客戶端下載
+        downloads: '客戶端下載',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: '下載 macOS 版本',
+        downloadForWindows: '下載 Windows 版本',
+        downloadForLinux: '下載 Linux 版本',
+        gdriveNote: '下載檔托管於 Google Drive，若無法開啟，請複製連結至新分頁。'
     }
 }

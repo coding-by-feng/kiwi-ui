@@ -388,6 +388,15 @@ export default {
         copyright: '©2025 Kason 英语学习平台。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
+        // 新增：客户端下载
+        downloads: '客户端下载',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: '下载 macOS 版本',
+        downloadForWindows: '下载 Windows 版本',
+        downloadForLinux: '下载 Linux 版本',
+        gdriveNote: '下载托管于 Google Drive，如无法打开，请复制链接到新标签页。'
     },
 
     // New: full AI features

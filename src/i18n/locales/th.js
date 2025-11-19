@@ -380,7 +380,15 @@ export default {
         visitWebsite: 'เยี่ยมชมเว็บไซต์ทางการ',
         copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason สงวนลิขสิทธิ์',
         github: 'GitHub',
-        followOnGitHub: 'ติดตามบน GitHub'
+        followOnGitHub: 'ติดตามบน GitHub',
+        downloads: 'ดาวน์โหลดไคลเอนต์',
+        mac: 'macOS',
+        windows: 'Windows',
+        linux: 'Linux',
+        downloadForMac: 'ดาวน์โหลดสำหรับ macOS',
+        downloadForWindows: 'ดาวน์โหลดสำหรับ Windows',
+        downloadForLinux: 'ดาวน์โหลดสำหรับ Linux',
+        gdriveNote: 'ไฟล์ดาวน์โหลดโฮสต์บน Google Drive หากลิงก์เปิดไม่ได้ โปรดคัดลอกลิงก์ไปเปิดในแท็บใหม่'
     },
 
     // Messages and notifications
