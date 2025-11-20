@@ -1,20 +1,20 @@
 <template>
   <div class="analytics-tab">
     <div class="analytics-controls">
-      <el-radio-group :value="chartType" @input="$emit('update:chartType', $event)" class="responsive-radio-group">
-        <el-radio-button label="bar" class="chart-option">
+      <KiwiRadioGroup :value="chartType" @input="$emit('update:chartType', $event)" class="responsive-radio-group">
+        <KiwiRadioButton label="bar" class="chart-option">
           <i class="el-icon-s-data"></i>
           <span class="option-text">{{ $t('todo.barChart') }}</span>
-        </el-radio-button>
-        <el-radio-button label="line" class="chart-option">
+        </KiwiRadioButton>
+        <KiwiRadioButton label="line" class="chart-option">
           <i class="el-icon-s-marketing"></i>
           <span class="option-text">{{ $t('todo.lineChart') }}</span>
-        </el-radio-button>
-        <el-radio-button label="doughnut" class="chart-option">
+        </KiwiRadioButton>
+        <KiwiRadioButton label="doughnut" class="chart-option">
           <i class="el-icon-pie-chart"></i>
           <span class="option-text">{{ $t('todo.donutChart') }}</span>
-        </el-radio-button>
-      </el-radio-group>
+        </KiwiRadioButton>
+      </KiwiRadioGroup>
     </div>
 
     <div class="chart-container">
@@ -22,7 +22,7 @@
     </div>
 
     <div class="monthly-summary">
-      <el-card class="summary-card responsive-summary-card enhanced-summary">
+      <div class="summary-card responsive-summary-card enhanced-summary">
         <div class="summary-header">
           <div class="summary-icon">
             <i class="el-icon-data-analysis"></i>
@@ -85,16 +85,19 @@
             </div>
           </div>
         </div>
-      </el-card>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import Chart from 'chart.js/auto'
+import KiwiRadioGroup from '@/components/ui/KiwiRadioGroup.vue'
+import KiwiRadioButton from '@/components/ui/KiwiRadioButton.vue'
 
 export default {
   name: 'AnalyticsPanel',
+  components: { KiwiRadioGroup, KiwiRadioButton },
   props: {
     chartType: { type: String, required: true },
     monthlyData: { type: Object, required: true },

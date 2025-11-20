@@ -106,23 +106,26 @@
       </div>
 
       <!-- Loading Overlay -->
-      <div v-if="pageLoading" class="loading-overlay">
-        <div class="loading-content">
-          <i class="el-icon-loading"></i>
-          <p>{{ loadingText }}</p>
-        </div>
-      </div>
+      <!-- Loading Overlay -->
+      <StatusOverlay
+        :visible="pageLoading"
+        status="loading"
+        :title="loadingText"
+        :backdrop="true"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
 import {mapGetters} from 'vuex'
 import { setStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'GoogleLogin',
+  components: { StatusOverlay },
   data() {
     return {
       googleLoading: false,
@@ -772,35 +775,4 @@ export default {
 }
 
 // Loading Overlay
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--bg-card);
-  opacity: 0.95;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(5px);
-  z-index: 1000;
-}
-
-.loading-content {
-  text-align: center;
-  color: var(--color-primary);
-
-  i {
-    font-size: 32px;
-    margin-bottom: 16px;
-    display: block;
-  }
-
-  p {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 500;
-  }
-}
 </style>

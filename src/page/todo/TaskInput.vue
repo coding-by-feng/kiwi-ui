@@ -1,89 +1,96 @@
 <template>
   <div class="task-input">
-    <el-form :model="newTask" class="task-form" label-position="top">
+    <div class="task-form">
       <div class="form-row form-row-inline align-end">
-        <el-form-item class="flex-1 mr-8">
-          <el-input
+        <div class="form-item flex-1 mr-8">
+          <KiwiInput
             v-model="newTask.title"
             :placeholder="$t('todo.enterTaskTitle')"
             @keyup.enter.native="handleAdd"
             class="w-100"
           />
-        </el-form-item>
-        <!-- Moved Add button to the bottom action row -->
+        </div>
       </div>
 
       <div class="form-row">
-        <el-form-item>
-          <el-input
+        <div class="form-item">
+          <KiwiInput
             v-model="newTask.description"
             type="textarea"
             :rows="2"
             :placeholder="$t('todo.enterTaskDescription')"
             class="w-100"
           />
-        </el-form-item>
+        </div>
       </div>
 
       <div class="form-row form-row-inline">
-        <el-form-item class="mr-8">
-          <el-input-number
-            v-model="newTask.successPoints"
-            :min="1"
-            :max="100"
-            :step="1"
-            size="small"
+        <div class="form-item mr-8">
+          <KiwiInput
+            v-model.number="newTask.successPoints"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
             class="numeric-input"
             :placeholder="$t('todo.successPoints')"
           />
-        </el-form-item>
-        <el-form-item>
-          <el-input-number
-            v-model="newTask.failPoints"
-            :min="-100"
-            :max="0"
-            :step="1"
-            size="small"
+        </div>
+        <div class="form-item">
+          <KiwiInput
+            v-model.number="newTask.failPoints"
+            type="number"
+            min="-100"
+            max="0"
+            step="1"
             class="numeric-input"
             :placeholder="$t('todo.failPoints')"
           />
-        </el-form-item>
+        </div>
       </div>
 
       <div class="form-row form-row-inline">
-        <el-form-item class="mr-8">
-          <el-select v-model="newTask.frequency" class="w-100" size="small" :placeholder="$t('todo.frequency')">
-            <el-option :label="$t('todo.freqOnce')" value="once" />
-            <el-option :label="$t('todo.freqDaily')" value="daily" />
-            <el-option :label="$t('todo.freqWeekly')" value="weekly" />
-            <el-option :label="$t('todo.freqMonthly')" value="monthly" />
-            <el-option :label="$t('todo.customDays')" value="custom" />
-          </el-select>
-        </el-form-item>
-        <el-form-item v-if="newTask.frequency === 'custom'">
-          <el-input
+        <div class="form-item mr-8">
+          <div class="kiwi-select-wrapper w-100">
+            <select v-model="newTask.frequency" class="kiwi-select">
+              <option value="once">{{ $t('todo.freqOnce') }}</option>
+              <option value="daily">{{ $t('todo.freqDaily') }}</option>
+              <option value="weekly">{{ $t('todo.freqWeekly') }}</option>
+              <option value="monthly">{{ $t('todo.freqMonthly') }}</option>
+              <option value="custom">{{ $t('todo.customDays') }}</option>
+            </select>
+            <i class="el-icon-arrow-down select-arrow"></i>
+          </div>
+        </div>
+        <div class="form-item" v-if="newTask.frequency === 'custom'">
+          <KiwiInput
             v-model.number="newTask.customDays"
             type="number"
-            size="small"
-            :min="2"
-            :max="365"
+            min="2"
+            max="365"
             :placeholder="$t('todo.everyNDays')"
             class="numeric-input"
           />
-        </el-form-item>
+        </div>
       </div>
 
       <!-- Bottom action row -->
       <div class="form-row form-actions">
-        <el-button type="primary" :disabled="!canAdd" icon="el-icon-plus" @click="handleAdd">{{ $t('todo.addTask') }}</el-button>
+        <KiwiButton type="primary" :disabled="!canAdd" icon="el-icon-plus" @click="handleAdd">
+          {{ $t('todo.addTask') }}
+        </KiwiButton>
       </div>
-    </el-form>
+    </div>
   </div>
 </template>
 
 <script>
+import KiwiInput from '@/components/ui/KiwiInput.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+
 export default {
   name: 'TaskInput',
+  components: { KiwiInput, KiwiButton },
   props: {
     newTask: { type: Object, required: true },
     onAdd: { type: Function, required: true }
@@ -106,7 +113,7 @@ export default {
 <style scoped>
 .task-input {
   padding: 12px 14px;
-  background: var(--bg-card);
+  background: transparent; /* Transparent for cyberpunk theme */
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: var(--shadow-card);
@@ -177,5 +184,44 @@ export default {
   .form-row-inline { flex-direction: column; align-items: stretch; gap: 8px; }
   .flex-1 { min-width: 100%; }
   .numeric-input { width: 100%; }
+}
+
+/* Custom Select Styles */
+.kiwi-select-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.kiwi-select {
+  width: 100%;
+  height: 40px;
+  padding: 0 30px 0 15px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color-light);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+
+.kiwi-select:hover {
+  border-color: var(--text-secondary);
+}
+
+.kiwi-select:focus {
+  border-color: var(--color-primary);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-placeholder);
+  pointer-events: none;
 }
 </style>

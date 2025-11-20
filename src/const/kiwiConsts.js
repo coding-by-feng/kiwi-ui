@@ -196,42 +196,44 @@ export default {
     ROUTER_VIEW_AI_HISTORY_MODE: 'aiCallHistory',
 
     SEARCH_MODES: {
-        DETAIL: {label: 'Dictionary', value: 'detail'}
+        DETAIL: { label: 'Dictionary', value: 'detail' }
     },
 
     SEARCH_AI_MODES: {
-        DIRECTLY_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation'},
-        TRANSLATION_AND_EXPLANATION: {label: 'Explanation', value: 'translation-and-explanation'},
-        GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation'},
-        GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction'},
-        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'},
-        SYNONYM: {label: 'Synonym', value: 'synonym'},
-        ANTONYM: {label: 'Antonym', value: 'antonym'},
-        VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association'},
-        PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association'},
+        DIRECTLY_TRANSLATION: { label: 'Direct Translation', value: 'directly-translation' },
+        TRANSLATION_AND_EXPLANATION: { label: 'Explanation', value: 'translation-and-explanation' },
+        GRAMMAR_EXPLANATION: { label: 'Grammar Explanation', value: 'grammar-explanation' },
+        GRAMMAR_CORRECTION: { label: 'Grammar Correction', value: 'grammar-correction' },
+        VOCABULARY_EXPLANATION: { label: 'Vocabulary Explanation', value: 'vocabulary-explanation' },
+        SYNONYM: { label: 'Synonym', value: 'synonym' },
+        ANTONYM: { label: 'Antonym', value: 'antonym' },
+        VOCABULARY_ASSOCIATION: { label: 'Vocabulary Association', value: 'vocabulary-association' },
+        PHRASES_ASSOCIATION: { label: 'Phrases Association', value: 'phrases-association' },
         // New modes
         VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion' },
-        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction' }
+        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction' },
+        NATURAL_IDIOMATIC_RETOUCH: { label: 'Natural Idiomatic Retouch', value: 'natural-idiomatic-retouch' }
     },
 
     SEARCH_MODES_DATA: Object.freeze({
-        DICTIONARY: {label: 'Dictionary', value: 'detail', width: '110px'},
-        DIRECT_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation', width: '140px'},
+        DICTIONARY: { label: 'Dictionary', value: 'detail', width: '110px' },
+        DIRECT_TRANSLATION: { label: 'Direct Translation', value: 'directly-translation', width: '140px' },
         TRANSLATION_AND_EXPLANATION: {
             label: 'Explanation',
             value: 'translation-and-explanation',
             width: '190px'
         },
-        GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation', width: '170px'},
-        GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction', width: '160px'},
-        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'},
-        SYNONYM: {label: 'Synonym', value: 'synonym', width: '100px'},
-        ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
-        VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px'},
-        PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association', width: '145px'},
+        GRAMMAR_EXPLANATION: { label: 'Grammar Explanation', value: 'grammar-explanation', width: '170px' },
+        GRAMMAR_CORRECTION: { label: 'Grammar Correction', value: 'grammar-correction', width: '160px' },
+        VOCABULARY_EXPLANATION: { label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px' },
+        SYNONYM: { label: 'Synonym', value: 'synonym', width: '100px' },
+        ANTONYM: { label: 'Antonym', value: 'antonym', width: '100px' },
+        VOCABULARY_ASSOCIATION: { label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px' },
+        PHRASES_ASSOCIATION: { label: 'Phrases Association', value: 'phrases-association', width: '145px' },
         // New modes with approximate widths
         VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion', width: '230px' },
-        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction', width: '240px' }
+        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction', width: '240px' },
+        NATURAL_IDIOMATIC_RETOUCH: { label: 'Natural Idiomatic Retouch', value: 'natural-idiomatic-retouch', width: '220px' }
     }),
 
 
@@ -295,7 +297,8 @@ export default {
         PHRASES_ASSOCIATION: 'input anything',
         // New modes
         VOCABULARY_CHARACTER_EXPANSION: 'input anything',
-        AMBIGUOUS_ASSOCIATION_CORRECTION: 'input anything'
+        AMBIGUOUS_ASSOCIATION_CORRECTION: 'input anything',
+        NATURAL_IDIOMATIC_RETOUCH: 'input text to retouch'
     },
 
     // New: mode value to i18n translation key mapping (centralized)
@@ -311,7 +314,8 @@ export default {
         'vocabulary-association': 'vocabularyAssociation',
         'phrases-association': 'phrasesAssociation',
         'vocabulary-character-expansion': 'vocabularyCharacterExpansion',
-        'ambiguous-association-correction': 'ambiguousAssociationCorrection'
+        'ambiguous-association-correction': 'ambiguousAssociationCorrection',
+        'natural-idiomatic-retouch': 'naturalIdiomaticRetouch'
     }),
 
     SUBTITLES_TYPE: {

@@ -102,8 +102,14 @@
           @mouseup="handleTextSelectionFromExplanation($event, item)"
           @touchend="handleTextSelectionFromExplanation($event, item)"
       >
-        <div v-show="item.isStreaming" class="streaming-indicator">
-          <i class="el-icon-loading"></i> Generating explanation...
+        <div v-show="item.isStreaming" class="streaming-indicator-wrapper" style="position: relative; min-height: 60px;">
+          <StatusOverlay
+            :visible="true"
+            status="loading"
+            title="Generating explanation..."
+            :backdrop="false"
+            style="position: absolute;"
+          />
         </div>
         <div v-html="parseMarkdown(item.responseText)"></div>
       </div>
@@ -111,8 +117,14 @@
 
     <!-- Original Response Container -->
     <div class="response-container">
-      <div v-show="isStreaming" class="streaming-indicator">
-        <i class="el-icon-loading"></i> Streaming response...
+      <div v-show="isStreaming" class="streaming-indicator-wrapper" style="position: relative; min-height: 60px;">
+        <StatusOverlay
+          :visible="true"
+          status="loading"
+          title="Streaming response..."
+          :backdrop="false"
+          style="position: absolute;"
+        />
       </div>
       <div v-if="lastErrorMessage" class="inline-error">{{ lastErrorMessage }}</div>
       <div
@@ -145,6 +157,7 @@
 </template>
 
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
 import util from '@/util/util'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it';
@@ -164,6 +177,7 @@ let that;
 
 export default {
   name: 'AiResponseDetail',
+  components: { StatusOverlay },
   data() {
     return {
       aiResponseVO: {
@@ -298,13 +312,15 @@ export default {
             String(newQ.selectedMode || ''),
             String(newQ.language || ''),
             String(newQ.nativeLanguage || ''),
-            String(newQ.originalText || '')
+            String(newQ.originalText || ''),
+            String(newQ.now || '')
           ].join('|')
           const oldKey = [
             String(oldQ && oldQ.selectedMode || ''),
             String(oldQ && oldQ.language || ''),
             String(oldQ && oldQ.nativeLanguage || ''),
-            String(oldQ && oldQ.originalText || '')
+            String(oldQ && oldQ.originalText || ''),
+            String(oldQ && oldQ.now || '')
           ].join('|')
           // Ignore route churn if core inputs haven’t changed
           if (newKey === oldKey) return
@@ -1043,8 +1059,8 @@ export default {
               : that.selectionResponseText;
             const extracted = this.extractResponseTextFromPayload(finalPayload);
             that.selectionResponseText = (typeof extracted === 'string' && extracted.length > 0)
-              ? extracted
-              : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+                ? extracted
+                : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
           } catch (_) {
             if (response.fullResponse) {
               that.selectionResponseText = response.fullResponse;
@@ -1295,6 +1311,7 @@ h1 {
   border-radius: 8px;
   margin-bottom: 20px;
   border-left: 4px solid var(--color-primary);
+  box-shadow: var(--shadow-card);
 }
 
 .selected-text-preview strong {
@@ -1442,22 +1459,13 @@ h1 {
 
 .regen-button:focus {
   opacity: 0.9;
-  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.3);
+  color: white !important;
 }
 
 .regen-button:active {
   transform: translateY(0px);
 }
 
-.streaming-indicator {
-  color: var(--color-primary);
-  font-style: italic;
-  margin-bottom: 10px;
-}
-
-.streaming-indicator i {
-  margin-right: 5px;
-}
 
 /* Dialog footer styles */
 .dialog-footer {

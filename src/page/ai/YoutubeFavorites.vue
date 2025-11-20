@@ -1,150 +1,113 @@
 <template>
   <div class="youtube-favorites">
-    <el-tabs v-model="favoritesActive" type="card" class="inner-tabs">
+    <KiwiTabs v-model="favoritesActive" type="card" class="inner-tabs">
       <!-- Favorite Videos -->
-      <el-tab-pane label="Videos" name="favVideos">
-        <div v-if="loading" class="loading-container"><el-skeleton :rows="3" animated/></div>
-        <template v-else>
-          <el-empty v-if="favoriteVideos.length === 0" description="No favorite videos" />
-          <!-- Desktop/tablet (stacked multi-line items) -->
-          <el-table v-if="!isSmallScreen && favoriteVideos.length > 0"
-                    :data="favoriteVideos"
-                    style="width: 100%; margin-top: 10px">
-            <el-table-column label="Video">
-              <template #default="scope">
-                <div class="video-row-desktop clickable" @click="openVideoFromRow(scope.row)">
-                  <div class="row-top"><div class="title-text">{{ scope.row.videoTitle }}</div></div>
-                  <div class="row-middle" v-if="scope.row.publishedAt">
-                    <span class="rel">{{ formatRelative(scope.row.publishedAt) }}</span>
-                    <span class="sep">·</span>
-                    <span class="abs">{{ formatLocalDateTime(scope.row.publishedAt) }}</span>
-                  </div>
-                  <div class="row-bottom">
-                    <el-tag size="mini" effect="dark">{{ getStatusText(scope.row.status) }}</el-tag>
-                    <el-button type="text"
-                               class="ml-8"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingVideoFavorite[scope.row.id || scope.row.videoLink]"
-                               @click.stop="toggleVideoFavorite(scope.row)"></el-button>
-                  </div>
+      <KiwiTabPane label="Videos" name="favVideos">
+        <StatusOverlay
+          :visible="loading"
+          status="loading"
+          title="Loading favorites..."
+          :backdrop="false"
+          style="position: relative; min-height: 200px;"
+        />
+        <template v-if="!loading">
+          <div v-if="favoriteVideos.length === 0" class="empty-state">No favorite videos</div>
+          
+          <!-- Video list -->
+          <div v-else class="video-list">
+            <div v-for="video in favoriteVideos" :key="video.id" class="video-item" @click="openVideoFromRow(video)">
+              <div class="video-content">
+                <div class="video-title">{{ video.videoTitle }}</div>
+                <div class="video-meta" v-if="video.publishedAt">
+                  <span class="rel">{{ formatRelative(video.publishedAt) }}</span>
+                  <span class="sep">·</span>
+                  <span class="abs">{{ formatLocalDateTime(video.publishedAt) }}</span>
                 </div>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <!-- Mobile stacked -->
-          <el-table v-else-if="favoriteVideos.length > 0"
-                    :data="favoriteVideos"
-                    style="width: 100%; margin-top: 10px">
-            <el-table-column label="Video">
-              <template #default="scope">
-                <div class="video-row-mobile clickable" @click="openVideoFromRow(scope.row)">
-                  <div class="row-top"><div class="title-text">{{ scope.row.videoTitle }}</div></div>
-                  <div class="row-middle" v-if="scope.row.publishedAt">
-                    <span class="rel">{{ formatRelative(scope.row.publishedAt) }}</span>
-                    <span class="sep">·</span>
-                    <span class="abs">{{ formatLocalDateTime(scope.row.publishedAt) }}</span>
-                  </div>
-                  <div class="row-bottom">
-                    <el-tag size="mini" effect="dark">{{ getStatusText(scope.row.status) }}</el-tag>
-                    <el-button type="text"
-                               class="ml-8"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingVideoFavorite[scope.row.id || scope.row.videoLink]"
-                               @click.stop="toggleVideoFavorite(scope.row)"></el-button>
-                  </div>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
+              </div>
+              <div class="video-actions">
+                <KiwiTag size="mini" effect="dark">{{ getStatusText(video.status) }}</KiwiTag>
+                <KiwiButton type="text"
+                           class="ml-8"
+                           :icon="video.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                           :class="['fav-btn', video.favorited ? 'favorited' : '']"
+                           :aria-pressed="video.favorited ? 'true' : 'false'"
+                           :disabled="!!pendingVideoFavorite[video.id || video.videoLink]"
+                           @click.stop="toggleVideoFavorite(video)"></KiwiButton>
+              </div>
+            </div>
+          </div>
 
           <div class="pagination-container" v-if="favoriteVideoTotal > 0">
-            <el-pagination
+            <KiwiPagination
                 @size-change="handleFavoriteVideoSizeChange"
                 @current-change="handleFavoriteVideoCurrentChange"
-                :current-page="favoriteVideoQuery.current"
+                :current-page.sync="favoriteVideoQuery.current"
                 :page-size="favoriteVideoQuery.size"
-                layout="total, prev, next"
                 :total="favoriteVideoTotal"
             />
           </div>
         </template>
-      </el-tab-pane>
+      </KiwiTabPane>
 
       <!-- Favorite Channels -->
-      <el-tab-pane label="Channels" name="favChannels">
-        <div v-if="loading" class="loading-container"><el-skeleton :rows="3" animated/></div>
-        <template v-else>
-          <el-empty v-if="favoriteChannels.length === 0" description="No favorite channels" />
+      <KiwiTabPane label="Channels" name="favChannels">
+        <StatusOverlay
+          :visible="loading"
+          status="loading"
+          title="Loading channels..."
+          :backdrop="false"
+          style="position: relative; min-height: 200px;"
+        />
+        <template v-if="!loading">
+          <div v-if="favoriteChannels.length === 0" class="empty-state">No favorite channels</div>
 
-          <!-- Desktop/tablet table -->
-          <el-table v-else-if="!isSmallScreen" :data="favoriteChannels" stripe style="width: 100%">
-            <el-table-column label="Channel" min-width="200">
-              <template #default="scope">
-                <div class="channel-row-desktop clickable" @click="goToChannel(scope.row)">
-                  <div class="row-top">
-                    <div class="title-text">{{ scope.row.channelName }}</div>
-                  </div>
-                  <div class="row-bottom">
-                    <el-button type="text"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingChannelFavorite[scope.row.channelId]"
-                               @click.stop="toggleChannelFavorite(scope.row)"></el-button>
-                  </div>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <!-- Mobile stacked, multi-line items to avoid horizontal scroll -->
-          <el-table v-else :data="favoriteChannels" style="width: 100%">
-            <el-table-column label="Channel">
-              <template #default="scope">
-                <div class="channel-row-mobile clickable" @click="goToChannel(scope.row)">
-                  <div class="row-top">
-                    <div class="title-text">{{ scope.row.channelName }}</div>
-                  </div>
-                  <div class="row-bottom">
-                    <el-button type="text"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingChannelFavorite[scope.row.channelId]"
-                               @click.stop="toggleChannelFavorite(scope.row)"></el-button>
-                  </div>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
+          <!-- Channel list -->
+          <div v-else class="channel-list">
+            <div v-for="channel in favoriteChannels" :key="channel.channelId" class="channel-item" @click="goToChannel(channel)">
+              <div class="channel-content">
+                <div class="channel-name">{{ channel.channelName }}</div>
+              </div>
+              <div class="channel-actions">
+                <KiwiButton type="text"
+                           :icon="channel.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                           :class="['fav-btn', channel.favorited ? 'favorited' : '']"
+                           :aria-pressed="channel.favorited ? 'true' : 'false'"
+                           :disabled="!!pendingChannelFavorite[channel.channelId]"
+                           @click.stop="toggleChannelFavorite(channel)"></KiwiButton>
+              </div>
+            </div>
+          </div>
 
           <div class="pagination-container" v-if="favoriteChannelTotal > 0">
-            <el-pagination
+            <KiwiPagination
                 @size-change="handleFavoriteChannelSizeChange"
                 @current-change="handleFavoriteChannelCurrentChange"
-                :current-page="favoriteChannelQuery.current"
+                :current-page.sync="favoriteChannelQuery.current"
                 :page-size="favoriteChannelQuery.size"
-                layout="total, prev, next"
                 :total="favoriteChannelTotal"
             />
           </div>
         </template>
-      </el-tab-pane>
-    </el-tabs>
+      </KiwiTabPane>
+    </KiwiTabs>
   </div>
 </template>
 
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import { mapGetters } from 'vuex'
 import { getFavoriteChannels, getFavoriteVideos, favoriteChannel, unfavoriteChannel, favoriteVideo, unfavoriteVideo, favoriteVideoByUrl, unfavoriteVideoByUrl } from '@/api/ai'
 import kiwiConsts from '@/const/kiwiConsts'
 
+import KiwiButton from '@/components/ui/KiwiButton'
+import KiwiTabs from '@/components/ui/KiwiTabs'
+import KiwiTabPane from '@/components/ui/KiwiTabPane'
+import KiwiTag from '@/components/ui/KiwiTag'
+import KiwiPagination from '@/components/ui/KiwiPagination'
+
 export default {
   name: 'YoutubeFavorites',
+  components: { StatusOverlay, KiwiButton, KiwiTabs, KiwiTabPane, KiwiTag, KiwiPagination },
   data() {
     return {
       favoritesActive: 'favVideos',
@@ -350,7 +313,7 @@ export default {
 
 <style scoped>
 .youtube-favorites { width: 100%; }
-.loading-container { margin-top: 20px; }
+
 .pagination-container { margin-top: 20px; text-align: right; }
 /* Wrap table cells to avoid horizontal scrolling */
 .youtube-favorites .el-table .cell { white-space: normal !important; word-break: break-word; }
@@ -378,4 +341,81 @@ export default {
 .ml-8 { margin-left: 8px; }
 .fav-btn { color: var(--text-placeholder); }
 .fav-btn.favorited { color: var(--color-warning); }
+
+/* New Styles for Native Components */
+.channel-list, .video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.channel-item, .video-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.channel-item:hover, .video-item:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.channel-content, .video-content {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16px;
+}
+
+.channel-name, .video-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.video-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.video-meta .rel {
+  font-weight: 500;
+}
+
+.video-meta .sep {
+  margin: 0 6px;
+  color: var(--text-placeholder);
+}
+
+.channel-actions, .video-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color-light);
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
 </style>

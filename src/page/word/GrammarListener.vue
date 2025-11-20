@@ -1,4 +1,6 @@
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import { mapGetters } from 'vuex'
 import kiwiConsts from "@/const/kiwiConsts"
 import {readFile} from '@/util/fileUtil'
 import NoSleep from 'nosleep.js'
@@ -50,6 +52,8 @@ function buildSearchKey(searchKey, currentGrammarItem, j) {
 }
 
 export default {
+  name: 'GrammarListener',
+  components: { StatusOverlay },
   data() {
     return {
       innerHeightPx: window.innerHeight * 0.7 + 'px',
@@ -477,9 +481,13 @@ export default {
     </div>
 
     <!-- Loading overlay -->
-    <div class="loading-overlay" v-if="loading">
-      <div class="spinner"></div>
-    </div>
+    <!-- Loading overlay -->
+    <StatusOverlay
+      :visible="loading"
+      status="loading"
+      title="Loading..."
+      :backdrop="true"
+    />
   </div>
 </template>
 
@@ -653,27 +661,7 @@ export default {
 }
 
 /* Loading overlay */
-.loading-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border-color);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
 
 @media (max-width: 768px) {
   .control-bar { top: 56px; left: 12px; padding: 6px 10px; }

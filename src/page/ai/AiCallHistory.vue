@@ -8,65 +8,57 @@
 
     <!-- Filters -->
     <div class="filters-container" v-if="!loading">
-      <el-card class="filter-card">
+      <div class="filter-card">
         <div class="filter-row">
-          <el-select
-              v-model="filterMode"
-              placeholder="Filter by Mode"
-              size="small"
-              clearable
-              @change="applyFilters"
-              v-if="historyData && historyData.total > 0">
-            <el-option label="All Modes" value=""></el-option>
-            <el-option
-                v-for="mode in uniqueModes"
-                :key="mode"
-                :label="getModeLabel(mode)"
-                :value="mode">
-            </el-option>
-          </el-select>
+          <div class="kiwi-select-wrapper" v-if="historyData && historyData.total > 0">
+            <select v-model="filterMode" @change="applyFilters" class="kiwi-select">
+              <option value="" selected>All Modes</option>
+              <option
+                  v-for="mode in uniqueModes"
+                  :key="mode"
+                  :value="mode">
+                {{ getModeLabel(mode) }}
+              </option>
+            </select>
+            <i class="el-icon-arrow-down select-arrow"></i>
+          </div>
 
-          <el-select
-              v-model="filterLanguage"
-              placeholder="Filter by Language"
-              size="small"
-              clearable
-              @change="applyFilters"
-              v-if="historyData && historyData.total > 0">
-            <el-option label="All Languages" value=""></el-option>
-            <el-option
-                v-for="lang in uniqueLanguages"
-                :key="lang"
-                :label="getLanguageLabel(lang)"
-                :value="lang">
-            </el-option>
-          </el-select>
+          <div class="kiwi-select-wrapper" v-if="historyData && historyData.total > 0">
+            <select v-model="filterLanguage" @change="applyFilters" class="kiwi-select">
+              <option value="" selected>All Languages</option>
+              <option
+                  v-for="lang in uniqueLanguages"
+                  :key="lang"
+                  :value="lang">
+                {{ getLanguageLabel(lang) }}
+              </option>
+            </select>
+            <i class="el-icon-arrow-down select-arrow"></i>
+          </div>
 
-          <el-select
-              v-model="filterClassification"
-              placeholder="Filter by Status"
-              size="small"
-              clearable
-              @change="applyFilters">
-            <el-option label="Normal Items" value="normal"></el-option>
-            <el-option label="Archived Items" value="archived"></el-option>
-            <el-option label="All Items" value="all"></el-option>
-          </el-select>
+          <div class="kiwi-select-wrapper">
+            <select v-model="filterClassification" @change="applyFilters" class="kiwi-select">
+              <option value="normal">Normal Items</option>
+              <option value="archived">Archived Items</option>
+              <option value="all">All Items</option>
+            </select>
+            <i class="el-icon-arrow-down select-arrow"></i>
+          </div>
 
-          <el-button
+          <KiwiButton
               type="text"
               size="small"
               icon="el-icon-delete"
               @click="clearFilters"
               v-if="filterMode || filterLanguage || filterClassification">
             Clear Filters
-          </el-button>
+          </KiwiButton>
         </div>
-      </el-card>
+      </div>
     </div>
 
     <!-- History List -->
-    <div class="history-content" v-loading="loading">
+    <div class="history-content" v-if="!loading">
       <div v-if="!historyData || historyData.total === 0" class="empty-state">
         <i class="el-icon-document-remove"></i>
         <h3>No AI Call History Found</h3>
@@ -74,19 +66,18 @@
       </div>
 
       <div v-else class="history-list">
-        <el-card
+        <div
             v-for="record in filteredRecords"
             :key="record.id"
-            class="history-item"
-            shadow="hover">
+            class="history-item">
           <div class="history-item-header">
             <div class="mode-info">
-              <el-tag
+              <KiwiTag
                   :type="getModeTagType(record.promptMode)"
                   :class="getModeClass()"
                   size="small">
                 {{ getModeLabel(record.promptMode) }}
-              </el-tag>
+              </KiwiTag>
               <div class="language-info">
                 <span class="language-tag">{{ getLanguageLabel(record.targetLanguage) }}</span>
                 <span v-if="record.nativeLanguage" class="native-language">
@@ -108,135 +99,145 @@
 
           <div class="history-item-actions">
             <!-- Icon-only compact action buttons with tooltips -->
-            <el-tooltip content="Review" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-search"
-                :aria-label="'Review'"
-                @click="searchAgain(record)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-search"
+              aria-label="Review"
+              title="Review"
+              @click="searchAgain(record)"
+            />
 
-            <el-tooltip content="Copy" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-document-copy"
-                :aria-label="'Copy prompt'"
-                @click="copyPrompt(record.prompt)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-document-copy"
+              aria-label="Copy prompt"
+              title="Copy Prompt"
+              @click="copyPrompt(record.prompt)"
+            />
 
-            <el-tooltip content="Details" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-view"
-                :aria-label="'Details'"
-                @click="viewDetails(record)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-view"
+              aria-label="Details"
+              title="Details"
+              @click="viewDetails(record)"
+            />
 
-            <el-tooltip content="Archive" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-box"
-                :aria-label="'Archive'"
-                @click="archiveItem(record.id)"
-                :loading="archivingIds.includes(record.id)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-box"
+              aria-label="Archive"
+              title="Archive"
+              @click="archiveItem(record.id)"
+              :loading="archivingIds.includes(record.id)"
+            />
 
-            <el-tooltip content="Delete" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-delete"
-                :aria-label="'Delete'"
-                @click="confirmDelete(record.id)"
-                :loading="deletingIds.includes(record.id)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-delete"
+              aria-label="Delete"
+              title="Delete"
+              @click="confirmDelete(record.id)"
+              :loading="deletingIds.includes(record.id)"
+            />
           </div>
-        </el-card>
+        </div>
 
         <!-- Pagination -->
         <div class="pagination-container" v-if="historyData.total > pageSize">
-          <el-pagination
+          <KiwiPagination
               @current-change="handlePageChange"
               :current-page="currentPage"
               :page-size="pageSize"
-              :total="historyData.total"
-              layout="prev, pager, next, jumper, total"
-              background>
-          </el-pagination>
+              :total="historyData.total">
+          </KiwiPagination>
         </div>
       </div>
     </div>
+    <div v-else class="loading-state">
+      <i class="el-icon-loading"></i> Loading history...
+    </div>
 
     <!-- Detail Dialog -->
-    <el-dialog
+    <KiwiDialog
         title="AI Call Details"
         :visible.sync="detailDialogVisible"
         width="70%"
         class="detail-dialog">
       <div v-if="selectedRecord" class="detail-content">
-        <el-form label-position="left" label-width="120px">
-          <el-form-item label="Mode:">
-            <el-tag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
+        <div class="detail-form">
+          <div class="detail-row">
+            <label>Mode:</label>
+            <KiwiTag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
               {{ getModeLabel(selectedRecord.promptMode) }}
-            </el-tag>
-          </el-form-item>
+            </KiwiTag>
+          </div>
 
-          <el-form-item label="Languages:">
+          <div class="detail-row">
+            <label>Languages:</label>
             <span class="language-display">
               {{ getLanguageLabel(selectedRecord.targetLanguage) }}
               <span v-if="selectedRecord.nativeLanguage">
                 → {{ getLanguageLabel(selectedRecord.nativeLanguage) }}
               </span>
             </span>
-          </el-form-item>
+          </div>
 
-          <el-form-item label="Timestamp:">
-            {{ formatFullTimestamp(selectedRecord.timestamp) }}
-          </el-form-item>
+          <div class="detail-row">
+            <label>Timestamp:</label>
+            <span>{{ formatFullTimestamp(selectedRecord.timestamp) }}</span>
+          </div>
 
-          <el-form-item label="Prompt:">
+          <div class="detail-row full-width">
+            <label>Prompt:</label>
             <div class="detail-prompt">{{ selectedRecord.prompt }}</div>
-          </el-form-item>
-        </el-form>
+          </div>
+        </div>
       </div>
 
       <span slot="footer" class="dialog-footer">
-        <el-button @click="detailDialogVisible = false">Close</el-button>
-        <el-button type="primary" @click="searchAgain(selectedRecord)">
+        <KiwiButton @click="detailDialogVisible = false">Close</KiwiButton>
+        <KiwiButton type="primary" @click="searchAgain(selectedRecord)">
           Search Again
-        </el-button>
+        </KiwiButton>
       </span>
-    </el-dialog>
+    </KiwiDialog>
   </div>
 </template>
 
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
 import messageCenter from '@/util/msg';
-import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai'; // Removed callAiChatCompletion
+import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai';
+import KiwiButton from '@/components/ui/KiwiButton.vue';
+import KiwiTag from '@/components/ui/KiwiTag.vue';
+import KiwiPagination from '@/components/ui/KiwiPagination.vue';
+import KiwiDialog from '@/components/ui/KiwiDialog.vue';
 
 export default {
   name: 'AiCallHistory',
+  components: {
+    KiwiButton,
+    KiwiTag,
+    KiwiPagination,
+    KiwiDialog
+  },
   data() {
     return {
       loading: false,
       currentPage: 1,
       pageSize: 10,
-      historyData: null,
+      historyData: { total: 0, records: [] },
 
       // Filters
       filterMode: '',
@@ -501,7 +502,8 @@ export default {
       this.$confirm('Are you sure you want to delete this item? This action cannot be undone.', 'Delete Item', {
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
-        type: 'warning'
+        type: 'warning',
+        customClass: 'kiwi-delete-confirm-dialog'
       }).then(() => {
         this.deleteItem(id);
       }).catch(() => {
@@ -540,6 +542,7 @@ export default {
   background: var(--bg-body);
   border-radius: 18px;
   box-shadow: var(--shadow-card);
+  min-height: 600px;
 }
 
 /* Header */
@@ -571,6 +574,7 @@ export default {
   border-radius: 16px;
   box-shadow: var(--shadow-card);
   backdrop-filter: var(--backdrop-filter);
+  padding: 16px;
 }
 
 .filter-row {
@@ -578,11 +582,48 @@ export default {
   gap: 15px;
   align-items: center;
   flex-wrap: wrap;
-  padding: 16px;
 }
 
-.filter-row .el-select {
+/* Custom Select Styles */
+.kiwi-select-wrapper {
+  position: relative;
+  display: inline-block;
   min-width: 150px;
+}
+
+.kiwi-select {
+  width: 100%;
+  height: 36px;
+  padding: 0 30px 0 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color-light);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.kiwi-select:hover {
+  border-color: var(--text-secondary);
+}
+
+.kiwi-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-placeholder);
+  pointer-events: none;
+  font-size: 12px;
 }
 
 /* Empty State */
@@ -625,6 +666,7 @@ export default {
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  padding: 20px;
 }
 
 .history-item:hover {
@@ -758,8 +800,75 @@ export default {
   border-radius: 8px;
   /* Keep other buttons (if any) reasonable, but our .action-btn overrides apply with !important */
 }
+</style>
 
+<style>
+/* Global styles for the delete confirmation dialog */
+.kiwi-delete-confirm-dialog {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color-light) !important;
+  border-radius: var(--card-border-radius, 16px) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: var(--backdrop-filter) !important;
+  padding-bottom: 20px !important;
+}
 
+.kiwi-delete-confirm-dialog .el-message-box__title {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.kiwi-delete-confirm-dialog .el-message-box__content {
+  color: var(--text-regular) !important;
+}
+
+.kiwi-delete-confirm-dialog .el-message-box__status {
+  color: var(--color-warning) !important;
+}
+
+.kiwi-delete-confirm-dialog .el-message-box__close {
+  color: var(--text-secondary) !important;
+}
+
+.kiwi-delete-confirm-dialog .el-message-box__close:hover {
+  color: var(--color-primary) !important;
+}
+
+/* Buttons in the dialog */
+.kiwi-delete-confirm-dialog .el-button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Cancel button */
+.kiwi-delete-confirm-dialog .el-button--default {
+  background: transparent !important;
+  border: 1px solid var(--border-color-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.kiwi-delete-confirm-dialog .el-button--default:hover {
+  background: var(--bg-container) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Delete/Confirm button (usually primary or danger depending on implementation, but here it's the confirm button) */
+.kiwi-delete-confirm-dialog .el-button--primary {
+  background: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+  color: #fff !important;
+}
+
+.kiwi-delete-confirm-dialog .el-button--primary:hover {
+  opacity: 0.9 !important;
+  box-shadow: 0 0 15px rgba(255, 0, 60, 0.4) !important;
+  transform: translateY(-1px);
+}
+</style>
+
+<style scoped>
 .filter-row .el-button {
   border-radius: 999px !important;
   font-size: 14px !important;

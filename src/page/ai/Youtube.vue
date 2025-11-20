@@ -152,6 +152,24 @@ export default {
 .ytb-mode-switch {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+::v-deep .el-radio-button__inner {
+  background: var(--bg-card);
+  color: var(--text-regular);
+  border-color: var(--border-color);
+  box-shadow: none !important;
+}
+
+::v-deep .el-radio-button:first-child .el-radio-button__inner {
+  border-left: 1px solid var(--border-color);
+}
+
+::v-deep .el-radio-button__orig-radio:checked + .el-radio-button__inner {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  box-shadow: -1px 0 0 0 var(--color-primary);
 }
 </style>

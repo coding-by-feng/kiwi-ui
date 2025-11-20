@@ -1,9 +1,9 @@
 <template>
   <div class="ai-selection-popup-wrapper">
-    <el-dialog
+    <KiwiDialog
       :title="title"
       :visible.sync="dialogVisible"
-      width="600px"
+      :width="dialogWidth"
       :before-close="onBeforeClose"
       :close-on-click-modal="true"
       :close-on-press-escape="true"
@@ -12,10 +12,12 @@
         <!-- All selections rendered as explanation cards -->
         <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
           <h3 class="selection-response-title">
-            <i class="el-icon-chat-dot-square"></i>
-            Explanation for Selected Text
+            <div class="title-left">
+              <i class="el-icon-chat-dot-square"></i>
+              Explanation for Selected Text
+            </div>
             <span class="selection-title-controls">
-              <el-button
+              <KiwiButton
                 class="fold-selection-button"
                 type="text"
                 :icon="item.collapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
@@ -23,7 +25,7 @@
                 :disabled="item.loading"
                 :title="item.collapsed ? 'Expand explanation' : 'Collapse explanation'"
               />
-              <el-button
+              <KiwiButton
                 class="close-selection-button"
                 type="text"
                 icon="el-icon-close"
@@ -40,24 +42,28 @@
             @touchend.passive="handleReferenceSelection(item)"
           >
             <strong>Selected:</strong> "{{ item.selectedText }}"
-            <span v-if="item.contextSelectedText && item.contextSelectedText !== item.selectedText" style="color:#909399;">
+            <span v-if="item.contextSelectedText && item.contextSelectedText !== item.selectedText" style="color: var(--text-secondary);">
               &nbsp;in context of "{{ item.contextSelectedText }}"
             </span>
-            <span v-if="item.promptMode && item.promptMode !== 'selection-explanation'" style="color:#b88230;">
+            <span v-if="item.promptMode && item.promptMode !== 'selection-explanation'" style="color: var(--color-warning);">
               &nbsp;({{ item.promptMode }})
             </span>
           </div>
           <div
             v-show="!item.collapsed"
             class="selection-response-content"
-            v-loading="item.loading && !item.isStreaming"
             :ref="'explanationContent_' + item.id"
             @mouseup="handleItemSelection(item)"
             @touchend.passive="handleItemSelection(item)"
             @contextmenu.prevent
           >
+            <!-- Custom loading indicator replacing v-loading -->
+            <div v-if="item.loading && !item.isStreaming" class="loading-overlay">
+              <i class="el-icon-loading spinning"></i>
+            </div>
+            
             <div v-show="item.isStreaming" class="streaming-indicator">
-              <i class="el-icon-loading"></i> Generating explanation...
+              <i class="el-icon-loading spinning"></i> Generating explanation...
             </div>
             <div v-if="item.error" class="inline-error">{{ item.error }}</div>
             <div v-html="renderMarkdown(item.responseText)"></div>
@@ -66,18 +72,21 @@
       </div>
 
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" :loading="aiSearchLoading" :disabled="reviewMode || !localSelectedText" @click="aiSearchSelectedText">
-          <i class="el-icon-search" style="margin-right:6px;"></i>Search
-        </el-button>
-        <el-button type="success" plain :disabled="reviewMode || !localSelectedText" @click="emitOpenInAiTab">
-          <i class="el-icon-s-operation" style="margin-right:6px;"></i>Open in AI Tab
-        </el-button>
-        <el-button plain @click="closeDialog">Close</el-button>
+        <KiwiButton type="primary" :loading="aiSearchLoading" :disabled="reviewMode || !localSelectedText" @click="aiSearchSelectedText" icon="el-icon-search">
+          Search
+        </KiwiButton>
+        <KiwiButton type="success" plain :disabled="reviewMode || !localSelectedText" @click="emitOpenInAiTab" icon="el-icon-s-operation">
+          Open in AI Tab
+        </KiwiButton>
+        <KiwiButton plain :disabled="!localSelectedText" @click="copySelectedText" icon="el-icon-document-copy">
+          Copy
+        </KiwiButton>
+        <KiwiButton plain @click="closeDialog">Close</KiwiButton>
       </span>
-    </el-dialog>
+    </KiwiDialog>
 
     <!-- Selection options dialog for text selected inside explanation content -->
-    <el-dialog
+    <KiwiDialog
       title="Explain Selected Text"
       :visible.sync="selectionDialogVisible"
       width="500px"
@@ -91,23 +100,23 @@
       </div>
 
       <div slot="footer" class="selection-dialog-footer">
-        <el-button
+        <KiwiButton
           size="small"
           type="info"
           icon="el-icon-search"
           @click="searchOnDictionaryFromDialog"
         >
           Search on Dictionary
-        </el-button>
-        <el-button
+        </KiwiButton>
+        <KiwiButton
           size="small"
           type="primary"
           @click="explainSelectionFromDialog"
         >
           Explain Selection
-        </el-button>
+        </KiwiButton>
       </div>
-    </el-dialog>
+    </KiwiDialog>
   </div>
 </template>
 
@@ -117,11 +126,14 @@ import kiwiConsts from '@/const/kiwiConsts'
 import { getStore } from '@/util/store'
 import msgUtil from '@/util/msg'
 import { buildAiTabQuery } from '@/util/aiNavigation'
+import KiwiDialog from '@/components/ui/KiwiDialog.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 const md = new MarkdownIt({ html: true, breaks: false, linkify: true, typographer: true })
 
 export default {
   name: 'AiSelectionPopup',
+  components: { KiwiDialog, KiwiButton },
   props: {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
@@ -148,7 +160,8 @@ export default {
       // Selection dialog state for in-explanation selections
       selectionDialogVisible: false,
       selectionSelectedText: '',
-      selectionSourceItemId: ''
+      selectionSourceItemId: '',
+      isSmallScreen: false
     }
   },
   watch: {
@@ -188,6 +201,9 @@ export default {
           this.clearAllCurrent()
         }
       }
+    },
+    dialogWidth() {
+      return this.isSmallScreen ? '95%' : '600px'
     }
   },
   methods: {
@@ -197,6 +213,36 @@ export default {
     // Public API-like methods
     closeDialog() { this.reviewMode = false; this.dialogVisible = false },
     onBeforeClose() { this.reviewMode = false; this.dialogVisible = false },
+
+    copySelectedText() {
+      const text = (this.localSelectedText || '').trim()
+      if (!text) {
+        msgUtil.msgWarning(this, 'No text to copy')
+        return
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          msgUtil.msgSuccess(this, 'Copied to clipboard')
+        }).catch(err => {
+          console.error('Failed to copy text: ', err)
+          msgUtil.msgError(this, 'Failed to copy text')
+        })
+      } else {
+        // Fallback
+        try {
+          const textArea = document.createElement('textarea')
+          textArea.value = text
+          document.body.appendChild(textArea)
+          textArea.select()
+          document.execCommand('copy')
+          document.body.removeChild(textArea)
+          msgUtil.msgSuccess(this, 'Copied to clipboard')
+        } catch (err) {
+          console.error('Fallback copy failed: ', err)
+          msgUtil.msgError(this, 'Failed to copy text')
+        }
+      }
+    },
 
     // Handle selection inside any explanation content -> open selection options dialog
     handleItemSelection(item) {
@@ -543,7 +589,17 @@ export default {
       const s = String(text).trim()
       const tokens = s.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9'’-]+/g)
       return Array.isArray(tokens) && tokens.length === 1
+    },
+    checkScreenSize() {
+      this.isSmallScreen = window.innerWidth < 768
     }
+  },
+  mounted() {
+    this.checkScreenSize()
+    window.addEventListener('resize', this.checkScreenSize)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.checkScreenSize)
   }
 }
 </script>
@@ -599,6 +655,12 @@ export default {
   color: var(--text-primary);
 }
 
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .selection-title-controls { display: inline-flex; gap: 4px; }
 
 .selected-text-reference {
@@ -610,6 +672,7 @@ export default {
   padding: 10px;
   text-align: left;
   color: var(--text-primary);
+  position: relative;
 }
 
 /* Disable native mobile select/callout while keeping selection */
@@ -617,22 +680,73 @@ export default {
 
 /* Selection dialog styles (minimal) */
 .selection-dialog-content { padding: 10px 0; }
-.selected-text-preview { margin-bottom: 12px; }
+.selected-text-preview {
+  background: var(--bg-container);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--color-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.selected-text-preview strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
 .selected-text {
-  background: var(--bg-container);
-  border: 1px solid var(--border-color-light);
-  border-radius: 8px;
-  padding: 10px;
-  margin-top: 6px;
   font-style: italic;
-  color: var(--text-regular);
+  color: var(--text-primary);
   line-height: 1.6;
-  max-height: 120px;
+  max-height: 150px;
   overflow-y: auto;
 }
 
 .selection-dialog-footer { display: flex; align-items: stretch; justify-content: center; gap: 10px; flex-wrap: wrap; width: 100%; padding: 6px 0; }
 .selection-dialog-footer .el-button { flex: 1 1 0; min-width: 0; white-space: normal; word-break: break-word; }
-@media (max-width: 640px) { .selection-dialog-footer { flex-direction: column; align-items: stretch; gap: 8px; } .selection-dialog-footer .el-button { width: 100%; } }
+@media (max-width: 640px) {
+  .dialog-footer,
+  .selection-dialog-footer {
+    justify-content: center !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .dialog-footer .el-button,
+  .selection-dialog-footer .el-button {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+}
+
+/* Loading indicator styles */
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: var(--color-primary);
+  font-size: 24px;
+}
+
+.streaming-indicator {
+  color: var(--color-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinning {
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>

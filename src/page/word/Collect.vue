@@ -1,36 +1,36 @@
 <template>
   <div class="collect-container">
-    <el-dialog
-        class="collect-dialog"
+    <KiwiDialog
         :title="$t('collections.selectList')"
-        :visible.sync="listSelectDialogVisible"
-        width="30%"
+        :visible="listSelectDialogVisible"
+        width="400px"
         center
-        :before-close="listSelectDialogHandleClose">
-      <el-table
-          :data="starListData"
-          class="collect-table"
-          style="width: 100%">
-        <el-table-column
-            width="180">
-          <template slot-scope="scope">
-            <div slot="reference" class="name-wrapper">
-              <el-button type="info" class="list-name-button" @click="selectOneWordList(scope.row.id)">{{scope.row.listName}}
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-dialog>
+        @update:visible="val => $emit('update:listSelectDialogVisible', val)"
+        @close="listSelectDialogHandleClose">
+      <div class="list-container">
+        <div v-for="item in starListData" :key="item.id" class="list-item">
+          <KiwiButton
+            type="primary"
+            class="list-name-button"
+            style="width: 100%; justify-content: center;"
+            @click="selectOneWordList(item.id)">
+            {{ item.listName }}
+          </KiwiButton>
+        </div>
+      </div>
+    </KiwiDialog>
   </div>
 </template>
 
 <script>
 import wordStarList from '@/api/wordStarList'
+import KiwiDialog from '@/components/ui/KiwiDialog'
+import KiwiButton from '@/components/ui/KiwiButton'
 
 export default {
   name: 'Collect',
-  prop: {
+  components: { KiwiDialog, KiwiButton },
+  props: {
     id: [String, Number],
     listSelectDialogVisible: [Boolean],
     type: [String],
@@ -41,87 +41,45 @@ export default {
       wordIsCollect: false
     }
   },
-  watch: {
-    'listSelectDialogVisible' (newVal) {
-      // console.log('listSelectDialogVisible' + this.listSelectDialogVisible)
-    }
-  },
   methods: {
     ...wordStarList,
     listSelectDialogHandleClose () {
-      this.listSelectDialogVisible = false
-      // console.log('listSelectDialogHandleClose')
+      this.$emit('update:listSelectDialogVisible', false)
     }
   }
 }
 </script>
 
 <style scoped>
-.collect-container {
-  /* reserved for future layout-specific spacing */
+/* .collect-container {
+   reserved for future layout-specific spacing
+} */
+
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 0;
 }
 
-/* Dialog aesthetics aligned with AiResponseDetail */
-::v-deep .collect-dialog .el-dialog__header {
-  background: var(--gradient-primary);
-  padding: 12px 16px;
-  border-top-left-radius: var(--card-border-radius);
-  border-top-right-radius: var(--card-border-radius);
-}
-
-::v-deep .collect-dialog .el-dialog__title {
-  color: #fff;
-  font-weight: 600;
-}
-
-::v-deep .collect-dialog .el-dialog__headerbtn .el-dialog__close {
-  color: #fff;
-}
-
-::v-deep .collect-dialog .el-dialog {
-  border-radius: var(--card-border-radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  background: var(--bg-card);
-}
-
-::v-deep .collect-dialog .el-dialog__body {
-  background: var(--bg-card);
-  color: var(--text-primary);
-}
-
-.collect-table {
-  margin-top: 6px;
-  background: transparent;
-}
-
-::v-deep .collect-table .el-table__body-wrapper {
-  border-radius: 8px;
-}
-
-::v-deep .collect-table th,
-::v-deep .collect-table tr,
-::v-deep .collect-table td {
-  background-color: transparent !important;
-  color: var(--text-primary);
-  border-bottom-color: var(--border-color-light);
-}
-
-::v-deep .collect-table--enable-row-hover .el-table__body tr:hover > td {
-  background-color: var(--bg-sidebar-active) !important;
+.list-item {
+  width: 100%;
 }
 
 /* Consistent list button style */
-::v-deep .list-name-button.el-button--info {
+.list-name-button {
   background: var(--gradient-primary) !important;
   border: none !important;
-  color: #fff !important;
+  color: var(--color-white) !important;
   border-radius: 6px !important;
+  height: 40px;
+  font-size: 14px;
+  transition: all 0.3s ease;
 }
 
-@media (max-width: 768px) {
-  ::v-deep .collect-dialog .el-dialog {
-    width: 90% !important;
-  }
+.list-name-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  opacity: 0.9;
 }
 </style>

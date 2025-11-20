@@ -214,6 +214,7 @@ export default {
   top: 0px;
   left: 10px;
   width: calc(100% - 20px);
+  min-height: 100vh;
 }
 
 // Global tab styling overrides for theming
@@ -248,6 +249,7 @@ export default {
     padding: 15px;
     background-color: var(--bg-card) !important;
     color: var(--text-primary) !important;
+    min-height: 100vh;
   }
 }
 
