@@ -292,7 +292,7 @@ export default {
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
-        theme: getStore({ name: 'theme' }) || 'default'
+        theme: getStore({ name: 'theme' }) || 'CyberPunk'
       },
 
       // Ensure this object exists before the first render to avoid runtime errors in v-model bindings
@@ -340,7 +340,7 @@ export default {
         'neumorphism': 'Neumorphism',
         'glassmorphism': 'Glassmorphism'
       }
-      return names[this.user.theme] || 'Default'
+      return names[this.user.theme] || 'CyberPunk'
     }
   },
 
@@ -424,6 +424,13 @@ export default {
           type: 'local'
         })
         this.user.clipboardDetection = kiwiConst.CLIPBOARD_DETECTION.DISABLE
+      }
+
+      if (util.isEmptyStr(this.user.theme)) {
+        setStore({ name: 'theme', content: 'cyberpunk', type: 'local' })
+        this.user.theme = 'cyberpunk'
+      } else {
+        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'cyberpunk'
       }
 
       // Initialize feature tabs visibility
@@ -641,14 +648,15 @@ export default {
           })
     },
     handleThemeChange(theme) {
-      this.user.theme = theme
+      const normalized = (theme || 'cyberpunk').toLowerCase()
+      this.user.theme = normalized
       setStore({
         name: 'theme',
-        content: theme,
+        content: normalized,
         type: 'local'
       })
-      this.applyTheme(theme)
-      this.$message.success(`Theme switched to ${theme}`)
+      this.applyTheme(normalized)
+      this.$message.success(`Theme switched to ${normalized}`)
     },
     applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme)
@@ -718,7 +726,7 @@ export default {
 
   &:hover {
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: var(--shadow-hover) !important;
   }
 
   &:active {
@@ -729,15 +737,15 @@ export default {
 /* Logout Button Styling */
 .logout-button {
   @extend .action-button;
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  background: var(--gradient-info) !important;
 
   &:hover {
-    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+    filter: brightness(0.9);
     color: white !important;
   }
 
   &:focus {
-    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
+    filter: brightness(0.9);
     color: white !important;
     box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.3) !important;
   }
@@ -745,15 +753,15 @@ export default {
 
 .clear-data-button {
   @extend .action-button;
-  background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%) !important;
+  background: var(--gradient-danger) !important;
 
   &:hover {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
+    filter: brightness(0.9);
     color: white !important;
   }
 
   &:focus {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
+    filter: brightness(0.9);
     color: white !important;
     box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.3) !important;
   }
@@ -820,15 +828,15 @@ export default {
     }
 
     &.remember-card {
-      background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+      background: var(--gradient-success);
     }
 
     &.review-card {
-      background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+      background: var(--gradient-primary);
     }
 
     &.master-card {
-      background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%);
+      background: var(--gradient-danger);
     }
 
     &::before {
@@ -889,14 +897,14 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border: 1px solid rgba(64, 158, 255, 0.2);
+    border: 1px solid var(--border-color-light);
     border-radius: 12px;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: var(--bg-container);
 
     &:hover {
-      border-color: rgba(64, 158, 255, 0.4);
-      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-hover);
       transform: translateY(-1px);
     }
 
@@ -905,16 +913,16 @@ export default {
       align-items: center;
       gap: 8px;
       font-weight: 500;
-      color: #2c3e50;
+      color: var(--text-primary);
 
       .help-icon {
-        color: #909399;
+        color: var(--text-secondary);
         font-size: 14px;
         margin-left: 4px;
         cursor: help;
 
         &:hover {
-          color: #409eff;
+          color: var(--color-primary);
         }
       }
     }
@@ -953,7 +961,7 @@ export default {
 
       .feature-label {
         min-width: 120px;
-        color: #2c3e50;
+        color: var(--text-primary);
         font-weight: 500;
       }
     }
@@ -965,22 +973,20 @@ export default {
   .dropdown-button {
     border: none !important;
     padding: 8px 12px !important;
-    color: #409eff !important;
+    color: var(--color-primary) !important;
     font-weight: 500 !important;
-    background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
+    background: var(--bg-container) !important;
     border-radius: 8px !important;
     transition: all 0.3s ease !important;
 
     &:hover {
-      color: #3a8ee6 !important;
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
+      filter: brightness(0.95);
       transform: translateY(-1px) !important;
     }
 
     &:focus {
-      color: #3a8ee6 !important;
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
-      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
+      filter: brightness(0.95);
+      box-shadow: 0 0 0 2px var(--border-color-light) !important;
     }
   }
 }
@@ -988,24 +994,24 @@ export default {
 /* Custom Switch Styling - Applied to ALL switches */
 .custom-switch {
   ::v-deep .el-switch__core {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e8eaed 100%) !important;
-    border: 2px solid #dcdfe6 !important;
+    background: var(--bg-body) !important;
+    border: 2px solid var(--border-color) !important;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   }
 
   ::v-deep .el-switch.is-checked .el-switch__core {
-    background: linear-gradient(135deg, #1890ff 0%, #40a9ff 50%, #69c0ff 100%) !important;
-    border-color: #1890ff !important;
+    background: var(--gradient-primary) !important;
+    border-color: var(--color-primary) !important;
     box-shadow:
-        0 0 0 2px rgba(24, 144, 255, 0.2),
-        0 2px 8px rgba(24, 144, 255, 0.3),
+        0 0 0 2px var(--border-color-light),
+        0 2px 8px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   }
 
   ::v-deep .el-switch__action {
-    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
     box-shadow:
         0 2px 4px rgba(0, 0, 0, 0.15),
         0 1px 2px rgba(0, 0, 0, 0.1) !important;
@@ -1013,27 +1019,27 @@ export default {
   }
 
   ::v-deep .el-switch.is-checked .el-switch__action {
-    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%) !important;
-    border-color: rgba(24, 144, 255, 0.3) !important;
+    background: var(--bg-card) !important;
+    border-color: var(--border-color-light) !important;
     box-shadow:
-        0 3px 6px rgba(24, 144, 255, 0.25),
-        0 1px 3px rgba(24, 144, 255, 0.15),
+        0 3px 6px rgba(0, 0, 0, 0.1),
+        0 1px 3px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
   }
 
   &:hover ::v-deep .el-switch__core {
-    background: linear-gradient(135deg, #e8eaed 0%, #d3d4d6 100%) !important;
-    border-color: #c0c4cc !important;
+    background: var(--bg-body) !important;
+    border-color: var(--border-color) !important;
     transform: scale(1.02) !important;
     box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15) !important;
   }
 
   &:hover ::v-deep .el-switch.is-checked .el-switch__core {
-    background: linear-gradient(135deg, #0050b3 0%, #1890ff 50%, #40a9ff 100%) !important;
-    border-color: #0050b3 !important;
+    background: var(--gradient-primary) !important;
+    border-color: var(--color-primary) !important;
     box-shadow:
-        0 0 0 3px rgba(24, 144, 255, 0.25),
-        0 4px 12px rgba(24, 144, 255, 0.4),
+        0 0 0 3px var(--border-color-light),
+        0 4px 12px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
     transform: scale(1.02) !important;
   }
@@ -1047,8 +1053,8 @@ export default {
 
   &:hover ::v-deep .el-switch.is-checked .el-switch__action {
     box-shadow:
-        0 4px 8px rgba(24, 144, 255, 0.3),
-        0 2px 4px rgba(24, 144, 255, 0.2),
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   }
 }
@@ -1064,7 +1070,7 @@ export default {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(135deg, rgba(24, 144, 255, 0.2) 0%, rgba(64, 169, 255, 0.1) 100%);
+    background: var(--border-color-light);
     border-radius: 14px;
     z-index: -1;
     opacity: 0;
@@ -1078,55 +1084,55 @@ export default {
 
 /* Custom Tag Styling */
 ::v-deep .el-tag {
-  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-  border: 1px solid rgba(64, 158, 255, 0.3) !important;
-  color: #409eff !important;
+  background: var(--bg-container) !important;
+  border: 1px solid var(--border-color-light) !important;
+  color: var(--color-primary) !important;
   border-radius: 6px !important;
   padding: 4px 8px !important;
   font-size: 12px !important;
   font-weight: 500 !important;
 
   &.el-tag--success {
-    background: linear-gradient(135deg, rgba(103, 194, 58, 0.1) 0%, rgba(133, 206, 97, 0.1) 100%) !important;
-    border-color: rgba(103, 194, 58, 0.3) !important;
-    color: #67c23a !important;
+    background: var(--bg-container) !important;
+    border-color: var(--color-success) !important;
+    color: var(--color-success) !important;
   }
 
   &.el-tag--warning {
-    background: linear-gradient(135deg, rgba(230, 162, 60, 0.1) 0%, rgba(247, 186, 42, 0.1) 100%) !important;
-    border-color: rgba(230, 162, 60, 0.3) !important;
-    color: #e6a23c !important;
+    background: var(--bg-container) !important;
+    border-color: var(--color-warning) !important;
+    color: var(--color-warning) !important;
   }
 
   &.el-tag--info {
-    background: linear-gradient(135deg, rgba(144, 147, 153, 0.1) 0%, rgba(96, 98, 102, 0.1) 100%) !important;
-    border-color: rgba(144, 147, 153, 0.3) !important;
-    color: #909399 !important;
+    background: var(--bg-container) !important;
+    border-color: var(--color-info) !important;
+    color: var(--color-info) !important;
   }
 }
 
 /* Dropdown Menu Styling */
 ::v-deep .el-dropdown-menu {
-  border: 1px solid rgba(64, 158, 255, 0.2) !important;
+  border: 1px solid var(--border-color-light) !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--shadow-card) !important;
   padding: 8px 0 !important;
-  background: white !important;
+  background: var(--bg-card) !important;
 
   .el-dropdown-menu__item {
     padding: 10px 16px !important;
-    color: #2c3e50 !important;
+    color: var(--text-primary) !important;
     font-weight: 500 !important;
     transition: all 0.3s ease !important;
 
     &:hover {
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-      color: #409eff !important;
+      background: var(--bg-container) !important;
+      color: var(--color-primary) !important;
     }
 
     &:focus {
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-      color: #409eff !important;
+      background: var(--bg-container) !important;
+      color: var(--color-primary) !important;
     }
   }
 }
@@ -1255,7 +1261,7 @@ export default {
       right: 20px;
       width: 16px;
       height: 16px;
-      border: 2px solid #409eff;
+      border: 2px solid var(--color-primary);
       border-top: 2px solid transparent;
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -1280,17 +1286,18 @@ export default {
   }
 
   &::-webkit-scrollbar-track {
-    background: rgba(64, 158, 255, 0.1);
+    background: var(--bg-body);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    background: var(--gradient-primary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+    background: var(--gradient-primary);
+    filter: brightness(1.1);
   }
 }
 </style>

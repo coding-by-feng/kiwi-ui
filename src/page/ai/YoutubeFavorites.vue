@@ -356,16 +356,16 @@ export default {
 .youtube-favorites .el-table .cell { white-space: normal !important; word-break: break-word; }
 .channel-name { display: flex; align-items: center; justify-content: space-between; }
 .video-title { display: flex; flex-direction: column; }
-.title-text { font-weight: 500; word-break: break-word; white-space: normal; }
+.title-text { font-weight: 500; word-break: break-word; white-space: normal; color: var(--text-primary); }
 .video-published { display: flex; flex-direction: column; }
 .video-published .rel { font-weight: 500; }
-.video-published .abs { font-size: 12px; color: #909399; }
+.video-published .abs { font-size: 12px; color: var(--text-placeholder); }
 /* Shared stacked row (desktop + mobile) */
 .video-row-desktop, .video-row-mobile { display: flex; flex-direction: column; padding: 6px 0; }
 .video-row-desktop .row-top, .video-row-mobile .row-top { display: flex; align-items: center; gap: 6px; }
-.video-row-desktop .row-middle, .video-row-mobile .row-middle { margin-top: 4px; color: #606266; font-size: 12px; }
+.video-row-desktop .row-middle, .video-row-mobile .row-middle { margin-top: 4px; color: var(--text-secondary); font-size: 12px; }
 .video-row-desktop .row-middle .rel, .video-row-mobile .row-middle .rel { font-weight: 500; }
-.video-row-desktop .row-middle .sep, .video-row-mobile .row-middle .sep { margin: 0 6px; color: #909399; }
+.video-row-desktop .row-middle .sep, .video-row-mobile .row-middle .sep { margin: 0 6px; color: var(--text-placeholder); }
 .video-row-desktop .row-bottom, .video-row-mobile .row-bottom { margin-top: 6px; display: flex; align-items: center; gap: 6px; }
 /* Channel rows */
 .channel-row-desktop { display: flex; flex-direction: column; padding: 8px 0; }
@@ -376,6 +376,6 @@ export default {
 .channel-row-mobile .row-bottom { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .clickable { cursor: pointer; }
 .ml-8 { margin-left: 8px; }
-.fav-btn { color: #C0C4CC; }
-.fav-btn.favorited { color: #f7ba2a; }
+.fav-btn { color: var(--text-placeholder); }
+.fav-btn.favorited { color: var(--color-warning); }
 </style>

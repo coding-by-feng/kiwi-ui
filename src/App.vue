@@ -18,9 +18,11 @@
         methods: {
             initTheme() {
                 try {
-                    // Dynamic import to avoid circular dependency issues if any, though getStore is safe
                     const { getStore } = require('@/util/store')
-                    const theme = getStore({ name: 'theme' }) || 'default'
+                    const stored = getStore({ name: 'theme' })
+                    const fallback = 'cyberpunk'
+                    const normalized = typeof stored === 'string' ? stored.toLowerCase() : fallback
+                    const theme = normalized || fallback
                     document.documentElement.setAttribute('data-theme', theme)
                 } catch (e) {
                     console.error('Failed to initialize theme', e)

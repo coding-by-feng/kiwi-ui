@@ -2168,7 +2168,7 @@ export default {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: var(--bg-body);
 }
 
 /* Header */
@@ -2180,20 +2180,20 @@ export default {
 .main-title {
   margin: 0;
   padding: 10px 16px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: white;
   font-size: 18px;
   font-weight: 600;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
   text-align: center;
   transition: all 0.3s ease;
 }
 
 .main-title:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  background: var(--gradient-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+  box-shadow: var(--shadow-hover);
 }
 
 .main-title i {
@@ -2238,20 +2238,21 @@ export default {
 
 .url-input .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--border-color-light);
   padding: 12px 16px;
   font-size: 14px;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .url-input .el-input__inner:focus {
-  border-color: #409eff;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
 
 .url-input .el-input__inner:disabled {
-  background: #f5f7fa;
+  background: var(--bg-container);
   cursor: not-allowed;
 }
 
@@ -2263,7 +2264,7 @@ export default {
 }
 
 .load-button {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -2275,22 +2276,22 @@ export default {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  box-shadow: var(--shadow-card);
   min-width: 100px;
   justify-content: center;
 }
 
 .load-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  background: var(--gradient-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+  box-shadow: var(--shadow-hover);
 }
 
 .load-button:disabled {
-  background: linear-gradient(135deg, #c0c4cc 0%, #c0c4cc 100%);
+  background: var(--text-placeholder);
   cursor: not-allowed;
   transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .load-button .spinning {
@@ -2310,12 +2311,15 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
+  background: var(--bg-card);
+  color: var(--text-secondary);
 }
 
 .action-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
+  color: var(--color-primary);
 }
 
 /* Controls Container */
@@ -2330,11 +2334,11 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: white;
+  background: var(--bg-card);
   padding: 12px 16px;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
 }
 
 .switch-group {
@@ -2350,7 +2354,7 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   font-size: 16px;
-  color: #409eff;
+  color: var(--color-primary);
   pointer-events: none;
   opacity: 0.7;
 }
@@ -2361,7 +2365,7 @@ export default {
 
 .enhanced-switch .el-switch__label {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-regular);
   font-weight: 500;
 }
 
@@ -2371,13 +2375,14 @@ export default {
 }
 
 .enhanced-switch.is-checked .el-switch__core {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
+  border-color: transparent;
 }
 
 .divider {
   width: 1px;
   height: 20px;
-  background: #e4e7ed;
+  background: var(--border-color-light);
   margin: 0 8px;
 }
 
@@ -2396,10 +2401,10 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  color: #606266;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
+  color: var(--text-regular);
   border-radius: 999px;
   padding: 6px 10px;
 }
@@ -2408,25 +2413,25 @@ export default {
 .compact-progress {
   width: 90px;
   height: 4px;
-  background: #f2f3f5;
+  background: var(--bg-container);
   border-radius: 999px;
   overflow: hidden;
 }
 .compact-progress-fill {
   height: 100%;
   width: 0;
-  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   transition: width 0.25s ease;
 }
 
 .status-message {
   padding: 10px 12px;
   margin: 0;
-  color: #f56c6c;
-  background: white;
+  color: var(--color-danger);
+  background: var(--bg-card);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #fde2e2;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
   font-size: 13px;
   font-weight: 500;
   text-align: center;
@@ -2454,15 +2459,15 @@ export default {
 }
 
 .subtitles-loading-container {
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 16px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e4e7ed;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
   min-width: 280px;
   max-width: 320px;
   position: relative;
-  backdrop-filter: blur(10px);
+  backdrop-filter: var(--backdrop-filter);
 }
 
 .subtitles-loading-icon {
@@ -2472,15 +2477,15 @@ export default {
 
 .subtitles-loading-icon i {
   font-size: 24px;
-  color: #409eff;
+  color: var(--color-primary);
 }
 
 .success-icon {
-  color: #67c23a !important;
+  color: var(--color-success) !important;
 }
 
 .warning-icon {
-  color: #e6a23c !important;
+  color: var(--color-warning) !important;
 }
 
 .subtitles-loading-text {
@@ -2492,7 +2497,7 @@ export default {
 
 .subtitles-loading-text > span {
   font-size: 14px;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
   text-align: center;
 }
@@ -2507,7 +2512,7 @@ export default {
 .subtitles-progress-bar {
   flex: 1;
   height: 6px;
-  background: #f0f2f5;
+  background: var(--bg-container);
   border-radius: 3px;
   overflow: hidden;
   position: relative;
@@ -2515,7 +2520,7 @@ export default {
 
 .subtitles-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   border-radius: 3px;
   transition: width 0.3s ease;
   position: relative;
@@ -2539,7 +2544,7 @@ export default {
 
 .subtitles-progress-text {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-secondary);
   font-weight: 500;
   min-width: 35px;
   text-align: right;
@@ -2568,21 +2573,21 @@ export default {
 }
 
 .status-item.success {
-  color: #67c23a;
+  color: var(--color-success);
   background: rgba(103, 194, 58, 0.1);
   border-color: rgba(103, 194, 58, 0.2);
 }
 
 .status-item.failed {
-  color: #f56c6c;
+  color: var(--color-danger);
   background: rgba(245, 108, 108, 0.1);
   border-color: rgba(245, 108, 108, 0.2);
 }
 
 .status-item.disabled {
-  color: #909399;
-  background: rgba(144, 147, 153, 0.1);
-  border-color: rgba(144, 147, 153, 0.2);
+  color: var(--text-placeholder);
+  background: var(--bg-container);
+  border-color: var(--border-color-light);
 }
 
 .status-item i {
@@ -2606,13 +2611,13 @@ export default {
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .subtitles-loading-close:hover,
 .subtitles-loading-minimize:hover {
   background: rgba(0, 0, 0, 0.2);
-  color: #606266;
+  color: var(--text-primary);
   transform: scale(1.1);
 }
 
@@ -2688,11 +2693,11 @@ export default {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
@@ -2701,9 +2706,9 @@ export default {
 .previous-subtitle {
   padding: 6px 10px;
   font-size: 11px;
-  color: #909399;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  color: var(--text-secondary);
+  background: var(--bg-body);
+  border-bottom: 1px solid var(--border-color-light);
   white-space: pre-wrap;
   line-height: 1.2;
   -webkit-touch-callout: none;
@@ -2712,7 +2717,7 @@ export default {
 }
 
 .current-subtitle-display {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: white;
   padding: 8px 10px;
   text-align: center;
@@ -2733,9 +2738,9 @@ export default {
 .next-subtitle {
   padding: 6px 10px;
   font-size: 11px;
-  color: #606266;
-  background: #f0f2f5;
-  border-top: 1px solid #e9ecef;
+  color: var(--text-regular);
+  background: var(--bg-container);
+  border-top: 1px solid var(--border-color-light);
   white-space: pre-wrap;
   line-height: 1.2;
   -webkit-touch-callout: none;
@@ -2747,10 +2752,10 @@ export default {
 .subtitles-container {
   flex: 1;
   overflow-y: auto;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
   min-height: 200px;
   position: relative;
   scrollbar-width: thin;
@@ -2762,7 +2767,7 @@ export default {
 }
 
 .subtitles-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
+  background: var(--bg-body);
   border-radius: 4px;
 }
 
@@ -2778,8 +2783,8 @@ export default {
 /* Updated Subtitles Header - matching translated-subtitles-header style */
 .subtitles-header {
   padding: 10px 16px;
-  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-  border-bottom: 1px solid #e4e7ed;
+  background: var(--gradient-success);
+  border-bottom: 1px solid var(--border-color-light);
   font-size: 13px;
   font-weight: 600;
   color: white;
@@ -2849,13 +2854,14 @@ export default {
   overflow: hidden;
   scroll-margin-top: 20px;
   scroll-margin-bottom: 20px;
+  color: var(--text-primary);
 }
 
 .subtitles-container p:hover {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-color: #bae7ff;
+  background: var(--bg-container);
+  border-color: var(--color-primary-light-5);
   transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+  box-shadow: var(--shadow-hover);
 }
 
 .subtitles-container p::before {
@@ -2870,12 +2876,12 @@ export default {
 
 /* Subtitle state styles */
 .subtitles-container p.active-subtitle {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-color: #a0d8ff;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.18);
+  background: var(--bg-container);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card);
 }
 .subtitles-container p.active-subtitle::before {
-  background: #409eff;
+  background: var(--color-primary);
 }
 .subtitles-container p.past-subtitle {
   opacity: 0.7;
@@ -2888,10 +2894,10 @@ export default {
 .translated-subtitles-container {
   flex: 1;
   overflow-y: auto;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
   min-height: 200px;
   position: relative;
   scrollbar-width: thin;
@@ -2902,7 +2908,7 @@ export default {
 }
 
 .translated-subtitles-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
+  background: var(--bg-body);
   border-radius: 4px;
 }
 
@@ -2917,8 +2923,8 @@ export default {
 
 .translated-subtitles-header {
   padding: 10px 16px;
-  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-  border-bottom: 1px solid #e4e7ed;
+  background: var(--gradient-success);
+  border-bottom: 1px solid var(--border-color-light);
   font-size: 13px;
   font-weight: 600;
   color: white;
@@ -2965,7 +2971,7 @@ export default {
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  color: #409eff;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -2989,7 +2995,7 @@ export default {
 
 .streaming-fill {
   height: 100%;
-  background: linear-gradient(90deg, #409eff, #67c23a);
+  background: var(--gradient-primary);
   border-radius: 2px;
   transition: width 0.3s ease;
   position: relative;
@@ -3008,7 +3014,7 @@ export default {
 
 .streaming-percentage {
   font-size: 12px;
-  color: #409eff;
+  color: var(--color-primary);
   font-weight: 500;
   min-width: 35px;
   text-align: right;
@@ -3018,15 +3024,15 @@ export default {
   padding: 20px;
   line-height: 1.8;
   font-size: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
   text-align: justify;
 }
 
 /* AI Search Dialog */
 .ai-dialog-content { padding: 10px 0; }
-.selected-text-preview { margin-bottom: 10px; color: #606266; }
-.ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: #fff; border: 1px solid #ebeef5; border-radius: 8px; }
-.inline-error { color: #f56c6c; background: #fdecea; border: 1px solid #f5c2c0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
+.selected-text-preview { margin-bottom: 10px; color: var(--text-regular); }
+.ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: var(--bg-card); border: 1px solid var(--border-color-light); border-radius: 8px; }
+.inline-error { color: var(--color-danger); background: rgba(245, 108, 108, 0.1); border: 1px solid rgba(245, 108, 108, 0.2); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
 
 /* Vocabulary Popup (deprecated, replaced by dialog) */
 /* .vocabulary-popup { display: none; } */
@@ -3130,7 +3136,7 @@ export default {
     position: static;
     transform: none;
     font-size: 10px;
-    color: #606266;
+    color: var(--text-regular);
     margin-top: 1px;
     order: 2;
   }
@@ -3179,7 +3185,7 @@ export default {
   .right-panel {
     width: 50%;
     height: 100%;
-    border-left: 1px solid #e4e7ed;
+    border-left: 1px solid var(--border-color-light);
     padding-left: 15px;
   }
 
@@ -3239,7 +3245,7 @@ export default {
 .load-button:focus,
 .action-btn:focus,
 .enhanced-switch:focus {
-  outline: 2px solid #409eff;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -3271,12 +3277,12 @@ export default {
 
   .progress-fill {
     animation: none;
-    background: #409eff;
+    background: var(--color-primary);
   }
 
   .loading-spinner .spinner-ring {
     animation: none;
-    border: 3px solid #409eff;
+    border: 3px solid var(--color-primary);
   }
 
   .subtitles-wrapper {
@@ -3288,10 +3294,10 @@ export default {
 /* .favorite-overlay { display: none; } */
 .favorite-top-group .favorite-btn {
   background: rgba(255,255,255,0.95);
-  color: #909399;
+  color: var(--text-placeholder);
 }
 .favorite-top-group .favorite-btn.favorited {
-  color: #f7ba2a;
+  color: var(--color-warning);
 }
 </style>
 

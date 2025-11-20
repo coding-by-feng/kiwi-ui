@@ -165,25 +165,25 @@ export default {
 
 /* Collapse card styling aligned with AiResponseDetail */
 ::v-deep .kiwi-collapse .el-collapse-item {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-container);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
   margin-bottom: 14px;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header {
   padding: 14px 18px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #fff;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid var(--border-color-light);
   transition: all 0.3s ease;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  filter: brightness(1.1);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item.is-active > .el-collapse-item__header {
@@ -192,14 +192,14 @@ export default {
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__wrap {
-  background: #fff;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  background: var(--bg-card);
+  border-bottom-left-radius: var(--card-border-radius);
+  border-bottom-right-radius: var(--card-border-radius);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__content {
   padding: 18px 20px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .collapse-content {
@@ -209,15 +209,15 @@ export default {
 .example-sentence {
   margin: 0 0 10px 0;
   font-size: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .example-translation {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .collapse-actions {
@@ -229,7 +229,7 @@ export default {
 
 .collapse-action-button {
   color: #fff !important;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  background: var(--gradient-primary) !important;
   border: none !important;
   border-radius: 6px !important;
   padding: 4px 8px !important;
@@ -239,10 +239,11 @@ export default {
 .collapse-action-button:hover {
   filter: brightness(0.95);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
 
 .collapse-action-button.danger {
-  background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%) !important;
+  background: var(--gradient-danger) !important;
 }
 
 .list-pagination {

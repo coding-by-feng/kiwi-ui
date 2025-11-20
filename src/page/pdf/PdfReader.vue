@@ -756,17 +756,18 @@ export default {
   height: 100%;
   padding: 16px;
   box-sizing: border-box;
+  background: var(--bg-body);
 
   &__controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
   &__file-input { display: none; }
-  &__filename { font-size: 14px; color: #606266; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__filename { font-size: 14px; color: var(--text-regular); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   &__right-controls { margin-left: auto; display: flex; align-items: center; gap: 12px; }
   &__zoom-group { display: inline-flex; align-items: center; gap: 8px; }
-  &__zoom-indicator { min-width: 46px; text-align: center; font-size: 13px; color: #606266; padding: 2px 8px; background: #f5f7fa; border: 1px solid #e4e7ed; border-radius: 8px; line-height: 20px; }
+  &__zoom-indicator { min-width: 46px; text-align: center; font-size: 13px; color: var(--text-regular); padding: 2px 8px; background: var(--bg-container); border: 1px solid var(--border-color-light); border-radius: 8px; line-height: 20px; }
   &__alert { margin-bottom: 12px; }
-  &__status { display: flex; align-items: center; gap: 8px; color: #606266; margin-bottom: 12px; }
+  &__status { display: flex; align-items: center; gap: 8px; color: var(--text-regular); margin-bottom: 12px; }
   &__content { flex: 1; min-height: 360px; }
-  &__placeholder, &__no-text { display: flex; align-items: center; justify-content: center; min-height: 360px; background: #f5f7fa; border: 1px dashed #dcdfe6; border-radius: 12px; }
+  &__placeholder, &__no-text { display: flex; align-items: center; justify-content: center; min-height: 360px; background: var(--bg-container); border: 1px dashed var(--border-color-light); border-radius: 12px; }
 
   &__layout {
     display: flex;
@@ -785,10 +786,10 @@ export default {
   }
   &__page-column {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    overflow: auto; padding: 16px; background: #f5f7fa; border: 1px solid #e4e7ed; border-radius: 12px;
+    overflow: auto; padding: 16px; background: var(--bg-container); border: 1px solid var(--border-color-light); border-radius: 12px;
     transition: height 0.25s ease;
   }
-  &__page-loading { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 0; color: #606266; background: linear-gradient(180deg, rgba(245, 247, 250, 1) 0%, rgba(245, 247, 250, 0.85) 100%); }
+  &__page-loading { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 0; color: var(--text-regular); background: var(--bg-container); opacity: 0.95; }
   &__viewer { position: relative; display: flex; flex-direction: column; gap: 20px; width: 100%; min-height: 360px; align-items: center; user-select: text; -webkit-user-select: text; }
 }
 
@@ -812,9 +813,9 @@ export default {
   }
 }
 
-::v-deep(.pdf-reader__viewer .page) { position: relative; margin: 0 auto; width: 100%; max-width: 100%; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); border-radius: 6px; overflow: hidden; background: #fff; }
+::v-deep(.pdf-reader__viewer .page) { position: relative; margin: 0 auto; width: 100%; max-width: 100%; box-shadow: var(--shadow-card); border-radius: 6px; overflow: hidden; background: var(--bg-card); }
 ::v-deep(.pdf-reader__viewer .page:last-child) { margin-bottom: 0; }
-::v-deep(.pdf-reader__viewer .page .canvasWrapper) { background: #fff; }
+::v-deep(.pdf-reader__viewer .page .canvasWrapper) { background: var(--bg-card); }
 
 /* Remove old pdf-selection-popup bubble (unused now) */
 .pdf-selection-popup { display: none; }
@@ -824,7 +825,7 @@ export default {
 
 ::v-deep(.textLayer) { position: absolute; top: 0; left: 0; right: 0; bottom: 0; color: transparent; pointer-events: auto; user-select: text; -webkit-user-select: text; }
 ::v-deep(.textLayer > span) { position: absolute; left: 0; top: 0; transform-origin: 0 0; white-space: pre; color: transparent; padding: 0; margin: 0; line-height: 1; cursor: text; }
-::v-deep(.textLayer > span::selection), ::v-deep(.textLayer > span::-moz-selection) { background: rgba(64, 158, 255, 0.35); color: #1f2d3d; }
+::v-deep(.textLayer > span::selection), ::v-deep(.textLayer > span::-moz-selection) { background: rgba(64, 158, 255, 0.35); color: var(--text-primary); }
 
 @media (max-width: 768px) { .pdf-selection-popup { font-size: 13px; padding: 8px 12px; } }
 </style>

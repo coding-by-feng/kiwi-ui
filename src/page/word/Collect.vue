@@ -63,10 +63,10 @@ export default {
 
 /* Dialog aesthetics aligned with AiResponseDetail */
 ::v-deep .collect-dialog .el-dialog__header {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   padding: 12px 16px;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
+  border-top-left-radius: var(--card-border-radius);
+  border-top-right-radius: var(--card-border-radius);
 }
 
 ::v-deep .collect-dialog .el-dialog__title {
@@ -79,22 +79,41 @@ export default {
 }
 
 ::v-deep .collect-dialog .el-dialog {
-  border-radius: 12px;
+  border-radius: var(--card-border-radius);
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
+  background: var(--bg-card);
+}
+
+::v-deep .collect-dialog .el-dialog__body {
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .collect-table {
   margin-top: 6px;
+  background: transparent;
 }
 
 ::v-deep .collect-table .el-table__body-wrapper {
   border-radius: 8px;
 }
 
+::v-deep .collect-table th,
+::v-deep .collect-table tr,
+::v-deep .collect-table td {
+  background-color: transparent !important;
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color-light);
+}
+
+::v-deep .collect-table--enable-row-hover .el-table__body tr:hover > td {
+  background-color: var(--bg-sidebar-active) !important;
+}
+
 /* Consistent list button style */
 ::v-deep .list-name-button.el-button--info {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  background: var(--gradient-primary) !important;
   border: none !important;
   color: #fff !important;
   border-radius: 6px !important;
