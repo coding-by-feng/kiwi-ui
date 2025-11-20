@@ -941,7 +941,7 @@ export default {
   padding: 6px 0;
   margin: 0 auto 8px auto;
   background: transparent;
-  border-bottom: 1px dashed #e9ecef;
+  border-bottom: 1px dashed var(--border-color-light);
 }
 
 /* Floating controls — compact, glassmorphism chips */
@@ -952,38 +952,41 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 6px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--bg-card); /* Fallback or solid base */
+  border: 1px solid var(--border-color-light);
   border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-card);
+  /* Optional: if we want glass effect, we can use a semi-transparent token if available, 
+     but for now standardizing on card bg is safer for themes */
 }
 .floating-controls-top { top: 12px; right: 16px; }
 .floating-controls-bottom { bottom: 12px; right: 16px; }
 .floating-controls .el-button {
-  background: rgba(255,255,255,0.9);
-  border: 1px solid #e9ecef;
-  color: #606266;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   border-radius: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
   transition: all 0.2s ease;
 }
 .floating-controls .el-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-hover);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
-.floating-controls .el-button i[class^='el-icon-'] { color: #76838f; }
-.floating-controls .el-button:focus { outline: 2px solid rgba(64,158,255,0.35); outline-offset: 1px; }
+.floating-controls .el-button i[class^='el-icon-'] { color: var(--text-secondary); }
+.floating-controls .el-button:hover i[class^='el-icon-'] { color: var(--color-primary); }
+.floating-controls .el-button:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 
 /* Page lead/title — gradient chip with the word */
 .header-title-alert { margin: 12px 0 0 0; }
 .header-title-alert >>> .el-alert {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #ffffff;
   border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(64, 158, 255, 0.22);
+  box-shadow: var(--shadow-card);
 }
 .header-title-alert >>> .el-alert__content { padding: 14px 18px; }
 .header-title-alert >>> .el-alert__title,
@@ -993,19 +996,19 @@ export default {
 .box-card {
   width: 100%;
   margin: 20px 0;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-color);
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
-.box-card:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+.box-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-hover); }
 
 /* Use alert as a visual header */
 .box-card >>> .el-card__header { padding: 0; border-bottom: none; cursor: pointer; }
 .box-card >>> .el-card__header .el-alert {
-  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+  background: var(--gradient-info);
   color: #ffffff;
   border: none;
   border-radius: 0;
@@ -1020,41 +1023,41 @@ export default {
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 999px;
-  border: 1px solid #e9ecef;
-  background: #f8fafc;
-  color: #34495e;
+  border: 1px solid var(--border-color);
+  background: var(--bg-container);
+  color: var(--text-primary);
 }
-.word-detail >>> .el-tag:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08); filter: brightness(1.02); }
-.word-detail >>> .el-tag .el-icon-video-play { color: #409eff; }
-.word-detail >>> .el-tag .el-icon-loading { color: #67c23a; }
-.word-detail >>> .el-tag:focus { outline: 2px solid rgba(64,158,255,0.3); outline-offset: 2px; }
+.word-detail >>> .el-tag:hover { transform: translateY(-1px); box-shadow: var(--shadow-hover); filter: brightness(1.02); }
+.word-detail >>> .el-tag .el-icon-video-play { color: var(--color-primary); }
+.word-detail >>> .el-tag .el-icon-loading { color: var(--color-success); }
+.word-detail >>> .el-tag:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
 /* Alerts inside paraphrase body and examples */
 .word-detail >>> .el-alert.is-light {
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   position: relative;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-card);
 }
 .word-detail >>> .el-alert.is-light::before {
   content: '';
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
 }
-.word-detail >>> .el-alert .el-alert__content { line-height: 1.7; color: #2c3e50; }
+.word-detail >>> .el-alert .el-alert__content { line-height: 1.7; color: var(--text-primary); }
 .word-detail >>> .el-alert .el-alert__title { text-align: justify; }
 
 /* Divider spacing */
-.word-detail >>> .el-divider { margin: 14px 0; }
+.word-detail >>> .el-divider { margin: 14px 0; background-color: var(--border-color-light); }
 
 /* Dialog polish: word select, star list, confirm */
 .word-select-dialog >>> .el-dialog__header,
 .star-list-dialog >>> .el-dialog__header,
 .confirm-dialog >>> .el-dialog__header {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #fff;
   border-bottom: none;
   padding: 14px 16px;
@@ -1065,32 +1068,39 @@ export default {
 .word-select-dialog >>> .el-dialog__headerbtn .el-dialog__close,
 .star-list-dialog >>> .el-dialog__headerbtn .el-dialog__close,
 .confirm-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
+.word-select-dialog >>> .el-dialog__body,
+.star-list-dialog >>> .el-dialog__body,
+.confirm-dialog >>> .el-dialog__body {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+}
 .word-select-dialog >>> .el-dialog__body { padding-top: 10px; }
 
 /* Collapse in word-select dialog */
 .word-select-dialog >>> .el-collapse-item__header {
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  background: var(--bg-container);
+  border-bottom: 1px solid var(--border-color);
   padding: 10px 12px;
   font-weight: 500;
+  color: var(--text-primary);
 }
-.word-select-dialog >>> .el-collapse-item__header:hover { background: #eef2f7; }
-.word-select-dialog >>> .el-collapse-item__wrap { background: #fff; border-bottom: 1px solid #f1f3f5; }
-.word-select-dialog >>> .el-collapse-item__content { padding: 10px 16px 6px 16px; color: #495057; }
+.word-select-dialog >>> .el-collapse-item__header:hover { background: var(--bg-sidebar-active); }
+.word-select-dialog >>> .el-collapse-item__wrap { background: var(--bg-card); border-bottom: 1px solid var(--border-color-light); }
+.word-select-dialog >>> .el-collapse-item__content { padding: 10px 16px 6px 16px; color: var(--text-secondary); }
 
 /* Pagination chips */
 .word-select-dialog >>> .el-pagination.is-background .btn-prev,
 .word-select-dialog >>> .el-pagination.is-background .btn-next,
-.word-select-dialog >>> .el-pagination.is-background .el-pager li { border-radius: 8px; }
+.word-select-dialog >>> .el-pagination.is-background .el-pager li { border-radius: 8px; background-color: var(--bg-container); color: var(--text-secondary); }
 .word-select-dialog >>> .el-pagination.is-background .el-pager li.active {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #fff;
 }
-.word-select-dialog >>> .el-pagination.is-background .el-pager li:not(.active):hover { filter: brightness(0.97); }
+.word-select-dialog >>> .el-pagination.is-background .el-pager li:not(.active):hover { color: var(--color-primary); }
 
 /* Table buttons inside star list dialog */
 .star-list-dialog >>> .el-button.el-button--info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  background: var(--gradient-info) !important;
   border: none !important;
   color: #fff !important;
 }
@@ -1105,23 +1115,23 @@ export default {
   border-radius: 10px;
   min-width: 120px;
   transition: all 0.25s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
 }
-.dialog-footer .el-button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+.dialog-footer .el-button:hover { transform: translateY(-1px); box-shadow: var(--shadow-hover); }
 .dialog-footer .el-button--info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  background: var(--gradient-info) !important;
   border: none !important;
   color: #fff !important;
 }
 .dialog-footer .el-button--primary {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  background: var(--gradient-primary) !important;
   border: none !important;
   color: #fff !important;
 }
 .dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
-  background: #f8f9fa !important;
-  border: 1px solid #e9ecef !important;
-  color: #6c757d !important;
+  background: var(--bg-container) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Utility placements retained */
@@ -1139,8 +1149,8 @@ export default {
 .outline_fix_bottom_left_2 { position: absolute; bottom: 6px; left: 26px; }
 
 /* Selection color */
-.word-detail ::selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
-.word-detail ::-moz-selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
+.word-detail ::selection { background: var(--color-primary); color: #fff; }
+.word-detail ::-moz-selection { background: var(--color-primary); color: #fff; }
 
 /* Responsive tweaks */
 @media (max-width: 992px) {
@@ -1157,16 +1167,5 @@ export default {
 }
 @media (max-width: 420px) {
   .floating-controls { right: 8px; }
-}
-
-/* Optional dark mode refinements */
-@media (prefers-color-scheme: dark) {
-  .row-bg { border-bottom-color: rgba(255,255,255,0.08); }
-  .ai-container { color: #e9eef3; }
-  .box-card { background: #111418; border-color: rgba(255,255,255,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
-  .word-detail >>> .el-alert.is-light { background: #0f1216; border-color: rgba(255,255,255,0.08); }
-  .word-detail >>> .el-alert.is-light::before { background: linear-gradient(180deg, #65b0ff 0%, #7bd48b 100%); }
-  .word-detail >>> .el-tag { background: #12161b; border-color: rgba(255,255,255,0.08); color: #dfe6ee; }
-  .floating-controls { background: rgba(20, 24, 28, 0.6); border-color: rgba(255,255,255,0.08); }
 }
 </style>

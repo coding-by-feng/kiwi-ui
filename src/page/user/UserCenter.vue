@@ -1,5 +1,5 @@
 <template>
-  <div class="user-center-container">
+  <div>
     <!-- User Profile Header -->
     <div class="user-profile-header">
       <div class="avatar-section">
@@ -71,6 +71,24 @@
         <i class="el-icon-setting"></i> {{ $t('user.learningSettings') }}
       </h4>
       <div class="settings-grid">
+        <!-- Theme Selection -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>{{ $t('user.theme') || 'Theme' }}</span>
+          </div>
+          <el-dropdown @command="handleThemeChange" trigger="click" class="custom-dropdown">
+            <el-button size="small" type="text" class="dropdown-button">
+              {{ currentThemeName }} <i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="default">Default</el-dropdown-item>
+              <el-dropdown-item command="cyberpunk">CyberPunk</el-dropdown-item>
+              <el-dropdown-item command="neumorphism">Neumorphism</el-dropdown-item>
+              <el-dropdown-item command="glassmorphism">Glassmorphism</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
+
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.pronunciationSource') }}</span>
@@ -79,7 +97,7 @@
             <el-button size="small" type="text" class="dropdown-button">
               {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
-            <el-dropdown-menu v-slot:dropdown>
+            <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
@@ -93,7 +111,7 @@
             <el-button size="small" type="text" class="dropdown-button">
               {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
-            <el-dropdown-menu v-slot:dropdown>
+            <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
                   v-for="(code, language) in languageCodes"
                   :key="code"
@@ -273,7 +291,8 @@ export default {
         clipboardDetection: getStore({ name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION }),
         keepInMindCount: 0,
         rememberCount: 0,
-        reviewCount: 0
+        reviewCount: 0,
+        theme: getStore({ name: 'theme' }) || 'default'
       },
 
       // Ensure this object exists before the first render to avoid runtime errors in v-model bindings
@@ -313,6 +332,15 @@ export default {
     clipboardDetectionEnabled: {
       get() { return this.user.clipboardDetection === kiwiConst.CLIPBOARD_DETECTION.ENABLE },
       set(val) { this.user.clipboardDetection = val ? kiwiConst.CLIPBOARD_DETECTION.ENABLE : kiwiConst.CLIPBOARD_DETECTION.DISABLE }
+    },
+    currentThemeName() {
+      const names = {
+        'default': 'Default',
+        'cyberpunk': 'CyberPunk',
+        'neumorphism': 'Neumorphism',
+        'glassmorphism': 'Glassmorphism'
+      }
+      return names[this.user.theme] || 'Default'
     }
   },
 
@@ -410,6 +438,9 @@ export default {
       } catch (e) {
         this.enabledTabsLocal = { ...kiwiConst.DEFAULT_ENABLED_TABS }
       }
+
+      // Apply theme
+      this.applyTheme(this.user.theme)
     },
 
     // Utility methods
@@ -608,34 +639,37 @@ export default {
           .catch(error => {
             console.error('Error loading review count:', error)
           })
+    },
+    handleThemeChange(theme) {
+      this.user.theme = theme
+      setStore({
+        name: 'theme',
+        content: theme,
+        type: 'local'
+      })
+      this.applyTheme(theme)
+      this.$message.success(`Theme switched to ${theme}`)
+    },
+    applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.user-center-container {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
-  overflow: hidden;
-  animation: fadeInUp 0.6s ease;
-}
-
 .user-profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  background: white;
+  background: var(--bg-header);
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
+  backdrop-filter: var(--backdrop-filter);
+  transition: all 0.3s ease;
 
   .avatar-section {
     display: flex;
@@ -643,7 +677,7 @@ export default {
     gap: 16px;
 
     .user-avatar {
-      border: 3px solid #409eff;
+      border: 3px solid var(--color-primary);
     }
 
     .user-basic-info {
@@ -651,8 +685,8 @@ export default {
         margin: 0 0 8px 0;
         font-size: 20px;
         font-weight: 600;
-        color: #2c3e50;
-        background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+        color: var(--text-primary);
+        background: var(--gradient-text);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -660,7 +694,7 @@ export default {
 
       .user-email {
         margin: 0 0 8px 0;
-        color: #666;
+        color: var(--text-regular);
         font-size: 14px;
       }
     }
@@ -727,35 +761,37 @@ export default {
 
 /* Custom Divider */
 .custom-divider {
-  border-top: 1px solid rgba(64, 158, 255, 0.2);
+  border-top: 1px solid var(--divider-color);
   margin: 24px 0;
 }
 
 .statistics-section,
 .settings-section {
   margin-bottom: 32px;
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
+  backdrop-filter: var(--backdrop-filter);
+  transition: all 0.3s ease;
 }
 
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0 0 20px 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-text);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 
   i {
-    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -771,16 +807,16 @@ export default {
   .stat-card {
     color: white;
     padding: 20px;
-    border-radius: 12px;
+    border-radius: var(--card-border-radius);
     text-align: center;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--shadow-hover);
     }
 
     &.remember-card {

@@ -468,7 +468,7 @@ export default {
   position: relative;
   margin-top: var(--header-height);
   min-height: calc(100vh - var(--header-height));
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--bg-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -495,12 +495,11 @@ export default {
   max-width: 1200px;
   height: 100%; // fill available content height (below header)
   max-height: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-  0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--backdrop-filter);
+  border: 1px solid var(--border-color-light);
   overflow: hidden;
   position: relative;
 }
@@ -508,7 +507,7 @@ export default {
 // Left Panel - Brand Section
 .login-left {
   flex: 1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   display: flex;
@@ -630,18 +629,17 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px; // tighten
-  background: rgba(249, 250, 251, 0.5);
+  background: var(--bg-container);
 }
 
 .login-card {
   width: 100%;
   max-width: 420px;
-  background: white;
-  border-radius: 16px;
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
   padding: 28px 22px; // tighten
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-  0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
   opacity: 0;
   animation: slideInRight 1s ease 0.5s forwards;
 }
@@ -663,13 +661,13 @@ export default {
 
   h2 {
     font-size: 22px;
-    color: #374151;
+    color: var(--text-primary);
     margin-bottom: 6px;
     font-weight: 600;
   }
 
   p {
-    color: #6b7280;
+    color: var(--text-secondary);
     font-size: 14px;
     margin: 0;
   }
@@ -682,11 +680,11 @@ export default {
     align-items: center;
     justify-content: center;
     padding: 14px 18px;
-    border: 2px solid #d1d5db;
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--bg-card);
     position: relative;
     min-height: 52px;
 
@@ -697,8 +695,8 @@ export default {
     }
 
     &:hover {
-      border-color: #4285f4;
-      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-hover);
       transform: translateY(-2px);
     }
 
@@ -716,7 +714,7 @@ export default {
     span {
       flex: 1;
       text-align: center;
-      color: #ffffff;
+      color: var(--text-primary);
       font-size: 15px;
       font-weight: 600;
     }
@@ -724,13 +722,13 @@ export default {
     .loading-spinner {
       position: absolute;
       right: 16px;
-      color: #ffffff;
+      color: var(--text-primary);
       font-size: 18px;
     }
 
     &.google-login {
-      border-color: #4285f4;
-      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+      border-color: var(--color-primary);
+      background: var(--gradient-primary);
       color: white;
 
       span {
@@ -738,7 +736,7 @@ export default {
       }
 
       &:hover {
-        box-shadow: 0 6px 20px rgba(66, 133, 244, 0.3);
+        box-shadow: var(--shadow-hover);
         transform: translateY(-3px);
       }
     }
@@ -750,7 +748,7 @@ export default {
   display: flex;
   align-items: center;
   margin: 14px 0;
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -758,7 +756,7 @@ export default {
     content: '';
     flex: 1;
     height: 1px;
-    background: #e5e7eb;
+    background: var(--border-color);
   }
   span {
     margin: 0 10px;
@@ -780,7 +778,8 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card);
+  opacity: 0.95;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -790,7 +789,7 @@ export default {
 
 .loading-content {
   text-align: center;
-  color: #4285f4;
+  color: var(--color-primary);
 
   i {
     font-size: 32px;

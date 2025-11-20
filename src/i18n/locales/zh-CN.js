@@ -193,6 +193,7 @@ export default {
         todayReviewed: '今日复习',
         todayMastered: '今日掌握',
         learningSettings: '学习设置',
+        theme: '主题',
         pronunciationSource: '发音来源',
         nativeLanguage: '母语',
         backgroundMusic: '背景音乐',
