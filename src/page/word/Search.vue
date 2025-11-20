@@ -830,8 +830,8 @@ export default {
 }
 
 .el-button[title*="History"]:hover {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
   color: white;
 }
 /* --- existing styles end --- */

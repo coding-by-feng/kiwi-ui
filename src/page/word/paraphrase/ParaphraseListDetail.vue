@@ -1428,34 +1428,34 @@ export default {
 
 /* Timer card aligned with AiResponseDetail aesthetic */
 .timer-card {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-container);
+  box-shadow: var(--shadow-card);
   margin-bottom: 14px;
 }
 
 /* Collapse card styling aligned with AiResponseDetail */
 ::v-deep .kiwi-collapse .el-collapse-item {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-container);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
   margin-bottom: 14px;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header {
   padding: 14px 18px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #fff;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid var(--border-color-light);
   transition: all 0.3s ease;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  filter: brightness(1.1);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item.is-active > .el-collapse-item__header {
@@ -1464,14 +1464,14 @@ export default {
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__wrap {
-  background: #fff;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  background: var(--bg-card);
+  border-bottom-left-radius: var(--card-border-radius);
+  border-bottom-right-radius: var(--card-border-radius);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__content {
   padding: 18px 20px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .collapse-content {
@@ -1481,15 +1481,15 @@ export default {
 .paraphrase-english {
   margin: 0 0 10px 0;
   font-size: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .paraphrase-translation {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .collapse-actions {
@@ -1501,7 +1501,7 @@ export default {
 
 .collapse-action-button {
   color: #fff !important;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  background: var(--gradient-primary) !important;
   border: none !important;
   border-radius: 6px !important;
   padding: 4px 8px !important;
@@ -1509,16 +1509,17 @@ export default {
 }
 
 .collapse-action-button.info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  background: var(--gradient-info) !important;
 }
 
 .collapse-action-button.danger {
-  background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%) !important;
+  background: var(--gradient-danger) !important;
 }
 
 .collapse-action-button:hover {
   filter: brightness(0.95);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
 
 .list-pagination {
@@ -1527,10 +1528,10 @@ export default {
 
 /* Detail dialog content styles (aligned with AiResponseDetail) */
 .detail-card {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-container);
+  box-shadow: var(--shadow-card);
   padding: 16px 16px 40px 16px;
 }
 
@@ -1539,7 +1540,7 @@ export default {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
-  background: #8c939d;
+  background: var(--bg-sidebar);
   padding: 6px 8px;
   border-radius: 8px;
   margin-bottom: 10px;
@@ -1560,7 +1561,7 @@ export default {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
-  background: #8c939d;
+  background: var(--bg-sidebar);
   padding: 6px 8px;
   border-radius: 8px;
   margin-bottom: 10px;
@@ -1570,9 +1571,9 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #eef5ff;
-  color: #2c3e50;
-  border: 1px solid #d6e4ff;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 4px 10px;
   font-size: 12px;
@@ -1590,9 +1591,9 @@ export default {
 
 .phrase-chip {
   display: inline-block;
-  background: #eef2f7;
-  border: 1px solid #e1e5ea;
-  color: #4a5568;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  color: var(--text-regular);
   border-radius: 12px;
   padding: 2px 8px;
   font-size: 12px;
@@ -1600,7 +1601,7 @@ export default {
 }
 
 .paraphrase-codes {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 13px;
   margin: 4px 0 6px 0;
 }
@@ -1608,24 +1609,24 @@ export default {
 .paraphrase-english-text {
   word-wrap: break-word;
   overflow: hidden;
-  color: #2c3e50;
+  color: var(--text-primary);
   line-height: 1.7;
 }
 
 .translation-box {
   margin-top: 8px;
-  background: #fff;
-  border: 1px solid #e9ecef;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .info-notice {
   margin-top: 12px;
-  background: #f8f9fa;
-  border: 1px dashed #d4edda;
-  color: #2f855a;
+  background: var(--bg-body);
+  border: 1px dashed var(--color-success);
+  color: var(--color-success);
   border-radius: 8px;
   padding: 10px 12px;
   text-align: center;
@@ -1633,31 +1634,31 @@ export default {
 
 .example-item {
   margin-top: 12px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-card);
   padding: 12px;
 }
 
 .example-title {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .example-translation {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 10px;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .word-spelling {
   font-size: larger;
   font-weight: bolder;
   font-family: sans-serif;
-  color: #606266;
+  color: var(--text-regular);
   cursor: pointer;
 }
 

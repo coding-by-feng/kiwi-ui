@@ -233,15 +233,15 @@ export default {
 }
 
 .about-card {
-  border: 1px solid rgba(64, 158, 255, 0.2) !important;
+  border: 1px solid var(--border-color-light) !important;
   border-radius: 12px !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  box-shadow: var(--shadow-card) !important;
+  background: var(--bg-body) !important;
   overflow: hidden !important;
 }
 
 .card-header {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   margin: -20px -20px 20px -20px;
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -271,28 +271,28 @@ export default {
 .contact-section,
 .download-section {
   margin-bottom: 24px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
 }
 
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0 0 16px 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 
   i {
-    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -300,14 +300,14 @@ export default {
 }
 
 .description-card {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
   border-radius: 8px;
   padding: 16px;
 }
 
 .description-text {
-  color: #2c3e50;
+  color: var(--text-primary);
   line-height: 1.6;
   margin: 0 0 12px 0;
   font-size: 14px;
@@ -319,9 +319,9 @@ export default {
 }
 
 .version-tag {
-  background: linear-gradient(135deg, rgba(103, 194, 58, 0.1) 0%, rgba(133, 206, 97, 0.1) 100%) !important;
+  background: rgba(103, 194, 58, 0.1) !important;
   border: 1px solid rgba(103, 194, 58, 0.3) !important;
-  color: #67c23a !important;
+  color: var(--color-success) !important;
   font-weight: 500 !important;
 }
 
@@ -340,15 +340,15 @@ export default {
 
 .contact-item,
 .download-item {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border: 1px solid rgba(64, 158, 255, 0.2);
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
   border-radius: 12px;
   padding: 16px;
   transition: all 0.3s ease;
 
   &:hover {
-    border-color: rgba(64, 158, 255, 0.4);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
+    border-color: var(--color-primary-light-5);
+    box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
   }
 }
@@ -364,13 +364,13 @@ export default {
 .contact-title,
 .download-title {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
 .contact-header i,
 .download-header i {
-  color: #409eff;
+  color: var(--color-primary);
   font-size: 16px;
 }
 
@@ -406,7 +406,7 @@ export default {
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-hover);
   }
 
   i {
@@ -429,7 +429,7 @@ export default {
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-hover);
   }
 
   i {
@@ -513,26 +513,26 @@ export default {
   width: 100%;
   height: auto;
   border-radius: 8px;
-  border: 2px solid rgba(64, 158, 255, 0.2);
+  border: 2px solid var(--border-color-light);
   transition: all 0.3s ease;
 
   &:hover {
-    border-color: rgba(64, 158, 255, 0.4);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-hover);
   }
 }
 
 .wechat-instruction {
   margin: 8px 0 0 0;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 12px;
   font-style: italic;
 }
 
 /* Keep provider styles removed section harmless if used elsewhere */
 .service-provider {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
   border-radius: 8px;
   padding: 16px;
 }
@@ -550,18 +550,18 @@ export default {
 }
 
 .provider-header i {
-  color: #409eff;
+  color: var(--color-primary);
   font-size: 18px;
 }
 
 .provider-name {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 16px;
 }
 
 .provider-description {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 14px;
   margin: 8px 0 16px 0;
   line-height: 1.5;
@@ -572,21 +572,21 @@ export default {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%);
+  background: rgba(64, 158, 255, 0.1);
   border: 1px solid rgba(64, 158, 255, 0.3);
   border-radius: 8px;
   padding: 8px 12px;
   transition: all 0.3s ease;
 
   &:hover {
-    background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%);
+    background: rgba(64, 158, 255, 0.2);
     border-color: rgba(64, 158, 255, 0.5);
     transform: translateY(-1px);
   }
 }
 
 .link-text {
-  color: #409eff;
+  color: var(--color-primary);
   font-weight: 500;
   font-size: 14px;
 }
@@ -598,7 +598,7 @@ export default {
 /* Download note */
 .download-note {
   margin-top: 10px;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 12px;
   text-align: right;
   font-style: italic;
@@ -625,7 +625,7 @@ export default {
 }
 
 .custom-divider {
-  border-top: 1px solid rgba(64, 158, 255, 0.2) !important;
+  border-top: 1px solid var(--border-color-light) !important;
   margin: 24px 0 !important;
 }
 
@@ -744,16 +744,16 @@ img {
 }
 
 .about-container::-webkit-scrollbar-track {
-  background: rgba(64, 158, 255, 0.1);
+  background: var(--bg-body);
   border-radius: 3px;
 }
 
 .about-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   border-radius: 3px;
 }
 
 .about-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  background: var(--gradient-primary);
 }
 </style>

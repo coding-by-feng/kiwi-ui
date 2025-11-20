@@ -568,6 +568,7 @@ export default {
 }
 .youtube-channel-manager .channel-name {
   white-space: inherit;
+  color: var(--text-primary);
 }
 
 /* Add a bit more spacing between Status and Favorite columns */
@@ -588,7 +589,7 @@ export default {
 }
 .video-row-desktop .row-middle, .video-row-mobile .row-middle {
   margin-top: 4px;
-  color: #606266;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 .video-row-desktop .row-middle .rel, .video-row-mobile .row-middle .rel {
@@ -596,7 +597,7 @@ export default {
 }
 .video-row-desktop .row-middle .sep, .video-row-mobile .row-middle .sep {
   margin: 0 6px;
-  color: #909399;
+  color: var(--text-placeholder);
 }
 /* Ensure clear spacing between status tag and favorite icon */
 .video-row-desktop .row-bottom, .video-row-mobile .row-bottom {
@@ -623,10 +624,11 @@ export default {
 .channel-row-mobile .title-text {
   white-space: normal;
   word-break: break-word;
+  color: var(--text-primary);
 }
 
 .clickable { cursor: pointer; }
 .ml-8 { margin-left: 8px; }
-.fav-btn { color: #C0C4CC; }
-.fav-btn.favorited { color: #f7ba2a; }
+.fav-btn { color: var(--text-placeholder); }
+.fav-btn.favorited { color: var(--color-warning); }
 </style>
