@@ -1209,6 +1209,7 @@ export default {
           ref="detailDialog"
           :visible.sync="detail.dialogVisible"
           fullscreen
+          custom-class="paraphrase-detail-dialog"
           width="100%">
         <div slot="title" class="dialog-title-bar">
           <v-touch
@@ -1598,6 +1599,20 @@ export default {
   padding: 2px 8px;
   font-size: 12px;
   margin: 0 6px 6px 0;
+}
+
+::v-deep .paraphrase-detail-dialog {
+  background: var(--bg-body);
+}
+
+::v-deep .paraphrase-detail-dialog .el-dialog__header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+}
+
+::v-deep .paraphrase-detail-dialog .el-dialog__body {
+  background: var(--bg-body);
+  color: var(--text-primary);
 }
 
 .paraphrase-codes {

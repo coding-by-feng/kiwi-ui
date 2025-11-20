@@ -1,7 +1,7 @@
 <template>
   <div class="youtube-player">
     <!-- Enhanced header with gradient styling -->
-    <div class="header-container" v-show="!isPlaying && !forceHideInput">
+    <div class="header-container">
       <h1 id="playHeader" class="main-title">
         <i class="el-icon-video-play"></i>
         YouTube Player
@@ -120,14 +120,14 @@
         <div class="switch-group favorite-top-group">
           <el-tooltip :content="canFavorite ? (isFavorited ? 'Unfavorite this video' : 'Favorite this video') : 'Load a video to favorite'" placement="top">
             <el-button
-              :icon="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-              :class="['favorite-btn', isFavorited ? 'favorited' : '']"
-              circle
-              size="small"
-              :loading="pendingFavorite"
-              :disabled="pendingFavorite || !canFavorite"
-              @click.stop="toggleFavoriteOnPlayer"
-              aria-label="Favorite toggle"
+                :icon="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                :class="['favorite-btn', isFavorited ? 'favorited' : '']"
+                circle
+                size="small"
+                :loading="pendingFavorite"
+                :disabled="pendingFavorite || !canFavorite"
+                @click.stop="toggleFavoriteOnPlayer"
+                aria-label="Favorite toggle"
             />
           </el-tooltip>
         </div>
@@ -148,54 +148,38 @@
     </div>
 
     <!-- Enhanced Subtitles Loading Indicator -->
-    <div v-if="showSubtitlesLoading" class="subtitles-loading-overlay">
-      <div class="subtitles-loading-container">
-        <div class="subtitles-loading-icon">
-          <i v-if="isSubtitlesLoading || isTranslationLoading" class="el-icon-loading spinning"></i>
-          <i v-else-if="subtitlesLoadingComplete && hasSubtitles" class="el-icon-check success-icon"></i>
-          <i v-else-if="subtitlesLoadingComplete" class="el-icon-warning warning-icon"></i>
-        </div>
-        <div class="subtitles-loading-text">
-          <span v-if="isSubtitlesLoading">Loading subtitles...</span>
-          <span v-else-if="isTranslationLoading">Streaming translation...</span>
-          <span v-else-if="subtitlesLoadingComplete && hasSubtitles">Ready!</span>
-          <span v-else-if="subtitlesLoadingComplete">Failed to load</span>
-
-          <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-progress">
-            <div class="subtitles-progress-bar">
-              <div class="subtitles-progress-fill" :style="{ width: currentProgress + '%' }"></div>
-            </div>
-            <span class="subtitles-progress-text">{{ Math.round(currentProgress) }}%</span>
-          </div>
-
-          <div v-else-if="subtitlesLoadingComplete" class="subtitles-status">
-            <div class="status-indicators">
-              <span :class="['status-item', subtitles.length > 0 ? 'success' : 'failed']">
-                <i :class="subtitles.length > 0 ? 'el-icon-check' : 'el-icon-close'"></i>
-                Subtitles
-              </span>
-              <span v-if="ifTranslation" :class="['status-item', translatedSubtitles ? 'success' : 'failed']">
-                <i :class="translatedSubtitles ? 'el-icon-check' : 'el-icon-close'"></i>
-                Translation
-              </span>
-              <span v-else class="status-item disabled">
-                <i class="el-icon-minus"></i>
-                Translation off
-              </span>
-            </div>
+    <!-- Enhanced Subtitles Loading Indicator using StatusOverlay -->
+    <StatusOverlay
+      :visible.sync="showSubtitlesLoading"
+      position="top-right"
+      :backdrop="false"
+      :closable="true"
+      :status="subtitleOverlayStatus"
+      :title="subtitleOverlayTitle"
+      :message="subtitleOverlayMessage"
+      :progress="currentProgress"
+      :show-progress="isSubtitlesLoading || isTranslationLoading"
+      @close="handleOverlayClose"
+    >
+      <template #content>
+        <div v-if="subtitlesLoadingComplete" class="subtitles-status">
+          <div class="status-indicators">
+            <span :class="['status-item', subtitles.length > 0 ? 'success' : 'failed']">
+              <i :class="subtitles.length > 0 ? 'el-icon-check' : 'el-icon-close'"></i>
+              Subtitles
+            </span>
+            <span v-if="ifTranslation" :class="['status-item', translatedSubtitles ? 'success' : 'failed']">
+              <i :class="translatedSubtitles ? 'el-icon-check' : 'el-icon-close'"></i>
+              Translation
+            </span>
+            <span v-else class="status-item disabled">
+              <i class="el-icon-minus"></i>
+              Translation off
+            </span>
           </div>
         </div>
-
-        <div class="subtitles-loading-actions">
-          <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-loading-close" @click="cancelSubtitlesLoading">
-            <i class="el-icon-close"></i>
-          </div>
-          <div v-else-if="subtitlesLoadingComplete" class="subtitles-loading-minimize" @click="minimizeSubtitlesStatus">
-            <i class="el-icon-minus"></i>
-          </div>
-        </div>
-      </div>
-    </div>
+      </template>
+    </StatusOverlay>
 
     <!-- Enhanced Content Container -->
     <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '') || (playerVideoId && playerVideoId !== '')">
@@ -237,16 +221,16 @@
 
       <!-- Draggable splitter: desktop only -->
       <div
-        v-if="!isSmallScreen"
-        class="splitter"
-        role="separator"
-        aria-orientation="vertical"
-        :aria-valuenow="leftPanelPercent"
-        aria-valuemin="20"
-        aria-valuemax="80"
-        tabindex="0"
-        @mousedown.prevent="startResize"
-        @dblclick="resetPanelSizes"
+          v-if="!isSmallScreen"
+          class="splitter"
+          role="separator"
+          aria-orientation="vertical"
+          :aria-valuenow="leftPanelPercent"
+          aria-valuemin="20"
+          aria-valuemax="80"
+          tabindex="0"
+          @mousedown.prevent="startResize"
+          @dblclick="resetPanelSizes"
       ></div>
 
       <!-- Right Panel (subtitles) -->
@@ -288,15 +272,15 @@
           <div class="header-toggle-hint">
             <!-- Modified: Download subtitles as TXT in header - only show after translation completes -->
             <el-button
-              v-if="!isTranslationLoading && translatedSubtitles && !translatedSubtitlesCollapsed"
-              type="success"
-              :loading="isDownloading"
-              icon="el-icon-download"
-              size="mini"
-              circle
-              @click.stop="downloadTranslatedSubtitlesFromUI"
-              class="header-action-btn"
-              title="Download translated subtitles"
+                v-if="!isTranslationLoading && translatedSubtitles && !translatedSubtitlesCollapsed"
+                type="success"
+                :loading="isDownloading"
+                icon="el-icon-download"
+                size="mini"
+                circle
+                @click.stop="downloadTranslatedSubtitlesFromUI"
+                class="header-action-btn"
+                title="Download translated subtitles"
             />
             <i :class="translatedSubtitlesCollapsed ? 'el-icon-arrow-right' : 'el-icon-arrow-down'" class="toggle-arrow"></i>
           </div>
@@ -327,10 +311,10 @@
 
       <!-- Inline AI Search Dialog for selected text -->
       <ai-selection-popup
-        :visible.sync="showSelectionPopup"
-        :selected-text.sync="selectedText"
-        title="AI Search"
-        @open-ai-tab="onOpenAiTabFromPopup"
+          :visible.sync="showSelectionPopup"
+          :selected-text.sync="selectedText"
+          title="AI Search"
+          @open-ai-tab="onOpenAiTabFromPopup"
       />
 
     </div>
@@ -397,7 +381,7 @@ export default {
       scrollingSubtitlesCollapsed: false,
       translatedSubtitlesCollapsed: false,
       player: null,
-      currentSubtitleIndex: -1,
+      currentSubtitleIndex: 0,
       subtitleInterval: null,
       middleControlEnabled: true,
       forceHideInput: false,
@@ -466,7 +450,11 @@ export default {
       // Init guards & timeouts
       isInitializing: false,
       _suppressVideoIdWatcher: false,
-      playerInitTimeout: null
+      playerInitTimeout: null,
+
+      // New: scrolling management for current subtitle in context display
+      currentSubtitleScrollInterval: null,
+      currentSubtitleScrollStartTime: 0,
     };
   },
   computed: {
@@ -484,8 +472,7 @@ export default {
           || kiwiConsts.SUBTITLES_TYPE.SMALL_PROFESSIONAL_SRT_RETURN_STRING === this.subtitlesType;
     },
     showContextDisplay() {
-      return (this.isSafariOrIOS() || this.currentSubtitleIndex !== -1) &&
-          this.subtitles.length &&
+      return this.subtitles.length &&
           (this.ifTranslation || (!this.ifTranslation && !this.ifProfessionalSubtitles));
     },
     hasSubtitles() {
@@ -517,6 +504,26 @@ export default {
     aiParsedResponseText() {
       const text = this.unescapeContent(this.aiResponseText || '');
       return md.render(text);
+    },
+    subtitleOverlayStatus() {
+      if (this.isSubtitlesLoading || this.isTranslationLoading) return 'loading';
+      if (this.subtitlesLoadingComplete && this.hasSubtitles) return 'success';
+      if (this.subtitlesLoadingComplete) return 'warning';
+      return 'info';
+    },
+    subtitleOverlayTitle() {
+      if (this.isSubtitlesLoading) return 'Loading Subtitles';
+      if (this.isTranslationLoading) return 'Translating';
+      if (this.subtitlesLoadingComplete && this.hasSubtitles) return 'Ready!';
+      if (this.subtitlesLoadingComplete) return 'No Subtitles';
+      return 'Status';
+    },
+    subtitleOverlayMessage() {
+      if (this.isSubtitlesLoading) return 'Fetching subtitles from source...';
+      if (this.isTranslationLoading) return 'Streaming translation...';
+      if (this.subtitlesLoadingComplete && this.hasSubtitles) return 'Subtitles loaded successfully.';
+      if (this.subtitlesLoadingComplete) return 'Could not load subtitles for this video.';
+      return '';
     }
   },
   watch: {
@@ -590,8 +597,11 @@ export default {
       }
     },
     currentSubtitleIndex(newVal, oldVal) {
-      if (this.autoCenterEnabled && newVal !== oldVal) {
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+      if (newVal !== oldVal) {
+        this.$nextTick(() => {
+          this.ensureActiveSubtitleVisibility();
+          this.restartCurrentSubtitleAutoScroll();
+        });
       }
     },
     leftPanelPercent: {
@@ -755,7 +765,6 @@ export default {
       window.removeEventListener('pageshow', this.onPageShow);
       window.removeEventListener('online', this.onOnline);
       window.removeEventListener('offline', this.onOffline);
-      this.clearWsTimers();
       this.disableNoSleep();
       this.closeAiStream();
     },
@@ -863,7 +872,6 @@ export default {
       }
 
       this.disconnectWebSocket();
-      this.clearWsTimers();
 
       return new Promise((resolve, reject) => {
         this.wsConnectionStatus = 'connecting';
@@ -908,7 +916,6 @@ export default {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'disconnected';
           this.websocket = null;
-          this.clearWsTimers();
 
           if (event.code === 1008 || event.code === 1011) {
             this.handleWebSocketError(new Error('Authentication failed'), 'Authentication failed. Please login again.');
@@ -938,7 +945,6 @@ export default {
         this.websocket = null;
         this.wsConnectionStatus = 'disconnected';
       }
-      this.clearWsTimers();
     },
 
     handleWebSocketMessage(event) {
@@ -1021,7 +1027,6 @@ export default {
       this.translationProgress = 100;
       this.subtitlesLoadingComplete = true;
       this.wsShouldReconnect = false;
-      this.clearWsTimers();
 
       if (response.fullResponse) {
         this.translatedSubtitles = response.fullResponse;
@@ -1049,7 +1054,6 @@ export default {
       this.subtitlesLoadingComplete = true;
       this.shouldShowTranslationContainer = false; // Hide container on error
       this.wsShouldReconnect = false;
-      this.clearWsTimers();
 
       this.stopProgressAnimation();
 
@@ -1107,7 +1111,6 @@ export default {
         this.subtitlesLoadingComplete = true;
         this.shouldShowTranslationContainer = false;
         this.wsShouldReconnect = false;
-        this.clearWsTimers();
         this.disableNoSleep();
       }
     },
@@ -1237,6 +1240,8 @@ export default {
       this.statusMessage = '';
       this.isLoading = false;
       msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
+      // Start continuous subtitle sync so index updates during play, pause, and seeks.
+      this.startSubtitleSync();
     },
 
     onPlayerStateChange(event) {
@@ -1248,15 +1253,16 @@ export default {
         this.startMiniLoaderPoll();
       } else if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
         this.isBuffering = false;
-        // keep poll running only if not fully loaded
         if (this.getLoadedFraction() >= 1) this.stopMiniLoaderPoll();
       }
 
       if (isPlaying) {
-        this.startSubtitleSync();
+        // Re-run auto scroll logic for active subtitle on resume.
         this.forceHideInput = true;
+        this.$nextTick(() => this.restartCurrentSubtitleAutoScroll());
       } else {
-        this.stopSubtitleSync();
+        // Keep sync interval running so seeking while paused updates currentSubtitleIndex.
+        this.stopCurrentSubtitleAutoScroll();
       }
     },
 
@@ -1344,6 +1350,7 @@ export default {
       this.closeAiStream(true);
       this.aiResponseText = '';
       this.aiLastError = '';
+      this.stopCurrentSubtitleAutoScroll();
     },
 
     async loadSubtitlesInBackground() {
@@ -1458,36 +1465,110 @@ export default {
     // Optimized subtitle management
     parseSubtitles(scrollingSubtitles) {
       const lines = scrollingSubtitles.split('\n').filter(line => line.trim());
-      const subtitles = [];
+      const rawSubtitles = [];
       let currentSubtitle = null;
       let parsingCue = false;
 
-      for (const line of lines) {
-        if (line.match(/\d{2}:\d{2}:\d{2}\.\d{3}\s+-->\s+\d{2}:\d{2}:\d{2}\.\d{3}/)) {
-          if (currentSubtitle) subtitles.push(currentSubtitle);
+      // Relaxed regex to match both VTT (dot) and SRT (comma) formats, and varying digits
+      const timeRegex = /(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})\s+-->\s+(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})/;
 
-          const [start, end] = line.split(' --> ');
+      for (const line of lines) {
+        const match = line.match(timeRegex);
+        if (match) {
+          if (currentSubtitle && currentSubtitle.text) rawSubtitles.push(currentSubtitle);
+
           currentSubtitle = {
-            start: this.parseTime(start),
-            end: this.parseTime(end),
+            start: this.parseTime(match[1]),
+            end: this.parseTime(match[2]),
             text: ''
           };
           parsingCue = true;
         } else if (parsingCue && line.trim()) {
-          currentSubtitle.text += (currentSubtitle.text ? '\n' : '') + line.trim();
+          // Skip index numbers often found in SRT files (lines that are just digits)
+          if (/^\d+$/.test(line.trim())) continue;
+
+          const cleaned = this.cleanSubtitleText(line.trim());
+          if (cleaned) {
+            currentSubtitle.text += (currentSubtitle.text ? '\n' : '') + cleaned;
+          }
         } else if (line.trim() === '' && parsingCue) {
           parsingCue = false;
         }
       }
 
-      if (currentSubtitle) subtitles.push(currentSubtitle);
-      this.subtitles = subtitles;
+      if (currentSubtitle && currentSubtitle.text) rawSubtitles.push(currentSubtitle);
+
+      // Post-process to fix short durations and gaps
+      const processedSubtitles = [];
+      for (let i = 0; i < rawSubtitles.length; i++) {
+        const sub = rawSubtitles[i];
+        const next = rawSubtitles[i + 1];
+        const duration = sub.end - sub.start;
+
+        // If subtitle is extremely short (likely a marker), try to merge or extend
+        if (duration < 0.2) {
+          if (next && (next.start - sub.start) < 0.5) {
+            // Merge with next if it starts very soon
+            next.text = sub.text + (next.text ? '\n' + next.text : '');
+            next.start = sub.start; // Adopt start time
+            // Skip adding this subtitle, effectively merging it into next
+            continue;
+          } else if (next) {
+            // Otherwise extend to next subtitle's start
+            sub.end = next.start;
+          } else {
+            // Last subtitle, give it a default duration
+            sub.end = sub.start + 3.0;
+          }
+        }
+
+        // Ensure strict non-overlapping with the next subtitle
+        // This fixes the issue where the index gets stuck on the previous subtitle
+        if (next && sub.end > next.start) {
+          sub.end = next.start;
+        }
+
+        // Only add valid subtitles with positive duration
+        if (sub.end > sub.start) {
+          processedSubtitles.push(sub);
+        }
+      }
+
+      this.subtitles = processedSubtitles;
+    },
+
+    cleanSubtitleText(text) {
+      if (!text) return '';
+      // Decode HTML entities and remove common artifacts
+      let cleaned = text
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+
+      // Remove leading speaker indicators like ">> "
+      cleaned = cleaned.replace(/^>>\s*/, '');
+
+      return cleaned.trim();
     },
 
     parseTime(timeStr) {
-      const [hours, minutes, seconds] = timeStr.split(':');
-      const [secs, ms] = seconds.split('.');
-      return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
+      if (!timeStr) return 0;
+      // Normalize comma to dot for standard parsing
+      const normalized = timeStr.replace(',', '.');
+      const parts = normalized.split(':');
+      
+      if (parts.length === 3) {
+        const [hours, minutes, seconds] = parts;
+        return parseFloat(hours) * 3600 + parseFloat(minutes) * 60 + parseFloat(seconds);
+      } else if (parts.length === 2) {
+        // Handle MM:SS.mmm format if present
+        const [minutes, seconds] = parts;
+        return parseFloat(minutes) * 60 + parseFloat(seconds);
+      }
+      return 0;
     },
 
     // Optimized subtitle sync
@@ -1496,6 +1577,10 @@ export default {
       this.subtitleInterval = setInterval(() => {
         this.updateCurrentSubtitle();
       }, 100);
+      this.$nextTick(() => {
+        this.ensureActiveSubtitleVisibility();
+        this.restartCurrentSubtitleAutoScroll();
+      });
     },
 
     stopSubtitleSync() {
@@ -1503,6 +1588,7 @@ export default {
         clearInterval(this.subtitleInterval);
         this.subtitleInterval = null;
       }
+      this.stopCurrentSubtitleAutoScroll();
     },
 
     updateCurrentSubtitle() {
@@ -1535,15 +1621,15 @@ export default {
     // UI event handlers
     jumpToSubtitle(index) {
       if (!this.player || !this.subtitles[index]) return;
-
       this.player.seekTo(this.subtitles[index].start, true);
       if (this.player.getPlayerState() !== YT.PlayerState.PLAYING) {
         this.player.playVideo();
       }
-      if (this.autoCenterEnabled) {
-        this.currentSubtitleIndex = index;
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
-      }
+      this.currentSubtitleIndex = index; // triggers watcher
+      this.$nextTick(() => {
+        this.ensureActiveSubtitleVisibility();
+        this.restartCurrentSubtitleAutoScroll();
+      });
     },
 
     // Handle Open in AI Tab from shared popup
@@ -1556,8 +1642,8 @@ export default {
         active: 'search',
         selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
         ytbMode: (this.$route && this.$route.query && this.$route.query.ytbMode)
-          ? this.$route.query.ytbMode
-          : kiwiConsts.YTB_MODE.CHANNEL
+            ? this.$route.query.ytbMode
+            : kiwiConsts.YTB_MODE.CHANNEL
       };
       if (this.selectedLanguage) {
         overrides.language = this.selectedLanguage;
@@ -1568,7 +1654,7 @@ export default {
     },
 
     pauseVideo() {
-      if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
+      if (this.player && typeof this.player.pauseVideo === 'function') {
         this.player.pauseVideo();
       }
     },
@@ -1605,6 +1691,8 @@ export default {
 
       if (selectedText) {
         this.selectedText = selectedText;
+        // Ensure video is paused before showing popup
+        this.pauseVideo();
         // Open inline AI dialog directly instead of navigating
         this.showSelectionPopup = true;
       } else {
@@ -1704,12 +1792,12 @@ export default {
             this.aiSearchLoading = false;
             try {
               const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
-                ? response.fullResponse
-                : this.aiResponseText;
+                  ? response.fullResponse
+                  : this.aiResponseText;
               const extracted = this.extractResponseTextFromPayload(finalPayload);
               this.aiResponseText = (typeof extracted === 'string' && extracted.length > 0)
-                ? extracted
-                : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+                  ? extracted
+                  : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
             } catch (_) {
               if (response.fullResponse) {
                 this.aiResponseText = response.fullResponse;
@@ -1802,29 +1890,70 @@ export default {
     scrollActiveSubtitleIntoView() {
       if (this.currentSubtitleIndex == null || this.currentSubtitleIndex < 0) return;
       if (this.scrollingSubtitlesCollapsed) return;
-
       const activeEl = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-      if (!activeEl) return;
+      if (activeEl) {
+        const container = this.$refs.subtitlesContainer || activeEl.closest('.subtitles-container') || activeEl.parentElement;
+        try {
+          activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch (_) {
+          if (container) {
+            const targetTop = Math.max(activeEl.offsetTop - (container.clientHeight / 2 - activeEl.offsetHeight / 2), 0);
+            container.scrollTo({ top: targetTop, behavior: 'smooth' });
+          }
+        }
+      }
+    },
 
-      const containerEl = this.getScrollableSubtitlesContainer(activeEl);
-      if (!containerEl) return;
+    ensureActiveSubtitleVisibility() {
+      // Always center active subtitle as per requirement.
+      this.scrollActiveSubtitleIntoView();
+    },
 
-      try {
-        const relativeTop = this.getOffsetTopRelativeTo(activeEl, containerEl);
-        const target = Math.max(0, relativeTop - (containerEl.clientHeight / 2) + (activeEl.offsetHeight / 2));
-        containerEl.scrollTo({ top: target, behavior: 'smooth' });
-      } catch (e) {
-        activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // Auto-scroll the current subtitle text inside context display if it overflows
+    restartCurrentSubtitleAutoScroll() {
+      this.stopCurrentSubtitleAutoScroll();
+      if (!this.isPlaying) return;
+      if (this.currentSubtitleIndex == null || this.currentSubtitleIndex < 0) return;
+      const displayEl = this.$el.querySelector('.current-subtitle-display');
+      if (!displayEl) return;
+      // Reset scroll position
+      displayEl.scrollTop = 0;
+      const overflow = displayEl.scrollHeight - displayEl.clientHeight;
+      if (overflow <= 4) return; // no meaningful overflow
+      const cue = this.subtitles[this.currentSubtitleIndex];
+      if (!cue) return;
+      const now = this.player ? this.player.getCurrentTime() : cue.start;
+      const remainingSec = Math.max(cue.end - now, 0.25); // avoid zero duration
+      const totalMs = remainingSec * 1000;
+      const startTime = performance.now();
+      const distance = overflow;
+      const step = () => {
+        if (!this.isPlaying) return; // stop when paused
+        // Abort if subtitle changed
+        if (this.subtitles[this.currentSubtitleIndex] !== cue) return;
+        const t = performance.now() - startTime;
+        const progress = Math.min(t / totalMs, 1);
+        displayEl.scrollTop = distance * progress;
+        if (progress < 1) {
+          this.currentSubtitleScrollInterval = requestAnimationFrame(step);
+        } else {
+          this.currentSubtitleScrollInterval = null;
+        }
+      };
+      this.currentSubtitleScrollInterval = requestAnimationFrame(step);
+    },
+
+    stopCurrentSubtitleAutoScroll() {
+      if (this.currentSubtitleScrollInterval) {
+        cancelAnimationFrame(this.currentSubtitleScrollInterval);
+        this.currentSubtitleScrollInterval = null;
       }
     },
 
     toggleScrollingSubtitles() {
       this.scrollingSubtitlesCollapsed = !this.scrollingSubtitlesCollapsed;
-      // Suppress popup on expand/collapse of subtitles timeline
-      // const action = this.scrollingSubtitlesCollapsed ? 'collapsed' : 'expanded';
-      // msgUtil.msgSuccess(this, `Subtitles timeline ${action}`, 1000);
       if (!this.scrollingSubtitlesCollapsed) {
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+        this.$nextTick(() => this.ensureActiveSubtitleVisibility());
       }
     },
 
@@ -1849,9 +1978,12 @@ export default {
       msgUtil.msgSuccess(this, 'Loading cancelled', 2000);
     },
 
-    minimizeSubtitlesStatus() {
-      this.subtitlesLoadingComplete = false;
-      msgUtil.msgSuccess(this, 'Status minimized', 1500);
+    handleOverlayClose() {
+      if (this.isSubtitlesLoading || this.isTranslationLoading) {
+        this.cancelSubtitlesLoading();
+      } else {
+        this.showSubtitlesLoading = false;
+      }
     },
 
     // Configuration handlers
@@ -1888,7 +2020,7 @@ export default {
     onAutoCenterChange(enabled) {
       setStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER, content: enabled, type: 'local' });
       if (enabled) {
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+        this.$nextTick(() => this.ensureActiveSubtitleVisibility());
       }
     },
 
@@ -1912,9 +2044,9 @@ export default {
 
         // Clean up the content: replace multiple spaces/newlines with proper formatting
         textContent = textContent
-          .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
-          .replace(/\n\s*\n/g, '\n\n')  // Normalize paragraph breaks
-          .trim();
+            .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+            .replace(/\n\s*\n/g, '\n\n')  // Normalize paragraph breaks
+            .trim();
 
         // Create blob with the text content
         const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
@@ -2159,6 +2291,11 @@ export default {
 </script>
 
 <style scoped>
+:root {
+  --text-placeholder: #c0c4cc;
+  --color-primary-light-5: rgba(64, 158, 255, 0.25);
+}
+
 /* Base styles */
 .youtube-player {
   padding: 0;
@@ -2236,7 +2373,8 @@ export default {
   min-width: 0;
 }
 
-.url-input .el-input__inner {
+.url-input >>> .el-input__inner,
+.language-select >>> .el-input__inner {
   border-radius: 8px;
   border: 1px solid var(--border-color-light);
   padding: 12px 16px;
@@ -2246,14 +2384,20 @@ export default {
   color: var(--text-primary);
 }
 
-.url-input .el-input__inner:focus {
+.url-input >>> .el-input__inner:focus,
+.language-select >>> .el-input__inner:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 0 0 2px var(--color-primary-light-5);
 }
 
-.url-input .el-input__inner:disabled {
+.url-input >>> .el-input__inner:disabled,
+.language-select >>> .el-input__inner:disabled {
   background: var(--bg-container);
   cursor: not-allowed;
+}
+
+.language-select >>> .el-input__icon {
+  color: var(--text-secondary);
 }
 
 .action-buttons {
@@ -2438,193 +2582,7 @@ export default {
 }
 .status-message.compact { border-radius: 999px; }
 
-/* Subtitles Loading Overlay */
-.subtitles-loading-overlay {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 2000;
-  animation: slideInFromRight 0.3s ease-out;
-}
 
-@keyframes slideInFromRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.subtitles-loading-container {
-  background: var(--bg-card);
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border-color-light);
-  min-width: 280px;
-  max-width: 320px;
-  position: relative;
-  backdrop-filter: var(--backdrop-filter);
-}
-
-.subtitles-loading-icon {
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.subtitles-loading-icon i {
-  font-size: 24px;
-  color: var(--color-primary);
-}
-
-.success-icon {
-  color: var(--color-success) !important;
-}
-
-.warning-icon {
-  color: var(--color-warning) !important;
-}
-
-.subtitles-loading-text {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-}
-
-.subtitles-loading-text > span {
-  font-size: 14px;
-  color: var(--text-primary);
-  font-weight: 500;
-  text-align: center;
-}
-
-.subtitles-progress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.subtitles-progress-bar {
-  flex: 1;
-  height: 6px;
-  background: var(--bg-container);
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-}
-
-.subtitles-progress-fill {
-  height: 100%;
-  background: var(--gradient-primary);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-  position: relative;
-}
-
-.subtitles-progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.subtitles-progress-text {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
-  min-width: 35px;
-  text-align: right;
-}
-
-.subtitles-status {
-  width: 100%;
-}
-
-.status-indicators {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-}
-
-.status-item.success {
-  color: var(--color-success);
-  background: rgba(103, 194, 58, 0.1);
-  border-color: rgba(103, 194, 58, 0.2);
-}
-
-.status-item.failed {
-  color: var(--color-danger);
-  background: rgba(245, 108, 108, 0.1);
-  border-color: rgba(245, 108, 108, 0.2);
-}
-
-.status-item.disabled {
-  color: var(--text-placeholder);
-  background: var(--bg-container);
-  border-color: var(--border-color-light);
-}
-
-.status-item i {
-  font-size: 14px;
-}
-
-.subtitles-loading-actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-
-.subtitles-loading-close,
-.subtitles-loading-minimize {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: var(--text-secondary);
-}
-
-.subtitles-loading-close:hover,
-.subtitles-loading-minimize:hover {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--text-primary);
-  transform: scale(1.1);
-}
-
-.subtitles-loading-close i,
-.subtitles-loading-minimize i {
-  font-size: 12px;
-}
 
 /* Content Container */
 .content-container {
@@ -2689,6 +2647,28 @@ export default {
 .mini-loader-text { white-space: nowrap; opacity: 0.9; }
 
 /* Subtitle Context Display */
+.youtube-player {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: transparent; /* Transparent for cyberpunk theme */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .youtube-player {
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
 .subtitles-context-display {
   display: flex;
   flex-direction: column;
@@ -2839,6 +2819,9 @@ export default {
   overflow-y: auto;
   scroll-padding-top: 20px;
   scroll-padding-bottom: 20px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .subtitles-container p {
@@ -2956,6 +2939,9 @@ export default {
 .translated-subtitles-wrapper {
   padding: 10px;
   min-height: calc(100% + 50px);
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .translation-streaming-indicator {
@@ -3293,8 +3279,15 @@ export default {
 /* Favorite overlay styles */
 /* .favorite-overlay { display: none; } */
 .favorite-top-group .favorite-btn {
-  background: rgba(255,255,255,0.95);
-  color: var(--text-placeholder);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
+}
+.favorite-top-group .favorite-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-light-5);
+  box-shadow: var(--shadow-hover);
 }
 .favorite-top-group .favorite-btn.favorited {
   color: var(--color-warning);

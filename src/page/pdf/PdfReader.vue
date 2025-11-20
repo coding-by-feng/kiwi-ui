@@ -8,16 +8,16 @@
         accept="application/pdf"
         @change="onFileSelected"
       />
-      <el-button type="primary" icon="el-icon-upload2" @click="triggerFilePicker">
+      <KiwiButton type="primary" icon="el-icon-upload2" @click="triggerFilePicker">
         {{ pdfLoaded ? $t('pdf.changeButton') : $t('pdf.selectButton') }}
-      </el-button>
+      </KiwiButton>
       <span v-if="pdfName" class="pdf-reader__filename">
         {{ pdfName }}
       </span>
       <!-- Right controls: zoom + history -->
       <div v-if="pdfLoaded" class="pdf-reader__right-controls">
         <div class="pdf-reader__zoom-group">
-          <el-button
+          <KiwiButton
             type="text"
             icon="el-icon-zoom-out"
             :disabled="!canZoomOut || loading"
@@ -27,7 +27,7 @@
           <span class="pdf-reader__zoom-indicator" :title="tOrFallback('pdf.zoom', 'Zoom')">
             {{ zoomPercent }}
           </span>
-          <el-button
+          <KiwiButton
             type="text"
             icon="el-icon-zoom-in"
             :disabled="!canZoomIn || loading"
@@ -35,7 +35,7 @@
             :title="tOrFallback('pdf.zoomIn', 'Zoom In')"
           />
         </div>
-        <el-button
+        <KiwiButton
           v-if="pdfName"
           class="pdf-history-button"
           type="text"
@@ -55,10 +55,13 @@
       class="pdf-reader__alert"
     />
 
-    <div v-if="loading" class="pdf-reader__status">
-      <i class="el-icon-loading"></i>
-      <span>{{ $t('common.loading') || 'Loading PDF…' }}</span>
-    </div>
+    <StatusOverlay
+      :visible="loading"
+      status="loading"
+      :title="$t('common.loading') || 'Loading PDF…'"
+      :backdrop="false"
+      class="pdf-reader__status"
+    />
 
     <div class="pdf-reader__content">
       <template v-if="!loading && !pdfLoaded">
@@ -77,9 +80,12 @@
               @touchend.passive="handleTouchSelection"
               @click="handleViewerClick"
             >
-              <div v-if="loading" class="pdf-reader__page-loading">
-                <i class="el-icon-loading"></i>
-              </div>
+              <StatusOverlay
+                :visible="loading"
+                status="loading"
+                :backdrop="false"
+                style="position: absolute;"
+              />
               <div ref="viewerContainer" class="pdf-reader__viewer pdfViewer"></div>
             </div>
           </div>
@@ -111,6 +117,8 @@
 </template>
 
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
 import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry'
 import 'pdfjs-dist/web/pdf_viewer.css'
@@ -143,7 +151,7 @@ const cachedPdfState = {
 
 export default {
   name: 'PdfReader',
-  components: { AiSelectionPopup, SelectionHistory },
+  components: { AiSelectionPopup, SelectionHistory, StatusOverlay, KiwiButton },
   data() {
     const winW = window.innerWidth
     const isSmallScreen = winW <= MOBILE_BASE_MAX_WIDTH
@@ -757,17 +765,64 @@ export default {
   padding: 16px;
   box-sizing: border-box;
   background: var(--bg-body);
+  transition: background 0.3s ease;
 
-  &__controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  &__controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    background: var(--bg-header);
+    backdrop-filter: var(--backdrop-filter);
+    padding: 12px 20px;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-color-light);
+  }
+
   &__file-input { display: none; }
-  &__filename { font-size: 14px; color: var(--text-regular); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
+  &__filename {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__right-controls { margin-left: auto; display: flex; align-items: center; gap: 12px; }
   &__zoom-group { display: inline-flex; align-items: center; gap: 8px; }
-  &__zoom-indicator { min-width: 46px; text-align: center; font-size: 13px; color: var(--text-regular); padding: 2px 8px; background: var(--bg-container); border: 1px solid var(--border-color-light); border-radius: 8px; line-height: 20px; }
+  
+  &__zoom-indicator {
+    min-width: 52px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 4px 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color-light);
+    border-radius: 20px;
+    line-height: 20px;
+    font-weight: 600;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  }
+
   &__alert { margin-bottom: 12px; }
   &__status { display: flex; align-items: center; gap: 8px; color: var(--text-regular); margin-bottom: 12px; }
   &__content { flex: 1; min-height: 360px; }
-  &__placeholder, &__no-text { display: flex; align-items: center; justify-content: center; min-height: 360px; background: var(--bg-container); border: 1px dashed var(--border-color-light); border-radius: 12px; }
+  
+  &__placeholder, &__no-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+    background: var(--bg-container);
+    border: 1px dashed var(--border-color-light);
+    border-radius: var(--card-border-radius);
+  }
 
   &__layout {
     display: flex;
@@ -777,6 +832,7 @@ export default {
     flex: 1 1 auto;       /* fill remaining space */
     min-height: 0;        /* allow children to size */
   }
+  
   &__page-column-wrapper {
     flex: 1 1 auto;
     position: relative;
@@ -784,20 +840,56 @@ export default {
     display: block;
     transition: height 0.25s ease;
   }
+  
   &__page-column {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    overflow: auto; padding: 16px; background: var(--bg-container); border: 1px solid var(--border-color-light); border-radius: 12px;
+    overflow: auto;
+    padding: 24px;
+    background: var(--bg-container);
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--card-border-radius);
     transition: height 0.25s ease;
+    
+    /* Custom Scrollbar */
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: var(--border-color-light);
+      border-radius: 4px;
+      &:hover {
+        background: var(--color-primary);
+      }
+    }
   }
-  &__page-loading { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 0; color: var(--text-regular); background: var(--bg-container); opacity: 0.95; }
-  &__viewer { position: relative; display: flex; flex-direction: column; gap: 20px; width: 100%; min-height: 360px; align-items: center; user-select: text; -webkit-user-select: text; }
+  
+  &__viewer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    min-height: 360px;
+    align-items: center;
+    user-select: text;
+    -webkit-user-select: text;
+  }
 }
 
 .pdf-reader--compact {
-  .pdf-reader__controls { flex-direction: column; align-items: stretch; gap: 8px; }
+  .pdf-reader__controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+  }
   .pdf-reader__right-controls { width: 100%; justify-content: center; order: 4; margin-left: 0; }
-  .pdf-reader__zoom-group { justify-content: center; }
-  .pdf-reader__filename { width: 100%; text-align: center; }
+  .pdf-reader__zoom-group { justify-content: center; width: 100%; }
+  .pdf-reader__filename { width: 100%; text-align: center; margin-bottom: 4px; }
   .pdf-reader__layout { flex-direction: column; gap: 14px; }
   .pdf-reader__page-column { width: 100%; padding: 12px; }
 }
@@ -813,9 +905,19 @@ export default {
   }
 }
 
-::v-deep(.pdf-reader__viewer .page) { position: relative; margin: 0 auto; width: 100%; max-width: 100%; box-shadow: var(--shadow-card); border-radius: 6px; overflow: hidden; background: var(--bg-card); }
+::v-deep(.pdf-reader__viewer .page) {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: var(--shadow-card);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff; /* PDF pages are usually white */
+}
+
 ::v-deep(.pdf-reader__viewer .page:last-child) { margin-bottom: 0; }
-::v-deep(.pdf-reader__viewer .page .canvasWrapper) { background: var(--bg-card); }
+::v-deep(.pdf-reader__viewer .page .canvasWrapper) { background: #fff; }
 
 /* Remove old pdf-selection-popup bubble (unused now) */
 .pdf-selection-popup { display: none; }
@@ -823,9 +925,42 @@ export default {
 .pdf-reader-fade-enter-active, .pdf-reader-fade-leave-active { transition: opacity 0.15s ease; }
 .pdf-reader-fade-enter, .pdf-reader-fade-leave-to { opacity: 0; }
 
-::v-deep(.textLayer) { position: absolute; top: 0; left: 0; right: 0; bottom: 0; color: transparent; pointer-events: auto; user-select: text; -webkit-user-select: text; }
-::v-deep(.textLayer > span) { position: absolute; left: 0; top: 0; transform-origin: 0 0; white-space: pre; color: transparent; padding: 0; margin: 0; line-height: 1; cursor: text; }
-::v-deep(.textLayer > span::selection), ::v-deep(.textLayer > span::-moz-selection) { background: rgba(64, 158, 255, 0.35); color: var(--text-primary); }
+::v-deep(.textLayer) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: transparent;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  mix-blend-mode: multiply;
+}
 
-@media (max-width: 768px) { .pdf-selection-popup { font-size: 13px; padding: 8px 12px; } }
+::v-deep(.textLayer > span) {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  white-space: pre;
+  color: transparent;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  cursor: text;
+}
+
+::v-deep(.textLayer > span::selection),
+::v-deep(.textLayer > span::-moz-selection) {
+  background: var(--bg-sidebar-active); /* Use theme-aware selection color */
+  color: transparent;
+}
+
+@media (max-width: 768px) {
+  .pdf-reader {
+    padding: 8px;
+  }
+  .pdf-selection-popup { font-size: 13px; padding: 8px 12px; }
+}
 </style>

@@ -3,15 +3,13 @@
     <h2 class="header-title">{{ $t('todo.title') }}</h2>
     <div class="header-controls">
       <div class="import-export-controls">
-        <button type="button" class="control-btn btn-info" @click="$emit('demo')">
-          <i class="el-icon-magic-stick"></i>
-          <span class="btn-text">{{ $t('todo.demo') }}</span>
-        </button>
+        <KiwiButton type="info" icon="el-icon-magic-stick" @click="$emit('demo')">
+          {{ $t('todo.demo') }}
+        </KiwiButton>
 
-        <button type="button" class="control-btn btn-danger" @click="$emit('clear')">
-          <i class="el-icon-delete"></i>
-          <span class="btn-text">{{ $t('todo.clearAll') }}</span>
-        </button>
+        <KiwiButton type="danger" icon="el-icon-delete" @click="$emit('clear')">
+          {{ $t('todo.clearAll') }}
+        </KiwiButton>
       </div>
 
       <div class="ranking-display">
@@ -24,7 +22,7 @@
             <div class="rank-level">{{ $t('todo.rankLevel', { level: currentRank.level }) }}</div>
           </div>
           <div class="rank-details-icon">
-            <el-popover placement="bottom" width="320" trigger="click" :title="$t('todo.rankingSystem')">
+            <KiwiPopover placement="bottom" width="320" trigger="click" :title="$t('todo.rankingSystem')">
               <div class="ranking-details">
                 <div class="current-rank-details">
                   <h4>{{ $t('todo.currentRank') }}</h4>
@@ -68,7 +66,7 @@
               <template v-slot:reference>
                 <i class="el-icon-info rank-info-icon" :title="$t('todo.viewRankingDetails')"></i>
               </template>
-            </el-popover>
+            </KiwiPopover>
           </div>
         </div>
         <div class="rank-progress">
@@ -77,7 +75,7 @@
             <span class="progress-percentage" v-if="currentRank.nextThreshold">{{ Number(rankProgress).toFixed(1) }}%</span>
             <span class="progress-percentage max-rank" v-else>{{ $t('todo.maxRank') }}</span>
           </div>
-          <el-progress :percentage="rankProgress" :show-text="false" :stroke-width="6" :color="getRankColor(currentRank.name)" class="rank-progress-bar" />
+          <KiwiProgress :percentage="rankProgress" :show-text="false" :stroke-width="6" :color="getRankColor(currentRank.name)" class="rank-progress-bar" />
           <div v-if="currentRank.nextRankName" class="next-rank-info">
             <span class="next-rank-text">{{ $t('todo.nextRank', { rank: currentRank.nextRankName }) }}</span>
           </div>
@@ -96,8 +94,13 @@
 </template>
 
 <script>
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiPopover from '@/components/ui/KiwiPopover.vue'
+import KiwiProgress from '@/components/ui/KiwiProgress.vue'
+
 export default {
   name: 'TodoHeader',
+  components: { KiwiButton, KiwiPopover, KiwiProgress },
   props: {
     totalPoints: { type: Number, required: true },
     currentRank: { type: Object, required: true },
@@ -112,3 +115,87 @@ export default {
   }
 }
 </script>
+<style scoped>
+.header {
+  /* Transparent to allow parent glass effect */
+  background: transparent;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.rank-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  /* Inner glass effect for the badge */
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rank-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rank-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  padding: 4px;
+}
+
+.rank-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rank-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.rank-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.rank-level {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .rank-badge {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .rank-icon {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+</style>

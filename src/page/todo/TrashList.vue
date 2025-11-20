@@ -1,58 +1,57 @@
 <template>
   <div class="trash-tab">
     <div class="trash-controls">
-      <el-button v-if="trashedTasks.length > 0" type="danger" size="small" icon="el-icon-delete" @click="onClearTrash" class="clear-trash-btn">
+      <KiwiButton v-if="trashedTasks.length > 0" type="danger" size="small" icon="el-icon-delete" @click="onClearTrash" class="clear-trash-btn">
         <span class="btn-text">{{ $t('todo.clearAll') }}</span>
-      </el-button>
+      </KiwiButton>
     </div>
 
     <div v-if="trashedTasks.length > 0" class="trash-tasks">
-      <el-card v-for="task in trashedTasks" :key="`trash-${task.id}-${task.deletedDate || task.originalDate || Date.now()}`" class="task-card trash-card responsive-trash-card">
+      <div v-for="task in trashedTasks" :key="`trash-${task.id}-${task.deletedDate || task.originalDate || Date.now()}`" class="task-card trash-card responsive-trash-card">
         <div class="task-content">
           <div class="task-info">
             <h4 class="task-title">{{ task.title }}</h4>
             <p v-if="task.description" class="task-description">{{ task.description }}</p>
             <div class="task-details">
               <div class="task-points">
-                <el-tag size="mini" type="success">+{{ task.successPoints }}</el-tag>
-                <el-tag size="mini" type="danger">{{ task.failPoints }}</el-tag>
+                <KiwiTag size="mini" type="success">+{{ task.successPoints }}</KiwiTag>
+                <KiwiTag size="mini" type="danger">{{ task.failPoints }}</KiwiTag>
               </div>
               <div class="task-dates">
-                <el-tag size="mini" type="info" class="date-tag">
+                <KiwiTag size="mini" type="info" class="date-tag">
                   <span class="date-label">{{ $t('todo.originalDate') }}:</span>
                   <span class="date-value">{{ formatDate(task.originalDate) }}</span>
-                </el-tag>
-                <el-tag size="mini" type="warning" class="date-tag">
+                </KiwiTag>
+                <KiwiTag size="mini" type="warning" class="date-tag">
                   <span class="date-label">{{ $t('todo.deletedDate') }}:</span>
                   <span class="date-value">{{ formatDate(task.deletedDate) }}</span>
-                </el-tag>
+                </KiwiTag>
               </div>
             </div>
           </div>
           <div class="trash-actions">
-            <el-tooltip :content="$t('todo.restoreToOriginal')" placement="top">
-              <el-button type="success" size="mini" icon="el-icon-refresh-right" circle @click="onRestore(task.id)" class="trash-action-btn"></el-button>
-            </el-tooltip>
-            <el-tooltip :content="$t('todo.permanentlyDelete')" placement="top">
-              <el-popconfirm :title="$t('todo.permanentlyDeleteConfirm')" @confirm="onDelete(task.id)">
-                <template v-slot:reference>
-                  <el-button type="danger" size="mini" icon="el-icon-close" circle class="trash-action-btn"></el-button>
-                </template>
-              </el-popconfirm>
-            </el-tooltip>
+            <KiwiButton type="success" size="mini" icon="el-icon-refresh-right" circle @click="onRestore(task.id)" class="trash-action-btn" :title="$t('todo.restoreToOriginal')"></KiwiButton>
+            <KiwiButton type="danger" size="mini" icon="el-icon-close" circle @click="handleDelete(task.id)" class="trash-action-btn" :title="$t('todo.permanentlyDelete')"></KiwiButton>
           </div>
         </div>
-      </el-card>
+      </div>
     </div>
     <div v-else class="no-data">
-      <el-empty :description="$t('todo.noTrashItems')" />
+      <div class="empty-state">
+        <i class="el-icon-document-remove empty-icon"></i>
+        <p class="empty-text">{{ $t('todo.noTrashItems') }}</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiTag from '@/components/ui/KiwiTag.vue'
+
 export default {
   name: 'TrashList',
+  components: { KiwiButton, KiwiTag },
   props: {
     trashedTasks: { type: Array, required: true },
     formatDate: { type: Function, required: true },
@@ -63,7 +62,34 @@ export default {
   methods: {
     onRestore(id) { this.onRestoreTask && this.onRestoreTask(id) },
     onDelete(id) { this.onPermanentlyDeleteTask && this.onPermanentlyDeleteTask(id) },
-    onClearTrash() { this.onClearTrashClick && this.onClearTrashClick() }
+    onClearTrash() { this.onClearTrashClick && this.onClearTrashClick() },
+    handleDelete(id) {
+      if (confirm(this.$t('todo.permanentlyDeleteConfirm'))) {
+        this.onDelete(id)
+      }
+    }
   }
 }
 </script>
+
+<style scoped>
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: var(--text-placeholder);
+}
+
+.empty-text {
+  font-size: 14px;
+}
+</style>

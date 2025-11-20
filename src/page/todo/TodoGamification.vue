@@ -1,89 +1,109 @@
 <template>
-  <el-card class="main-card todo-gamification">
-    <div slot="header">
-      <TodoHeader
-        :total-points="totalPoints"
-        :current-rank="currentRankDisplay"
-        :sorted-ranks-for-display="sortedRanksForDisplay"
-        :rank-progress="rankProgress"
-        :get-rank-name="key => getRankName(key)"
-        :get-rank-class="name => getRankClass(name)"
-        :get-rank-image="name => getRankImage(name)"
-        :get-rank-color="name => getRankColor(name)"
-        :get-next-rank-image="() => getNextRankImage()"
-        :on-rank-image-error="e => onRankImageError(e)"
-        @demo="createDemoTasks"
-        @clear="clearAllData"
-        @open-rank-image="openRankImagePreview"
-      />
-    </div>
-
-    <el-tabs v-model="activeTab" type="card" class="responsive-tabs">
-      <el-tab-pane :label="$t('todo.taskList')" name="tasks">
-        <TaskInput :new-task="newTask" :on-add="() => addTask()" />
-        <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
-        <TaskList
-          :tasks="filteredTasks"
-          :editing-task-id="editingTaskId"
-          :editing-task="editingTask"
-          :empty-description="emptyDescriptionText"
-          :get-task-status-class="s => getTaskStatusClass(s)"
-          :get-frequency-text="(f, d) => getFrequencyText(f, d)"
-          :should-show-done-tag="t => shouldShowDoneTag(t)"
-          :should-show-status-display="t => shouldShowStatusDisplay(t)"
-          :get-completion-tag-type="t => getCompletionTagType(t)"
-          :get-completion-tag-text="t => getCompletionTagText(t)"
-          :should-show-status-actions="t => shouldShowStatusActions(t)"
-          :should-show-reset-action="t => shouldShowResetAction(t)"
-          :on-complete="(id, status) => completeTask(id, status)"
-          :on-start-edit="t => startTaskEdit(t)"
-          :on-save-edit="id => saveTaskEdit(id)"
-          :on-cancel-edit="() => cancelTaskEdit()"
-          :on-delete="id => deleteTask(id)"
-          :on-reset-status="id => resetTaskStatus(id)"
+  <div>
+    <div class="main-card">
+      <div class="card-header">
+        <TodoHeader
+          :total-points="totalPoints"
+          :current-rank="currentRankDisplay"
+          :sorted-ranks-for-display="sortedRanksForDisplay"
+          :rank-progress="rankProgress"
+          :get-rank-name="key => getRankName(key)"
+          :get-rank-class="name => getRankClass(name)"
+          :get-rank-image="name => getRankImage(name)"
+          :get-rank-color="name => getRankColor(name)"
+          :get-next-rank-image="() => getNextRankImage()"
+          :on-rank-image-error="e => onRankImageError(e)"
+          @demo="createDemoTasks"
+          @clear="clearAllData"
+          @open-rank-image="openRankImagePreview"
         />
-      </el-tab-pane>
-
-      <el-tab-pane :label="$t('todo.history')" name="history">
-        <HistoryPanel
-          :selected-date="selectedDate"
-          :history-tasks="historyTasks"
-          :format-date="d => formatDate(d)"
-          :format-time="d => formatTime(d)"
-          :get-task-status-class="s => getTaskStatusClass(s)"
-          :on-date-changed="d => loadHistoryForDate(d)"
-          :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
-        />
-      </el-tab-pane>
-
-      <el-tab-pane :label="$t('todo.trash')" name="trash">
-        <TrashList
-          :trashed-tasks="trashedTasks"
-          :format-date="d => formatDate(d)"
-          :on-restore-task="id => restoreTask(id)"
-          :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
-          :on-clear-trash-click="() => clearTrash()"
-        />
-      </el-tab-pane>
-
-      <el-tab-pane :label="$t('todo.analytics')" name="analytics">
-        <AnalyticsPanel
-          :chart-type.sync="chartType"
-          :monthly-data="getMonthlyData()"
-          :current-month-points="currentMonthPoints"
-          :current-month-completed="currentMonthCompleted"
-          :success-rate="successRate"
-        />
-      </el-tab-pane>
-    </el-tabs>
-
-    <!-- Move dialogs inside root and append to body to keep behavior -->
-    <el-dialog :visible.sync="showFullScreenRanking" width="90%" :before-close="closeFullScreenRanking" custom-class="full-screen-ranking-modal" :show-close="false" append-to-body>
-      <div class="full-screen-ranking-header">
-        <h2 class="modal-title">{{ $t('todo.rankingSystem') }}</h2>
-        <el-button type="primary" icon="el-icon-close" circle @click="closeFullScreenRanking" class="close-btn"></el-button>
       </div>
 
+      <div class="card-body">
+        <!-- Custom Tabs -->
+        <div class="kiwi-tabs">
+          <div class="kiwi-tabs-header">
+            <div 
+              v-for="tab in tabs" 
+              :key="tab.name" 
+              class="kiwi-tab-item" 
+              :class="{ active: activeTab === tab.name }"
+              @click="activeTab = tab.name"
+            >
+              {{ $t(tab.label) }}
+            </div>
+          </div>
+          
+          <div class="kiwi-tabs-content">
+            <div v-if="activeTab === 'tasks'" class="tab-pane fade-in">
+              <TaskInput :new-task="newTask" :on-add="() => addTask()" />
+              <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
+              <TaskList
+                :tasks="filteredTasks"
+                :editing-task-id="editingTaskId"
+                :editing-task="editingTask"
+                :empty-description="emptyDescriptionText"
+                :get-task-status-class="s => getTaskStatusClass(s)"
+                :get-frequency-text="(f, d) => getFrequencyText(f, d)"
+                :should-show-done-tag="t => shouldShowDoneTag(t)"
+                :should-show-status-display="t => shouldShowStatusDisplay(t)"
+                :get-completion-tag-type="t => getCompletionTagType(t)"
+                :get-completion-tag-text="t => getCompletionTagText(t)"
+                :should-show-status-actions="t => shouldShowStatusActions(t)"
+                :should-show-reset-action="t => shouldShowResetAction(t)"
+                :on-complete="(id, status) => completeTask(id, status)"
+                :on-start-edit="t => startTaskEdit(t)"
+                :on-save-edit="id => saveTaskEdit(id)"
+                :on-cancel-edit="() => cancelTaskEdit()"
+                :on-delete="id => deleteTask(id)"
+                :on-reset-status="id => resetTaskStatus(id)"
+              />
+            </div>
+
+            <div v-if="activeTab === 'history'" class="tab-pane fade-in">
+              <HistoryPanel
+                :selected-date="selectedDate"
+                :history-tasks="historyTasks"
+                :format-date="d => formatDate(d)"
+                :format-time="d => formatTime(d)"
+                :get-task-status-class="s => getTaskStatusClass(s)"
+                :on-date-changed="d => loadHistoryForDate(d)"
+                :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
+              />
+            </div>
+
+            <div v-if="activeTab === 'trash'" class="tab-pane fade-in">
+              <TrashList
+                :trashed-tasks="trashedTasks"
+                :format-date="d => formatDate(d)"
+                :on-restore-task="id => restoreTask(id)"
+                :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
+                :on-clear-trash-click="() => clearTrash()"
+              />
+            </div>
+
+            <div v-if="activeTab === 'analytics'" class="tab-pane fade-in">
+              <AnalyticsPanel
+                :chart-type.sync="chartType"
+                :monthly-data="getMonthlyData()"
+                :current-month-points="currentMonthPoints"
+                :current-month-completed="currentMonthCompleted"
+                :success-rate="successRate"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialogs -->
+    <KiwiDialog 
+      :visible.sync="showFullScreenRanking" 
+      width="90%" 
+      :title="$t('todo.rankingSystem')" 
+      :show-close="true" 
+      @close="closeFullScreenRanking"
+    >
       <div class="full-screen-ranking-content">
         <div class="current-rank-showcase">
           <div class="showcase-rank-icon">
@@ -106,14 +126,19 @@
           </div>
         </div>
       </div>
-    </el-dialog>
+    </KiwiDialog>
 
-    <el-dialog :visible.sync="showRankImagePreview" fullscreen :show-close="false" custom-class="rank-image-preview-dialog" append-to-body>
+    <KiwiDialog 
+      :visible.sync="showRankImagePreview" 
+      fullscreen 
+      :show-close="true" 
+      @close="showRankImagePreview = false"
+    >
       <div class="rank-image-preview-container" @click="showRankImagePreview = false">
         <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="rank-image-fullscreen" />
       </div>
-    </el-dialog>
-  </el-card>
+    </KiwiDialog>
+  </div>
 </template>
 
 <script>
@@ -150,12 +175,21 @@ const RANK_ASSETS = {
   beginner: { color: '#595959', image: '/assets/rankings/beginner.png' }
 }
 
+import KiwiDialog from '@/components/ui/KiwiDialog.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+
 export default {
   name: 'TodoGamification',
-  components: { TodoHeader, TaskInput, TaskFilters, TaskList, HistoryPanel, TrashList, AnalyticsPanel },
+  components: { TodoHeader, TaskInput, TaskFilters, TaskList, HistoryPanel, TrashList, AnalyticsPanel, KiwiDialog, KiwiButton },
   data() {
     return {
       activeTab: 'tasks',
+      tabs: [
+        { name: 'tasks', label: 'todo.taskList' },
+        { name: 'history', label: 'todo.history' },
+        { name: 'trash', label: 'todo.trash' },
+        { name: 'analytics', label: 'todo.analytics' }
+      ],
       taskFilter: 'all',
       frequencyFilter: 'all',
       newTask: { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 },
@@ -520,14 +554,31 @@ export default {
 .main-card {
   border-radius: var(--card-border-radius);
   overflow: hidden;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: transparent; /* Transparent for cyberpunk theme */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+/* Dark mode support via CSS variables if available, or media query */
+@media (prefers-color-scheme: dark) {
+  .main-card {
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 }
 
 .header {
-  background-color: var(--bg-header);
+  background: transparent; /* Let the main card's glass effect show through */
   padding: 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
 }
 
 .header-title {
@@ -754,11 +805,6 @@ export default {
     max-width: var(--hdr-btn-size) !important;
   }
 }
-
-@media (max-width: 480px) {
-  .todo-gamification { --hdr-btn-size: 32px; }
-}
-
 @media (max-width: 360px) {
   .todo-gamification { --hdr-btn-size: 30px; }
 }
@@ -1347,43 +1393,79 @@ export default {
   height: 32px;
 }
 
-/* Responsive tabs */
-.responsive-tabs {
-  width: 100%;
-}
-
-.responsive-tabs .el-tabs__header {
-  margin-bottom: 0;
-}
-
-.responsive-tabs .el-tabs__nav-wrap {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.responsive-tabs .el-tabs__nav-wrap::-webkit-scrollbar {
-  display: none;
-}
-
-.responsive-tabs .el-tabs__nav-scroll {
-  white-space: nowrap;
-}
-
-.responsive-tabs .el-tabs__nav {
+/* Custom Tabs Styling */
+.kiwi-tabs {
   display: flex;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  min-width: max-content;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.responsive-tabs .el-tabs__item {
-  flex-shrink: 0;
-  min-width: auto;
-  padding: 0 16px;
-  font-size: 14px;
+.kiwi-tabs-header {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-container);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color-light);
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.kiwi-tabs-header::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.kiwi-tab-item {
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
+}
+
+.kiwi-tab-item:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.kiwi-tab-item.active {
+  background: var(--bg-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+  border: 1px solid var(--border-color-light);
+}
+
+.tab-pane.fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-body {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .card-body {
+    padding: 16px;
+  }
+  
+  .kiwi-tab-item {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 }
 
 /* Task status classes */

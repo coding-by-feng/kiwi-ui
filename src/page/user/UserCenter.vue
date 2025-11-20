@@ -81,9 +81,7 @@
               {{ currentThemeName }} <i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="default">Default</el-dropdown-item>
               <el-dropdown-item command="cyberpunk">CyberPunk</el-dropdown-item>
-              <el-dropdown-item command="neumorphism">Neumorphism</el-dropdown-item>
               <el-dropdown-item command="glassmorphism">Glassmorphism</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
@@ -226,10 +224,10 @@
             <div class="feature-toggle">
               <span class="feature-label">{{ $t('tabs.pdfReader') || 'PDF Reader' }}</span>
               <el-switch
-                v-model="enabledTabsLocal.pdfReader"
-                class="custom-switch"
-                @change="onFeatureToggle('pdfReader', $event)"
-                :aria-label="$t('tabs.pdfReader') || 'PDF Reader'"></el-switch>
+                  v-model="enabledTabsLocal.pdfReader"
+                  class="custom-switch"
+                  @change="onFeatureToggle('pdfReader', $event)"
+                  :aria-label="$t('tabs.pdfReader') || 'PDF Reader'"></el-switch>
             </div>
             <div class="feature-toggle">
               <span class="feature-label">{{ $t('tabs.about') || 'About' }}</span>
@@ -335,9 +333,7 @@ export default {
     },
     currentThemeName() {
       const names = {
-        'default': 'Default',
         'cyberpunk': 'CyberPunk',
-        'neumorphism': 'Neumorphism',
         'glassmorphism': 'Glassmorphism'
       }
       return names[this.user.theme] || 'CyberPunk'
@@ -361,9 +357,9 @@ export default {
     initializeSettings() {
       // migrate/remove Local pronunciation source, keep only Cambridge
       if (
-        util.isEmptyStr(this.user.pronunciationSource) ||
-        this.user.pronunciationSource === (kiwiConst.PRONUNCIATION_SOURCE && kiwiConst.PRONUNCIATION_SOURCE.LOCAL) ||
-        this.user.pronunciationSource === 'Local'
+          util.isEmptyStr(this.user.pronunciationSource) ||
+          this.user.pronunciationSource === (kiwiConst.PRONUNCIATION_SOURCE && kiwiConst.PRONUNCIATION_SOURCE.LOCAL) ||
+          this.user.pronunciationSource === 'Local'
       ) {
         setStore({
           name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE,
