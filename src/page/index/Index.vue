@@ -216,19 +216,56 @@ export default {
   width: calc(100% - 20px);
 }
 
+// Global tab styling overrides for theming
+.el-tabs--border-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-card) !important;
+
+  > .el-tabs__header {
+    background-color: var(--bg-header) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+
+    .el-tabs__item {
+      color: var(--text-secondary) !important;
+      border-right: 1px solid var(--border-color-light) !important;
+      
+      &.is-active {
+        background-color: var(--bg-card) !important;
+        border-right-color: var(--border-color) !important;
+        border-left-color: var(--border-color) !important;
+        color: var(--color-primary) !important;
+        font-weight: bold;
+      }
+
+      &:hover {
+        color: var(--color-primary) !important;
+      }
+    }
+  }
+
+  > .el-tabs__content {
+    padding: 15px;
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+  }
+}
+
 .platform-header {
   height: 50px;
-  background: #545c64;
-  border-bottom: 1px solid #E2E2E2;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
   width: 100%;
   position: absolute;
   top: 0px;
 
   .el-menu {
-    border-bottom: 1px solid #E2E2E2;
+    border-bottom: 1px solid var(--border-color);
+    background-color: transparent;
 
     .el-menu-item {
       height: 50px;
+      color: var(--text-primary);
 
       i {
         margin-top: 20px;
@@ -237,11 +274,18 @@ export default {
         display: block;
         line-height: 10px;
         text-align: center;
+        color: var(--icon-color);
       }
 
       span {
         margin-top: -20px;
         line-height: 20px;
+      }
+      
+      &:hover, &:focus {
+        background-color: rgba(0,0,0,0.05);
+        color: var(--color-primary);
+        i { color: var(--color-primary); }
       }
     }
   }

@@ -120,7 +120,7 @@
         width="90%"
         center>
       <div style="text-align: center;">
-        <i class="el-icon-info" style="font-size: 48px; color: #409EFF; margin-bottom: 16px;"></i>
+        <i class="el-icon-info" style="font-size: 48px; color: var(--color-primary); margin-bottom: 16px;"></i>
         <p style="margin-bottom: 16px;">{{ $t('login.clipboardInstructions.title') }}</p>
         <ol style="text-align: left; display: inline-block;">
           <li>{{ $t('login.clipboardInstructions.step1') }}</li>

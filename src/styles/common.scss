@@ -1,5 +1,6 @@
 // 全局变量
 @import './variables.scss';
+@import './theme-tokens.scss';
 // ele样式覆盖
 @import './element-ui.scss';
 // 顶部右侧显示
@@ -17,11 +18,12 @@
 //通用配置
 @import './normalize.scss';
 
-a{
+a {
   text-decoration: none;
-  color:#333;
+  color: #333;
 }
-*{
+
+* {
   outline: none;
 }
 

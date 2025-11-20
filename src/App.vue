@@ -10,11 +10,22 @@
         mounted() {
             this.setupOAuthHandlers()
             this.signalIfOAuthPopup()
+            this.initTheme()
         },
         beforeDestroy() {
             try { window.removeEventListener('message', this.handleOAuthMessage) } catch (e) { /* ignore */ }
         },
         methods: {
+            initTheme() {
+                try {
+                    // Dynamic import to avoid circular dependency issues if any, though getStore is safe
+                    const { getStore } = require('@/util/store')
+                    const theme = getStore({ name: 'theme' }) || 'default'
+                    document.documentElement.setAttribute('data-theme', theme)
+                } catch (e) {
+                    console.error('Failed to initialize theme', e)
+                }
+            },
             setupOAuthHandlers() {
                 try { window.addEventListener('message', this.handleOAuthMessage, false) } catch (e) { /* ignore */ }
             },
@@ -48,12 +59,16 @@
 </script>
 
 <style>
+    body {
+        background: var(--bg-body);
+        transition: background 0.3s ease;
+    }
     #app {
         font-family: 'Avenir', Helvetica, Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-align: center;
-        color: #2c3e50;
+        color: var(--text-primary);
         margin-top: 60px;
     }
 </style>

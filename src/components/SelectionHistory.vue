@@ -125,24 +125,35 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .history-dialog-content { max-height: 60vh; overflow-y: auto; padding: 4px 0; }
-.history-loading { color: #606266; display: flex; align-items: center; gap: 6px; }
-.history-empty { color: #909399; font-size: 13px; padding: 12px; }
+.history-loading { color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.history-empty { color: var(--text-secondary); font-size: 13px; padding: 12px; }
 .history-items { display: flex; flex-direction: column; gap: 14px; }
-.history-item { border: 1px solid #ebeef5; border-radius: 10px; background: #fff; padding: 10px 12px; }
+.history-item {
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--card-border-radius);
+  background: var(--bg-card);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: var(--shadow-hover);
+  }
+}
 .history-item-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
-.history-selected { color: #303133; }
-.history-context { color: #909399; font-style: italic; }
-.history-mode { color: #b88230; font-weight: 500; }
-.history-time { margin-left: auto; color: #c0c4cc; font-size: 12px; }
-.history-item-body { font-size: 13px; line-height: 1.5; }
+.history-selected { color: var(--text-primary); }
+.history-context { color: var(--text-secondary); font-style: italic; }
+.history-mode { color: var(--color-warning); font-weight: 500; }
+.history-time { margin-left: auto; color: var(--text-regular); font-size: 12px; }
+.history-item-body { font-size: 13px; line-height: 1.5; color: var(--text-primary); }
 .history-item-body :deep(p),
 .history-item-body :deep(ul),
 .history-item-body :deep(ol),
 .history-item-body :deep(li) { text-align: left; }
-.history-item-body :deep(code) { background: #f5f7fa; padding: 2px 4px; border-radius: 4px; font-size: 12px; }
-.history-item-body :deep(pre code) { display: block; background: #f5f7fa; padding: 10px; border-radius: 6px; overflow-x: auto; }
+.history-item-body :deep(code) { background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; font-size: 12px; color: var(--color-primary); }
+.history-item-body :deep(pre code) { display: block; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px; overflow-x: auto; }
 .dialog-footer { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
-.history-delete-btn { margin-left: 4px; }
+.history-delete-btn { margin-left: 4px; color: var(--color-danger); }
 </style>

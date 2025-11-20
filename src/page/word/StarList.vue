@@ -638,8 +638,8 @@ export default {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-card);
   color: #fff;
 }
 
@@ -703,9 +703,9 @@ export default {
   cursor: pointer;
   color: #fff;
 }
-.ctrl-btn.primary { background: linear-gradient(135deg, #409eff 0%, #67c23a 100%); }
-.ctrl-btn.info { background: linear-gradient(135deg, #909399 0%, #606266 100%); }
-.ctrl-btn.secondary { background: linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%); color: #2c3e50; }
+.ctrl-btn.primary { background: var(--gradient-primary); }
+.ctrl-btn.info { background: var(--gradient-info); }
+.ctrl-btn.secondary { background: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); }
 .ctrl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* List styling */
@@ -716,14 +716,14 @@ export default {
   gap: 10px;
   padding: 12px;
   margin: 10px 0;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--bg-container);
+  box-shadow: var(--shadow-card);
 }
 
 .list-name-button {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -740,9 +740,9 @@ export default {
   margin-left: auto;
   appearance: none;
   -webkit-appearance: none;
-  background: #fff;
-  color: #2c3e50;
-  border: 1px solid #e4e7ed;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 6px 10px;
   flex: 0 0 auto;
@@ -757,8 +757,8 @@ export default {
 }
 
 .row-actions { margin-left: auto; display: inline-flex; gap: 8px; }
-.icon-btn { background: #fff; color: #606266; border: 1px solid #e4e7ed; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
-.icon-btn.danger { color: #f56c6c; border-color: #f56c6c; }
+.icon-btn { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.icon-btn.danger { color: var(--color-danger); border-color: var(--color-danger); }
 
 /* Modal */
 .modal-overlay {
@@ -773,20 +773,20 @@ export default {
 .modal {
   width: 90%;
   max-width: 420px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 .modal-header {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: #fff;
   padding: 12px 16px;
   font-weight: 600;
 }
 .modal-body { padding: 16px; }
-.modal-label { display: block; font-size: 14px; margin-bottom: 8px; color: #606266; }
-.modal-input { width: 100%; padding: 8px 10px; border: 1px solid #e4e7ed; border-radius: 6px; }
+.modal-label { display: block; font-size: 14px; margin-bottom: 8px; color: var(--text-secondary); }
+.modal-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-card); color: var(--text-primary); }
 .modal-footer { padding: 12px 16px; display: flex; justify-content: flex-end; gap: 10px; }
 
 @media (max-width: 768px) {

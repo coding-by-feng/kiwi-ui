@@ -1,33 +1,41 @@
 .avue-top {
     padding: 0 20px;
     position: relative;
-    box-shadow: 0 1px 4px rgba(0,21,41,.08);
-    color: rgba(0, 0, 0, .65);
+    box-shadow: var(--shadow-card);
+    color: var(--text-primary);
+    background-color: var(--bg-header);
     font-size: 28px;
     height: 64px;
     box-sizing: border-box;
     white-space: nowrap;
-    .el-menu-item{
-        i,span{
+
+    .el-menu-item {
+
+        i,
+        span {
             font-size: 13px;
         }
     }
 }
+
 .avue-breadcrumb {
     height: 100%;
-    i{
+
+    i {
         font-size: 30px !important;
     }
+
     &--active {
-        transform:rotate(90deg);
+        transform: rotate(90deg);
     }
 }
 
 .top-menu {
     box-sizing: border-box;
+
     .el-menu-item {
         padding: 0 10px;
-        border:none !important;
+        border: none !important;
     }
 }
 
@@ -35,12 +43,14 @@
     line-height: 64px;
     position: absolute !important;
     left: 20px;
-    top:0;
+    top: 0;
     width: 400px !important;
+
     .el-input__inner {
         font-size: 13px;
         border: none;
         background-color: transparent;
+        color: var(--text-primary);
     }
 }
 
@@ -51,7 +61,7 @@
     height: 30px;
     border-radius: 100%;
     box-sizing: border-box;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
     vertical-align: middle;
 }
 
@@ -60,7 +70,8 @@
     height: 64px;
     position: absolute;
     top: 0;
-    i{
+
+    i {
         line-height: 64px;
     }
 }
@@ -79,20 +90,22 @@
     position: relative;
     display: inline-block;
     height: 64px;
-    margin:0 10px;
+    margin: 0 10px;
     font-size: 16px;
+
     &--show {
         display: inline-block !important;
     }
-    .el-badge__content.is-fixed{
-        top:12px;
+
+    .el-badge__content.is-fixed {
+        top: 12px;
         right: 5px;
     }
 }
 
 .top-bar__title {
     height: 100%;
-    padding:0 40px;
+    padding: 0 40px;
     box-sizing: border-box;
     overflow: hidden;
     text-overflow: ellipsis;

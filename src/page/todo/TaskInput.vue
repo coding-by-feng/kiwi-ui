@@ -106,10 +106,10 @@ export default {
 <style scoped>
 .task-input {
   padding: 12px 14px;
-  background: #fff;
-  border: 1px solid #ebeef5;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-card);
 }
 .task-form { width: 100%; }
 .w-100 { width: 100%; }
@@ -133,28 +133,32 @@ export default {
 ::v-deep .el-select .el-input__inner {
   height: 36px;
   border-radius: 8px;
-  border-color: #e4e7ed;
+  border-color: var(--border-color);
   padding: 8px 12px;
   transition: all .2s ease;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 ::v-deep .el-input__inner:focus,
 ::v-deep .el-select .el-input.is-focus .el-input__inner,
 ::v-deep .el-select .el-input__inner:focus {
-  border-color: #409eff;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--border-color-light);
 }
 
 /* Textarea */
 ::v-deep .el-textarea__inner {
   border-radius: 10px;
-  border-color: #e4e7ed;
+  border-color: var(--border-color);
   padding: 10px 12px;
   line-height: 1.5;
   transition: all .2s ease;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 ::v-deep .el-textarea__inner:focus {
-  border-color: #409eff;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--border-color-light);
 }
 
 /* Primary button alignment and style */

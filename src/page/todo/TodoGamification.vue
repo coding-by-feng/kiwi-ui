@@ -1,86 +1,84 @@
 <template>
-  <div class="todo-gamification">
-    <el-card class="main-card">
-      <div slot="header">
-        <TodoHeader
-          :total-points="totalPoints"
-          :current-rank="currentRankDisplay"
-          :sorted-ranks-for-display="sortedRanksForDisplay"
-          :rank-progress="rankProgress"
-          :get-rank-name="key => getRankName(key)"
-          :get-rank-class="name => getRankClass(name)"
-          :get-rank-image="name => getRankImage(name)"
-          :get-rank-color="name => getRankColor(name)"
-          :get-next-rank-image="() => getNextRankImage()"
-          :on-rank-image-error="e => onRankImageError(e)"
-          @demo="createDemoTasks"
-          @clear="clearAllData"
-          @open-rank-image="openRankImagePreview"
+  <el-card class="main-card todo-gamification">
+    <div slot="header">
+      <TodoHeader
+        :total-points="totalPoints"
+        :current-rank="currentRankDisplay"
+        :sorted-ranks-for-display="sortedRanksForDisplay"
+        :rank-progress="rankProgress"
+        :get-rank-name="key => getRankName(key)"
+        :get-rank-class="name => getRankClass(name)"
+        :get-rank-image="name => getRankImage(name)"
+        :get-rank-color="name => getRankColor(name)"
+        :get-next-rank-image="() => getNextRankImage()"
+        :on-rank-image-error="e => onRankImageError(e)"
+        @demo="createDemoTasks"
+        @clear="clearAllData"
+        @open-rank-image="openRankImagePreview"
+      />
+    </div>
+
+    <el-tabs v-model="activeTab" type="card" class="responsive-tabs">
+      <el-tab-pane :label="$t('todo.taskList')" name="tasks">
+        <TaskInput :new-task="newTask" :on-add="() => addTask()" />
+        <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
+        <TaskList
+          :tasks="filteredTasks"
+          :editing-task-id="editingTaskId"
+          :editing-task="editingTask"
+          :empty-description="emptyDescriptionText"
+          :get-task-status-class="s => getTaskStatusClass(s)"
+          :get-frequency-text="(f, d) => getFrequencyText(f, d)"
+          :should-show-done-tag="t => shouldShowDoneTag(t)"
+          :should-show-status-display="t => shouldShowStatusDisplay(t)"
+          :get-completion-tag-type="t => getCompletionTagType(t)"
+          :get-completion-tag-text="t => getCompletionTagText(t)"
+          :should-show-status-actions="t => shouldShowStatusActions(t)"
+          :should-show-reset-action="t => shouldShowResetAction(t)"
+          :on-complete="(id, status) => completeTask(id, status)"
+          :on-start-edit="t => startTaskEdit(t)"
+          :on-save-edit="id => saveTaskEdit(id)"
+          :on-cancel-edit="() => cancelTaskEdit()"
+          :on-delete="id => deleteTask(id)"
+          :on-reset-status="id => resetTaskStatus(id)"
         />
-      </div>
+      </el-tab-pane>
 
-      <el-tabs v-model="activeTab" type="card" class="responsive-tabs">
-        <el-tab-pane :label="$t('todo.taskList')" name="tasks">
-          <TaskInput :new-task="newTask" :on-add="() => addTask()" />
-          <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
-          <TaskList
-            :tasks="filteredTasks"
-            :editing-task-id="editingTaskId"
-            :editing-task="editingTask"
-            :empty-description="emptyDescriptionText"
-            :get-task-status-class="s => getTaskStatusClass(s)"
-            :get-frequency-text="(f, d) => getFrequencyText(f, d)"
-            :should-show-done-tag="t => shouldShowDoneTag(t)"
-            :should-show-status-display="t => shouldShowStatusDisplay(t)"
-            :get-completion-tag-type="t => getCompletionTagType(t)"
-            :get-completion-tag-text="t => getCompletionTagText(t)"
-            :should-show-status-actions="t => shouldShowStatusActions(t)"
-            :should-show-reset-action="t => shouldShowResetAction(t)"
-            :on-complete="(id, status) => completeTask(id, status)"
-            :on-start-edit="t => startTaskEdit(t)"
-            :on-save-edit="id => saveTaskEdit(id)"
-            :on-cancel-edit="() => cancelTaskEdit()"
-            :on-delete="id => deleteTask(id)"
-            :on-reset-status="id => resetTaskStatus(id)"
-          />
-        </el-tab-pane>
+      <el-tab-pane :label="$t('todo.history')" name="history">
+        <HistoryPanel
+          :selected-date="selectedDate"
+          :history-tasks="historyTasks"
+          :format-date="d => formatDate(d)"
+          :format-time="d => formatTime(d)"
+          :get-task-status-class="s => getTaskStatusClass(s)"
+          :on-date-changed="d => loadHistoryForDate(d)"
+          :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
+        />
+      </el-tab-pane>
 
-        <el-tab-pane :label="$t('todo.history')" name="history">
-          <HistoryPanel
-            :selected-date="selectedDate"
-            :history-tasks="historyTasks"
-            :format-date="d => formatDate(d)"
-            :format-time="d => formatTime(d)"
-            :get-task-status-class="s => getTaskStatusClass(s)"
-            :on-date-changed="d => loadHistoryForDate(d)"
-            :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
-          />
-        </el-tab-pane>
+      <el-tab-pane :label="$t('todo.trash')" name="trash">
+        <TrashList
+          :trashed-tasks="trashedTasks"
+          :format-date="d => formatDate(d)"
+          :on-restore-task="id => restoreTask(id)"
+          :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
+          :on-clear-trash-click="() => clearTrash()"
+        />
+      </el-tab-pane>
 
-        <el-tab-pane :label="$t('todo.trash')" name="trash">
-          <TrashList
-            :trashed-tasks="trashedTasks"
-            :format-date="d => formatDate(d)"
-            :on-restore-task="id => restoreTask(id)"
-            :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
-            :on-clear-trash-click="() => clearTrash()"
-          />
-        </el-tab-pane>
+      <el-tab-pane :label="$t('todo.analytics')" name="analytics">
+        <AnalyticsPanel
+          :chart-type.sync="chartType"
+          :monthly-data="getMonthlyData()"
+          :current-month-points="currentMonthPoints"
+          :current-month-completed="currentMonthCompleted"
+          :success-rate="successRate"
+        />
+      </el-tab-pane>
+    </el-tabs>
 
-        <el-tab-pane :label="$t('todo.analytics')" name="analytics">
-          <AnalyticsPanel
-            :chart-type.sync="chartType"
-            :monthly-data="getMonthlyData()"
-            :current-month-points="currentMonthPoints"
-            :current-month-completed="currentMonthCompleted"
-            :success-rate="successRate"
-          />
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
-
-
-    <el-dialog :visible.sync="showFullScreenRanking" width="90%" :before-close="closeFullScreenRanking" custom-class="full-screen-ranking-modal" :show-close="false">
+    <!-- Move dialogs inside root and append to body to keep behavior -->
+    <el-dialog :visible.sync="showFullScreenRanking" width="90%" :before-close="closeFullScreenRanking" custom-class="full-screen-ranking-modal" :show-close="false" append-to-body>
       <div class="full-screen-ranking-header">
         <h2 class="modal-title">{{ $t('todo.rankingSystem') }}</h2>
         <el-button type="primary" icon="el-icon-close" circle @click="closeFullScreenRanking" class="close-btn"></el-button>
@@ -110,12 +108,12 @@
       </div>
     </el-dialog>
 
-    <el-dialog :visible.sync="showRankImagePreview" fullscreen :show-close="false" custom-class="rank-image-preview-dialog">
+    <el-dialog :visible.sync="showRankImagePreview" fullscreen :show-close="false" custom-class="rank-image-preview-dialog" append-to-body>
       <div class="rank-image-preview-container" @click="showRankImagePreview = false">
         <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="rank-image-fullscreen" />
       </div>
     </el-dialog>
-  </div>
+  </el-card>
 </template>
 
 <script>
@@ -520,21 +518,23 @@ export default {
 }
 
 .main-card {
-  border-radius: 2px;
+  border-radius: var(--card-border-radius);
   overflow: hidden;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .header {
-  background-color: #f5f7fa;
+  background-color: var(--bg-header);
   padding: 16px;
-  border-bottom: 1px solid #e4e7ec;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-title {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .header-controls {
@@ -595,11 +595,11 @@ export default {
   .rank-info .rank-name {
     font-size: 14px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text-primary);
   }
   .rank-info .rank-level {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-secondary);
   }
 
   /* Make header buttons a touch larger and consistent on big screens */
@@ -619,7 +619,7 @@ export default {
 
 .points-label {
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .points-badge {
@@ -630,10 +630,10 @@ export default {
   height: 28px;
   padding: 0 10px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #10b981, #34d399);
+  background: var(--gradient-success);
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  box-shadow: var(--shadow-card);
 }
 
 /* Rank progress: clearer layout without logic changes */
@@ -647,17 +647,17 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 12px;
   margin-bottom: 6px;
 }
 
 .rank-progress .progress-percentage {
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
 }
 .rank-progress .progress-percentage.max-rank {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .rank-progress-bar {
@@ -667,7 +667,7 @@ export default {
 .next-rank-info .next-rank-text,
 .max-rank-info .max-rank-text {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* Responsive header controls */
@@ -816,48 +816,44 @@ export default {
 
 /* Color variants */
 .control-btn.btn-primary {
-  background-color: #409eff;
-  border-color: #409eff;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 .control-btn.btn-primary:hover {
-  background-color: #337ecc;
-  border-color: #337ecc;
+  opacity: 0.9;
 }
 .control-btn.btn-primary:focus {
-  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 0 0 3px var(--border-color-light);
 }
 
 .control-btn.btn-success {
-  background-color: #67c23a;
-  border-color: #67c23a;
+  background-color: var(--color-success);
+  border-color: var(--color-success);
 }
 .control-btn.btn-success:hover {
-  background-color: #52a832;
-  border-color: #52a832;
+  opacity: 0.9;
 }
 .control-btn.btn-success:focus {
   box-shadow: 0 0 0 3px rgba(103, 194, 58, 0.2);
 }
 
 .control-btn.btn-info {
-  background-color: #909399;
-  border-color: #909399;
+  background-color: var(--color-info);
+  border-color: var(--color-info);
 }
 .control-btn.btn-info:hover {
-  background-color: #767a80;
-  border-color: #767a80;
+  opacity: 0.9;
 }
 .control-btn.btn-info:focus {
   box-shadow: 0 0 0 3px rgba(144, 147, 153, 0.2);
 }
 
 .control-btn.btn-danger {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 .control-btn.btn-danger:hover {
-  background-color: #dd6161;
-  border-color: #dd6161;
+  opacity: 0.9;
 }
 .control-btn.btn-danger:focus {
   box-shadow: 0 0 0 3px rgba(245, 108, 108, 0.2);
@@ -866,7 +862,7 @@ export default {
 /* Task input and form styles */
 .task-input-section {
   padding: 20px;
-  background-color: #fafbfc;
+  background-color: var(--bg-body);
   border-radius: 8px;
   margin-bottom: 20px;
   text-align: left; /* ensure left alignment on all screens */
@@ -927,15 +923,15 @@ export default {
   margin-bottom: 10px;
   cursor: pointer;
   user-select: none;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
-  background: #f0f2f5;
-  border: 1px solid #e4e7ec;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 .task-input-toggle:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.25);
+  box-shadow: 0 0 0 2px var(--border-color-light);
 }
 .toggle-icon {
   transition: transform 0.2s ease;
@@ -984,7 +980,7 @@ export default {
 
 .filter-label {
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -1068,11 +1064,13 @@ export default {
 
 .task-card {
   transition: all 0.3s ease;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-hover);
 }
 
 .task-content {
@@ -1090,12 +1088,12 @@ export default {
   margin: 0 0 8px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .task-description {
   margin: 0 0 12px 0;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -1147,7 +1145,7 @@ export default {
 
 .edit-label {
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
@@ -1185,7 +1183,7 @@ export default {
   gap: 8px;
   flex-wrap: wrap;
   padding-top: 12px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 1px solid var(--border-color);
   margin-top: 8px;
 }
 
@@ -1253,7 +1251,7 @@ export default {
   margin: 0 0 16px 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .history-tasks {
@@ -1286,13 +1284,13 @@ export default {
 .history-task-title {
   font-size: 1.15rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
   line-height: 1.4;
 }
 
 .history-task-description {
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
   margin: 0;
   font-size: 14px;
@@ -1390,15 +1388,15 @@ export default {
 
 /* Task status classes */
 .task-success {
-  border-left: 4px solid #67c23a;
+  border-left: 4px solid var(--color-success);
 }
 
 .task-fail {
-  border-left: 4px solid #f56c6c;
+  border-left: 4px solid var(--color-danger);
 }
 
 .task-pending {
-  border-left: 4px solid #e6a23c;
+  border-left: 4px solid var(--color-warning);
 }
 
 /* Enhanced Ranking display styles */
@@ -1416,11 +1414,11 @@ export default {
   gap: 12px;
   padding: 12px 16px;
   border-radius: 25px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  background: var(--bg-container);
   border: 2px solid transparent;
   background-clip: padding-box;
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
   overflow: hidden;
 }
@@ -1431,7 +1429,7 @@ export default {
   inset: -2px;
   border-radius: 25px;
   padding: 2px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
   z-index: -1;
@@ -1439,7 +1437,7 @@ export default {
 
 .rank-badge:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
 }
 
 .rank-badge::after {
@@ -1465,7 +1463,7 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   position: relative;
   overflow: hidden;
@@ -1488,20 +1486,20 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  background: var(--bg-card);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
 .rank-item:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: var(--bg-container);
   transform: translateY(-1px);
 }
 
 .rank-item.current-rank {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  border-color: #4299e1;
+  background: var(--bg-container);
+  border-color: var(--color-primary);
   box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
   position: relative;
 }
@@ -1510,7 +1508,7 @@ export default {
   content: '✓';
   position: absolute;
   right: 8px;
-  color: #2b6cb0;
+  color: var(--color-primary);
   font-weight: bold;
   font-size: 12px;
 }
@@ -1536,21 +1534,21 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 8px 6px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  background: var(--bg-card);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
   position: relative;
 }
 
 .rank-preview-item:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: var(--bg-container);
   transform: translateY(-1px);
 }
 
 .rank-preview-item.current-rank {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  border-color: #4299e1;
+  background: var(--bg-container);
+  border-color: var(--color-primary);
   box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
 }
 
@@ -1559,7 +1557,7 @@ export default {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: #2b6cb0;
+  color: var(--color-primary);
   font-weight: bold;
   font-size: 10px;
   background: white;
@@ -1582,17 +1580,17 @@ export default {
 .rank-preview-name {
   font-size: 11px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text-primary);
   text-align: center;
   line-height: 1.2;
 }
 
 .rank-preview-threshold {
   font-size: 10px;
-  color: #718096;
+  color: var(--text-secondary);
   font-weight: 500;
   padding: 2px 6px;
-  background-color: #edf2f7;
+  background-color: var(--bg-body);
   border-radius: 8px;
 }
 

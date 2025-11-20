@@ -325,6 +325,7 @@ export default {
         todayReviewed: 'Reviewed Today',
         todayMastered: 'Mastered Today',
         learningSettings: 'Learning Settings',
+        theme: 'Theme',
         pronunciationSource: 'Pronunciation Source',
         nativeLanguage: 'Native Language',
         backgroundMusic: 'Background Music',
