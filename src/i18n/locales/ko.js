@@ -273,7 +273,27 @@ export default {
         antonym: '반의어',
         vocabularyAssociation: '어휘 연관',
         phrasesAssociation: '구문 연관',
+        vocabularyCharacterExpansion: '어휘 문자 확장',
+        ambiguousAssociationCorrection: '모호한 연관 수정',
+        naturalIdiomaticRetouch: '자연스러운 관용적 수정',
         selectMode: '모드 선택'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '어휘 입력',
+        directTranslation: '무엇이든 입력',
+        explanation: '무엇이든 입력',
+        grammarExplanation: '무엇이든 입력',
+        grammarCorrection: '무엇이든 입력',
+        synonym: '어휘 입력',
+        antonym: '어휘 입력',
+        vocabularyAssociation: '무엇이든 입력',
+        phrasesAssociation: '무엇이든 입력',
+        // New modes
+        vocabularyCharacterExpansion: '무엇이든 입력',
+        ambiguousAssociationCorrection: '무엇이든 입력',
+        naturalIdiomaticRetouch: '수정할 텍스트 입력'
     },
 
     user: {

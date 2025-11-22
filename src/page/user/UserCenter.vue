@@ -74,7 +74,7 @@
         <!-- Theme Selection -->
         <div class="setting-item">
           <div class="setting-label">
-            <span>{{ $t('user.theme') || 'Theme' }}</span>
+            <span>{{ $t('user.theme') }}</span>
           </div>
           <el-dropdown @command="handleThemeChange" trigger="click" class="custom-dropdown">
             <el-button size="small" type="text" class="dropdown-button">
@@ -207,35 +207,35 @@
         <!-- NEW: Feature Tabs Visibility -->
         <div class="setting-item setting-item--feature-tabs">
           <div class="setting-label">
-            <span>{{ $t('user.featureTabs') || 'Feature Tabs' }}</span>
-            <el-tooltip :content="$t('user.featureTabsTip') || 'Show or hide tabs in the toolbar'" placement="top" effect="dark">
+            <span>{{ $t('user.featureTabs') }}</span>
+            <el-tooltip :content="$t('user.featureTabsTip')" placement="top" effect="dark">
               <i class="el-icon-question help-icon"></i>
             </el-tooltip>
           </div>
           <div class="feature-toggles feature-toggles--stacked">
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.todo') || 'Todo' }}</span>
-              <el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)" :aria-label="$t('tabs.todo') || 'Todo'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.todo') }}</span>
+              <el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)" :aria-label="$t('tabs.todo')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.youtube') || 'YouTube' }}</span>
-              <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube') || 'YouTube'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.youtube') }}</span>
+              <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.pdfReader') || 'PDF Reader' }}</span>
+              <span class="feature-label">{{ $t('tabs.pdfReader') }}</span>
               <el-switch
                   v-model="enabledTabsLocal.pdfReader"
                   class="custom-switch"
                   @change="onFeatureToggle('pdfReader', $event)"
-                  :aria-label="$t('tabs.pdfReader') || 'PDF Reader'"></el-switch>
+                  :aria-label="$t('tabs.pdfReader')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.about') || 'About' }}</span>
-              <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about') || 'About'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.about') }}</span>
+              <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.vocabularyReview') || 'Vocabulary Review' }}</span>
-              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview') || 'Vocabulary Review'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.vocabularyReview') }}</span>
+              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview')"></el-switch>
             </div>
           </div>
         </div>
@@ -611,11 +611,11 @@ export default {
         const updated = { ...this.enabledTabsLocal, [key]: !!enabled }
         this.enabledTabsLocal = updated
         setStore({ name: kiwiConst.CONFIG_KEY.ENABLED_TABS, content: updated, type: 'local' })
-        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
+        this.$message.success(this.$t('messages.operationSuccess'))
         try { window.dispatchEvent(new Event('enabled-tabs-updated')) } catch (_) {}
       } catch (e) {
         console.error('Failed to save feature tabs setting', e)
-        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
+        this.$message.error(this.$t('messages.saveFailed'))
       }
     },
 

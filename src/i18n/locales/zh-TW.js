@@ -148,7 +148,25 @@ export default {
         // 新增模式
         vocabularyCharacterExpansion: '詞形擴展',
         ambiguousAssociationCorrection: '歧義關聯糾正',
+        naturalIdiomaticRetouch: '自然地道潤色',
         selectMode: '選擇模式'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '輸入詞彙',
+        directTranslation: '輸入任何內容',
+        explanation: '輸入任何內容',
+        grammarExplanation: '輸入任何內容',
+        grammarCorrection: '輸入任何內容',
+        synonym: '輸入詞彙',
+        antonym: '輸入詞彙',
+        vocabularyAssociation: '輸入任何內容',
+        phrasesAssociation: '輸入任何內容',
+        // New modes
+        vocabularyCharacterExpansion: '輸入任何內容',
+        ambiguousAssociationCorrection: '輸入任何內容',
+        naturalIdiomaticRetouch: '輸入需要潤色的文本'
     },
 
     // Todo Gamification

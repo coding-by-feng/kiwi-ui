@@ -141,7 +141,27 @@ export default {
         antonym: '反義語',
         vocabularyAssociation: '語彙関連',
         phrasesAssociation: 'フレーズ関連',
+        vocabularyCharacterExpansion: '語彙文字展開',
+        ambiguousAssociationCorrection: '曖昧な関連付けの修正',
+        naturalIdiomaticRetouch: '自然で慣用的なリタッチ',
         selectMode: 'モードを選択'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '語彙を入力',
+        directTranslation: '何でも入力',
+        explanation: '何でも入力',
+        grammarExplanation: '何でも入力',
+        grammarCorrection: '何でも入力',
+        synonym: '語彙を入力',
+        antonym: '語彙を入力',
+        vocabularyAssociation: '何でも入力',
+        phrasesAssociation: '何でも入力',
+        // New modes
+        vocabularyCharacterExpansion: '何でも入力',
+        ambiguousAssociationCorrection: '何でも入力',
+        naturalIdiomaticRetouch: 'リタッチするテキストを入力'
     },
 
     // Todo Gamification

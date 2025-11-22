@@ -117,9 +117,29 @@ export default {
         vocabularyExplanation: 'Explication du vocabulaire',
         synonym: 'Synonyme',
         antonym: 'Antonyme',
+        vocabularyCharacterExpansion: 'Extension de caractères de vocabulaire',
+        ambiguousAssociationCorrection: 'Correction d\'association ambiguë',
+        naturalIdiomaticRetouch: 'Retouche idiomatique naturelle',
         vocabularyAssociation: 'Association de vocabulaire',
         phrasesAssociation: 'Association de phrases',
         selectMode: 'Sélectionner le mode'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'Entrez le vocabulaire',
+        directTranslation: 'Entrez n\'importe quoi',
+        explanation: 'Entrez n\'importe quoi',
+        grammarExplanation: 'Entrez n\'importe quoi',
+        grammarCorrection: 'Entrez n\'importe quoi',
+        synonym: 'Entrez le vocabulaire',
+        antonym: 'Entrez le vocabulaire',
+        vocabularyAssociation: 'Entrez n\'importe quoi',
+        phrasesAssociation: 'Entrez n\'importe quoi',
+        // New modes
+        vocabularyCharacterExpansion: 'Entrez n\'importe quoi',
+        ambiguousAssociationCorrection: 'Entrez n\'importe quoi',
+        naturalIdiomaticRetouch: 'Saisir le texte à retoucher'
     },
 
     // AI features

@@ -192,9 +192,10 @@ export default {
       searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE,
-      searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map(mode => ({
+      searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map((mode, index) => ({
         ...mode,
-        labelKey: this.getModeTranslationKey(mode.value)
+        labelKey: this.getModeTranslationKey(mode.value),
+        originalIndex: index
       })),
       selectedLanguage: getInitialSelectedLanguage(this.$route),
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
@@ -295,6 +296,8 @@ export default {
     // Added: window focus & pageshow for browsers where visibility doesn't fire (Safari / dialogs)
     window.addEventListener('focus', this.handleWindowFocus);
     window.addEventListener('pageshow', this.handleWindowFocus);
+    // Sort modes based on usage frequency
+    this.sortSearchModes();
   },
   beforeDestroy() {
     this.cleanupClipboardHandling();
@@ -425,6 +428,38 @@ export default {
         content: language,
         type: 'local'
       });
+    },
+
+    // Increment usage count for a mode
+    incrementModeUsage(mode) {
+      try {
+        const stats = getStore({ name: kiwiConsts.CONFIG_KEY.AI_MODE_USAGE_STATS }) || {};
+        stats[mode] = (stats[mode] || 0) + 1;
+        setStore({
+          name: kiwiConsts.CONFIG_KEY.AI_MODE_USAGE_STATS,
+          content: stats,
+          type: 'local'
+        });
+      } catch (e) {
+        console.error('Failed to update mode usage stats', e);
+      }
+    },
+
+    // Sort search modes based on usage frequency
+    sortSearchModes() {
+      try {
+        const stats = getStore({ name: kiwiConsts.CONFIG_KEY.AI_MODE_USAGE_STATS }) || {};
+        this.searchModes.sort((a, b) => {
+          const countA = stats[a.value] || 0;
+          const countB = stats[b.value] || 0;
+          if (countA !== countB) {
+            return countB - countA; // Descending order of usage
+          }
+          return a.originalIndex - b.originalIndex; // Stable fallback
+        });
+      } catch (e) {
+        console.error('Failed to sort search modes', e);
+      }
     },
 
     getNativeLanguage() {
@@ -737,6 +772,10 @@ export default {
       const target = isAi
         ? { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: baseQuery }
         : { path: kiwiConsts.ROUTES.DETAIL, query: baseQuery }
+      
+      // Increment usage count
+      this.incrementModeUsage(item);
+      
       this.navigateIfChanged(target)
       
       // Re-focus after mode change (dropdown click can steal focus)
@@ -782,11 +821,16 @@ export default {
       this.navigateIfChanged(target)
     },
 
-    handlePrependClick() {
+    handlePrependClick(event) {
       if (this.lazy) {
         this.closeLazy()
       } else {
         const dropdown = this.$refs.modeDropdown
+        // If click originated from inside the dropdown component, let it handle the toggle naturally
+        if (dropdown && dropdown.$el && dropdown.$el.contains(event.target)) {
+          return
+        }
+        // Otherwise (clicked on padding/prepend area), manually toggle
         if (dropdown && typeof dropdown.toggle === 'function') {
           dropdown.toggle()
         }
