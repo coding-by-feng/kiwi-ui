@@ -115,7 +115,27 @@ export default {
         antonym: 'คำตรงข้าม',
         vocabularyAssociation: 'เชื่อมโยงคำศัพท์',
         phrasesAssociation: 'เชื่อมโยงวลี',
+        vocabularyCharacterExpansion: 'การขยายตัวอักษรคำศัพท์',
+        ambiguousAssociationCorrection: 'การแก้ไขการเชื่อมโยงที่กำกวม',
+        naturalIdiomaticRetouch: 'การปรับแต่งสำนวนธรรมชาติ',
         selectMode: 'เลือกโหมด'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'ป้อนคำศัพท์',
+        directTranslation: 'ป้อนอะไรก็ได้',
+        explanation: 'ป้อนอะไรก็ได้',
+        grammarExplanation: 'ป้อนอะไรก็ได้',
+        grammarCorrection: 'ป้อนอะไรก็ได้',
+        synonym: 'ป้อนคำศัพท์',
+        antonym: 'ป้อนคำศัพท์',
+        vocabularyAssociation: 'ป้อนอะไรก็ได้',
+        phrasesAssociation: 'ป้อนอะไรก็ได้',
+        // New modes
+        vocabularyCharacterExpansion: 'ป้อนอะไรก็ได้',
+        ambiguousAssociationCorrection: 'ป้อนอะไรก็ได้',
+        naturalIdiomaticRetouch: 'ป้อนข้อความเพื่อปรับแต่ง'
     },
 
     // Word details

@@ -119,7 +119,27 @@ export default {
         antonym: 'Antonym',
         vocabularyAssociation: 'Vokabularassoziation',
         phrasesAssociation: 'Phrasenassoziation',
+        vocabularyCharacterExpansion: 'Wortschatz-Zeichenerweiterung',
+        ambiguousAssociationCorrection: 'Korrektur mehrdeutiger Assoziationen',
+        naturalIdiomaticRetouch: 'Natürliche idiomatische Retusche',
         selectMode: 'Modus auswählen'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'Wortschatz eingeben',
+        directTranslation: 'Alles eingeben',
+        explanation: 'Alles eingeben',
+        grammarExplanation: 'Alles eingeben',
+        grammarCorrection: 'Alles eingeben',
+        synonym: 'Wortschatz eingeben',
+        antonym: 'Wortschatz eingeben',
+        vocabularyAssociation: 'Alles eingeben',
+        phrasesAssociation: 'Alles eingeben',
+        // New modes
+        vocabularyCharacterExpansion: 'Alles eingeben',
+        ambiguousAssociationCorrection: 'Alles eingeben',
+        naturalIdiomaticRetouch: 'Text zum Retuschieren eingeben'
     },
 
     user: {

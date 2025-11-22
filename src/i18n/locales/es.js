@@ -271,7 +271,27 @@ export default {
         antonym: 'Antónimo',
         vocabularyAssociation: 'Asociación de vocabulario',
         phrasesAssociation: 'Asociación de frases',
+        vocabularyCharacterExpansion: 'Expansión de caracteres de vocabulario',
+        ambiguousAssociationCorrection: 'Corrección de asociación ambigua',
+        naturalIdiomaticRetouch: 'Retoque idiomático natural',
         selectMode: 'Seleccionar modo'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'Introducir vocabulario',
+        directTranslation: 'Introducir cualquier cosa',
+        explanation: 'Introducir cualquier cosa',
+        grammarExplanation: 'Introducir cualquier cosa',
+        grammarCorrection: 'Introducir cualquier cosa',
+        synonym: 'Introducir vocabulario',
+        antonym: 'Introducir vocabulario',
+        vocabularyAssociation: 'Introducir cualquier cosa',
+        phrasesAssociation: 'Introducir cualquier cosa',
+        // New modes
+        vocabularyCharacterExpansion: 'Introducir cualquier cosa',
+        ambiguousAssociationCorrection: 'Introducir cualquier cosa',
+        naturalIdiomaticRetouch: 'Introducir texto para retocar'
     },
 
     user: {
@@ -279,7 +299,6 @@ export default {
         searchModeHotkeysTip: 'Presiona Ctrl (o Cmd en macOS) + Shift + Número para cambiar de modo',
         resetToDefaults: 'Restablecer a valores predeterminados',
         hotkey: 'Atajo',
-        pressKeys: 'Presiona teclas...',
         // Añadido: configuración de pestañas de funciones
         featureTabs: 'Pestañas de funciones',
         featureTabsTip: 'Mostrar u ocultar pestañas en la barra de herramientas'

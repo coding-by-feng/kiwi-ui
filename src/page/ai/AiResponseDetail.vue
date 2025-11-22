@@ -20,52 +20,12 @@
     </div>
 
     <!-- Selection Popup Modal -->
-    <el-dialog
-        title="Explain Selected Text"
-        :visible.sync="selectionDialogVisible"
-        width="500px"
-        :before-close="handleCloseSelectionDialog"
-    >
-      <div class="selection-dialog-content">
-        <div class="selected-text-preview">
-          <strong>Selected Text:</strong>
-          <div class="selected-text">{{ selectedText }}</div>
-        </div>
-
-        <div class="dialog-actions">
-          <p>Would you like to get an explanation for the selected text?</p>
-        </div>
-      </div>
-
-      <div slot="footer" class="selection-dialog-footer">
-        <el-button
-            size="small"
-            type="success"
-            plain
-            icon="el-icon-document-copy"
-            :disabled="!selectedText"
-            @click="copySelectedText"
-        >
-          Copy Selection
-        </el-button>
-        <el-button
-            size="small"
-            type="info"
-            @click="searchOnDictionary"
-            icon="el-icon-search"
-        >
-          Search on Dictionary
-        </el-button>
-        <el-button
-            size="small"
-            type="primary"
-            @click="explainSelectedText"
-            :loading="selectionApiLoading"
-        >
-          Explain Selection
-        </el-button>
-      </div>
-    </el-dialog>
+    <!-- Selection Popup Modal -->
+    <AiSelectionPopup
+      :visible.sync="selectionDialogVisible"
+      :selectedText="selectedText"
+      title="Explain Selected Text"
+    />
 
     <!-- Multiple Selection Response Displays -->
     <div v-for="item in selectionExplanations" :key="item.id" class="selection-response-container">
@@ -158,6 +118,7 @@
 
 <script>
 import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import util from '@/util/util'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it';
@@ -177,7 +138,7 @@ let that;
 
 export default {
   name: 'AiResponseDetail',
-  components: { StatusOverlay },
+  components: { StatusOverlay, AiSelectionPopup },
   data() {
     return {
       aiResponseVO: {

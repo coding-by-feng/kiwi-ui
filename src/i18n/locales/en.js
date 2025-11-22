@@ -152,6 +152,7 @@ export default {
         // New modes
         vocabularyCharacterExpansion: 'Vocabulary Character Expansion',
         ambiguousAssociationCorrection: 'Ambiguous Association Correction',
+        naturalIdiomaticRetouch: 'Natural Idiomatic Retouch',
         selectMode: 'Select Mode'
     },
 
@@ -168,7 +169,8 @@ export default {
         phrasesAssociation: 'Enter anything',
         // New modes
         vocabularyCharacterExpansion: 'Enter anything',
-        ambiguousAssociationCorrection: 'Enter anything'
+        ambiguousAssociationCorrection: 'Enter anything',
+        naturalIdiomaticRetouch: 'Input text to retouch'
     },
 
     // Word details

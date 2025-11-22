@@ -169,7 +169,8 @@ export default {
         CLIPBOARD_DETECTION: 'clipboard_detection',
         SUBTITLES_AUTO_CENTER: 'subtitles_auto_center', // New: persist subtitles auto-center preference
         // New: feature tabs enable/disable map
-        ENABLED_TABS: 'enabled_tabs'
+        ENABLED_TABS: 'enabled_tabs',
+        AI_MODE_USAGE_STATS: 'ai_mode_usage_stats'
         // Removed: ONBOARDING_TOUR_DONE, TOUR_ENABLED, SHOW_TOUR_ICON
     },
 

@@ -178,7 +178,25 @@ export default {
         // 新增模式
         vocabularyCharacterExpansion: '词形扩展',
         ambiguousAssociationCorrection: '歧义关联纠正',
+        naturalIdiomaticRetouch: '自然地道润色',
         selectMode: '选择模式'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '输入词汇',
+        directTranslation: '输入任何内容',
+        explanation: '输入任何内容',
+        grammarExplanation: '输入任何内容',
+        grammarCorrection: '输入任何内容',
+        synonym: '输入词汇',
+        antonym: '输入词汇',
+        vocabularyAssociation: '输入任何内容',
+        phrasesAssociation: '输入任何内容',
+        // New modes
+        vocabularyCharacterExpansion: '输入任何内容',
+        ambiguousAssociationCorrection: '输入任何内容',
+        naturalIdiomaticRetouch: '输入需要润色的文本'
     },
 
     // User and settings (新增完整用户中心配置)
