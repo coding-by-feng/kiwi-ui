@@ -1,12 +1,6 @@
 <template>
-  <div class="youtube-player">
-    <!-- Enhanced header with gradient styling -->
-    <div class="header-container">
-      <h1 id="playHeader" class="main-title">
-        <i class="el-icon-video-play"></i>
-        YouTube Player
-      </h1>
-    </div>
+  <div class="youtube-player" :class="{ 'mobile-no-select': isSmallScreen }" @contextmenu="isSmallScreen && $event.preventDefault()">
+
 
     <!-- Enhanced Input Container with gradient styling -->
     <div class="input-container" v-show="!forceHideInput">
@@ -182,7 +176,7 @@
     </StatusOverlay>
 
     <!-- Enhanced Content Container -->
-    <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '') || (playerVideoId && playerVideoId !== '')">
+    <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '')">
       <!-- Left Panel (video and controls) -->
       <div class="left-panel" :style="!isSmallScreen ? { width: leftPanelPercent + '%' } : null">
         <!-- Video Player Section -->
@@ -314,6 +308,7 @@
           :visible.sync="showSelectionPopup"
           :selected-text.sync="selectedText"
           title="AI Search"
+          :auto-request="true"
           @open-ai-tab="onOpenAiTabFromPopup"
       />
 
@@ -364,7 +359,6 @@ export default {
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
       // Split IDs: backend internal DB id vs YouTube 11-char id
       backendVideoId: null,
-      playerVideoId: null,
       // New: single favorite state for player view
       isFavorited: false,
       pendingFavorite: false,
@@ -412,6 +406,7 @@ export default {
       wsShouldReconnect: false,
       wsSessionId: '',
       lastTranslationRequest: null,
+      connectingPromise: null, // Track pending connection
       pageHidden: false,
 
       // NoSleep helper to reduce iOS background suspension via wake-lock-like behavior
@@ -487,9 +482,7 @@ export default {
     },
     // Whether a video can be favorited: requires a valid URL or a player video id we can convert to URL
     canFavorite() {
-      const hasValidUrl = !!(this.videoUrl && this.extractVideoId(this.videoUrl));
-      const hasPlayerId = !!(this.playerVideoId && this.isLikelyYoutubeId(this.playerVideoId));
-      return hasValidUrl || hasPlayerId;
+      return !!(this.videoUrl && this.extractVideoId(this.videoUrl));
     },
     showMiniLoader() {
       return this.isLoading || !this.videoReady || this.isBuffering;
@@ -527,30 +520,7 @@ export default {
     }
   },
   watch: {
-    // When player video id changes, re-init the iframe (guarded)
-    playerVideoId(newVideoId, oldVideoId) {
-      if (this._suppressVideoIdWatcher) return;
-      if (newVideoId && oldVideoId && newVideoId !== oldVideoId) {
-        if (this.player && this.youtubeApiReady) {
-          console.log('[YoutubePlayer] watcher loadVideoById', newVideoId);
-          this.isLoading = true;
-          this.videoReady = false;
-          this.statusMessage = 'Initializing player...';
-          this.stopMiniLoaderPoll();
-          this.startMiniLoaderPoll();
-          try {
-            this.player.loadVideoById(newVideoId);
-            this.setPlayerInitTimeout();
-          } catch (e) {
-            console.warn('[YoutubePlayer] loadVideoById failed in watcher, reinitializing', e);
-            this.reinitializePlayer().then(() => { this.isLoading = false; });
-          }
-        } else {
-          console.log('[YoutubePlayer] watcher reinitializePlayer', newVideoId);
-          this.reinitializePlayer().then(() => { this.isLoading = false; });
-        }
-      }
-    },
+
     '$route.query.videoUrl': {
       handler(newVideoUrl) {
         if (!newVideoUrl) return;
@@ -568,7 +538,8 @@ export default {
         const s = String(val);
         if (this.isLikelyYoutubeId(s)) {
           // In case deep-link sends a raw YouTube id
-          this.playerVideoId = s;
+          this.videoUrl = `https://www.youtube.com/watch?v=${s}`;
+          this.loadContent();
         } else {
           this.backendVideoId = s;
         }
@@ -630,8 +601,8 @@ export default {
       this.loadContent();
     } else if (q.videoId && this.isLikelyYoutubeId(String(q.videoId))) {
       // Fallback only if a raw YouTube id is provided
-      this.playerVideoId = String(q.videoId);
-      this.videoUrl = `https://www.youtube.com/watch?v=${this.playerVideoId}`;
+      const vid = String(q.videoId);
+      this.videoUrl = `https://www.youtube.com/watch?v=${vid}`;
       this.loadContent();
     }
 
@@ -660,7 +631,7 @@ export default {
       this.isFavorited = !prev; // optimistic update
 
       // Always construct URL from current state
-      const fallbackUrl = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
+      const fallbackUrl = this.videoUrl;
 
       try {
         if (!fallbackUrl || !this.extractVideoId(fallbackUrl)) {
@@ -707,7 +678,7 @@ export default {
             favorited = res.data.code === 1 ? !!res.data.data : false;
           }
         } else {
-          const url = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
+          const url = this.videoUrl;
           if (url && this.extractVideoId(url)) {
             const res = await checkVideoFavoriteByUrl(url);
             if (res && res.data) {
@@ -871,15 +842,21 @@ export default {
         return Promise.resolve();
       }
 
+      // Reuse existing connection attempt if in progress
+      if (this.connectingPromise) {
+        return this.connectingPromise;
+      }
+
       this.disconnectWebSocket();
 
-      return new Promise((resolve, reject) => {
+      this.connectingPromise = new Promise((resolve, reject) => {
         this.wsConnectionStatus = 'connecting';
         const token = getStore({name: 'access_token'});
 
         if (!token) {
           const error = new Error('Authentication token not found');
           this.handleWebSocketError(error, 'Authentication token not found. Please login again.');
+          this.connectingPromise = null;
           reject(error);
           return;
         }
@@ -892,6 +869,7 @@ export default {
         const connectionTimeout = setTimeout(() => {
           if (this.wsConnectionStatus !== 'connected') {
             try { this.websocket?.close(); } catch (_) {}
+            this.connectingPromise = null;
             reject(new Error('WebSocket connection timeout'));
           }
         }, 10000);
@@ -899,6 +877,7 @@ export default {
         this.websocket.onopen = () => {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'connected';
+          this.connectingPromise = null; // Clear promise on success
           // Start heartbeat keepalive (best-effort; may be throttled in background)
           this.wsHeartbeatInterval = setInterval(() => {
             try {
@@ -916,6 +895,7 @@ export default {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'disconnected';
           this.websocket = null;
+          if (this.connectingPromise) this.connectingPromise = null; // Ensure cleared
 
           if (event.code === 1008 || event.code === 1011) {
             this.handleWebSocketError(new Error('Authentication failed'), 'Authentication failed. Please login again.');
@@ -930,6 +910,7 @@ export default {
         this.websocket.onerror = (error) => {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'error';
+          if (this.connectingPromise) this.connectingPromise = null; // Ensure cleared
           // If initial connect, reject; otherwise we'll attempt reconnect
           if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
             this.handleWebSocketError(error, 'Failed to connect to translation service.');
@@ -937,10 +918,16 @@ export default {
           }
         };
       });
+
+      return this.connectingPromise;
     },
 
     disconnectWebSocket() {
       if (this.websocket) {
+        // Prevent onclose from triggering reconnect logic
+        this.websocket.onclose = null;
+        this.websocket.onerror = null;
+        this.websocket.onmessage = null;
         this.websocket.close();
         this.websocket = null;
         this.wsConnectionStatus = 'disconnected';
@@ -1084,17 +1071,29 @@ export default {
     },
 
     async requestTranslation(videoUrl, language) {
+      // Prevent duplicate requests for the same video and language if already loading
+      if (this.isTranslationLoading &&
+          this.lastTranslationRequest &&
+          this.lastTranslationRequest.videoUrl === videoUrl &&
+          this.lastTranslationRequest.language === language) {
+        console.log('[YoutubePlayer] Skipping duplicate translation request');
+        return;
+      }
+
+      // Set loading state immediately to block concurrent requests
+      this.isTranslationLoading = true;
+      this.shouldShowTranslationContainer = true;
+      this.translatedSubtitlesCollapsed = false;
+
+      // Generate session ID early
+      this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+      this.wsShouldReconnect = true;
+
+      // Update last request immediately to prevent race conditions
+      this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.wsSessionId };
+
       try {
-        // Show translation container immediately when starting WS streaming
-        this.shouldShowTranslationContainer = true;
-        this.translatedSubtitlesCollapsed = false; // Ensure it's expanded
-
         await this.connectWebSocket();
-
-        // New session id and remember payload for reconnects
-        this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
-        this.wsShouldReconnect = true;
-        this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.wsSessionId };
 
         const request = {
           videoUrl: videoUrl,
@@ -1214,13 +1213,13 @@ export default {
       });
     },
 
-    async initializePlayer() {
+    async initializePlayer(videoId) {
       return new Promise((resolve) => {
-        console.log('[YoutubePlayer] initializePlayer videoId=', this.playerVideoId);
+        console.log('[YoutubePlayer] initializePlayer videoId=', videoId);
         this.player = new YT.Player('youtube-player-container', {
           height: '100%',
           width: '100%',
-          videoId: this.playerVideoId,
+          videoId: videoId,
           playerVars: { playsinline: 1, rel: 0, autoplay: 0 },
           events: {
             onReady: (event) => { this.onPlayerReady(event); resolve(); },
@@ -1279,14 +1278,15 @@ export default {
         console.log('[YoutubePlayer] loadContent start videoUrl=', this.videoUrl);
         const normalizedUrl = this.normalizeVideoUrl(this.videoUrl) || null;
         if (normalizedUrl) this.videoUrl = normalizedUrl;
-        const extractedId = this.videoUrl ? this.extractVideoId(this.videoUrl) : (this.isLikelyYoutubeId(this.videoUrl) ? this.videoUrl : null);
-        const prevId = this.playerVideoId;
-        this.playerVideoId = extractedId || this.playerVideoId;
-        if (!this.playerVideoId) {
+        
+        const videoId = this.videoUrl ? this.extractVideoId(this.videoUrl) : (this.isLikelyYoutubeId(this.videoUrl) ? this.videoUrl : null);
+        
+        if (!videoId) {
           this.statusMessage = 'Invalid YouTube URL';
           this.isLoading = false;
           return;
         }
+
         try {
           const isYoutubeActive = (this.$route && this.$route.query && this.$route.query.active === 'youtube');
           if (isYoutubeActive) {
@@ -1301,13 +1301,20 @@ export default {
         this.statusMessage = 'Initializing player...';
         this.startMiniLoaderPoll && this.startMiniLoaderPoll();
         await this.ensureYouTubeAPIReady();
-        if (this.player && prevId && prevId !== this.playerVideoId) {
-          console.log('[YoutubePlayer] Reuse existing player loadVideoById', this.playerVideoId);
-          try { this.player.loadVideoById(this.playerVideoId); this.setPlayerInitTimeout(); }
-          catch(e) { console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e); await this.initializePlayer(); }
-        } else if (!this.player) {
-          await this.initializePlayer();
+        
+        if (this.player) {
+          console.log('[YoutubePlayer] Reuse existing player loadVideoById', videoId);
+          try { 
+            this.player.loadVideoById(videoId); 
+            this.setPlayerInitTimeout(); 
+          } catch(e) { 
+            console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e); 
+            await this.initializePlayer(videoId); 
+          }
+        } else {
+          await this.initializePlayer(videoId);
         }
+        
         this.isLoading = false; // may already be false after onReady
         if (!this.videoReady) {
           // onReady not fired yet; keep status if still initializing
@@ -1329,6 +1336,8 @@ export default {
 
     resetStates() {
       this.cleanupPlayer && this.cleanupPlayer();
+      this.wsShouldReconnect = false; // Prevent reconnects during reset
+      this.disconnectWebSocket(); // Ensure previous connection is closed
       this.isLoading = true;
       this.videoReady = false;
       this.subtitles = [];
@@ -1390,7 +1399,7 @@ export default {
             // Extract raw YouTube video id if provided
             const maybeYtId = payload.youtubeVideoId || payload.ytId || payload.ytbId;
             if (maybeYtId && this.isLikelyYoutubeId(String(maybeYtId))) {
-              this.playerVideoId = String(maybeYtId);
+              // We already have videoUrl, so we don't need to set playerVideoId
             }
 
             // Initialize favorited status if returned from server
@@ -2308,35 +2317,9 @@ export default {
   background: var(--bg-body);
 }
 
-/* Header */
-.header-container {
-  margin: 8px 0;
-  padding: 0 20px;
-}
 
-.main-title {
-  margin: 0;
-  padding: 10px 16px;
-  background: var(--gradient-primary);
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 12px;
-  box-shadow: var(--shadow-card);
-  text-align: center;
-  transition: all 0.3s ease;
-}
 
-.main-title:hover {
-  background: var(--gradient-primary);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
-}
 
-.main-title i {
-  margin-right: 6px;
-  font-size: 16px;
-}
 
 /* Input Container */
 .input-container {
@@ -3043,15 +3026,7 @@ export default {
 
 /* Responsive Design */
 @media (max-width: 767px) {
-  .header-container {
-    margin: 3px 0;
-    padding: 0 10px;
-  }
 
-  .main-title {
-    font-size: 13px;
-    padding: 5px 8px;
-  }
 
   .input-container {
     padding: 0 10px 6px;
@@ -3237,7 +3212,7 @@ export default {
 
 /* High contrast support */
 @media (prefers-contrast: more) {
-  .main-title,
+
   .current-subtitle-display,
   .active-subtitle,
   .load-button,
@@ -3291,6 +3266,12 @@ export default {
 }
 .favorite-top-group .favorite-btn.favorited {
   color: var(--color-warning);
+}
+
+.mobile-no-select {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -webkit-touch-callout: none !important;
 }
 </style>
 

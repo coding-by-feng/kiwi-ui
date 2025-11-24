@@ -101,6 +101,7 @@
       :selected-text.sync="selectedText"
       :file-name="pdfName"
       :title="tOrFallback('pdf.explainSelection', 'Explain Selection')"
+      :auto-request="true"
       @open-ai-tab="onOpenAiTabFromPopup"
     />
 
@@ -896,6 +897,10 @@ export default {
 
 /* Disable native text selection on mobile click-to-search mode, but keep textLayer clickable */
 .pdf-reader--no-select {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+
   ::v-deep(.textLayer) {
     user-select: none !important;
     -webkit-user-select: none !important;

@@ -169,7 +169,7 @@ import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
 import {setStore, getStore} from "@/util/store";
 import messageCenter from '@/util/msg';
-import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
+import { getLanguageForMode, getInitialSelectedLanguage, saveLanguageForMode } from '@/util/langUtil';
 import KiwiInput from '@/components/ui/KiwiInput';
 import KiwiButton from '@/components/ui/KiwiButton';
 import KiwiDropdown from '@/components/ui/KiwiDropdown';
@@ -420,15 +420,7 @@ export default {
       // You can add additional logic here if needed
     },
 
-    // Save language setting for current mode
-    saveLanguageForMode(mode, language) {
-      const modeSpecificKey = mode + '-' + kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE;
-      setStore({
-        name: modeSpecificKey,
-        content: language,
-        type: 'local'
-      });
-    },
+
 
     // Increment usage count for a mode
     incrementModeUsage(mode) {
@@ -789,7 +781,7 @@ export default {
 
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
-      this.saveLanguageForMode(this.selectedMode, item)
+      saveLanguageForMode(this.selectedMode, item)
       const target = {
         path: this.$route.path,
         query: {
