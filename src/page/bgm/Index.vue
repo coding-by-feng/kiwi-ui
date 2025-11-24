@@ -77,6 +77,11 @@
           </el-button>
         </div>
       </div>
+      
+      <!-- Hidden YouTube Player Container -->
+      <div class="youtube-player-container">
+        <div id="bgm-youtube-player"></div>
+      </div>
     </el-card>
   </div>
 </template>
@@ -103,11 +108,14 @@ export default {
       loading: false,
       allDataSize: 0,
       bgmData: [
-        {id: 1, name: 'Rescue'},
-        {id: 4010190, name: 'Death'},
+        {id: 1, name: 'Rescue', type: 'local'},
+        {id: 4010190, name: 'Death', type: 'local'},
+        {id: 'bzABzr9gPC8', name: 'Day of the Triffids', type: 'youtube'},
       ],
       currentPlayBgmIndex: null,
-      currentPlayBgm: null,
+      currentPlayBgm: null, // Local Audio object
+      youtubePlayer: null, // YouTube Player instance
+      youtubeApiReady: false,
       // Read persisted preference using the standard config key
       bgm: getStore({name: kiwiConst.CONFIG_KEY.BGM})
     }
@@ -116,6 +124,7 @@ export default {
     that = this
   },
   mounted() {
+    this.loadYouTubeAPI()
     this.currentPlayBgm = new Audio()
     this.currentPlayBgm.volume = 0.6
     this.currentPlayBgm.loop = false
@@ -129,6 +138,56 @@ export default {
     this.countDbAudio()
   },
   methods: {
+    loadYouTubeAPI() {
+      if (window.YT && window.YT.Player) {
+        this.youtubeApiReady = true
+        return
+      }
+      if (!document.getElementById('youtube-api-script')) {
+        const tag = document.createElement('script')
+        tag.id = 'youtube-api-script'
+        tag.src = '/assets/external/youtube-iframe-api.js'
+        document.head.appendChild(tag)
+      }
+      const self = this
+      const prevCb = window.onYouTubeIframeAPIReady
+      window.onYouTubeIframeAPIReady = function() {
+        self.youtubeApiReady = true
+        if (typeof prevCb === 'function') {
+          try { prevCb() } catch (e) { /* no-op */ }
+        }
+      }
+    },
+    initYoutubePlayer(videoId) {
+      return new Promise((resolve) => {
+        if (this.youtubePlayer) {
+          this.youtubePlayer.loadVideoById(videoId)
+          resolve()
+          return
+        }
+        this.youtubePlayer = new window.YT.Player('bgm-youtube-player', {
+          height: '0',
+          width: '0',
+          videoId: videoId,
+          playerVars: {
+            'playsinline': 1,
+            'controls': 0,
+            'disablekb': 1
+          },
+          events: {
+            'onReady': (event) => {
+              event.target.playVideo()
+              resolve()
+            },
+            'onStateChange': (event) => {
+              if (event.data === window.YT.PlayerState.ENDED) {
+                this.nextBgm()
+              }
+            }
+          }
+        })
+      })
+    },
     countDbAudio() {
       db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION).then(dbObject => {
         db.cursorGetData(dbObject, kiwiConst.DB_STORE_NAME)
@@ -152,21 +211,68 @@ export default {
             that.loading = false
           })
     },
-    playBgm(index) {
-      console.log('playBgm accepted')
-      console.log('this.currentPlayBgm.paused', this.currentPlayBgm.paused)
-      if (this.currentPlayBgm.paused) {
-        this.currentPlayBgm.src = `bgm/${this.bgmData[index].id}.mp3`
+    stopAll() {
+      // Stop local audio
+      if (this.currentPlayBgm) {
+        this.currentPlayBgm.pause()
+        this.currentPlayBgm.currentTime = 0
+      }
+      // Stop YouTube audio
+      if (this.youtubePlayer && typeof this.youtubePlayer.stopVideo === 'function') {
+        this.youtubePlayer.stopVideo()
+      }
+    },
+    async playBgm(index) {
+      console.log('playBgm accepted', index)
+      
+      // Stop currently playing
+      this.stopAll()
+      
+      const item = this.bgmData[index]
+      if (!item) return
+
+      this.currentPlayBgmIndex = index
+
+      if (item.type === 'youtube') {
+        if (this.youtubeApiReady) {
+          await this.initYoutubePlayer(item.id)
+          if (this.youtubePlayer && typeof this.youtubePlayer.playVideo === 'function') {
+            this.youtubePlayer.playVideo()
+          }
+        } else {
+          console.warn('YouTube API not ready yet')
+        }
+      } else {
+        // Default to local
+        this.currentPlayBgm.src = `bgm/${item.id}.mp3`
         this.currentPlayBgm.play()
-        this.currentPlayBgmIndex = index
       }
     },
     playAudioData(index) {
       if (this.currentPlayBgmIndex === index) {
-        this.currentPlayBgm.pause()
-        this.currentPlayBgmIndex = null
+        // Toggle pause/play for current track
+        const item = this.bgmData[index]
+        if (item.type === 'youtube') {
+          if (this.youtubePlayer) {
+            const state = this.youtubePlayer.getPlayerState()
+            if (state === window.YT.PlayerState.PLAYING) {
+              this.youtubePlayer.pauseVideo()
+              this.currentPlayBgmIndex = null // Mark as paused/stopped
+            } else {
+              this.youtubePlayer.playVideo()
+            }
+          }
+        } else {
+          if (!this.currentPlayBgm.paused) {
+            this.currentPlayBgm.pause()
+            this.currentPlayBgmIndex = null
+          } else {
+            this.currentPlayBgm.play()
+          }
+        }
         return
       }
+      // Switch to new track
       this.playBgm(index)
     },
     nextBgm() {
@@ -590,5 +696,13 @@ export default {
 
 .bgm-container::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
+}
+
+.youtube-player-container {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 </style>

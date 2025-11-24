@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-selection-popup-wrapper">
+  <div class="ai-selection-popup-wrapper" :class="{ 'mobile-no-select': isSmallScreen }">
     <KiwiDialog
       :title="title"
       :visible.sync="dialogVisible"
@@ -78,6 +78,9 @@
         <KiwiButton type="success" plain :disabled="reviewMode || !localSelectedText" @click="emitOpenInAiTab" icon="el-icon-s-operation">
           Open in AI Tab
         </KiwiButton>
+        <KiwiButton type="info" plain :disabled="reviewMode || !localSelectedText" @click="openInDictionary" icon="el-icon-notebook-1">
+          Open in Dictionary
+        </KiwiButton>
         <KiwiButton plain :disabled="!localSelectedText" @click="copySelectedText" icon="el-icon-document-copy">
           Copy
         </KiwiButton>
@@ -138,7 +141,8 @@ export default {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
     title: { type: String, default: 'AI Search' },
-    fileName: { type: String, default: '' }
+    fileName: { type: String, default: '' },
+    autoRequest: { type: Boolean, default: true }
   },
   data() {
     return {
@@ -172,14 +176,15 @@ export default {
       this.localSelectedText = trimmed
       const isFirst = (this.nestedItems || []).length === 0
       if (isFirst) {
+        // Always add item, but only auto-start if autoRequest is true
         const mode = this.isSingleWord(trimmed) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-        this.addNestedItemWithContext(trimmed, null, mode)
+        this.addNestedItemWithContext(trimmed, null, mode, this.autoRequest)
       } else {
         const last = this.nestedItems[this.nestedItems.length - 1]
         const ctx = last ? last.selectedText : null
-        this.addNestedItemWithContext(trimmed, ctx, 'selection-explanation')
+        this.addNestedItemWithContext(trimmed, ctx, 'selection-explanation', true)
       }
-    }
+  },
   },
   computed: {
     dialogVisible: {
@@ -192,8 +197,9 @@ export default {
             const t = (this.localSelectedText || '').trim()
             if (!this.reviewMode && t && (!this.nestedItems || this.nestedItems.length === 0)) {
               try {
+                // Always add item, but only auto-start if autoRequest is true
                 const mode = this.isSingleWord(t) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-                this.addNestedItemWithContext(t, null, mode)
+                this.addNestedItemWithContext(t, null, mode, this.autoRequest)
               } catch (_) {}
             }
           })
@@ -303,7 +309,9 @@ export default {
         now: String(Date.now())
       })
       const dictionaryUrl = `https://kason.app/#/lazy/tools/detail?${queryParams.toString()}`
-      try { window.open(dictionaryUrl, '_blank') } catch (_) {}
+      try {
+        window.open(dictionaryUrl, '_blank')
+      } catch (_) {}
       this.handleCloseSelectionDialog()
     },
     explainSelectionFromDialog() {
@@ -327,7 +335,7 @@ export default {
     },
 
     // Add item with optional context and mode; if context is empty, fall back to the selection itself for explanation mode
-    addNestedItemWithContext(selectedText, contextText, promptMode) {
+    addNestedItemWithContext(selectedText, contextText, promptMode, autoStart = true) {
       const selected = (selectedText || '').trim()
       if (!selected) return
       const mode = promptMode || 'selection-explanation'
@@ -342,18 +350,25 @@ export default {
         promptMode: mode,
         responseText: '',
         isStreaming: false,
-        loading: true,
+        loading: autoStart, // Only show loading if we are about to start
         error: '',
         collapsed: false,
         ws: null,
         requestId: id
       }
       this.nestedItems.push(item)
-      this.$nextTick(() => this.startNestedForItem(item))
+      if (autoStart) {
+        this.$nextTick(() => this.startNestedForItem(item))
+      }
     },
 
-    toggleItemCollapsed(item) { item.collapsed = !item.collapsed },
-    closeItem(item) { this.stopItem(item, true); this.nestedItems = this.nestedItems.filter(i => i.id !== item.id) },
+    toggleItemCollapsed(item) {
+      item.collapsed = !item.collapsed
+    },
+    closeItem(item) {
+      this.stopItem(item, true)
+      this.nestedItems = this.nestedItems.filter(i => i.id !== item.id)
+    },
 
     // Core: start per-item WS using that item's context/mode
     startNestedForItem(item) {
@@ -438,13 +453,19 @@ export default {
       item.loading = false
       item.isStreaming = false
       item.error = message || 'AI streaming error'
-      try { item.ws && item.ws.close() } catch (_) {}
+      try {
+        if (item.ws) item.ws.close()
+      } catch (_) {}
       item.ws = null
       msgUtil.msgError(this, item.error)
     },
 
     stopItem(item, silent) {
-      try { if (item && item.ws) { item.ws.close() } } catch (_) {}
+      try {
+        if (item && item.ws) {
+          item.ws.close()
+        }
+      } catch (_) {}
       if (item) {
         item.ws = null
         item.loading = false
@@ -460,14 +481,23 @@ export default {
         this.aiLastError = 'No text selected'
         return
       }
+      
+      // Check if there is already a pending item for this text (added but not started)
+      const pendingItem = (this.nestedItems || []).find(i => i.selectedText === text && !i.loading && !i.responseText && !i.error)
+      if (pendingItem) {
+        pendingItem.loading = true
+        this.startNestedForItem(pendingItem)
+        return
+      }
+
       const isFirst = (this.nestedItems || []).length === 0
       if (isFirst) {
         const mode = this.isSingleWord(text) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-        this.addNestedItemWithContext(text, null, mode)
+        this.addNestedItemWithContext(text, null, mode, true)
       } else {
         const last = this.nestedItems[this.nestedItems.length - 1]
         const ctx = last ? last.selectedText : null
-        this.addNestedItemWithContext(text, ctx, 'selection-explanation')
+        this.addNestedItemWithContext(text, ctx, 'selection-explanation', true)
       }
     },
 
@@ -481,6 +511,23 @@ export default {
       this.clearAllCurrent()
       this.dialogVisible = false
       this.$emit('open-ai-tab', { text, query })
+    },
+
+    openInDictionary() {
+      const text = (this.localSelectedText || '').trim()
+      if (!text) {
+        msgUtil.msgWarning(this, 'No text selected')
+        return
+      }
+      const routeData = this.$router.resolve({
+        path: kiwiConsts.ROUTES.DETAIL,
+        query: {
+          active: 'search',
+          selectedMode: 'detail',
+          originalText: text
+        }
+      })
+      window.open(routeData.href, '_blank')
     },
 
     clearAllCurrent() {
@@ -748,5 +795,11 @@ export default {
 @keyframes rotating {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.mobile-no-select {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -webkit-touch-callout: none !important;
 }
 </style>

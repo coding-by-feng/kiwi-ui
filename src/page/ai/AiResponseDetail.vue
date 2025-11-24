@@ -25,6 +25,7 @@
       :visible.sync="selectionDialogVisible"
       :selectedText="selectedText"
       title="Explain Selected Text"
+      :auto-request="false"
     />
 
     <!-- Multiple Selection Response Displays -->
@@ -1520,4 +1521,23 @@ h1 {
 }
 
 .main-response-content { text-align: left; margin-bottom: 40px; color: var(--text-primary); }
+</style>
+<style scoped>
+/* ... existing styles ... */
+
+@media (max-width: 768px) {
+  .ai-container {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+  /* Allow selection in specific areas if needed, but user asked to prevent it generally or for popups. 
+     If they want to copy, they might need buttons. 
+     However, usually response text might need to be selectable? 
+     The user said "prevent the native selection event or popup". 
+     I will apply it to the container. 
+     If specific parts need to be selectable, I can override.
+     But for now, I follow the instruction to prevent it.
+  */
+}
 </style>
