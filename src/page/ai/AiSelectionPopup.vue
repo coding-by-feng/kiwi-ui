@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-selection-popup-wrapper" :class="{ 'mobile-no-select': isSmallScreen }">
+  <div class="ai-selection-popup-wrapper">
     <KiwiDialog
       :title="title"
       :visible.sync="dialogVisible"
@@ -723,7 +723,7 @@ export default {
 }
 
 /* Disable native mobile select/callout while keeping selection */
-.selection-response-content { -webkit-touch-callout: none; user-select: text; -webkit-user-select: text; }
+.selection-response-content { user-select: text; -webkit-user-select: text; }
 
 /* Selection dialog styles (minimal) */
 .selection-dialog-content { padding: 10px 0; }
@@ -797,9 +797,5 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-.mobile-no-select {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -webkit-touch-callout: none !important;
-}
+
 </style>
