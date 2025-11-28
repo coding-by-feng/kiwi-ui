@@ -1,5 +1,5 @@
 <template>
-  <div class="youtube-player" :class="{ 'mobile-no-select': isSmallScreen }" @contextmenu="isSmallScreen && $event.preventDefault()">
+  <div class="youtube-player">
 
 
     <!-- Enhanced Input Container with gradient styling -->
@@ -408,48 +408,8 @@ export default {
       lastTranslationRequest: null,
       connectingPromise: null, // Track pending connection
       pageHidden: false,
-
-      // NoSleep helper to reduce iOS background suspension via wake-lock-like behavior
-      noSleep: null,
-
-      // Optimized debouncing
-      scrollTimeout: null,
-      progressUpdateInterval: null,
-      // New: downloading state
-      isDownloading: false,
-      // New: auto-center toggle (default true if unset)
-      autoCenterEnabled: (persistedAutoCenter === undefined || persistedAutoCenter === null) ? true : !!persistedAutoCenter,
-
-      // Mini loader state
-      isBuffering: false,
-      miniLoaderPercent: 0,
-      miniLoaderInterval: null,
-      // Splitter state (desktop only)
-      leftPanelPercent: (() => {
-        const v = getStore({ name: 'ytb_left_panel_percent' });
-        const n = typeof v === 'number' ? v : parseFloat(v);
-        const clamped = isNaN(n) ? 50 : Math.max(20, Math.min(80, n));
-        return clamped;
-      })(),
-      isResizing: false,
-      splitterMin: 20,
-      splitterMax: 80,
-
-      // Inline AI search (generic) streaming state
-      aiWebsocket: null,
-      aiSearchLoading: false,
-      aiIsStreaming: false,
-      aiRequestId: '',
-      aiResponseText: '',
-      aiLastError: '',
-      // Init guards & timeouts
-      isInitializing: false,
-      _suppressVideoIdWatcher: false,
-      playerInitTimeout: null,
-
-      // New: scrolling management for current subtitle in context display
-      currentSubtitleScrollInterval: null,
-      currentSubtitleScrollStartTime: 0,
+      // New: strong dedupe key for in-flight translation
+      currentTranslationKey: null,
     };
   },
   computed: {
@@ -932,6 +892,10 @@ export default {
         this.websocket = null;
         this.wsConnectionStatus = 'disconnected';
       }
+      if (this.wsHeartbeatInterval) {
+        clearInterval(this.wsHeartbeatInterval);
+        this.wsHeartbeatInterval = null;
+      }
     },
 
     handleWebSocketMessage(event) {
@@ -1014,6 +978,7 @@ export default {
       this.translationProgress = 100;
       this.subtitlesLoadingComplete = true;
       this.wsShouldReconnect = false;
+      this.currentTranslationKey = null;
 
       if (response.fullResponse) {
         this.translatedSubtitles = response.fullResponse;
@@ -1041,6 +1006,7 @@ export default {
       this.subtitlesLoadingComplete = true;
       this.shouldShowTranslationContainer = false; // Hide container on error
       this.wsShouldReconnect = false;
+      this.currentTranslationKey = null;
 
       this.stopProgressAnimation();
 
@@ -1071,14 +1037,22 @@ export default {
     },
 
     async requestTranslation(videoUrl, language) {
-      // Prevent duplicate requests for the same video and language if already loading
-      if (this.isTranslationLoading &&
-          this.lastTranslationRequest &&
-          this.lastTranslationRequest.videoUrl === videoUrl &&
-          this.lastTranslationRequest.language === language) {
-        console.log('[YoutubePlayer] Skipping duplicate translation request');
+      if (!videoUrl || !language) return;
+
+      // Build a stable key for this translation request
+      const buildKey = (url, lang) => {
+        const id = this.extractVideoId(url) || url;
+        return `${id}::${lang}`;
+      };
+      const key = buildKey(videoUrl, language);
+
+      // Strong dedupe: if same request is already in-flight, skip
+      if (this.isTranslationLoading && this.currentTranslationKey === key) {
+        console.log('[YoutubePlayer] Skipping duplicate translation request for key', key);
         return;
       }
+
+      this.currentTranslationKey = key;
 
       // Set loading state immediately to block concurrent requests
       this.isTranslationLoading = true;
@@ -1095,6 +1069,10 @@ export default {
       try {
         await this.connectWebSocket();
 
+        if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+          throw new Error('WebSocket is not open');
+        }
+
         const request = {
           videoUrl: videoUrl,
           language: language,
@@ -1105,11 +1083,12 @@ export default {
 
         this.websocket.send(JSON.stringify(request));
       } catch (error) {
-        this.handleWebSocketError(error, 'Failed to start translation: ' + error.message);
+        this.handleWebSocketError(error, 'Failed to start translation: ' + (error && error.message ? error.message : 'unknown error'));
         this.isTranslationLoading = false;
         this.subtitlesLoadingComplete = true;
         this.shouldShowTranslationContainer = false;
         this.wsShouldReconnect = false;
+        this.currentTranslationKey = null;
         this.disableNoSleep();
       }
     },
@@ -1129,7 +1108,9 @@ export default {
               ...this.lastTranslationRequest,
               timestamp: Date.now()
             };
-            this.websocket.send(JSON.stringify(resumeRequest));
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+              this.websocket.send(JSON.stringify(resumeRequest));
+            }
           }
         } catch (e) {
           // Keep trying while allowed
@@ -1354,6 +1335,7 @@ export default {
       this.statusMessage = 'Loading video...';
       this.miniLoaderPercent = 0;
       this.isBuffering = false;
+      this.currentTranslationKey = null;
 
       // Reset inline AI search state
       this.closeAiStream(true);
@@ -1679,6 +1661,7 @@ export default {
       this.isTranslationLoading = false;
       this.translationProgress = 0;
       this.translationChunks = [];
+      this.currentTranslationKey = null;
       msgUtil.msgSuccess(this, 'Cleared subtitles', 1200);
     },
 
@@ -1981,6 +1964,7 @@ export default {
       if (this.isTranslationLoading) {
         this.isTranslationLoading = false;
         this.translationProgress = 0;
+        this.currentTranslationKey = null;
         this.disconnectWebSocket();
       }
 
@@ -2005,9 +1989,14 @@ export default {
 
       if (enabled && this.selectedLanguage && this.videoUrl && !this.translatedSubtitles) {
         this.shouldShowTranslationContainer = true;
-        this.loadContent();
+        // Only start translation if subtitles are already loaded; otherwise rely on background loader
+        if (!this.isSubtitlesLoading && this.subtitles.length > 0) {
+          this.requestTranslation(this.videoUrl, this.selectedLanguage);
+        }
       } else if (!enabled) {
         this.shouldShowTranslationContainer = false;
+        this.wsShouldReconnect = false;
+        this.currentTranslationKey = null;
         this.disconnectWebSocket();
       }
     },
@@ -3268,10 +3257,6 @@ export default {
   color: var(--color-warning);
 }
 
-.mobile-no-select {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -webkit-touch-callout: none !important;
-}
+
 </style>
 

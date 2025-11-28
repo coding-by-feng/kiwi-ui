@@ -182,8 +182,7 @@ export default {
   computed: {
     readerClass() {
       return {
-        'pdf-reader--compact': this.isSmallScreen,
-        'pdf-reader--no-select': this.useClickToSearch
+        'pdf-reader--compact': this.isSmallScreen
       }
     },
     // Zoom helpers
@@ -398,13 +397,11 @@ export default {
       return fallback
     },
     handlePointerSelection(event) {
-      // On mobile/tablet we disable selection and use click-to-search instead
-      if (this.useClickToSearch) return
+      // On mobile/tablet we allow selection now
       this.$nextTick(() => this.processSelection(event))
     },
     handleTouchSelection() {
-      // On mobile/tablet we disable selection and use click-to-search instead
-      if (this.useClickToSearch) return
+      // On mobile/tablet we allow selection now
       setTimeout(() => this.processSelection(), 60)
     },
     // New: click/tap to pick the sentence under finger on mobile devices
@@ -895,20 +892,7 @@ export default {
   .pdf-reader__page-column { width: 100%; padding: 12px; }
 }
 
-/* Disable native text selection on mobile click-to-search mode, but keep textLayer clickable */
-.pdf-reader--no-select {
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -webkit-touch-callout: none !important;
 
-  ::v-deep(.textLayer) {
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -webkit-touch-callout: none !important;
-    pointer-events: auto;
-  }
-}
 
 ::v-deep(.pdf-reader__viewer .page) {
   position: relative;

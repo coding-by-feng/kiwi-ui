@@ -181,7 +181,8 @@ export default {
         youtube: true,
         about: true,
         aiHistory: true, // New: AI History tab enabled by default
-        pdfReader: true
+        pdfReader: true,
+        signature: true
     }),
 
     DB_NAME: 'KIWI_VOCABULARY',
@@ -355,7 +356,8 @@ export default {
         AI_RESPONSE_DETAIL: '/index/tools/aiResponseDetail',
         AI_CALL_HISTORY: '/index/tools/aiCallHistory',
         YOUTUBE: '/index/tools/youtube',
-        PDF_READER: '/index/tools/pdfReader'
+        PDF_READER: '/index/tools/pdfReader',
+        SIGNATURE: '/index/tools/signature'
     }),
 
     // Centralized API base prefixes
