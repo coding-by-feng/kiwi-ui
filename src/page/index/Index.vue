@@ -147,7 +147,7 @@ export default {
       }
 
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
+      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader','signature']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Only starList requires login to view; youtube and aiHistory should be visible with hints when logged out
@@ -363,6 +363,13 @@ export default {
         <span slot="label"><i class="el-icon-document"></i></span>
         <keep-alive>
           <router-view name="pdfReader" v-if="visitedTabs.pdfReader" v-show="activeName==='pdfReader'"></router-view>
+        </keep-alive>
+      </el-tab-pane>
+
+      <el-tab-pane name="signature" lazy v-if="enabledTabs.signature">
+        <span slot="label"><i class="el-icon-edit"></i></span>
+        <keep-alive>
+          <router-view name="signature" v-if="visitedTabs.signature" v-show="activeName==='signature'"></router-view>
         </keep-alive>
       </el-tab-pane>
 

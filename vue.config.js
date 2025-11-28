@@ -31,7 +31,9 @@ module.exports = {
         '@smallwei/avue',
         'chart.js',
         '@opendocsg/pdf2md',
-        'unpdf'
+        'unpdf',
+        'signature_pad',
+        'pdfjs-dist'
     ],
     configureWebpack: {
         devtool: false,
@@ -152,7 +154,7 @@ module.exports = {
             maxEntrypointSize: 250000,
             maxAssetSize: 200000,
             hints: isProduction ? 'warning' : false,
-            assetFilter: function(assetFilename) {
+            assetFilter: function (assetFilename) {
                 return assetFilename.endsWith('.js') || assetFilename.endsWith('.css');
             }
         }
