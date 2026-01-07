@@ -10,18 +10,25 @@
     <div class="filters-container" v-if="!loading">
       <div class="filter-card">
         <div class="filter-row">
-          <div class="kiwi-select-wrapper" v-if="historyData && historyData.total > 0">
-            <select v-model="filterMode" @change="applyFilters" class="kiwi-select">
-              <option value="" selected>All Modes</option>
-              <option
-                  v-for="mode in uniqueModes"
-                  :key="mode"
-                  :value="mode">
-                {{ getModeLabel(mode) }}
-              </option>
-            </select>
-            <i class="el-icon-arrow-down select-arrow"></i>
-          </div>
+          <KiwiDropdown @command="handleModeFilter">
+            <KiwiButton size="small">
+              {{ filterMode ? getModeLabel(filterMode) : 'All Modes' }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem :command="''">
+                All Modes
+              </KiwiDropdownItem>
+              <KiwiDropdownItem
+                  v-for="mode in searchModes"
+                  :key="mode.value"
+                  :command="mode.value">
+                <span :class="'mode-option-' + getModeTagType(mode.value)">
+                  {{ mode.label }}
+                </span>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
           <div class="kiwi-select-wrapper" v-if="historyData && historyData.total > 0">
             <select v-model="filterLanguage" @change="applyFilters" class="kiwi-select">
@@ -223,6 +230,8 @@ import KiwiButton from '@/components/ui/KiwiButton.vue';
 import KiwiTag from '@/components/ui/KiwiTag.vue';
 import KiwiPagination from '@/components/ui/KiwiPagination.vue';
 import KiwiDialog from '@/components/ui/KiwiDialog.vue';
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue';
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue';
 
 export default {
   name: 'AiCallHistory',
@@ -230,7 +239,9 @@ export default {
     KiwiButton,
     KiwiTag,
     KiwiPagination,
-    KiwiDialog
+    KiwiDialog,
+    KiwiDropdown,
+    KiwiDropdownItem
   },
   data() {
     return {
@@ -314,7 +325,7 @@ export default {
         // Use the extracted API function with filter parameter
         const response = await getAiCallHistory(this.currentPage, this.pageSize, this.filterClassification);
 
-        if (response.data.code === 1) {
+        if (response.data.success) {
           this.historyData = response.data.data;
           console.log('Loaded AI call history successfully:', this.historyData);
         } else {
@@ -352,12 +363,17 @@ export default {
       this.filterLanguage = '';
       this.filterClassification = '';
       this.lastClassificationFilter = '';
-      
+
       // If we had a classification filter, reload data to get all items
       if (hadClassificationFilter) {
         this.currentPage = 1;
         this.loadHistory();
       }
+    },
+
+    handleModeFilter(command) {
+      this.filterMode = command;
+      this.applyFilters();
     },
 
     getModeLabel(modeValue) {
@@ -377,9 +393,9 @@ export default {
         [kiwiConsts.SEARCH_AI_MODES.ANTONYM.value]: 'warning',
         [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_ASSOCIATION.value]: 'primary',
         [kiwiConsts.SEARCH_AI_MODES.PHRASES_ASSOCIATION.value]: 'info',
-        // New modes
         [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_CHARACTER_EXPANSION.value]: 'warning',
-        [kiwiConsts.SEARCH_AI_MODES.AMBIGUOUS_ASSOCIATION_CORRECTION.value]: 'danger'
+        [kiwiConsts.SEARCH_AI_MODES.AMBIGUOUS_ASSOCIATION_CORRECTION.value]: 'danger',
+        [kiwiConsts.SEARCH_AI_MODES.NATURAL_IDIOMATIC_RETOUCH.value]: 'primary'
       };
       return map[modeValue] || 'primary';
     },
@@ -399,43 +415,40 @@ export default {
       return languageCode;
     },
 
-    // Convert array-based timestamp to Date object
-    arrayToDate(timestampArray) {
-      if (!Array.isArray(timestampArray) || timestampArray.length < 6) {
+    // Convert timestamp to Date object (supports both ISO string and array formats)
+    parseTimestamp(timestamp) {
+      if (!timestamp) {
         return null;
       }
 
-      // Array format: [year, month, day, hour, minute, second]
-      // Note: JavaScript months are 0-based, so we need to subtract 1 from month
-      const [year, month, day, hour, minute, second] = timestampArray;
-      return new Date(year, month - 1, day, hour, minute, second);
+      // Handle ISO 8601 string format: "2025-11-18T16:54:06"
+      if (typeof timestamp === 'string') {
+        const date = new Date(timestamp);
+        return isNaN(date.getTime()) ? null : date;
+      }
+
+      // Handle array format: [year, month, day, hour, minute, second]
+      if (Array.isArray(timestamp) && timestamp.length >= 6) {
+        const [year, month, day, hour, minute, second] = timestamp;
+        return new Date(year, month - 1, day, hour, minute, second);
+      }
+
+      return null;
     },
 
     formatTimestamp(timestamp) {
       if (!timestamp) return 'Unknown';
 
-      const date = this.arrayToDate(timestamp);
+      const date = this.parseTimestamp(timestamp);
       if (!date) return 'Invalid Date';
 
-      const now = new Date();
-      const diffTime = now - date;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) {
-        return 'Today ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } else if (diffDays === 1) {
-        return 'Yesterday ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } else if (diffDays <= 7) {
-        return diffDays + ' days ago';
-      } else {
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
+      return date.toLocaleString();
     },
 
     formatFullTimestamp(timestamp) {
       if (!timestamp) return 'Unknown';
 
-      const date = this.arrayToDate(timestamp);
+      const date = this.parseTimestamp(timestamp);
       if (!date) return 'Invalid Date';
 
       return date.toLocaleString();
@@ -482,7 +495,7 @@ export default {
       this.archivingIds.push(id);
       try {
         const response = await archiveAiCallHistory(id);
-        if (response.data.code === 1) {
+        if (response.data.success) {
           messageCenter.success(response.data.data || 'Item archived successfully');
           // Reload the history to reflect changes
           this.loadHistory();
@@ -515,7 +528,7 @@ export default {
       this.deletingIds.push(id);
       try {
         const response = await deleteAiCallHistory(id);
-        if (response.data.code === 1) {
+        if (response.data.success) {
           messageCenter.success(response.data.data || 'Item deleted successfully');
           // Reload the history to reflect changes
           this.loadHistory();
@@ -534,13 +547,13 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .ai-call-history {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
   background: var(--bg-body);
-  border-radius: 18px;
+  border-radius: var(--card-border-radius);
   box-shadow: var(--shadow-card);
   min-height: 600px;
 }
@@ -624,6 +637,27 @@ export default {
   color: var(--text-placeholder);
   pointer-events: none;
   font-size: 12px;
+}
+
+/* Mode option colors in dropdown */
+.mode-option-primary {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.mode-option-info {
+  color: var(--color-info);
+  font-weight: 500;
+}
+
+.mode-option-warning {
+  color: var(--color-warning);
+  font-weight: 500;
+}
+
+.mode-option-danger {
+  color: var(--color-danger);
+  font-weight: 500;
 }
 
 /* Empty State */
@@ -760,211 +794,126 @@ export default {
 
 /* Compact icon-only action button */
 .history-item-actions .action-btn {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  border: 1px solid var(--border-color-light) !important;
-  background: var(--bg-card) !important;
-  color: var(--color-primary) !important;
-  box-shadow: none !important;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-color-light);
+  background: var(--bg-card);
+  color: var(--color-primary);
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .history-item-actions .action-btn:hover:not(.is-loading) {
-  background: var(--bg-container) !important;
-  color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
+  background: var(--bg-container);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .history-item-actions .action-btn:active {
-  transform: none !important;
+  transform: none;
 }
 
 .history-item-actions .action-btn [class^="el-icon-"],
 .history-item-actions .action-btn [class*=" el-icon-"] {
   font-size: 16px;
 }
-
-/* Override previous large/button styles within actions for these icon buttons */
-.history-item-actions .action-btn.el-button--primary,
-.history-item-actions .action-btn.el-button--info,
-.history-item-actions .action-btn.el-button--danger {
-  background: var(--bg-card) !important;
-  color: var(--color-primary) !important;
-}
-
-/* Remove previous button sizing overrides inside actions */
-.history-item-actions .el-button {
-  border-radius: 8px;
-  /* Keep other buttons (if any) reasonable, but our .action-btn overrides apply with !important */
-}
 </style>
 
-<style>
-/* Global styles for the delete confirmation dialog */
+<style lang="scss">
+/* Global styles for the delete confirmation dialog - uses !important to override Element UI defaults */
 .kiwi-delete-confirm-dialog {
   background: var(--bg-card) !important;
   border: 1px solid var(--border-color-light) !important;
   border-radius: var(--card-border-radius, 16px) !important;
   box-shadow: var(--shadow-card) !important;
-  backdrop-filter: var(--backdrop-filter) !important;
+  backdrop-filter: var(--backdrop-filter);
+  -webkit-backdrop-filter: var(--backdrop-filter);
   padding-bottom: 20px !important;
-}
 
-.kiwi-delete-confirm-dialog .el-message-box__title {
-  color: var(--text-primary) !important;
-  font-weight: 600 !important;
-}
+  .el-message-box__title {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+  }
 
-.kiwi-delete-confirm-dialog .el-message-box__content {
-  color: var(--text-regular) !important;
-}
+  .el-message-box__content {
+    color: var(--text-secondary) !important;
+  }
 
-.kiwi-delete-confirm-dialog .el-message-box__status {
-  color: var(--color-warning) !important;
-}
+  .el-message-box__status {
+    color: var(--color-warning) !important;
+  }
 
-.kiwi-delete-confirm-dialog .el-message-box__close {
-  color: var(--text-secondary) !important;
-}
+  .el-message-box__close {
+    color: var(--text-secondary);
 
-.kiwi-delete-confirm-dialog .el-message-box__close:hover {
-  color: var(--color-primary) !important;
-}
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
 
-/* Buttons in the dialog */
-.kiwi-delete-confirm-dialog .el-button {
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-}
+  // Buttons in the dialog
+  .el-button {
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: var(--transition-normal);
+  }
 
-/* Cancel button */
-.kiwi-delete-confirm-dialog .el-button--default {
-  background: transparent !important;
-  border: 1px solid var(--border-color-light) !important;
-  color: var(--text-primary) !important;
-}
+  // Cancel button
+  .el-button--default {
+    background: transparent !important;
+    border: 1px solid var(--border-color-light) !important;
+    color: var(--text-primary) !important;
 
-.kiwi-delete-confirm-dialog .el-button--default:hover {
-  background: var(--bg-container) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
+    &:hover {
+      background: var(--bg-container) !important;
+      border-color: var(--color-primary) !important;
+      color: var(--color-primary) !important;
+    }
+  }
 
-/* Delete/Confirm button (usually primary or danger depending on implementation, but here it's the confirm button) */
-.kiwi-delete-confirm-dialog .el-button--primary {
-  background: var(--color-danger) !important;
-  border-color: var(--color-danger) !important;
-  color: #fff !important;
-}
+  // Delete/Confirm button
+  .el-button--primary {
+    background: var(--color-danger) !important;
+    border-color: var(--color-danger) !important;
+    color: #fff !important;
 
-.kiwi-delete-confirm-dialog .el-button--primary:hover {
-  opacity: 0.9 !important;
-  box-shadow: 0 0 15px rgba(255, 0, 60, 0.4) !important;
-  transform: translateY(-1px);
+    &:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 15px rgba(var(--color-danger-rgb), 0.4);
+      transform: translateY(-1px);
+    }
+  }
 }
 </style>
 
-<style scoped>
-.filter-row .el-button {
-  border-radius: 999px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  transition: all 0.25s ease !important;
-  box-shadow: var(--shadow-card) !important;
-  border: none !important;
-  padding: 8px 18px !important;
-  background: var(--gradient-primary) !important;
-  color: #fff !important;
-}
+<style lang="scss" scoped>
+// Filter row button styles
+.filter-row ::v-deep .el-button {
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-card);
+  border: none;
+  padding: 8px 18px;
+  background: var(--gradient-primary);
+  color: #fff;
 
-.filter-row .el-button:hover {
-  background: var(--gradient-primary) !important;
-  filter: brightness(1.1);
-  transform: translateY(-1px) !important;
-  box-shadow: var(--shadow-hover) !important;
-  color: #fff !important;
-}
-
-.filter-row .el-button:focus {
-  background: var(--gradient-primary) !important;
-  box-shadow: 0 0 0 3px var(--border-color-light) !important;
-  color: #fff !important;
-}
-
-.filter-row .el-button:active {
-  transform: translateY(0px) !important;
-}
-
-/* Responsive design for small screens */
-@media (max-width: 768px) {
-  .ai-call-history {
-    padding: 18px;
-    border-radius: 16px;
-    box-shadow: var(--shadow-card);
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
   }
 
-  .history-title {
-    font-size: 20px;
+  &:focus {
+    box-shadow: 0 0 0 3px var(--border-color-light);
   }
-  
-  .filter-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
-  }
-  
-  .filter-row .el-select {
-    min-width: unset;
-    width: 100%;
-  }
-  
-  /* Keep actions on a single line; allow horizontal scroll on mobile */
-  .history-item-actions {
-    gap: 10px;
-    padding-top: 12px;
-  }
-  
-}
 
-@media (max-width: 480px) {
-  .ai-call-history {
-    padding: 14px;
-    border-radius: 14px;
-  }
-  
-  .history-title {
-    font-size: 18px;
-  }
-  
-  .filter-row {
-    padding: 10px;
-  }
-  
-  /* Ensure action buttons remain single-line with scroll */
-  .history-item-actions {
-    gap: 10px;
-    padding-top: 12px;
-  }
-  
-  .history-item-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .timestamp {
-    align-self: flex-end;
-    font-size: 12px;
-  }
-  
-  .prompt-text {
-    padding: 12px;
-    font-size: 14px;
+  &:active {
+    transform: translateY(0);
   }
 }
 
@@ -986,9 +935,9 @@ export default {
 .detail-prompt {
   background: var(--bg-container);
   padding: 22px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color-light); /* place base border first */
-  border-left: 4px solid var(--color-primary); /* then accent left border so it's not overwritten */
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color-light);
+  border-left: 4px solid var(--color-primary);
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
@@ -1005,46 +954,16 @@ export default {
 
 .dialog-footer {
   text-align: center;
+
+  .el-button {
+    margin: 0 8px;
+  }
 }
 
-.dialog-footer .el-button {
-  margin: 0 8px;
+// AI mode tag - force white text for gradient backgrounds
+.ai-mode-tag {
+  color: #ffffff;
 }
-
-/* Element UI tag customization */
-.el-tag {
-  border-radius: 999px;
-  font-weight: 600;
-  border: none;
-  padding: 4px 12px;
-  box-shadow: var(--shadow-card);
-}
-
-.el-tag--primary {
-  background: var(--gradient-primary);
-  color: #fff;
-}
-
-.el-tag--success {
-  background: var(--gradient-success);
-  color: #fff;
-}
-
-.el-tag--warning {
-  background: var(--gradient-warning);
-  color: #fff;
-}
-
-.el-tag--danger {
-  background: var(--gradient-danger);
-  color: #fff;
-}
-
-.el-tag--info {
-  background: var(--gradient-info);
-  color: #fff;
-}
-
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -1059,23 +978,30 @@ export default {
     align-items: stretch;
   }
 
+  .history-title {
+    font-size: 20px;
+  }
+
   .header-actions {
     display: flex;
     gap: 10px;
-  }
 
-  .header-actions .el-button {
-    margin-left: 0;
-    flex: 1;
+    .el-button {
+      margin-left: 0;
+      flex: 1;
+    }
   }
 
   .filter-row {
     flex-direction: column;
     align-items: stretch;
-  }
+    gap: 10px;
+    padding: 12px;
 
-  .filter-row .el-select {
-    min-width: auto;
+    .el-select {
+      min-width: auto;
+      width: 100%;
+    }
   }
 
   .history-item-header {
@@ -1085,17 +1011,37 @@ export default {
 
   .history-item-actions {
     justify-content: flex-start;
+    gap: 10px;
+    padding-top: 12px;
   }
 
   .detail-dialog {
-    width: 95% !important;
+    width: 95%;
   }
 }
 
-.ai-mode-tag { /* force white font for all AI mode tags */
-  color: #ffffff !important;
-}
-.ai-mode-tag ::v-deep(*) {
-  color: #ffffff !important;
+@media (max-width: 480px) {
+  .ai-call-history {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .history-title {
+    font-size: 18px;
+  }
+
+  .filter-row {
+    padding: 10px;
+  }
+
+  .timestamp {
+    align-self: flex-end;
+    font-size: 12px;
+  }
+
+  .prompt-text {
+    padding: 12px;
+    font-size: 14px;
+  }
 }
 </style>

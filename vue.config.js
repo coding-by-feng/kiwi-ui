@@ -11,7 +11,7 @@ const isDevServer = (
 const isProduction = process.env.NODE_ENV === 'production'
 
 // Backend URL handling (web only)
-const devProxyTarget = process.env.VUE_APP_API_URL || 'http://localhost:9991'
+const devProxyTarget = process.env.VUE_APP_API_URL || 'http://localhost:8088'
 const definedApiEnv = isDevServer
     ? devProxyTarget
     : (process.env.VUE_APP_API_URL || '')
@@ -266,8 +266,7 @@ module.exports = {
         compress: true,
         proxy: {
             '/auth': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
-            '/wordBiz': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
-            '/ai-biz': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
+            '/api': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
             '/code': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
             '/admin': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
             '/tools': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false }

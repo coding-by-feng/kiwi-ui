@@ -172,7 +172,7 @@ export default {
           let listId = this.$route.query.listId
           if (listId) {
             await wordStarList.findAllWordId(listId).then(response => {
-              if (response.data.code) {
+              if (response.data.success) {
                 let wordIdList = response.data.data
                 this.stockReview(wordIdList)
               }
@@ -235,7 +235,7 @@ export default {
       }
 
       await this.queryWordDetail(word, this.current, this.size).then(response => {
-        if (response.data.code && response.data.data.records && response.data.data.records.length > 0) {
+        if (response.data.success && response.data.data.records && response.data.data.records.length > 0) {
           if (response.data.data.records.length > 1) {
             this.wordInfoList = response.data.data.records
             this.initTabActivate()
@@ -324,7 +324,7 @@ export default {
       for (let i = 0; i < wordIdList.length; i++) {
         let wordId = wordIdList[i]
         await this.queryWordDetailById(wordId).then(response => {
-          if (response.data.code) {
+          if (response.data.success) {
             this.wordInfo = response.data.data
             this.playDetail2Audio()
           } else {
@@ -402,7 +402,7 @@ export default {
         let source = getStore({name: 'pronunciation_source'})
         if (!audio.src || audio.src === window.location.href) {
           if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-            audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+            audio.src = '/api/word/pronunciation/downloadVoice/' + id
           } else {
             audio.src = sourceUrl
           }

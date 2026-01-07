@@ -76,11 +76,11 @@
 
           <!-- Username / Password Login -->
           <el-form ref="upForm" :model="upForm" :rules="upRules" label-position="top" class="up-login-form" @submit.native.prevent="handleUsernamePasswordLogin">
-            <el-form-item prop="username" :label="$t('auth.username') || 'Username'">
+            <el-form-item prop="username" :label="$t('auth.usernameOrEmail') || 'Username / Email'">
               <el-input
                 v-model.trim="upForm.username"
                 autocomplete="username"
-                placeholder="Username"
+                :placeholder="$t('auth.usernameOrEmailPlaceholder') || 'Enter your username or email'"
                 clearable
                 @keyup.enter.native="handleUsernamePasswordLogin"
               />
@@ -90,7 +90,7 @@
                 v-model="upForm.password"
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
-                placeholder="Password"
+                :placeholder="$t('auth.passwordPlaceholder') || 'Enter your password'"
                 show-password
                 @keyup.enter.native="handleUsernamePasswordLogin"
               />
@@ -102,6 +102,12 @@
               </el-button>
             </el-form-item>
           </el-form>
+
+          <!-- Link to Registration -->
+          <div class="auth-link">
+            <span>{{ $t('auth.noAccount') || "Don't have an account?" }}</span>
+            <a href="javascript:void(0)" @click="goToRegister">{{ $t('auth.register') || 'Register' }}</a>
+          </div>
         </div>
       </div>
 
@@ -174,7 +180,7 @@ export default {
       return undefined
     },
 
-    // Username/Password login
+    // Username/Password login using new /auth/login endpoint
     handleUsernamePasswordLogin() {
       if (this.upLoading) return
       const form = this.$refs.upForm
@@ -191,7 +197,13 @@ export default {
               password: this.upForm.password || ''
             }
 
-            const resp = await this.$http.post(`${kiwiConsts.API_BASE.AUTH}/username-password/login`, payload, { headers: { isToken: false } })
+            // Use new /auth/login endpoint per API documentation
+            const resp = await this.$http.post(`${kiwiConsts.API_BASE.AUTH}/login`, payload, {
+              headers: {
+                isToken: false,
+                'Content-Type': 'application/json'
+              }
+            })
             const body = (resp && resp.data) || {}
             const code = body.code
             const tokens = body.data || body.result || body
@@ -207,7 +219,10 @@ export default {
             }
           } catch (e) {
             console.error('❌ [AUTH] Username/Password login error:', e)
-            const msg = (e && e.message) || this.$t('auth.loginFailed') || 'Login failed'
+            const errResponse = e && e.response && e.response.data
+            const msg = (errResponse && (errResponse.msg || errResponse.message)) ||
+                        (e && e.message) ||
+                        this.$t('auth.loginFailed') || 'Login failed'
             try { this.$message.error(msg) } catch (_) {}
           } finally {
             this.upLoading = false
@@ -215,6 +230,11 @@ export default {
           }
         })
       }
+    },
+
+    // Navigate to registration page
+    goToRegister() {
+      this.$emit('switch-to-register')
     },
 
     // Dynamically ensure gapi.auth2 is available; fallback gracefully
@@ -448,16 +468,15 @@ export default {
         query: redirectQuery
       })
 
-      // Use replace to avoid extra history entries, and avoid full reload
-      this.$router.replace({
+      // Store the redirect destination and reload the page
+      // The router will pick up this destination after reload
+      sessionStorage.setItem('loginRedirect', JSON.stringify({
         path: redirectPath,
         query: redirectQuery
-      })
+      }))
 
-      // Let Index.vue pick up the new token via getStore without a hard reload
-      this.$nextTick(() => {
-        try { this.$forceUpdate() } catch (_) {}
-      })
+      console.log('🔄 [REDIRECT] Performing full page reload')
+      window.location.href = '/'
     }
   }
 }
@@ -771,6 +790,27 @@ export default {
   margin-top: 4px;
   .full-width {
     width: 100%;
+  }
+}
+
+/* Auth link (Login/Register toggle) */
+.auth-link {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color-light);
+  font-size: 14px;
+  color: var(--text-secondary);
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
 
