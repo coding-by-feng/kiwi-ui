@@ -671,7 +671,7 @@ export default {
         }
         let audio = this.createNewAudio()
         if (this.source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-          audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+          audio.src = '/api/word/pronunciation/downloadVoice/' + id
         } else {
           audio.src = sourceUrl
         }
@@ -735,7 +735,7 @@ export default {
     },
     getPronunciationUrl: function (first) {
       if (this.source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-        return '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
+        return '/api/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
         return first.sourceUrl
       }

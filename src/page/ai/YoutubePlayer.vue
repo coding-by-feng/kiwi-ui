@@ -390,7 +390,7 @@ export default {
 
       // WebSocket streaming (subtitles translation)
       websocket: null,
-      wsUrl: '/ai-biz/ai/ws/ytb/subtitle',
+      wsUrl: '/api/ai/ws/ytb/subtitle',
       isTranslationLoading: false,
       translationProgress: 0,
       translationChunks: [],

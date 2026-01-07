@@ -4,7 +4,7 @@ export default {
 
   getParaphraseStarList () {
     return request({
-      url: '/wordBiz/word/paraphrase/star/list/getCurrentUserList',
+      url: '/api/word/paraphrase/star/list/getCurrentUserList',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -15,7 +15,7 @@ export default {
 
   removeParaphraseStar (data) {
     return request({
-      url: '/wordBiz/word/paraphrase/star/list/removeParaphraseStar',
+      url: '/api/word/paraphrase/star/list/removeParaphraseStar',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -30,7 +30,7 @@ export default {
 
   getListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/getListItems/${page.size}/${page.current}/${listId}`,
+      url: `/api/word/paraphrase/star/list/getListItems/${page.size}/${page.current}/${listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -41,7 +41,7 @@ export default {
 
   getReviewListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/getReviewListItems/${page.size}/${page.current}/${listId}`,
+      url: `/api/word/paraphrase/star/list/getReviewListItems/${page.size}/${page.current}/${listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -52,7 +52,7 @@ export default {
 
   getEnhanceListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/getRememberListItems/${page.size}/${page.current}/${listId}`,
+      url: `/api/word/paraphrase/star/list/getRememberListItems/${page.size}/${page.current}/${listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -63,7 +63,7 @@ export default {
 
   getItemDetail (paraphraseId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/getItemDetail/${paraphraseId}`,
+      url: `/api/word/paraphrase/star/list/getItemDetail/${paraphraseId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -74,7 +74,7 @@ export default {
 
   putParaphraseStarList (data) {
     return request({
-      url: '/wordBiz/word/paraphrase/star/list/putIntoStarList',
+      url: '/api/word/paraphrase/star/list/putIntoStarList',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -86,7 +86,7 @@ export default {
 
   updateById (data) {
     return request({
-      url: '/wordBiz/word/paraphrase/star/list/updateById',
+      url: '/api/word/paraphrase/star/list/updateById',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ export default {
 
   save (data) {
     return request({
-      url: '/wordBiz/word/paraphrase/star/list/save',
+      url: '/api/word/paraphrase/star/list/save',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -110,7 +110,7 @@ export default {
 
   delById (paraphraseId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/delById/${paraphraseId}`,
+      url: `/api/word/paraphrase/star/list/delById/${paraphraseId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -121,7 +121,7 @@ export default {
 
   rememberOne (paraphraseId, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/rememberOne`,
+      url: `/api/word/paraphrase/star/list/rememberOne`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -136,7 +136,7 @@ export default {
 
   keepInMind (paraphraseId, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/keepInMind`,
+      url: `/api/word/paraphrase/star/list/keepInMind`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -151,7 +151,7 @@ export default {
 
   forgetOne (paraphraseId, listId) {
     return request({
-      url: `/wordBiz/word/paraphrase/star/list/forgetOne`,
+      url: `/api/word/paraphrase/star/list/forgetOne`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'

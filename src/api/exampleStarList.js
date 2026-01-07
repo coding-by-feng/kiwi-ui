@@ -4,7 +4,7 @@ export default {
 
   getExampleStarList () {
     return request({
-      url: '/wordBiz/word/example/star/list/getCurrentUserList',
+      url: '/api/word/example/star/list/getCurrentUserList',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -15,7 +15,7 @@ export default {
 
   removeExampleStar (data) {
     return request({
-      url: `/wordBiz/word/example/star/list/removeExampleStar/${data.exampleId}/${data.listId}`,
+      url: `/api/word/example/star/list/removeExampleStar/${data.exampleId}/${data.listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -26,7 +26,7 @@ export default {
 
   getExampleListItems (page, listId) {
     return request({
-      url: `/wordBiz/word/example/star/list/getListItems/${page.size}/${page.current}/${listId}`,
+      url: `/api/word/example/star/list/getListItems/${page.size}/${page.current}/${listId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -37,7 +37,7 @@ export default {
 
   putExampleStarList (data) {
     return request({
-      url: '/wordBiz/word/example/star/list/putIntoStarList',
+      url: '/api/word/example/star/list/putIntoStarList',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -49,7 +49,7 @@ export default {
 
   updateById (data) {
     return request({
-      url: '/wordBiz/word/example/star/list/updateById',
+      url: '/api/word/example/star/list/updateById',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -61,7 +61,7 @@ export default {
 
   save (data) {
     return request({
-      url: '/wordBiz/word/example/star/list/save',
+      url: '/api/word/example/star/list/save',
       headers: {
         isToken: true,
         'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ export default {
 
   delById (exampleId) {
     return request({
-      url: `/wordBiz/word/example/star/list/delById/${exampleId}`,
+      url: `/api/word/example/star/list/delById/${exampleId}`,
       headers: {
         isToken: true,
         'Content-Type': 'application/json'

@@ -124,7 +124,6 @@ import util from '@/util/util'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it';
 import {getStore} from '@/util/store'
-import { callAiChatCompletion } from '@/api/ai'
 // Import the language utility function
 import { getInitialSelectedLanguage } from '@/util/langUtil';
 import msgUtil from '@/util/msg';
@@ -253,8 +252,8 @@ export default {
       return getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) ? getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     },
     isWsOnly() {
-      // Force wsOnly off to avoid repeated refreshes and duplicate calls
-      return false
+      // Always use WebSocket only, no HTTP fallback
+      return true
     },
     coreQueryKey() {
       const q = this.$route && this.$route.query ? this.$route.query : {}
@@ -822,13 +821,15 @@ export default {
         }
       };
 
+      let retryScheduled = false
       const maybeRetryOrFallback = () => {
         // Only for main, only if no data yet
         if (isSelection) return
         if (that._mainWsHadData) return
-        const wsOnly = that.isWsOnly === true
+        if (retryScheduled) return // Prevent duplicate retry from onerror + onclose
         // Retry up to max attempts
         if (that._mainWsAttempts < that._mainWsMaxAttempts) {
+          retryScheduled = true
           const backoff = 200 * Math.pow(2, that._mainWsAttempts - 1) // 200ms, 400ms
           console.log(`WS retry ${that._mainWsAttempts} scheduled in ${backoff}ms`)
           setTimeout(() => {
@@ -846,13 +847,8 @@ export default {
           }, backoff)
         } else if (!that._mainFallbackInFlight) {
           that._mainFallbackInFlight = true
-          if (wsOnly) {
-            console.log('WS-only mode: skipping HTTP fallback and surfacing error')
-            that.handleError('Realtime connection failed. Please try again or check your network.');
-          } else {
-            console.log('WS failed to start streaming; falling back to HTTP API')
-            that.fetchViaHttpFallback()
-          }
+          console.log('WS retries exhausted, surfacing error')
+          that.handleError('Realtime connection failed. Please try again or check your network.');
         }
       }
 
@@ -871,29 +867,6 @@ export default {
         that[streamingKey] = false;
         if (!isSelection) maybeRetryOrFallback()
       };
-    },
-
-    // HTTP fallback when WS cannot be established
-    async fetchViaHttpFallback() {
-      try {
-        const info = this._lastMainRequest
-        if (!info) throw new Error('No request context for fallback')
-        const res = await callAiChatCompletion(info.selectedMode, info.targetLanguage, info.nativeLanguage, info.decodedText)
-        const data = (res && res.data && res.data.data) || ''
-        // Post-validate fallback payload to ensure only responseText is used
-        const extracted = this.extractResponseTextFromPayload(data)
-        const finalText = (typeof extracted === 'string' && extracted.length > 0)
-          ? extracted
-          : (typeof data === 'string' ? data : JSON.stringify(data))
-        this.aiResponseVO.responseText = finalText
-        this.apiLoading = false
-        this.isStreaming = false
-        this.lastErrorMessage = ''
-        this.persistNow()
-      } catch (e) {
-        console.error('HTTP fallback failed:', e && (e.message || e))
-        this.handleError('AI request failed (WS and HTTP). Please try again later.')
-      }
     },
 
     // Simplified main AI request method
@@ -1380,52 +1353,52 @@ h1 {
   position: absolute;
   top: 0;
   right: 0;
-  background: var(--gradient-primary) !important;
-  border: none !important;
-  color: white !important;
-  transition: all 0.3s ease;
-  border-radius: 6px !important;
-}
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+  transition: var(--transition-normal);
+  border-radius: var(--radius-md);
 
-.copy-button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
-}
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
 
-.copy-button:focus {
-  opacity: 0.9;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3);
-}
+  &:focus {
+    opacity: 0.9;
+    box-shadow: 0 0 0 2px var(--color-primary-light-9);
+  }
 
-.copy-button:active {
-  transform: translateY(0px);
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .regen-button {
   position: absolute;
   top: 0;
   right: 100px;
-  background: var(--gradient-danger) !important;
-  border: none !important;
-  color: white !important;
-  transition: all 0.3s ease;
-  border-radius: 6px !important;
-}
+  background: var(--gradient-danger);
+  border: none;
+  color: white;
+  transition: var(--transition-normal);
+  border-radius: var(--radius-md);
 
-.regen-button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
-}
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
 
-.regen-button:focus {
-  opacity: 0.9;
-  color: white !important;
-}
+  &:focus {
+    opacity: 0.9;
+    color: white;
+  }
 
-.regen-button:active {
-  transform: translateY(0px);
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 
@@ -1457,36 +1430,28 @@ h1 {
 
 /* Dictionary button specific styling */
 .dialog-footer .el-button--info {
-  background: var(--gradient-info) !important;
-  border: none !important;
-  color: white !important;
-}
+  background: var(--gradient-info);
+  border: none;
+  color: white;
 
-.dialog-footer .el-button--info:hover {
-  opacity: 0.9;
-  color: white !important;
-}
-
-.dialog-footer .el-button--info:focus {
-  opacity: 0.9;
-  color: white !important;
+  &:hover,
+  &:focus {
+    opacity: 0.9;
+    color: white;
+  }
 }
 
 /* Primary button (Explain Selection) specific styling */
 .dialog-footer .el-button--primary {
-  background: var(--gradient-primary) !important;
-  border: none !important;
-  color: white !important;
-}
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
 
-.dialog-footer .el-button--primary:hover {
-  opacity: 0.9;
-  color: white !important;
-}
-
-.dialog-footer .el-button--primary:focus {
-  opacity: 0.9;
-  color: white !important;
+  &:hover,
+  &:focus {
+    opacity: 0.9;
+    color: white;
+  }
 }
 
 /* Align footer buttons in Explain Selected Text dialog */
@@ -1522,22 +1487,13 @@ h1 {
 
 .main-response-content { text-align: left; margin-bottom: 40px; color: var(--text-primary); }
 </style>
-<style scoped>
-/* ... existing styles ... */
-
+<style lang="scss" scoped>
+// Mobile-specific: prevent native text selection UI to avoid popup conflicts
 @media (max-width: 768px) {
   .ai-container {
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -webkit-touch-callout: none !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
-  /* Allow selection in specific areas if needed, but user asked to prevent it generally or for popups. 
-     If they want to copy, they might need buttons. 
-     However, usually response text might need to be selectable? 
-     The user said "prevent the native selection event or popup". 
-     I will apply it to the container. 
-     If specific parts need to be selectable, I can override.
-     But for now, I follow the instruction to prevent it.
-  */
 }
 </style>

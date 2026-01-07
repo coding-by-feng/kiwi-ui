@@ -111,7 +111,7 @@ export default {
         google: '使用谷歌账户登录',
         connecting: '正在连接谷歌...',
         processing: '处理中...',
-        loginFailed: '谷歌登录失败，请重试',
+        loginFailed: '登录失败，请重试',
         accountNotFound: '账户未找到，请联系管理员',
         loginSuccess: '登录成功',
         logout: '退出登录',
@@ -132,9 +132,48 @@ export default {
         },
         copyright: '©2025 Kason英语学习平台 v2.0',
         username: '用户名',
+        usernameOrEmail: '用户名 / 邮箱',
         password: '密码',
         signIn: '登录',
-        or: '或'
+        or: '或',
+        // 注册相关
+        createAccount: '创建账户',
+        register: '注册',
+        registerSubtitle: '加入我们，开始学习',
+        registering: '注册中...',
+        registerSuccess: '注册成功！请登录。',
+        registerFailed: '注册失败，请重试',
+        email: '邮箱',
+        confirmPassword: '确认密码',
+        realName: '姓名（可选）',
+        // 占位符
+        usernamePlaceholder: '请输入用户名',
+        usernameOrEmailPlaceholder: '请输入用户名或邮箱',
+        passwordPlaceholder: '请输入密码',
+        emailPlaceholder: '请输入邮箱地址',
+        confirmPasswordPlaceholder: '请再次输入密码',
+        realNamePlaceholder: '请输入姓名',
+        // 验证消息
+        usernameRequired: '用户名不能为空',
+        usernameLength: '用户名长度需为3-20个字符',
+        usernamePattern: '用户名只能包含字母、数字和下划线',
+        usernameNotAvailable: '用户名已被使用',
+        emailRequired: '邮箱不能为空',
+        emailInvalid: '请输入有效的邮箱地址',
+        emailNotAvailable: '邮箱已被注册',
+        passwordRequired: '密码不能为空',
+        passwordTooShort: '密码长度至少为6个字符',
+        confirmPasswordRequired: '请确认密码',
+        passwordMismatch: '两次密码输入不一致',
+        realNameTooLong: '姓名不能超过50个字符',
+        // 密码强度
+        passwordWeak: '弱',
+        passwordFair: '一般',
+        passwordGood: '良好',
+        passwordStrong: '强',
+        // 导航链接
+        noAccount: '还没有账户？',
+        alreadyHaveAccount: '已有账户？'
     },
 
     // New: complete login block
@@ -239,7 +278,22 @@ export default {
         pressKeys: '请按下按键...',
         // 功能标签配置
         featureTabs: '功能标签',
-        featureTabsTip: '在工具栏中显示或隐藏标签'
+        featureTabsTip: '在工具栏中显示或隐藏标签',
+        // 密码修改
+        changePassword: '修改密码',
+        currentPassword: '当前密码',
+        newPassword: '新密码',
+        confirmNewPassword: '确认新密码',
+        currentPasswordPlaceholder: '请输入当前密码',
+        newPasswordPlaceholder: '请输入新密码',
+        confirmNewPasswordPlaceholder: '请再次输入新密码',
+        passwordMismatch: '两次输入的密码不一致',
+        passwordTooShort: '密码长度至少为6个字符',
+        passwordChangeSuccess: '密码修改成功',
+        passwordChangeFailed: '密码修改失败',
+        currentPasswordRequired: '请输入当前密码',
+        newPasswordRequired: '请输入新密码',
+        confirmPasswordRequired: '请确认新密码'
     },
 
     // Todo Gamification

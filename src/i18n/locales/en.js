@@ -111,7 +111,7 @@ export default {
         google: 'Use Google Account to Login',
         connecting: 'Connecting to Google...',
         processing: 'Processing...',
-        loginFailed: 'Google login failed, please try again',
+        loginFailed: 'Login failed, please try again',
         accountNotFound: 'Account not found, please contact administrator',
         loginSuccess: 'Login successful',
         logout: 'Logout',
@@ -132,9 +132,48 @@ export default {
         },
         copyright: '©2025 Kason English Learning Platform v2.0',
         username: 'Username',
+        usernameOrEmail: 'Username / Email',
         password: 'Password',
         signIn: 'Sign In',
-        or: 'OR'
+        or: 'OR',
+        // Registration
+        createAccount: 'Create Account',
+        register: 'Register',
+        registerSubtitle: 'Join us and start learning',
+        registering: 'Registering...',
+        registerSuccess: 'Registration successful! Please login.',
+        registerFailed: 'Registration failed, please try again',
+        email: 'Email',
+        confirmPassword: 'Confirm Password',
+        realName: 'Name (Optional)',
+        // Placeholders
+        usernamePlaceholder: 'Enter your username',
+        usernameOrEmailPlaceholder: 'Enter your username or email',
+        passwordPlaceholder: 'Enter your password',
+        emailPlaceholder: 'Enter your email address',
+        confirmPasswordPlaceholder: 'Confirm your password',
+        realNamePlaceholder: 'Enter your name',
+        // Validation messages
+        usernameRequired: 'Username is required',
+        usernameLength: 'Username must be 3-20 characters',
+        usernamePattern: 'Username can only contain letters, numbers, and underscores',
+        usernameNotAvailable: 'Username is already taken',
+        emailRequired: 'Email is required',
+        emailInvalid: 'Please enter a valid email address',
+        emailNotAvailable: 'Email is already registered',
+        passwordRequired: 'Password is required',
+        passwordTooShort: 'Password must be at least 6 characters',
+        confirmPasswordRequired: 'Please confirm your password',
+        passwordMismatch: 'Passwords do not match',
+        realNameTooLong: 'Name must be less than 50 characters',
+        // Password strength
+        passwordWeak: 'Weak',
+        passwordFair: 'Fair',
+        passwordGood: 'Good',
+        passwordStrong: 'Strong',
+        // Navigation links
+        noAccount: "Don't have an account?",
+        alreadyHaveAccount: 'Already have an account?'
     },
 
     // Search modes
@@ -355,7 +394,22 @@ export default {
         pressKeys: 'Press keys...',
         // Added: Feature tabs settings
         featureTabs: 'Feature Tabs',
-        featureTabsTip: 'Show or hide tabs in the toolbar'
+        featureTabsTip: 'Show or hide tabs in the toolbar',
+        // Password change
+        changePassword: 'Change Password',
+        currentPassword: 'Current Password',
+        newPassword: 'New Password',
+        confirmNewPassword: 'Confirm New Password',
+        currentPasswordPlaceholder: 'Enter your current password',
+        newPasswordPlaceholder: 'Enter your new password',
+        confirmNewPasswordPlaceholder: 'Confirm your new password',
+        passwordMismatch: 'New passwords do not match',
+        passwordTooShort: 'Password must be at least 6 characters',
+        passwordChangeSuccess: 'Password changed successfully',
+        passwordChangeFailed: 'Failed to change password',
+        currentPasswordRequired: 'Current password is required',
+        newPasswordRequired: 'New password is required',
+        confirmPasswordRequired: 'Please confirm your new password'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
@@ -439,7 +493,7 @@ export default {
         title: 'Audio Settings',
         management: 'Audio Management',
         cleanAudioData: 'Clean audio data, totally {count}',
-        cleanAllCache: 'Clean all cache',
+        cleanAllCache: 'Clean All Cache',
         backgroundMusic: 'Background Music',
         audioCleanedSuccess: 'Audio data cleaned successfully',
         cacheCleanedSuccess: 'All cache cleaned successfully',

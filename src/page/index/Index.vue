@@ -3,8 +3,14 @@ import {getStore} from '@/util/store'
 import website from '@/const/website'
 import {handleGoogleOAuthCallback} from '@/util/oauth'
 import kiwiConst from '@/const/kiwiConsts'
+import UserLogin from '@/page/login/UserLogin'
+import UserRegister from '@/page/login/UserRegister'
 
 export default {
+  components: {
+    UserLogin,
+    UserRegister
+  },
   data() {
     return {
       tabsWidth: window.innerWidth - 20 + 'px',
@@ -19,7 +25,9 @@ export default {
         ? { path: this.$route.path, query: { ...this.$route.query } }
         : null,
       // Track if a tab has been visited so we only mount its component after first activation
-      visitedTabs: { [this.$route.query.active || 'search']: true }
+      visitedTabs: { [this.$route.query.active || 'search']: true },
+      // Auth view toggle: 'login' or 'register'
+      currentAuthView: 'login'
     }
   },
   watch: {
@@ -53,6 +61,10 @@ export default {
     },
     isMobile() {
       return window.innerWidth <= 768
+    },
+    // Dynamic component for auth (login/register)
+    authView() {
+      return this.currentAuthView === 'register' ? 'UserRegister' : 'UserLogin'
     }
   },
   mounted() {
@@ -147,7 +159,7 @@ export default {
       }
 
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader','signature']
+      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Only starList requires login to view; youtube and aiHistory should be visible with hints when logged out
@@ -203,65 +215,41 @@ export default {
     onLanguageChanged(langCode) {
       console.log('Language changed to:', langCode)
       this.$emit('language-changed', langCode)
+    },
+
+    // Switch to registration view
+    switchToRegister() {
+      this.currentAuthView = 'register'
+    },
+
+    // Switch to login view
+    switchToLogin() {
+      this.currentAuthView = 'login'
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .tab_nav {
   position: absolute;
-  top: 0px;
+  top: 0;
   left: 10px;
   width: calc(100% - 20px);
   min-height: 100vh;
 }
 
-// Global tab styling overrides for theming
-.el-tabs--border-card {
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border-color) !important;
-  box-shadow: var(--shadow-card) !important;
-
-  > .el-tabs__header {
-    background-color: var(--bg-header) !important;
-    border-bottom: 1px solid var(--border-color) !important;
-
-    .el-tabs__item {
-      color: var(--text-secondary) !important;
-      border-right: 1px solid var(--border-color-light) !important;
-      
-      &.is-active {
-        background-color: var(--bg-card) !important;
-        border-right-color: var(--border-color) !important;
-        border-left-color: var(--border-color) !important;
-        color: var(--color-primary) !important;
-        font-weight: bold;
-      }
-
-      &:hover {
-        color: var(--color-primary) !important;
-      }
-    }
-  }
-
-  > .el-tabs__content {
-    padding: 15px;
-    background-color: var(--bg-card) !important;
-    color: var(--text-primary) !important;
-    min-height: 100vh;
-  }
-}
+// Tab styling is now handled globally in theme-tokens.scss
 
 .platform-header {
   height: 50px;
-  background: var(--bg-header);
+  background: var(--bg-container);
   border-bottom: 1px solid var(--border-color);
   width: 100%;
   position: absolute;
-  top: 0px;
+  top: 0;
 
-  .el-menu {
+  ::v-deep .el-menu {
     border-bottom: 1px solid var(--border-color);
     background-color: transparent;
 
@@ -276,18 +264,22 @@ export default {
         display: block;
         line-height: 10px;
         text-align: center;
-        color: var(--icon-color);
+        color: var(--text-secondary);
       }
 
       span {
         margin-top: -20px;
         line-height: 20px;
       }
-      
-      &:hover, &:focus {
-        background-color: rgba(0,0,0,0.05);
+
+      &:hover,
+      &:focus {
+        background-color: var(--bg-highlight);
         color: var(--color-primary);
-        i { color: var(--color-primary); }
+
+        i {
+          color: var(--color-primary);
+        }
       }
     }
   }
@@ -297,13 +289,15 @@ export default {
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 1000;
+  z-index: var(--z-sticky);
 }
 
-/* Simple login hint spacing */
-.login-hint { padding: 16px; }
+// Simple login hint spacing
+.login-hint {
+  padding: var(--spacing-md);
+}
 
-/* Mobile responsive adjustments */
+// Mobile responsive adjustments
 @media (max-width: 768px) {
   .tab_nav {
     left: 5px;
@@ -315,12 +309,12 @@ export default {
     right: 5px;
   }
 
-  .el-tabs__header {
+  ::v-deep .el-tabs__header {
     margin-bottom: 10px;
   }
 
-  .el-tabs__nav-wrap {
-    padding-right: 60px; /* Make room for language switcher */
+  ::v-deep .el-tabs__nav-wrap {
+    padding-right: 60px; // Make room for language switcher
   }
 }
 </style>
@@ -366,13 +360,6 @@ export default {
         </keep-alive>
       </el-tab-pane>
 
-      <el-tab-pane name="signature" lazy v-if="enabledTabs.signature">
-        <span slot="label"><i class="el-icon-edit"></i></span>
-        <keep-alive>
-          <router-view name="signature" v-if="visitedTabs.signature" v-show="activeName==='signature'"></router-view>
-        </keep-alive>
-      </el-tab-pane>
-
       <el-tab-pane name="aiHistory" lazy v-if="enabledTabs.aiHistory">
         <span slot="label"><i class="el-icon-time"></i></span>
         <keep-alive>
@@ -393,7 +380,13 @@ export default {
       <el-tab-pane name="login" lazy v-if="!isLogin">
         <span slot="label"><i class="el-icon-user"></i></span>
         <keep-alive>
-          <router-view name="userLogin" v-if="visitedTabs.login" v-show="activeName==='login'"></router-view>
+          <component
+            v-if="visitedTabs.login"
+            v-show="activeName==='login'"
+            :is="authView"
+            @switch-to-register="switchToRegister"
+            @switch-to-login="switchToLogin"
+          />
         </keep-alive>
       </el-tab-pane>
 

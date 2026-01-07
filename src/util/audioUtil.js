@@ -218,10 +218,10 @@ export default {
     },
 
     assembleReviseAudioUrl(sourceId, type) {
-        return `/wordBiz/word/review/downloadReviewAudio/${sourceId}/${type}`
+        return `/api/word/review/downloadReviewAudio/${sourceId}/${type}`
     },
     assembleCharacterReviseAudioUrl(characterCode) {
-        return `/wordBiz/word/review/character/downloadReviewAudio/${characterCode}`
+        return `/api/word/review/character/downloadReviewAudio/${characterCode}`
     },
 
     assembleReviseAudioFile(sourceId, type) {

@@ -81,7 +81,7 @@ export default {
         google: '使用Google帳戶登入',
         connecting: '正在連接Google...',
         processing: '處理中...',
-        loginFailed: 'Google登入失敗，請重試',
+        loginFailed: '登入失敗，請重試',
         accountNotFound: '帳戶未找到，請聯絡管理員',
         loginSuccess: '登入成功',
         logout: '登出',
@@ -102,9 +102,48 @@ export default {
         },
         copyright: '©2025 Kason英語學習平台 v2.0',
         username: '使用者名稱',
+        usernameOrEmail: '使用者名稱 / 電子郵件',
         password: '密碼',
         signIn: '登入',
-        or: '或'
+        or: '或',
+        // 註冊相關
+        createAccount: '建立帳戶',
+        register: '註冊',
+        registerSubtitle: '加入我們，開始學習',
+        registering: '註冊中...',
+        registerSuccess: '註冊成功！請登入。',
+        registerFailed: '註冊失敗，請重試',
+        email: '電子郵件',
+        confirmPassword: '確認密碼',
+        realName: '姓名（選填）',
+        // 佔位符
+        usernamePlaceholder: '請輸入使用者名稱',
+        usernameOrEmailPlaceholder: '請輸入使用者名稱或電子郵件',
+        passwordPlaceholder: '請輸入密碼',
+        emailPlaceholder: '請輸入電子郵件地址',
+        confirmPasswordPlaceholder: '請再次輸入密碼',
+        realNamePlaceholder: '請輸入姓名',
+        // 驗證訊息
+        usernameRequired: '使用者名稱不能為空',
+        usernameLength: '使用者名稱長度需為3-20個字元',
+        usernamePattern: '使用者名稱只能包含字母、數字和底線',
+        usernameNotAvailable: '使用者名稱已被使用',
+        emailRequired: '電子郵件不能為空',
+        emailInvalid: '請輸入有效的電子郵件地址',
+        emailNotAvailable: '電子郵件已被註冊',
+        passwordRequired: '密碼不能為空',
+        passwordTooShort: '密碼長度至少為6個字元',
+        confirmPasswordRequired: '請確認密碼',
+        passwordMismatch: '兩次密碼輸入不一致',
+        realNameTooLong: '姓名不能超過50個字元',
+        // 密碼強度
+        passwordWeak: '弱',
+        passwordFair: '一般',
+        passwordGood: '良好',
+        passwordStrong: '強',
+        // 導航連結
+        noAccount: '還沒有帳戶？',
+        alreadyHaveAccount: '已有帳戶？'
     },
 
     // New: complete login block
@@ -353,6 +392,53 @@ export default {
         switchedModeHotkey: '已透過 {key} 切換模式'
     },
 
+    // User Center
+    user: {
+        profile: '個人資料',
+        loginOut: '登出',
+        learningStats: '學習統計',
+        todayRemembered: '今日已記',
+        todayReviewed: '今日已複習',
+        todayMastered: '今日已掌握',
+        learningSettings: '學習設定',
+        pronunciationSource: '發音來源',
+        nativeLanguage: '母語',
+        backgroundMusic: '背景音樂',
+        letterSpelling: '字母拼寫',
+        englishDefinition: '英文釋義',
+        messageHints: '訊息提示',
+        playExamples: '播放例句',
+        englishToEnglish: '英英模式',
+        defaultLanguage: '預設語言',
+        unknownLanguage: '未知語言',
+        clipboardDetection: '剪貼簿偵測',
+        clipboardDetectionTooltip: '切換分頁或搜尋框為空時，自動偵測剪貼簿內容並提示使用',
+        featureTabs: '功能標籤',
+        featureTabsTip: '在工具列中顯示或隱藏標籤',
+        registerSource: {
+            local: '本機註冊',
+            google: 'Google 註冊',
+            wechat: '微信註冊',
+            qq: 'QQ 註冊',
+            unknown: '未知來源'
+        },
+        // 密碼修改
+        changePassword: '修改密碼',
+        currentPassword: '目前密碼',
+        newPassword: '新密碼',
+        confirmNewPassword: '確認新密碼',
+        currentPasswordPlaceholder: '請輸入目前密碼',
+        newPasswordPlaceholder: '請輸入新密碼',
+        confirmNewPasswordPlaceholder: '請再次輸入新密碼',
+        passwordMismatch: '兩次輸入的密碼不一致',
+        passwordTooShort: '密碼長度至少為6個字元',
+        passwordChangeSuccess: '密碼修改成功',
+        passwordChangeFailed: '密碼修改失敗',
+        currentPasswordRequired: '請輸入目前密碼',
+        newPasswordRequired: '請輸入新密碼',
+        confirmPasswordRequired: '請確認新密碼'
+    },
+
     // Tabs labels for feature toggles
     tabs: {
         todo: '待辦',
@@ -411,5 +497,19 @@ export default {
         downloadForWindows: '下載 Windows 版本',
         downloadForLinux: '下載 Linux 版本',
         gdriveNote: '下載檔托管於 Google Drive，若無法開啟，請複製連結至新分頁。'
+    },
+
+    // Audio settings
+    audio: {
+        title: '音訊設定',
+        management: '音訊管理',
+        cleanAudioData: '清理音訊資料，共 {count}',
+        cleanAllCache: '清理所有快取',
+        backgroundMusic: '背景音樂',
+        audioCleanedSuccess: '音訊資料清理成功',
+        cacheCleanedSuccess: '所有快取清理成功',
+        playing: '播放中...',
+        clickToPlay: '點擊播放',
+        nowPlaying: '正在播放'
     }
 }

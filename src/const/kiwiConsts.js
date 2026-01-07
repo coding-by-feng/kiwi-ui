@@ -117,7 +117,7 @@ export default {
         PHRASE_PRONUNCIATION: 10
     },
 
-    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/wordBiz/word/review/downloadReviewAudio/',
+    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/api/word/review/downloadReviewAudio/',
 
     REVIEW_MODEL: {
         STOCK_REVIEW: 'stockReview',
@@ -360,10 +360,10 @@ export default {
         SIGNATURE: '/index/tools/signature'
     }),
 
-    // Centralized API base prefixes
+    // Centralized API base prefixes (migrated to monolith)
     API_BASE: Object.freeze({
-        WORD_BIZ: '/wordBiz/word',
-        AI_BIZ: '/ai-biz/ai',
+        WORD_BIZ: '/api/word',
+        AI_BIZ: '/api/ai',
         AUTH: '/auth/oauth',
         LOG_ERROR: '/api/log-error'
     }),

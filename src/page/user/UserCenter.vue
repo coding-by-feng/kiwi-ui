@@ -17,7 +17,10 @@
             @click="handleClearWebsiteData"
             :loading="clearingWebsiteData"
             class="action-button clear-data-button">
-          {{ $t('audio.cleanAllCache') }}
+          <i class="el-icon-delete"></i> {{ $t('audio.cleanAllCache') }}
+        </el-button>
+        <el-button type="primary" size="small" @click="showPasswordDialog = true" class="action-button change-password-btn">
+          <i class="el-icon-lock"></i> {{ $t('user.changePassword') }}
         </el-button>
         <el-button type="info" size="small" @click="handleLoginOut" class="action-button logout-button">
           <i class="el-icon-switch-button"></i> {{ $t('user.loginOut') }}
@@ -249,6 +252,68 @@
       </h4>
       <Bgm />
     </div>
+
+    <!-- Password Change Dialog -->
+    <el-dialog
+      :title="$t('user.changePassword')"
+      :visible.sync="showPasswordDialog"
+      width="400px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="!changingPassword"
+      :show-close="!changingPassword"
+      custom-class="password-dialog"
+      @closed="resetPasswordForm"
+    >
+      <el-form
+        ref="passwordForm"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-position="top"
+        class="password-change-form"
+        @submit.native.prevent="handleChangePassword"
+      >
+        <el-form-item :label="$t('user.currentPassword')" prop="oldPassword">
+          <el-input
+            v-model="passwordForm.oldPassword"
+            type="password"
+            :placeholder="$t('user.currentPasswordPlaceholder')"
+            show-password
+            autocomplete="current-password"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('user.newPassword')" prop="newPassword">
+          <el-input
+            v-model="passwordForm.newPassword"
+            type="password"
+            :placeholder="$t('user.newPasswordPlaceholder')"
+            show-password
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('user.confirmNewPassword')" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            :placeholder="$t('user.confirmNewPasswordPlaceholder')"
+            show-password
+            autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showPasswordDialog = false" :disabled="changingPassword">
+          {{ $t('common.cancel') }}
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="changingPassword"
+          :disabled="changingPassword"
+          @click="handleChangePassword"
+        >
+          {{ $t('common.confirm') }}
+        </el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -298,7 +363,33 @@ export default {
 
       languageCodes: kiwiConst.TRANSLATION_LANGUAGE_CODE,
 
-      clearingWebsiteData: false
+      clearingWebsiteData: false,
+
+      // Password change dialog
+      showPasswordDialog: false,
+      changingPassword: false,
+      passwordForm: {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+    }
+  },
+
+  created() {
+    // Initialize password validation rules with i18n
+    this.passwordRules = {
+      oldPassword: [
+        { required: true, message: () => this.$t('user.currentPasswordRequired'), trigger: 'blur' }
+      ],
+      newPassword: [
+        { required: true, message: () => this.$t('user.newPasswordRequired'), trigger: 'blur' },
+        { min: 6, message: () => this.$t('user.passwordTooShort'), trigger: 'blur' }
+      ],
+      confirmPassword: [
+        { required: true, message: () => this.$t('user.confirmPasswordRequired'), trigger: 'blur' },
+        { validator: this.validateConfirmPassword, trigger: 'blur' }
+      ]
     }
   },
 
@@ -643,6 +734,8 @@ export default {
             console.error('Error loading review count:', error)
           })
     },
+
+    // Theme handling
     handleThemeChange(theme) {
       const normalized = (theme || 'cyberpunk').toLowerCase()
       this.user.theme = normalized
@@ -656,6 +749,74 @@ export default {
     },
     applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme)
+    },
+
+    // Password change validation
+    validateConfirmPassword(rule, value, callback) {
+      if (value !== this.passwordForm.newPassword) {
+        callback(new Error(this.$t('user.passwordMismatch')))
+      } else {
+        callback()
+      }
+    },
+
+    // Password change handler
+    async handleChangePassword() {
+      if (this.changingPassword) return
+
+      const form = this.$refs.passwordForm
+      if (!form) return
+
+      form.validate(async (valid) => {
+        if (!valid) return
+
+        try {
+          this.changingPassword = true
+
+          // Build form data as URL-encoded parameters
+          const params = new URLSearchParams()
+          params.append('oldPassword', this.passwordForm.oldPassword)
+          params.append('newPassword', this.passwordForm.newPassword)
+
+          const response = await this.$http.post('/api/upms/user/change-password', params, {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+
+          const data = response && response.data
+          if (data && (data.code === 0 || data.success === true)) {
+            this.$message.success(this.$t('user.passwordChangeSuccess'))
+            // Close dialog and reset form
+            this.showPasswordDialog = false
+            this.resetPasswordForm()
+          } else {
+            const msg = (data && (data.msg || data.message)) || this.$t('user.passwordChangeFailed')
+            this.$message.error(msg)
+          }
+        } catch (error) {
+          console.error('Password change error:', error)
+          const errResponse = error && error.response && error.response.data
+          const msg = (errResponse && (errResponse.msg || errResponse.message)) ||
+                      (error && error.message) ||
+                      this.$t('user.passwordChangeFailed')
+          this.$message.error(msg)
+        } finally {
+          this.changingPassword = false
+        }
+      })
+    },
+
+    // Reset password form
+    resetPasswordForm() {
+      this.passwordForm = {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+      if (this.$refs.passwordForm) {
+        this.$refs.passwordForm.resetFields()
+      }
     }
   }
 }
@@ -689,11 +850,7 @@ export default {
         margin: 0 0 8px 0;
         font-size: 20px;
         font-weight: 600;
-        color: var(--text-primary);
-        background: var(--gradient-text);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #ffffff;
       }
 
       .user-email {
@@ -711,56 +868,43 @@ export default {
   }
 }
 
+// Action buttons - unified styling without !important
 .action-button {
-  border: none !important;
-  color: white !important;
-  padding: 12px 20px !important;
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: none;
+  color: #fff;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
 
   &:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: var(--shadow-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+    filter: brightness(1.1);
   }
 
   &:active {
-    transform: translateY(0px) !important;
-  }
-}
-
-/* Logout Button Styling */
-.logout-button {
-  @extend .action-button;
-  background: var(--gradient-info) !important;
-
-  &:hover {
-    filter: brightness(0.9);
-    color: white !important;
+    transform: translateY(0);
   }
 
   &:focus {
-    filter: brightness(0.9);
-    color: white !important;
-    box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.3) !important;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-light-5);
   }
+}
+
+.logout-button {
+  background: var(--gradient-info);
 }
 
 .clear-data-button {
-  @extend .action-button;
-  background: var(--gradient-danger) !important;
+  background: var(--gradient-danger);
+}
 
-  &:hover {
-    filter: brightness(0.9);
-    color: white !important;
-  }
-
-  &:focus {
-    filter: brightness(0.9);
-    color: white !important;
-    box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.3) !important;
-  }
+.change-password-btn {
+  background: var(--gradient-primary);
 }
 
 /* Custom Divider */
@@ -805,12 +949,12 @@ export default {
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 
   .stat-card {
     color: white;
-    padding: 20px;
+    padding: 12px;
     border-radius: var(--card-border-radius);
     text-align: center;
     position: relative;
@@ -840,27 +984,27 @@ export default {
       position: absolute;
       top: 0;
       right: 0;
-      width: 60px;
-      height: 60px;
+      width: 40px;
+      height: 40px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 50%;
       transform: translate(30%, -30%);
     }
 
     .stat-icon {
-      width: 40px;
-      height: 40px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 12px;
+      margin: 0 auto 8px;
       position: relative;
       z-index: 1;
       background: rgba(255, 255, 255, 0.2);
 
       i {
-        font-size: 20px;
+        font-size: 14px;
       }
     }
 
@@ -869,13 +1013,13 @@ export default {
       z-index: 1;
 
       h5 {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 700;
-        margin: 0 0 4px 0;
+        margin: 0 0 2px 0;
       }
 
       p {
-        font-size: 14px;
+        font-size: 11px;
         margin: 0;
         opacity: 0.9;
       }
@@ -964,174 +1108,38 @@ export default {
   }
 }
 
-/* Custom Dropdown Styling */
+// Custom Dropdown Styling - simplified
 .custom-dropdown {
   .dropdown-button {
-    border: none !important;
-    padding: 8px 12px !important;
-    color: var(--color-primary) !important;
-    font-weight: 500 !important;
-    background: var(--bg-container) !important;
-    border-radius: 8px !important;
-    transition: all 0.3s ease !important;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+    background: var(--bg-container);
+    border-radius: var(--radius-md);
+    transition: var(--transition-normal);
 
     &:hover {
       filter: brightness(0.95);
-      transform: translateY(-1px) !important;
+      transform: translateY(-1px);
     }
 
     &:focus {
-      filter: brightness(0.95);
-      box-shadow: 0 0 0 2px var(--border-color-light) !important;
+      box-shadow: 0 0 0 2px var(--border-color-light);
     }
   }
 }
 
-/* Custom Switch Styling - Applied to ALL switches */
+// Switch styling is now handled globally in theme-tokens.scss
+// Custom switch class kept for backwards compatibility
 .custom-switch {
-  ::v-deep .el-switch__core {
-    background: var(--bg-body) !important;
-    border: 2px solid var(--border-color) !important;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  ::v-deep .el-switch.is-checked .el-switch__core {
-    background: var(--gradient-primary) !important;
-    border-color: var(--color-primary) !important;
-    box-shadow:
-        0 0 0 2px var(--border-color-light),
-        0 2px 8px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-  }
-
-  ::v-deep .el-switch__action {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
-    box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.15),
-        0 1px 2px rgba(0, 0, 0, 0.1) !important;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-
-  ::v-deep .el-switch.is-checked .el-switch__action {
-    background: var(--bg-card) !important;
-    border-color: var(--border-color-light) !important;
-    box-shadow:
-        0 3px 6px rgba(0, 0, 0, 0.1),
-        0 1px 3px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-  }
-
-  &:hover ::v-deep .el-switch__core {
-    background: var(--bg-body) !important;
-    border-color: var(--border-color) !important;
-    transform: scale(1.02) !important;
-    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  &:hover ::v-deep .el-switch.is-checked .el-switch__core {
-    background: var(--gradient-primary) !important;
-    border-color: var(--color-primary) !important;
-    box-shadow:
-        0 0 0 3px var(--border-color-light),
-        0 4px 12px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-    transform: scale(1.02) !important;
-  }
-
-  &:hover ::v-deep .el-switch__action {
-    transform: scale(1.05) !important;
-    box-shadow:
-        0 4px 8px rgba(0, 0, 0, 0.2),
-        0 2px 4px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  &:hover ::v-deep .el-switch.is-checked .el-switch__action {
-    box-shadow:
-        0 4px 8px rgba(0, 0, 0, 0.1),
-        0 2px 4px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  }
+  // Global styles apply automatically
 }
 
-/* Add a subtle glow effect for ALL enabled switches */
-.custom-switch ::v-deep .el-switch.is-checked {
-  position: relative;
+// Tag styling is now handled globally in theme-tokens.scss
+// Additional tag styles can be added here if needed
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: var(--border-color-light);
-    border-radius: 14px;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
-}
-
-/* Custom Tag Styling */
-::v-deep .el-tag {
-  background: var(--bg-container) !important;
-  border: 1px solid var(--border-color-light) !important;
-  color: var(--color-primary) !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-
-  &.el-tag--success {
-    background: var(--bg-container) !important;
-    border-color: var(--color-success) !important;
-    color: var(--color-success) !important;
-  }
-
-  &.el-tag--warning {
-    background: var(--bg-container) !important;
-    border-color: var(--color-warning) !important;
-    color: var(--color-warning) !important;
-  }
-
-  &.el-tag--info {
-    background: var(--bg-container) !important;
-    border-color: var(--color-info) !important;
-    color: var(--color-info) !important;
-  }
-}
-
-/* Dropdown Menu Styling */
-::v-deep .el-dropdown-menu {
-  border: 1px solid var(--border-color-light) !important;
-  border-radius: 8px !important;
-  box-shadow: var(--shadow-card) !important;
-  padding: 8px 0 !important;
-  background: var(--bg-card) !important;
-
-  .el-dropdown-menu__item {
-    padding: 10px 16px !important;
-    color: var(--text-primary) !important;
-    font-weight: 500 !important;
-    transition: all 0.3s ease !important;
-
-    &:hover {
-      background: var(--bg-container) !important;
-      color: var(--color-primary) !important;
-    }
-
-    &:focus {
-      background: var(--bg-container) !important;
-      color: var(--color-primary) !important;
-    }
-  }
-}
+// Dropdown menu styling is now handled globally in theme-tokens.scss
 
 /* Responsive design */
 @media (max-width: 768px) {
@@ -1145,6 +1153,21 @@ export default {
     gap: 16px;
     text-align: center;
     padding: 16px;
+
+    .avatar-section {
+      width: 100%;
+    }
+
+    .user-actions {
+      width: 100%;
+      flex-direction: column;
+      gap: 10px;
+
+      .action-button {
+        width: 100%;
+        margin: 0;
+      }
+    }
   }
 
   .statistics-section,
@@ -1159,27 +1182,27 @@ export default {
   }
 
   .stats-cards {
-    gap: 12px;
+    gap: 10px;
 
     .stat-card {
-      padding: 16px;
+      padding: 10px;
 
       .stat-icon {
-        width: 35px;
-        height: 35px;
-        margin-bottom: 10px;
+        width: 24px;
+        height: 24px;
+        margin-bottom: 6px;
 
         i {
-          font-size: 18px;
+          font-size: 12px;
         }
       }
 
       .stat-content h5 {
-        font-size: 20px;
+        font-size: 16px;
       }
 
       .stat-content p {
-        font-size: 13px;
+        font-size: 10px;
       }
     }
   }
@@ -1200,25 +1223,52 @@ export default {
     align-items: stretch;
 
     .feature-toggles {
-      grid-template-columns: 1fr !important;
+      grid-template-columns: 1fr;
       justify-items: start;
     }
 
     .setting-label {
-      justify-content: flex-start !important;
+      justify-content: flex-start;
       text-align: left;
     }
   }
 
-  .logout-button {
-    padding: 10px 16px !important;
-    font-size: 14px !important;
+  .logout-button,
+  .change-password-btn,
+  .clear-data-button {
+    padding: 10px 16px;
+    font-size: 14px;
   }
 
   .section-title {
     font-size: 14px;
     justify-content: center;
     text-align: center;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .user-profile-header {
+    padding: 12px;
+    gap: 12px;
+
+    .user-basic-info h3 {
+      font-size: 16px;
+    }
+
+    .user-actions {
+      gap: 8px;
+
+      .action-button {
+        padding: 8px 12px;
+        font-size: 13px;
+
+        i {
+          margin-right: 4px;
+        }
+      }
+    }
   }
 }
 
@@ -1294,6 +1344,78 @@ export default {
   &::-webkit-scrollbar-thumb:hover {
     background: var(--gradient-primary);
     filter: brightness(1.1);
+  }
+}
+
+/* Password Change Dialog Styling */
+::v-deep .password-dialog {
+  border-radius: var(--card-border-radius);
+  background: var(--bg-card);
+
+  .el-dialog__header {
+    background: var(--gradient-primary);
+    border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+    padding: 16px 20px;
+
+    .el-dialog__title {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .el-dialog__headerbtn .el-dialog__close {
+      color: var(--text-primary);
+
+      &:hover {
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+    background: var(--bg-card);
+  }
+
+  .el-dialog__footer {
+    padding: 12px 20px 20px;
+    border-top: 1px solid var(--border-color-light);
+    background: var(--bg-card);
+  }
+}
+
+/* Password Change Form Styling */
+.password-change-form {
+  ::v-deep .el-form-item {
+    margin-bottom: 20px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .el-form-item__label {
+      color: var(--text-primary);
+      font-weight: 500;
+      padding-bottom: 6px;
+    }
+
+    .el-input__inner {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      transition: var(--transition-normal);
+
+      &:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px var(--color-primary-light-9);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  ::v-deep .password-dialog {
+    width: 90%;
   }
 }
 </style>
