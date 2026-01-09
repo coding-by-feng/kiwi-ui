@@ -112,11 +112,9 @@
       </div>
 
       <!-- Loading Overlay -->
-      <!-- Loading Overlay -->
       <StatusOverlay
         :visible="pageLoading"
         status="loading"
-        :title="loadingText"
         :backdrop="true"
       />
     </div>
@@ -138,7 +136,6 @@ export default {
     return {
       googleLoading: false,
       pageLoading: false,
-      loadingText: this.$t('auth.processing'),
 
       // Store Google user info for potential account linking
       pendingGoogleUser: null,
@@ -192,7 +189,6 @@ export default {
           try {
             this.upLoading = true
             this.pageLoading = true
-            this.loadingText = this.$t('auth.processing') || 'Processing...'
 
             const payload = {
               username: (this.upForm.username || '').trim(),
@@ -328,7 +324,6 @@ export default {
 
       try {
         this.googleLoading = true
-        this.loadingText = this.$t('auth.connecting')
         this.pageLoading = true
 
         console.log('⏳ [GOOGLE] Setting loading states')
