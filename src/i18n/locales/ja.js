@@ -326,7 +326,9 @@ export default {
         pressKeys: 'キーを押してください...',
         // 追加：機能タブ設定
         featureTabs: '機能タブ',
-        featureTabsTip: 'ツールバーのタブを表示/非表示'
+        featureTabsTip: 'ツールバーのタブを表示/非表示',
+        uiLanguage: 'インターフェース言語',
+        uiLanguageTooltip: 'インターフェースに使用される言語（翻訳言語とは独立）'
     },
 
     messages: {

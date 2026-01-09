@@ -1,7 +1,7 @@
 <template>
   <div class="ai-container">
     <!-- Beautiful Original Text Display -->
-    <div class="original-text-container">
+    <div v-if="showOriginalTextContainer" class="original-text-container">
       <h3 class="original-text-title" @click="toggleOriginalText">
         <span class="title-text">Original Text(Select text to explain based on the sentences context)</span>
         <i :class="originalTextCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'" class="collapse-icon"></i>
@@ -237,6 +237,10 @@ export default {
         console.warn('Error decoding originalText:', error);
         return originalText;
       }
+    },
+    // Modes that don't need the original text container (vocabulary-focused modes)
+    showOriginalTextContainer() {
+      return !kiwiConsts.AI_MODES_WITHOUT_ORIGINAL_TEXT.includes(this.validSelectedMode);
     },
     defaultTargetLanguage() {
       // Use the extracted utility function to get the language for the current mode

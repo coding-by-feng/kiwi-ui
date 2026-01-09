@@ -1,4 +1,8 @@
 export default {
+    language: {
+        nativeName: 'Español',
+        englishName: 'Spanish'
+    },
     // Navigation
     nav: {
         search: 'Buscar',
@@ -301,7 +305,9 @@ export default {
         hotkey: 'Atajo',
         // Añadido: configuración de pestañas de funciones
         featureTabs: 'Pestañas de funciones',
-        featureTabsTip: 'Mostrar u ocultar pestañas en la barra de herramientas'
+        featureTabsTip: 'Mostrar u ocultar pestañas en la barra de herramientas',
+        uiLanguage: 'Idioma de la interfaz',
+        uiLanguageTooltip: 'Idioma utilizado para la interfaz (independiente del idioma de traducción)'
     },
 
     messages: {

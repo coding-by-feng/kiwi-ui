@@ -1,20 +1,32 @@
 <template>
   <div class="youtube-player">
 
+    <!-- Collapse/expand toggle button for controls -->
+    <div class="controls-collapse-toggle">
+      <div class="collapse-toggle-wrapper" @click="toggleControlsCollapsed">
+        <i :class="controlsCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'" class="collapse-toggle-icon"></i>
+        <span class="collapse-toggle-text">{{ controlsCollapsed ? 'Show Controls' : 'Hide Controls' }}</span>
+      </div>
+    </div>
 
     <!-- Enhanced Input Container with gradient styling -->
-    <div class="input-container" v-show="!forceHideInput">
+    <div class="input-container" v-show="!controlsCollapsed">
       <div class="url-input-group">
         <!-- Language dropdown that shows only when translation is enabled -->
-        <el-select v-show="ifTranslation" v-model="selectedLanguage" placeholder="Select Language"
-                   @change="selectedLanguageChange" class="language-select">
-          <el-option
-              v-for="(code, language) in languageCodes"
-              :key="code"
-              :label="language.replaceAll('_', ' ')"
-              :value="code">
-          </el-option>
-        </el-select>
+        <KiwiDropdown v-show="ifTranslation" @command="selectedLanguageChange" class="language-select">
+          <KiwiButton size="small">
+            {{ getSelectedLanguageLabel() || 'Select Language' }}
+            <i class="el-icon-arrow-down"></i>
+          </KiwiButton>
+          <template slot="dropdown">
+            <KiwiDropdownItem
+                v-for="(code, language) in languageCodes"
+                :key="code"
+                :command="code">
+              {{ language.replaceAll('_', ' ') }}
+            </KiwiDropdownItem>
+          </template>
+        </KiwiDropdown>
 
         <div class="input-with-buttons">
           <KiwiInput
@@ -38,9 +50,9 @@
     </div>
 
     <!-- Enhanced Controls Container -->
-    <div id="responsiveContainer" class="responsive-container">
+    <div id="responsiveContainer" class="responsive-container" v-show="!controlsCollapsed">
       <div class="controls-wrapper">
-        <div class="switch-group" v-if="!forceHideInput">
+        <div class="switch-group">
           <el-switch
               v-model="ifTranslation"
               :active-text="isSmallScreen ? '' : 'Include translation'"
@@ -55,24 +67,6 @@
           </el-switch>
           <span v-if="isSmallScreen" class="mobile-switch-label">
             <i class="el-icon-chat-dot-round"></i>
-          </span>
-        </div>
-        <div class="divider" v-if="!isSmallScreen && !forceHideInput"></div>
-        <div class="switch-group">
-          <el-switch
-              v-model="forceHideInput"
-              :active-text="isSmallScreen ? '' : 'Force to hide searching while playing'"
-              @change="ifTranslationOnChange"
-              class="enhanced-switch">
-            <template v-if="isSmallScreen" #inactive-icon>
-              <i class="el-icon-s-operation"></i>
-            </template>
-            <template v-if="isSmallScreen" #active-icon>
-              <i class="el-icon-view"></i>
-            </template>
-          </el-switch>
-          <span v-if="isSmallScreen" class="mobile-switch-label">
-            <i class="el-icon-view"></i>
           </span>
         </div>
         <div class="divider" v-if="!isSmallScreen"></div>
@@ -110,6 +104,24 @@
             <i class="el-icon-location-information"></i>
           </span>
         </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="enhancedSubtitlesEnabled"
+              :active-text="isSmallScreen ? '' : 'Enhanced Subtitles'"
+              @change="onEnhancedSubtitlesChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-document"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-magic-stick"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-magic-stick"></i>
+          </span>
+        </div>
         <!-- Favorite button moved to top controls bar -->
         <div class="switch-group favorite-top-group">
           <el-tooltip :content="canFavorite ? (isFavorited ? 'Unfavorite this video' : 'Favorite this video') : 'Load a video to favorite'" placement="top">
@@ -129,7 +141,7 @@
     </div>
 
     <!-- Enhanced Status Message with Loading Animation -->
-    <div class="status-container" v-show="!isPlaying && !forceHideInput && statusMessage !== ''">
+    <div class="status-container" v-show="!isPlaying && statusMessage !== ''">
       <!-- Compact inline loading chip instead of large panel -->
       <div v-if="isLoading" class="compact-status">
         <i class="el-icon-loading spinning"></i>
@@ -141,8 +153,8 @@
       <p v-else class="status-message compact">{{ statusMessage }}</p>
     </div>
 
-    <!-- Subtitles Loading Indicator - only shows during active loading -->
-    <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-loading-indicator">
+    <!-- Subtitles Loading Indicator - only shows during active loading (hidden when enhanced subtitles enabled) -->
+    <div v-if="!enhancedSubtitlesEnabled && (isSubtitlesLoading || isTranslationLoading)" class="subtitles-loading-indicator">
       <i class="el-icon-loading"></i>
       <span>{{ isTranslationLoading ? 'Translating...' : 'Loading subtitles...' }}</span>
     </div>
@@ -291,7 +303,7 @@
 <script>
 // Removed defineComponent import for Vue 2 options API
 // import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, downloadVideoScrollingSubtitlesEnhanced, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from '@/const/kiwiConsts'
 import {getStore, setStore} from "@/util/store";
@@ -302,6 +314,8 @@ import { buildAiTabQuery } from '@/util/aiNavigation'
 import { navigateIfChanged } from '@/util/routerUtil'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 const md = new MarkdownIt({
   html: true,
@@ -312,7 +326,7 @@ const md = new MarkdownIt({
 
 export default {
   name: 'YoutubeSubtitleDownloader',
-  components: { AiSelectionPopup, KiwiButton, KiwiInput },
+  components: { AiSelectionPopup, KiwiButton, KiwiInput, KiwiDropdown, KiwiDropdownItem },
   data() {
     const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
     // Normalize stored translation toggle to an actual boolean; default OFF.
@@ -326,7 +340,19 @@ export default {
       }
       return false; // default OFF
     })();
+    // Normalize stored enhanced subtitles toggle; default OFF
+    const storedEnhancedSubtitlesRaw = getStore({ name: kiwiConsts.CONFIG_KEY.ENHANCED_SUBTITLES });
+    const normalizedEnhancedSubtitles = (() => {
+      if (typeof storedEnhancedSubtitlesRaw === 'boolean') return storedEnhancedSubtitlesRaw;
+      if (typeof storedEnhancedSubtitlesRaw === 'string') {
+        const v = storedEnhancedSubtitlesRaw.toLowerCase();
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+      }
+      return false; // default OFF
+    })();
     return {
+      enhancedSubtitlesEnabled: normalizedEnhancedSubtitles,
       videoUrl: null,
       ifTranslation: normalizedIfTranslation,
       autoCenterEnabled: persistedAutoCenter !== false, // Default to true if not set
@@ -353,7 +379,7 @@ export default {
       currentSubtitleIndex: 0,
       subtitleInterval: null,
       middleControlEnabled: true,
-      forceHideInput: false,
+      controlsCollapsed: false,
       isSmallScreen: false,
       selectedText: '',
       // Use dialog instead of small bubble for selection actions and AI streaming
@@ -1203,7 +1229,10 @@ export default {
 
       if (isPlaying) {
         // Re-run auto scroll logic for active subtitle on resume.
-        this.forceHideInput = true;
+        // Auto-collapse controls on small screens when playback starts
+        if (this.isSmallScreen) {
+          this.controlsCollapsed = true;
+        }
         this.$nextTick(() => this.restartCurrentSubtitleAutoScroll());
       } else {
         // Keep sync interval running so seeking while paused updates currentSubtitleIndex.
@@ -1324,9 +1353,11 @@ export default {
       }, 200);
 
       try {
-        const response = await this.retryApiCall(() =>
-            downloadVideoScrollingSubtitles(this.videoUrl)
-        );
+        // Use enhanced or regular API based on toggle
+        const apiCall = this.enhancedSubtitlesEnabled
+            ? () => downloadVideoScrollingSubtitlesEnhanced(this.videoUrl)
+            : () => downloadVideoScrollingSubtitles(this.videoUrl);
+        const response = await this.retryApiCall(apiCall);
 
         if (response.status === 'fulfilled' && response.value?.status === 200) {
           // Support both legacy string and new object payloads.
@@ -1907,6 +1938,10 @@ export default {
       }
     },
 
+    toggleControlsCollapsed() {
+      this.controlsCollapsed = !this.controlsCollapsed;
+    },
+
     toggleScrollingSubtitles() {
       this.scrollingSubtitlesCollapsed = !this.scrollingSubtitlesCollapsed;
       if (!this.scrollingSubtitlesCollapsed) {
@@ -1968,6 +2003,7 @@ export default {
     },
 
     selectedLanguageChange(language) {
+      this.selectedLanguage = language;
       setStore({
         name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE,
         content: language,
@@ -1981,10 +2017,28 @@ export default {
       });
     },
 
+    getSelectedLanguageLabel() {
+      if (!this.selectedLanguage) return null;
+      for (const [language, code] of Object.entries(this.languageCodes)) {
+        if (code === this.selectedLanguage) {
+          return language.replaceAll('_', ' ');
+        }
+      }
+      return this.selectedLanguage;
+    },
+
     onAutoCenterChange(enabled) {
       setStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER, content: enabled, type: 'local' });
       if (enabled) {
         this.$nextTick(() => this.ensureActiveSubtitleVisibility());
+      }
+    },
+
+    onEnhancedSubtitlesChange(enabled) {
+      setStore({ name: kiwiConsts.CONFIG_KEY.ENHANCED_SUBTITLES, content: enabled, type: 'local' });
+      // Reload subtitles if video is loaded
+      if (this.videoReady && this.videoUrl) {
+        this.loadSubtitlesInBackground();
       }
     },
 
@@ -2271,6 +2325,47 @@ export default {
   flex-direction: column;
   box-sizing: border-box;
   background: var(--bg-body);
+}
+
+/* Controls collapse toggle button */
+.controls-collapse-toggle {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.collapse-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-light);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.collapse-toggle-wrapper:hover,
+.collapse-toggle-wrapper:active {
+  background: var(--color-primary-light-5);
+  border-color: var(--color-primary);
+}
+
+.collapse-toggle-icon {
+  font-size: 14px;
+  color: var(--color-primary);
+  transition: transform 0.2s ease;
+}
+
+.collapse-toggle-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 /* Subtitles loading indicator */

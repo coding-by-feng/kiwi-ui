@@ -4,6 +4,8 @@ import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import kiwiConsts from '@/const/kiwiConsts'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 function emptyExampleStars() {
   setStore({
@@ -60,7 +62,9 @@ export default {
   components: {
     WordListDetail: () => import('@/page/word/WordListDetail'),
     ParaphraseListDetail: () => import('@/page/word/paraphrase/ParaphraseListDetail.vue'),
-    ExampleListDetail: () => import('@/page/word/ExampleListDetail')
+    ExampleListDetail: () => import('@/page/word/ExampleListDetail'),
+    KiwiDropdown,
+    KiwiDropdownItem
   },
   data() {
     return {
@@ -508,6 +512,20 @@ export default {
       let query = {active: 'starList'}
       this.$router.push({path: kiwiConsts.ROUTES.DETAIL, query: query})
       window.location.reload()
+    },
+    getListTypeLabel(type) {
+      const labels = {
+        'paraphrase': this.$t('starList.listType.paraphrase'),
+        'word': this.$t('starList.listType.word'),
+        'example': this.$t('starList.listType.example')
+      }
+      return labels[type] || this.$t('starList.listType.paraphrase')
+    },
+    handleGlobalReviewMode(mode) {
+      this.selectReviewMode({ mode, id: 0 })
+    },
+    handleRowReviewMode(mode, id) {
+      this.selectReviewMode({ mode, id })
     }
   },
   computed: {
@@ -526,25 +544,36 @@ export default {
     <!-- Native control bar -->
     <div class="control-bar" ref="controlBar">
       <!-- List type selector -->
-      <select class="ctrl-select" v-model="list.listType" @change="listTypeClick(list.listType)" :disabled="loading || list.status !== 'list'">
-        <option value="paraphrase">{{ $t('starList.listType.paraphrase') }}</option>
-        <option value="word">{{ $t('starList.listType.word') }}</option>
-        <option value="example">{{ $t('starList.listType.example') }}</option>
-      </select>
+      <KiwiDropdown @command="listTypeClick" class="list-type-dropdown">
+        <button class="ctrl-select" :disabled="loading || list.status !== 'list'">
+          {{ getListTypeLabel(list.listType) }}
+          <i class="el-icon-arrow-down"></i>
+        </button>
+        <template slot="dropdown">
+          <KiwiDropdownItem command="paraphrase">{{ $t('starList.listType.paraphrase') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="word">{{ $t('starList.listType.word') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="example">{{ $t('starList.listType.example') }}</KiwiDropdownItem>
+        </template>
+      </KiwiDropdown>
 
       <!-- Global review mode selector (paraphrase list only) -->
-      <select class="ctrl-select" v-if="list.listType === 'paraphrase' && list.status === 'list'" @change="selectReviewMode({mode: $event.target.value, id: 0})" :disabled="loading">
-        <option value="" disabled selected>{{ $t('starList.selectReviewModePlaceholder') }}</option>
-        <option value="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</option>
-        <option value="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</option>
-        <option value="stockReview">{{ $t('review.stockReview') }}</option>
-        <option value="enhanceReview">{{ $t('review.enhanceReview') }}</option>
-        <option value="totalReview">{{ $t('review.totalReview') }}</option>
-        <option value="stockRead">{{ $t('review.stockRead') }}</option>
-        <option value="enhanceRead">{{ $t('review.enhanceRead') }}</option>
-        <option value="totalRead">{{ $t('review.totalRead') }}</option>
-        <option value="downloadReviewAudio">{{ $t('review.downloadResources') }}</option>
-      </select>
+      <KiwiDropdown v-if="list.listType === 'paraphrase' && list.status === 'list'" @command="handleGlobalReviewMode" class="review-mode-dropdown">
+        <button class="ctrl-select" :disabled="loading">
+          {{ $t('starList.selectReviewModePlaceholder') }}
+          <i class="el-icon-arrow-down"></i>
+        </button>
+        <template slot="dropdown">
+          <KiwiDropdownItem command="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="stockReview">{{ $t('review.stockReview') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="enhanceReview">{{ $t('review.enhanceReview') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="totalReview">{{ $t('review.totalReview') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="stockRead">{{ $t('review.stockRead') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="enhanceRead">{{ $t('review.enhanceRead') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="totalRead">{{ $t('review.totalRead') }}</KiwiDropdownItem>
+          <KiwiDropdownItem command="downloadReviewAudio">{{ $t('review.downloadResources') }}</KiwiDropdownItem>
+        </template>
+      </KiwiDropdown>
 
       <!-- Actions -->
       <button class="ctrl-btn info" @click="goBack" :disabled="loading">{{ $t('common.back') }}</button>
@@ -560,17 +589,22 @@ export default {
           <button class="list-name-button" @click="selectOneList(row.id, false)" :disabled="loading">{{ row.listName }}</button>
 
           <!-- Per-row review mode (paraphrase list only, not in edit mode) -->
-          <select class="row-select" v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode" @change="selectReviewMode({mode: $event.target.value, id: row.id})" :disabled="loading">
-            <option value="" disabled selected>{{ $t('starList.selectMode') }}</option>
-            <option value="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</option>
-            <option value="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</option>
-            <option value="stockReview">{{ $t('review.stockReview') }}</option>
-            <option value="enhanceReview">{{ $t('review.enhanceReview') }}</option>
-            <option value="totalReview">{{ $t('review.totalReview') }}</option>
-            <option value="stockRead">{{ $t('review.stockRead') }}</option>
-            <option value="enhanceRead">{{ $t('review.enhanceRead') }}</option>
-            <option value="totalRead">{{ $t('review.totalRead') }}</option>
-          </select>
+          <KiwiDropdown v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode" @command="(mode) => handleRowReviewMode(mode, row.id)" class="row-review-dropdown">
+            <button class="row-select" :disabled="loading">
+              {{ $t('starList.selectMode') }}
+              <i class="el-icon-arrow-down"></i>
+            </button>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="stockReview">{{ $t('review.stockReview') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="enhanceReview">{{ $t('review.enhanceReview') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="totalReview">{{ $t('review.totalReview') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="stockRead">{{ $t('review.stockRead') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="enhanceRead">{{ $t('review.enhanceRead') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="totalRead">{{ $t('review.totalRead') }}</KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
           <!-- Edit actions -->
           <div v-if="list.editMode" class="row-actions">

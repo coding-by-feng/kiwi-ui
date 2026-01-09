@@ -304,7 +304,9 @@ export default {
         pressKeys: '키를 누르세요...',
         // 추가: 기능 탭 설정
         featureTabs: '기능 탭',
-        featureTabsTip: '툴바에서 탭을 표시하거나 숨기기'
+        featureTabsTip: '툴바에서 탭을 표시하거나 숨기기',
+        uiLanguage: '인터페이스 언어',
+        uiLanguageTooltip: '인터페이스에 사용되는 언어 (번역 언어와 독립적)'
     },
 
     messages: {

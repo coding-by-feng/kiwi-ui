@@ -240,12 +240,16 @@ export default {
       this.selectedChannel = row
       this.activeTabName = 'videos'
       this.videoQuery.current = 1
-      this.selectedChannel.id = row.channelId
+      // Use channelId if available, otherwise fall back to id
+      this.selectedChannel.id = row.channelId || row.id
       await this.fetchVideos()
     },
 
     async fetchVideos() {
-      if (!this.selectedChannel) return
+      if (!this.selectedChannel || !this.selectedChannel.id) {
+        console.error('No valid channel ID for fetching videos')
+        return
+      }
       this.loading = true
       try {
         const response = await getChannelVideos(this.selectedChannel.id, this.videoQuery.current, this.videoQuery.size)

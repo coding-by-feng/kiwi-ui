@@ -369,6 +369,8 @@ export default {
         theme: 'Theme',
         pronunciationSource: 'Pronunciation Source',
         nativeLanguage: 'Native Language',
+        uiLanguage: 'UI Language',
+        uiLanguageTooltip: 'Language used for the interface text (independent of translation language)',
         backgroundMusic: 'Background Music',
         letterSpelling: 'Letter Spelling',
         englishDefinition: 'English Definition',

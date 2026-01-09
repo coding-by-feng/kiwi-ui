@@ -253,6 +253,8 @@ export default {
         theme: '主题',
         pronunciationSource: '发音来源',
         nativeLanguage: '母语',
+        uiLanguage: '界面语言',
+        uiLanguageTooltip: '界面显示的语言（与翻译语言独立设置）',
         backgroundMusic: '背景音乐',
         letterSpelling: '字母拼写',
         englishDefinition: '英文释义',

@@ -87,16 +87,19 @@
         </label>
         <div class="form-row-inline">
           <div class="form-item mr-8">
-            <div class="kiwi-select-wrapper w-100">
-              <select v-model="newTask.frequency" class="kiwi-select">
-                <option value="once">{{ $t('todo.freqOnce') }}</option>
-                <option value="daily">{{ $t('todo.freqDaily') }}</option>
-                <option value="weekly">{{ $t('todo.freqWeekly') }}</option>
-                <option value="monthly">{{ $t('todo.freqMonthly') }}</option>
-                <option value="custom">{{ $t('todo.customDays') }}</option>
-              </select>
-              <i class="el-icon-arrow-down select-arrow"></i>
-            </div>
+            <KiwiDropdown @command="handleFrequencyChange" class="frequency-dropdown">
+              <KiwiButton size="small" class="frequency-trigger">
+                {{ getFrequencyLabel(newTask.frequency) }}
+                <i class="el-icon-arrow-down"></i>
+              </KiwiButton>
+              <template slot="dropdown">
+                <KiwiDropdownItem command="once">{{ $t('todo.freqOnce') }}</KiwiDropdownItem>
+                <KiwiDropdownItem command="daily">{{ $t('todo.freqDaily') }}</KiwiDropdownItem>
+                <KiwiDropdownItem command="weekly">{{ $t('todo.freqWeekly') }}</KiwiDropdownItem>
+                <KiwiDropdownItem command="monthly">{{ $t('todo.freqMonthly') }}</KiwiDropdownItem>
+                <KiwiDropdownItem command="custom">{{ $t('todo.customDays') }}</KiwiDropdownItem>
+              </template>
+            </KiwiDropdown>
           </div>
           <div class="form-item" v-if="newTask.frequency === 'custom'">
             <KiwiInput
@@ -125,10 +128,12 @@
 <script>
 import KiwiInput from '@/components/ui/KiwiInput.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 export default {
   name: 'TaskInput',
-  components: { KiwiInput, KiwiButton },
+  components: { KiwiInput, KiwiButton, KiwiDropdown, KiwiDropdownItem },
   props: {
     newTask: { type: Object, required: true },
     onAdd: { type: Function, required: true }
@@ -156,6 +161,19 @@ export default {
     },
     toggleHint(field) {
       this.visibleHints[field] = !this.visibleHints[field]
+    },
+    handleFrequencyChange(command) {
+      this.newTask.frequency = command
+    },
+    getFrequencyLabel(value) {
+      const labels = {
+        'once': this.$t('todo.freqOnce'),
+        'daily': this.$t('todo.freqDaily'),
+        'weekly': this.$t('todo.freqWeekly'),
+        'monthly': this.$t('todo.freqMonthly'),
+        'custom': this.$t('todo.customDays')
+      }
+      return labels[value] || this.$t('todo.freqOnce')
     }
   }
 }
