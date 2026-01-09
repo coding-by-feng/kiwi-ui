@@ -88,15 +88,17 @@ export default {
   outline: none;
 
   &__inner {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     line-height: 1;
     white-space: nowrap;
     vertical-align: middle;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--bg-container);
+    border: 1px solid var(--border-color-light);
     font-weight: 500;
     border-left: 0;
-    color: var(--text-regular);
+    color: var(--text-secondary);
     -webkit-appearance: none;
     appearance: none;
     text-align: center;
@@ -105,27 +107,36 @@ export default {
     margin: 0;
     position: relative;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(.645,.045,.355,1);
-    padding: 12px 20px;
+    transition: var(--transition-fast);
+    padding: 10px 18px;
     font-size: 14px;
     border-radius: 0;
 
     &:hover {
       color: var(--color-primary);
+      background: var(--bg-highlight);
+      z-index: 1;
     }
   }
 
   &:first-child {
     .kiwi-radio-button__inner {
-      border-left: 1px solid var(--border-color);
-      border-radius: 4px 0 0 4px;
-      box-shadow: none !important;
+      border-left: 1px solid var(--border-color-light);
+      border-radius: var(--radius-md) 0 0 var(--radius-md);
     }
   }
 
   &:last-child {
     .kiwi-radio-button__inner {
-      border-radius: 0 4px 4px 0;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    }
+  }
+
+  // Only child - full rounded
+  &:only-child {
+    .kiwi-radio-button__inner {
+      border-radius: var(--radius-md);
+      border-left: 1px solid var(--border-color-light);
     }
   }
 
@@ -137,25 +148,60 @@ export default {
   }
 
   &.is-active {
+    z-index: 2;
+
     .kiwi-radio-button__inner {
       color: #fff;
-      background-color: var(--color-primary);
+      background: var(--gradient-primary);
       border-color: var(--color-primary);
-      box-shadow: -1px 0 0 0 var(--color-primary);
+      box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.4),
+                  -1px 0 0 0 var(--color-primary);
+
+      &:hover {
+        filter: brightness(1.1);
+      }
     }
   }
 
+  &.is-disabled {
+    .kiwi-radio-button__inner {
+      cursor: not-allowed;
+      opacity: 0.5;
+      background: var(--bg-container);
+      color: var(--text-muted);
+
+      &:hover {
+        color: var(--text-muted);
+        background: var(--bg-container);
+      }
+    }
+  }
+
+  // Size variants
   &--mini {
     .kiwi-radio-button__inner {
-      padding: 7px 15px;
+      padding: 6px 12px;
       font-size: 12px;
-      border-radius: 0;
     }
     &:first-child .kiwi-radio-button__inner {
-      border-radius: 3px 0 0 3px;
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
     }
     &:last-child .kiwi-radio-button__inner {
-      border-radius: 0 3px 3px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+  }
+
+  &--small {
+    .kiwi-radio-button__inner {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+  }
+
+  &--large {
+    .kiwi-radio-button__inner {
+      padding: 12px 24px;
+      font-size: 15px;
     }
   }
 }

@@ -1,17 +1,6 @@
 import request from '@/router/axios'
 import kiwiConsts from '@/const/kiwiConsts'
 
-export function callAiChatCompletion(selectedMode, targetLanguage, nativeLanguage, originalText) {
-    console.log('callAiChatCompletion selectedMode: ' + selectedMode + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' originalText: ' + originalText)
-    return request({
-        url: `${kiwiConsts.API_BASE.AI_BIZ}/v2/${selectedMode}/${targetLanguage}/${nativeLanguage}/${encodeURIComponent(encodeURIComponent(originalText))}`,
-        headers: {
-            isToken: true
-        },
-        method: 'get'
-    })
-}
-
 // AI Call History API calls
 export function getAiCallHistory(current, size, filter = null) {
     const params = {
@@ -86,7 +75,7 @@ export function submitChannel(channelLinkOrName) {
 
 export function getChannelVideos(channelId, current, size) {
     return request({
-        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/videos`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/id/${channelId}/videos`,
         method: 'get',
         params: {
             current: current,
@@ -101,7 +90,7 @@ export function getChannelVideos(channelId, current, size) {
 // Favorites API
 export function favoriteChannel(channelId) {
   return request({
-    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/id/${channelId}/favorite`,
     method: 'post',
     headers: { isToken: true }
   })
@@ -109,7 +98,7 @@ export function favoriteChannel(channelId) {
 
 export function unfavoriteChannel(channelId) {
   return request({
-    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/id/${channelId}/favorite`,
     method: 'delete',
     headers: { isToken: true }
   })

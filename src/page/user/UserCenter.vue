@@ -11,20 +11,21 @@
         </div>
       </div>
       <div class="user-actions">
-        <el-button
+        <KiwiButton
             type="warning"
             size="small"
             @click="handleClearWebsiteData"
             :loading="clearingWebsiteData"
+            icon="el-icon-delete"
             class="action-button clear-data-button">
-          <i class="el-icon-delete"></i> {{ $t('audio.cleanAllCache') }}
-        </el-button>
-        <el-button type="primary" size="small" @click="showPasswordDialog = true" class="action-button change-password-btn">
-          <i class="el-icon-lock"></i> {{ $t('user.changePassword') }}
-        </el-button>
-        <el-button type="info" size="small" @click="handleLoginOut" class="action-button logout-button">
-          <i class="el-icon-switch-button"></i> {{ $t('user.loginOut') }}
-        </el-button>
+          {{ $t('audio.cleanAllCache') }}
+        </KiwiButton>
+        <KiwiButton type="primary" size="small" @click="showPasswordDialog = true" icon="el-icon-lock" class="action-button change-password-btn">
+          {{ $t('user.changePassword') }}
+        </KiwiButton>
+        <KiwiButton type="info" size="small" @click="handleLoginOut" icon="el-icon-switch-button" class="action-button logout-button">
+          {{ $t('user.loginOut') }}
+        </KiwiButton>
       </div>
     </div>
 
@@ -79,48 +80,61 @@
           <div class="setting-label">
             <span>{{ $t('user.theme') }}</span>
           </div>
-          <el-dropdown @command="handleThemeChange" trigger="click" class="custom-dropdown">
-            <el-button size="small" type="text" class="dropdown-button">
-              {{ currentThemeName }} <i class="el-icon-arrow-down el-icon--right"></i>
-            </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="cyberpunk">CyberPunk</el-dropdown-item>
-              <el-dropdown-item command="glassmorphism">Glassmorphism</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <KiwiDropdown @command="handleThemeChange" class="custom-dropdown theme-dropdown">
+            <span class="dropdown-trigger">
+              {{ currentThemeName }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="cyberpunk">
+                <span class="theme-option"><i class="theme-dot theme-dot--cyberpunk"></i> CyberPunk</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="glassmorphism">
+                <span class="theme-option"><i class="theme-dot theme-dot--glass"></i> Glassmorphism</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="neon-tokyo">
+                <span class="theme-option"><i class="theme-dot theme-dot--tokyo"></i> Neon Tokyo</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="ocean-depth">
+                <span class="theme-option"><i class="theme-dot theme-dot--ocean"></i> Ocean Depth</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="aurora">
+                <span class="theme-option"><i class="theme-dot theme-dot--aurora"></i> Aurora Borealis</span>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.pronunciationSource') }}</span>
           </div>
-          <el-dropdown @command="pronunciationSourceChange" trigger="click" class="custom-dropdown">
-            <el-button size="small" type="text" class="dropdown-button">
-              {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down el-icon--right"></i>
-            </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <KiwiDropdown @command="pronunciationSourceChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="Cambridge">Cambridge</KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.nativeLanguage') }}</span>
           </div>
-          <el-dropdown @command="nativeLangChange" trigger="click" class="custom-dropdown">
-            <el-button size="small" type="text" class="dropdown-button">
-              {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down el-icon--right"></i>
-            </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item
+          <KiwiDropdown @command="nativeLangChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem
                   v-for="(code, language) in languageCodes"
                   :key="code"
                   :command="code">
                 {{ language.replaceAll('_', ' ') }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
         </div>
 
         <!-- NEW: Clipboard Detection Setting -->
@@ -245,13 +259,8 @@
       </div>
     </div>
 
-    <!-- NEW: Audio (BGM) Section embedded into User Center -->
-    <div class="settings-section">
-      <h4 class="section-title">
-        <i class="el-icon-headset"></i> {{ $t('audio.title') }}
-      </h4>
-      <Bgm />
-    </div>
+    <!-- Audio (BGM) Section - no wrapper, Bgm has its own styling -->
+    <Bgm />
 
     <!-- Password Change Dialog -->
     <el-dialog
@@ -273,7 +282,7 @@
         @submit.native.prevent="handleChangePassword"
       >
         <el-form-item :label="$t('user.currentPassword')" prop="oldPassword">
-          <el-input
+          <KiwiInput
             v-model="passwordForm.oldPassword"
             type="password"
             :placeholder="$t('user.currentPasswordPlaceholder')"
@@ -282,7 +291,7 @@
           />
         </el-form-item>
         <el-form-item :label="$t('user.newPassword')" prop="newPassword">
-          <el-input
+          <KiwiInput
             v-model="passwordForm.newPassword"
             type="password"
             :placeholder="$t('user.newPasswordPlaceholder')"
@@ -291,7 +300,7 @@
           />
         </el-form-item>
         <el-form-item :label="$t('user.confirmNewPassword')" prop="confirmPassword">
-          <el-input
+          <KiwiInput
             v-model="passwordForm.confirmPassword"
             type="password"
             :placeholder="$t('user.confirmNewPasswordPlaceholder')"
@@ -301,17 +310,17 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="showPasswordDialog = false" :disabled="changingPassword">
+        <KiwiButton @click="showPasswordDialog = false" :disabled="changingPassword">
           {{ $t('common.cancel') }}
-        </el-button>
-        <el-button
+        </KiwiButton>
+        <KiwiButton
           type="primary"
           :loading="changingPassword"
           :disabled="changingPassword"
           @click="handleChangePassword"
         >
           {{ $t('common.confirm') }}
-        </el-button>
+        </KiwiButton>
       </span>
     </el-dialog>
   </div>
@@ -327,12 +336,16 @@ import msgUtil from '@/util/msg'
 import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
 import Bgm from '@/page/bgm/Index'
 import { setLanguage as setUiLanguage } from '@/i18n'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
 
 const USER_NAME = 'user_name'
 
 export default {
   name: 'UserCenter',
-  components: { Bgm },
+  components: { Bgm, KiwiDropdown, KiwiDropdownItem, KiwiButton, KiwiInput },
   data() {
     return {
       userInfo: {
@@ -425,7 +438,10 @@ export default {
     currentThemeName() {
       const names = {
         'cyberpunk': 'CyberPunk',
-        'glassmorphism': 'Glassmorphism'
+        'glassmorphism': 'Glassmorphism',
+        'neon-tokyo': 'Neon Tokyo',
+        'ocean-depth': 'Ocean Depth',
+        'aurora': 'Aurora Borealis'
       }
       return names[this.user.theme] || 'CyberPunk'
     }
@@ -922,7 +938,9 @@ export default {
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color-light);
   backdrop-filter: var(--backdrop-filter);
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: static;
+  overflow: visible;
 }
 
 .section-title {
@@ -1039,8 +1057,16 @@ export default {
     padding: 16px;
     border: 1px solid var(--border-color-light);
     border-radius: 12px;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     background: var(--bg-container);
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+
+    // When dropdown inside is active, elevate this setting-item
+    &:has(.is-active) {
+      z-index: 100;
+    }
 
     &:hover {
       border-color: var(--color-primary);
@@ -1108,24 +1134,35 @@ export default {
   }
 }
 
-// Custom Dropdown Styling - simplified
+// Custom Dropdown Styling
 .custom-dropdown {
-  .dropdown-button {
-    border: none;
+
+  .dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: var(--spacing-sm) var(--spacing-md);
     color: var(--color-primary);
     font-weight: var(--font-weight-medium);
+    font-size: 14px;
     background: var(--bg-container);
+    border: 1px solid var(--border-color-light);
     border-radius: var(--radius-md);
-    transition: var(--transition-normal);
+    cursor: pointer;
+    transition: var(--transition-fast);
 
-    &:hover {
-      filter: brightness(0.95);
-      transform: translateY(-1px);
+    i {
+      font-size: 12px;
+      transition: var(--transition-fast);
     }
 
-    &:focus {
-      box-shadow: 0 0 0 2px var(--border-color-light);
+    &:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+
+      i {
+        transform: translateY(2px);
+      }
     }
   }
 }
@@ -1320,10 +1357,7 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-/* Smooth transitions for all interactive elements */
-* {
-  transition: all 0.3s ease;
-}
+/* Note: Removed universal transition rule to prevent z-index/stacking issues */
 
 /* Custom scrollbar for dropdown menus */
 ::v-deep .el-dropdown-menu {
@@ -1416,6 +1450,65 @@ export default {
 @media (max-width: 768px) {
   ::v-deep .password-dialog {
     width: 90%;
+  }
+}
+
+/* Theme Selector Styles */
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px currentColor;
+
+  &--cyberpunk {
+    background: linear-gradient(135deg, #00ffff, #ff00ff);
+    box-shadow: 0 0 8px #00ffff;
+  }
+
+  &--glass {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 0 8px #667eea;
+  }
+
+  &--tokyo {
+    background: linear-gradient(135deg, #ff4081, #00e5ff);
+    box-shadow: 0 0 8px #ff4081;
+  }
+
+  &--ocean {
+    background: linear-gradient(135deg, #64ffda, #00bfff);
+    box-shadow: 0 0 8px #64ffda;
+  }
+
+  &--aurora {
+    background: linear-gradient(135deg, #48d1cc, #9370db, #98fb98);
+    box-shadow: 0 0 8px #48d1cc;
+  }
+}
+
+.theme-dropdown ::v-deep .el-dropdown-menu__item {
+  padding: 12px 20px !important;
+
+  &:hover .theme-dot {
+    animation: glow-pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
   }
 }
 </style>

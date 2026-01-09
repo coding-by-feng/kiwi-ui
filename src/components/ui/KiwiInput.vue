@@ -110,7 +110,7 @@ export default {
     appearance: none;
     background-color: var(--bg-card);
     background-image: none;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-color-light);
     box-sizing: border-box;
     color: var(--text-primary);
@@ -120,7 +120,7 @@ export default {
     line-height: 40px;
     outline: none;
     padding: 0 15px;
-    transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    transition: var(--transition-normal);
     width: 100%;
 
     &::placeholder {
@@ -128,20 +128,23 @@ export default {
     }
 
     &:hover {
-      border-color: var(--text-secondary);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
     }
 
     &:focus {
       border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2),
+                  0 0 15px rgba(var(--color-primary-rgb), 0.15);
     }
   }
 
   &--prefix .kiwi-input__inner {
-    padding-left: 30px;
+    padding-left: 36px;
   }
 
   &--suffix .kiwi-input__inner {
-    padding-right: 30px;
+    padding-right: 36px;
   }
 
   &__prefix, &__suffix {
@@ -150,12 +153,12 @@ export default {
     height: 100%;
     color: var(--text-placeholder);
     text-align: center;
-    transition: all .3s;
+    transition: var(--transition-fast);
     pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
+    width: 36px;
   }
 
   &__prefix {
@@ -167,13 +170,21 @@ export default {
     pointer-events: auto;
   }
 
+  // When input is focused, highlight icons
+  &:focus-within {
+    .kiwi-input__prefix,
+    .kiwi-input__suffix {
+      color: var(--color-primary);
+    }
+  }
+
   &__icon {
     height: 100%;
     width: 25px;
     text-align: center;
-    transition: all .3s;
+    transition: var(--transition-fast);
     line-height: 40px;
-    
+
     &:after {
       content: '';
       height: 100%;
@@ -185,8 +196,11 @@ export default {
 
   &__clear, &__pwd-toggle {
     cursor: pointer;
+    border-radius: var(--radius-sm);
+
     &:hover {
-      color: var(--text-secondary);
+      color: var(--color-primary);
+      text-shadow: 0 0 8px var(--color-primary);
     }
   }
 
@@ -205,40 +219,54 @@ export default {
   }
 
   &__prepend {
-    background-color: var(--bg-body);
+    background: var(--bg-container);
     border: 1px solid var(--border-color-light);
     border-right: 0;
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
     color: var(--text-secondary);
     display: table-cell;
-    padding: 0 20px;
+    padding: 0 16px;
     position: relative;
     vertical-align: middle;
     white-space: nowrap;
     width: 1px;
     cursor: pointer;
+    transition: var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--bg-highlight);
+    }
   }
 
   &__append {
-    background-color: var(--bg-body);
+    background: var(--bg-container);
     border: 1px solid var(--border-color-light);
     border-left: 0;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     color: var(--text-secondary);
     display: table-cell;
-    padding: 0 20px;
+    padding: 0 16px;
     position: relative;
     vertical-align: middle;
     white-space: nowrap;
     width: 1px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--bg-highlight);
+    }
   }
 
   &__textarea {
     height: auto;
-    min-height: 40px;
-    padding: 8px 15px;
-    line-height: 1.5;
+    min-height: 80px;
+    padding: 12px 15px;
+    line-height: 1.6;
     resize: vertical;
+    border-radius: var(--radius-md);
   }
 }
 </style>

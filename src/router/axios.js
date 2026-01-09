@@ -107,6 +107,7 @@ axios.interceptors.response.use(res => {
     }
   } catch (e) { /* ignore expiry check errors */ }
 
+  // Handle 401 Unauthorized - try refresh token first
   if (String(responseCode.UNAUTHORIZED) === status) {
     if (refreshToken) {
       store.dispatch('RefreshToken').then(() => {
@@ -118,7 +119,6 @@ axios.interceptors.response.use(res => {
     } else {
       store.dispatch('LogOut').then(() => {
         if (isElectron) {
-          // In Electron, just navigate to login page
           router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
         } else {
           window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
@@ -127,11 +127,24 @@ axios.interceptors.response.use(res => {
     }
   }
 
+  // Handle 403 Forbidden - token expired or authentication failed, force logout
+  if (String(responseCode.FORBIDDEN) === status) {
+    console.warn('403 Forbidden - token expired or auth failed, forcing logout.')
+    store.dispatch('LogOut').finally(() => {
+      if (isElectron) {
+        router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
+      } else {
+        window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
+      }
+    })
+    return Promise.reject(new Error('Session expired or authentication failed'))
+  }
+
   // New: handle payload-level auth error codes when HTTP status isn't 401
   try {
     const payloadCode = (res.data && (res.data.errorCode || res.data.code || res.data.error)) || ''
     const normalizedPayloadCode = String(payloadCode).toUpperCase()
-    const authCodes = ['AUTHENTICATION_ERROR','UNAUTHORIZED','TOKEN_EXPIRED','INVALID_TOKEN']
+    const authCodes = ['AUTHENTICATION_ERROR','UNAUTHORIZED','TOKEN_EXPIRED','INVALID_TOKEN','FORBIDDEN','ACCESS_DENIED']
     if (authCodes.includes(normalizedPayloadCode)) {
       console.warn('Detected auth failure in payload, redirecting to login:', normalizedPayloadCode)
       store.dispatch('LogOut').finally(() => {
@@ -163,8 +176,8 @@ axios.interceptors.response.use(res => {
     const errPayload = resp && resp.data
     const payloadCode = (errPayload && (errPayload.errorCode || errPayload.code || errPayload.error)) || ''
     const normalizedPayloadCode = String(payloadCode).toUpperCase()
-    const authCodes = ['AUTHENTICATION_ERROR','UNAUTHORIZED','TOKEN_EXPIRED','INVALID_TOKEN']
-    if (status === responseCode.UNAUTHORIZED || authCodes.includes(normalizedPayloadCode)) {
+    const authCodes = ['AUTHENTICATION_ERROR','UNAUTHORIZED','TOKEN_EXPIRED','INVALID_TOKEN','FORBIDDEN','ACCESS_DENIED']
+    if (status === responseCode.UNAUTHORIZED || status === responseCode.FORBIDDEN || authCodes.includes(normalizedPayloadCode)) {
       console.warn('Authentication error in error handler, redirecting to login.')
       store.dispatch('LogOut').finally(() => {
         if (isElectron) {

@@ -154,18 +154,32 @@ export default {
   overflow: auto;
   margin: 0;
   z-index: 2000;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
 .kiwi-dialog {
   position: relative;
   margin: 0 auto 50px;
   background: var(--bg-card);
-  border-radius: 8px;
-  box-shadow: var(--shadow-card);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-lg),
+              0 0 40px rgba(var(--color-primary-rgb), 0.1);
   box-sizing: border-box;
   width: 50%;
   border: 1px solid var(--border-color-light);
+  overflow: hidden;
+
+  // Gradient accent line at top
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+  }
 
   &.is-fullscreen {
     width: 100%;
@@ -173,91 +187,136 @@ export default {
     margin-bottom: 0;
     height: 100%;
     overflow: auto;
+    border-radius: 0;
   }
 
   &__header {
-    padding: 20px 20px 10px;
+    padding: 24px 24px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--border-color-light);
   }
 
   &__title {
-    line-height: 24px;
+    line-height: 1.4;
     font-size: 18px;
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.02em;
   }
 
   &__headerbtn {
     position: absolute;
     top: 20px;
     right: 20px;
-    padding: 0;
-    background: transparent;
-    border: none;
+    padding: 8px;
+    background: var(--bg-container);
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--radius-md);
     outline: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: var(--bg-highlight);
+      border-color: var(--color-primary);
+      transform: rotate(90deg);
+    }
 
     .kiwi-dialog__close {
       color: var(--text-secondary);
-      &:hover {
-        color: var(--color-primary);
-      }
+      transition: var(--transition-fast);
+    }
+
+    &:hover .kiwi-dialog__close {
+      color: var(--color-primary);
     }
   }
 
   &__body {
-    padding: 30px 20px;
+    padding: 24px;
     color: var(--text-regular);
     font-size: 14px;
-    word-break: break-all;
+    line-height: 1.6;
+    word-break: break-word;
+    max-height: 60vh;
+    overflow-y: auto;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--bg-container);
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+
+      &:hover {
+        background: var(--color-primary);
+      }
+    }
   }
 
   &__footer {
-    padding: 10px 20px 20px;
+    padding: 16px 24px 24px;
     text-align: right;
     box-sizing: border-box;
+    border-top: 1px solid var(--border-color-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
   }
 
   &--center {
     text-align: center;
+
     .kiwi-dialog__header {
       justify-content: center;
     }
+
     .kiwi-dialog__footer {
-      text-align: center;
+      justify-content: center;
     }
   }
 }
 
+// Animation classes
 .dialog-fade-enter-active {
-  animation: dialog-fade-in .3s;
+  animation: dialog-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dialog-fade-leave-active {
-  animation: dialog-fade-out .3s;
+  animation: dialog-fade-out 0.25s ease-out;
 }
 
 @keyframes dialog-fade-in {
   0% {
-    transform: translate3d(0, -20px, 0);
+    transform: translate3d(0, -30px, 0) scale(0.95);
     opacity: 0;
   }
   100% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
 }
 
 @keyframes dialog-fade-out {
   0% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
   100% {
-    transform: translate3d(0, -20px, 0);
+    transform: translate3d(0, -20px, 0) scale(0.95);
     opacity: 0;
   }
 }

@@ -74,9 +74,7 @@
 
           <!-- Mobile Row 4: Submit Button -->
           <div v-if="isSmallScreen" class="mobile-row submit-row">
-            <KiwiButton type="primary" @click="onSubmit" class="mobile-submit-btn" icon="el-icon-search">
-              {{ $t('common.search') }}
-            </KiwiButton>
+            <KiwiButton type="primary" @click="onSubmit" class="mobile-submit-btn" icon="el-icon-search" />
           </div>
           
           <!-- Suggestions Dropdown -->

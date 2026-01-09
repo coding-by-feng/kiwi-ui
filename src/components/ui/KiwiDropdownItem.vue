@@ -25,29 +25,54 @@ export default {
 <style lang="scss" scoped>
 .kiwi-dropdown-item {
   list-style: none;
-  line-height: 36px;
-  padding: 0 20px;
-  margin: 0;
+  line-height: 1.4;
+  padding: 10px 14px;
+  margin: 2px 0;
   font-size: 14px;
-  color: var(--text-regular);
+  font-weight: 500;
+  color: var(--text-secondary);
   cursor: pointer;
   outline: none;
   white-space: nowrap;
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 
   &:hover {
-    background-color: var(--bg-body);
+    background: rgba(var(--color-primary-rgb), 0.1);
     color: var(--color-primary);
+
+    // Icon glow on hover
+    i {
+      text-shadow: 0 0 8px var(--color-primary);
+    }
+  }
+
+  &:active {
+    background: rgba(var(--color-primary-rgb), 0.15);
+    transform: scale(0.98);
   }
 
   &.is-disabled {
-    cursor: default;
-    color: #bbb;
+    cursor: not-allowed;
+    color: var(--text-muted);
+    opacity: 0.5;
     pointer-events: none;
   }
 
   &.is-divided {
-    margin-top: 6px;
-    border-top: 1px solid var(--divider-color);
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color-light);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+  }
+
+  // Icon styling
+  i {
+    font-size: 16px;
+    transition: var(--transition-fast);
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="kiwi-dropdown" v-click-outside="close">
+  <div class="kiwi-dropdown" :class="{ 'is-active': visible }" v-click-outside="close">
     <div class="kiwi-dropdown-trigger" @click="toggle">
       <slot></slot>
     </div>
@@ -58,42 +58,77 @@ export default {
 .kiwi-dropdown {
   display: inline-block;
   position: relative;
+  z-index: 1;
   color: var(--text-primary);
   font-size: 14px;
 
+  &.is-active {
+    z-index: 9999;
+  }
+
   .kiwi-dropdown-trigger {
     cursor: pointer;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary);
+    }
   }
 
   .kiwi-dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 4px);
     left: 0;
-    z-index: 10;
-    margin: 5px 0;
-    background-color: var(--bg-card);
+    z-index: 9999;
+    margin: 0;
+    background: var(--bg-card);
     border: 1px solid var(--border-color-light);
-    border-radius: 4px;
-    box-shadow: var(--shadow-card);
-    padding: 10px 0;
-    min-width: 100px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg),
+                0 0 30px rgba(var(--color-primary-rgb), 0.08);
+    padding: 8px;
+    min-width: 140px;
     transform-origin: center top;
-    max-height: 300px;
+    max-height: 320px;
     overflow-y: auto;
+    backdrop-filter: blur(10px);
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: var(--radius-full);
+
+      &:hover {
+        background: var(--color-primary);
+      }
+    }
   }
 }
 
+// Enhanced animation
 .kiwi-zoom-in-top-enter-active,
 .kiwi-zoom-in-top-leave-active {
   opacity: 1;
-  transform: scaleY(1);
-  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  transform: scaleY(1) translateY(0);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.2s ease;
   transform-origin: center top;
 }
+
 .kiwi-zoom-in-top-enter,
 .kiwi-zoom-in-top-leave-active {
   opacity: 0;
-  transform: scaleY(0);
+  transform: scaleY(0.9) translateY(-8px);
 }
 </style>

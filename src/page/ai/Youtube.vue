@@ -25,6 +25,7 @@ import YoutubePlayer from '@/page/ai/YoutubePlayer.vue'
 import YoutubeChannel from '@/page/ai/YoutubeChannel.vue'
 import YoutubeFavorites from '@/page/ai/YoutubeFavorites.vue'
 import kiwiConsts from '@/const/kiwiConsts'
+import StatusService from '@/util/status-overlay-service'
 
 const STORAGE_KEY = 'ytb_state'
 
@@ -44,6 +45,9 @@ export default {
     }
   },
   created() {
+    // Clear any stale overlays on mount
+    StatusService.closeAll()
+
     // Attempt restoration from local storage first (before route normalization)
     this.restoreLocalState()
     this.initFromRoute()
@@ -97,6 +101,9 @@ export default {
 
     // Handle UI toggle to switch modes and persist to URL
     handleModeChange(val) {
+      // Clear any global status overlays when switching modes
+      StatusService.closeAll()
+
       const q = { ...(this.$route.query || {}) }
       this.currentMode = val
       this.persistLocalState()

@@ -3,13 +3,9 @@
     <KiwiTabs v-model="favoritesActive" type="card" class="inner-tabs">
       <!-- Favorite Videos -->
       <KiwiTabPane label="Videos" name="favVideos">
-        <StatusOverlay
-          :visible="loading"
-          status="loading"
-          title="Loading favorites..."
-          :backdrop="false"
-          style="position: relative; min-height: 200px;"
-        />
+        <div v-if="loading" class="loading-container">
+          <i class="el-icon-loading"></i>
+        </div>
         <template v-if="!loading">
           <div v-if="favoriteVideos.length === 0" class="empty-state">No favorite videos</div>
           
@@ -51,13 +47,9 @@
 
       <!-- Favorite Channels -->
       <KiwiTabPane label="Channels" name="favChannels">
-        <StatusOverlay
-          :visible="loading"
-          status="loading"
-          title="Loading channels..."
-          :backdrop="false"
-          style="position: relative; min-height: 200px;"
-        />
+        <div v-if="loading" class="loading-container">
+          <i class="el-icon-loading"></i>
+        </div>
         <template v-if="!loading">
           <div v-if="favoriteChannels.length === 0" class="empty-state">No favorite channels</div>
 
@@ -94,7 +86,6 @@
 </template>
 
 <script>
-import StatusOverlay from '@/components/common/StatusOverlay.vue'
 import { mapGetters } from 'vuex'
 import { getFavoriteChannels, getFavoriteVideos, favoriteChannel, unfavoriteChannel, favoriteVideo, unfavoriteVideo, favoriteVideoByUrl, unfavoriteVideoByUrl } from '@/api/ai'
 import kiwiConsts from '@/const/kiwiConsts'
@@ -107,7 +98,7 @@ import KiwiPagination from '@/components/ui/KiwiPagination'
 
 export default {
   name: 'YoutubeFavorites',
-  components: { StatusOverlay, KiwiButton, KiwiTabs, KiwiTabPane, KiwiTag, KiwiPagination },
+  components: { KiwiButton, KiwiTabs, KiwiTabPane, KiwiTag, KiwiPagination },
   data() {
     return {
       favoritesActive: 'favVideos',
@@ -144,7 +135,7 @@ export default {
       this.loading = true
       try {
         const res = await getFavoriteVideos(this.favoriteVideoQuery.current, this.favoriteVideoQuery.size)
-        if (res.data.code === 1) {
+        if (res.data.code === 0 || res.data.success) {
           const rec = res.data.data.records || []
           this.favoriteVideos = rec.slice().sort((a, b) => {
             const da = this.parseLocalDateTime(a && a.publishedAt)
@@ -168,7 +159,7 @@ export default {
       this.loading = true
       try {
         const res = await getFavoriteChannels(this.favoriteChannelQuery.current, this.favoriteChannelQuery.size)
-        if (res.data.code === 1) {
+        if (res.data.code === 0 || res.data.success) {
           this.favoriteChannels = res.data.data.records || []
           this.favoriteChannelTotal = res.data.data.total || 0
         } else {
@@ -203,22 +194,25 @@ export default {
         if (id) {
           const api = item.favorited ? favoriteVideo : unfavoriteVideo
           res = await api(id)
-          ok = !!(res && res.data && res.data.code === 1)
+          ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
           if (!ok && url) {
             const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
             res = await apiUrl(url)
-            ok = !!(res && res.data && res.data.code === 1)
+            ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
           }
         } else if (url) {
           const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
           res = await apiUrl(url)
-          ok = !!(res && res.data && res.data.code === 1)
+          ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
         }
         if (!ok) {
           // rollback
           item.favorited = prevF
           item.favoriteCount = prevC
           this.$message.error((res && res.data && (res.data.msg || res.data.message)) || 'Favorite toggle failed')
+        } else {
+          // Refresh list after successful toggle
+          await this.fetchFavoriteVideos()
         }
       } catch (e) {
         item.favorited = prevF
@@ -236,12 +230,15 @@ export default {
       try {
         const api = item.favorited ? favoriteChannel : unfavoriteChannel
         const res = await api(id)
-        const ok = res && res.data && res.data.code === 1
+        const ok = res && res.data && (res.data.code === 0 || res.data.success)
         if (!ok) {
           // rollback
           item.favorited = prevF
           item.favoriteCount = prevC
           this.$message.error((res && res.data && res.data.msg) || 'Favorite toggle failed')
+        } else {
+          // Refresh list after successful toggle
+          await this.fetchFavoriteChannels()
         }
       } catch (e) {
         item.favorited = prevF
@@ -417,5 +414,23 @@ export default {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 24px;
+  color: var(--color-primary);
+}
+
+.loading-container i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

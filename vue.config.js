@@ -20,6 +20,24 @@ console.log(`Building Web in ${isProduction ? 'Production' : 'Development'} mode
 console.log(`API URL set to: ${definedApiEnv || '(relative, same-origin)'}`);
 console.log(`Public path set to: '/' (web-only)`);
 
+// Helper to create proxy config with error handling for both HTTP and WebSocket
+const createProxyConfig = (path) => ({
+    target: devProxyTarget,
+    ws: true,
+    changeOrigin: true,
+    secure: false,
+    onError: (err, req, res) => {
+        console.warn(`Proxy error for ${path}:`, err.code);
+        if (res && res.writeHead) res.writeHead(502);
+        if (res && res.end) res.end('Proxy error');
+    },
+    onProxyReqWs: (proxyReq, req, socket) => {
+        socket.on('error', (err) => {
+            console.warn(`WebSocket proxy error for ${path}:`, err.code);
+        });
+    }
+});
+
 // Always absolute path for web
 let publicPath = '/'
 
@@ -265,11 +283,11 @@ module.exports = {
         hot: true,
         compress: true,
         proxy: {
-            '/auth': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
-            '/api': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
-            '/code': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
-            '/admin': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false },
-            '/tools': { target: devProxyTarget, ws: true, changeOrigin: true, secure: false }
+            '/auth': createProxyConfig('/auth'),
+            '/api': createProxyConfig('/api'),
+            '/code': createProxyConfig('/code'),
+            '/admin': createProxyConfig('/admin'),
+            '/tools': createProxyConfig('/tools')
         }
     },
 
