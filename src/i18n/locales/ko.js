@@ -265,7 +265,12 @@ export default {
         loadHistoryFailed: 'AI 호출 기록 로딩에 실패했습니다',
         // 삭제 확인 대화상자
         deleteItemTitle: '항목 삭제',
-        deleteItemConfirm: '이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
+        deleteItemConfirm: '이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+        // 최소화/복원
+        minimize: '최소화',
+        restore: '복원',
+        close: '닫기',
+        aiSearch: 'AI 검색'
     },
 
     // New: audio settings parity

@@ -505,7 +505,12 @@ export default {
         loadHistoryFailed: 'Failed to load AI call history',
         // Delete confirmation dialog
         deleteItemTitle: 'Delete Item',
-        deleteItemConfirm: 'Are you sure you want to delete this item? This action cannot be undone.'
+        deleteItemConfirm: 'Are you sure you want to delete this item? This action cannot be undone.',
+        // Minimize/Restore
+        minimize: 'Minimize',
+        restore: 'Restore',
+        close: 'Close',
+        aiSearch: 'AI Search'
     },
 
     // Audio and BGM

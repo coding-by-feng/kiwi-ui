@@ -421,7 +421,12 @@ export default {
         loadHistoryFailed: '載入 AI 呼叫歷史失敗',
         // 刪除確認對話框
         deleteItemTitle: '刪除項目',
-        deleteItemConfirm: '確定要刪除此項目嗎？此操作無法復原。'
+        deleteItemConfirm: '確定要刪除此項目嗎？此操作無法復原。',
+        // 最小化/恢復
+        minimize: '最小化',
+        restore: '恢復',
+        close: '關閉',
+        aiSearch: 'AI 搜尋'
     },
 
     // Messages and notifications (added keys)

@@ -1,5 +1,21 @@
 <template>
   <div class="ai-selection-popup-wrapper">
+    <!-- Minimized floating bar -->
+    <transition name="minimize-fade">
+      <div v-if="isMinimized" class="minimized-bar" @click="restoreDialog">
+        <div class="minimized-content">
+          <i v-if="hasActiveProcessing" class="el-icon-loading spinning"></i>
+          <i v-else class="el-icon-chat-dot-square"></i>
+          <span class="minimized-text">{{ $t('ai.aiSearch') }}</span>
+          <span v-if="hasActiveProcessing" class="minimized-status">{{ $t('ai.streaming') }}</span>
+        </div>
+        <div class="minimized-actions">
+          <KiwiButton type="text" icon="el-icon-full-screen" @click.stop="restoreDialog" :title="$t('ai.restore')" />
+          <KiwiButton type="text" icon="el-icon-close" @click.stop="closeFromMinimized" :title="$t('ai.close')" />
+        </div>
+      </div>
+    </transition>
+
     <KiwiDialog
       :title="title"
       :visible.sync="dialogVisible"
@@ -7,6 +23,8 @@
       :before-close="onBeforeClose"
       :close-on-click-modal="true"
       :close-on-press-escape="true"
+      :custom-header-buttons="headerButtons"
+      @header-button-click="onHeaderButtonClick"
     >
       <div class="ai-dialog-content">
         <!-- Always show the current selected text at the top -->
@@ -190,7 +208,9 @@ export default {
       selectionSelectedText: '',
       selectionSourceItemId: '',
       isSmallScreen: false,
-      selectedAiMode: ''
+      selectedAiMode: '',
+      // Minimize state
+      isMinimized: false
     }
   },
   watch: {
@@ -251,6 +271,14 @@ export default {
     selectedAiModeLabel() {
       const mode = this.aiModeOptions.find(m => m.value === this.selectedAiMode)
       return mode ? mode.label : 'Select Mode'
+    },
+    hasActiveProcessing() {
+      return (this.nestedItems || []).some(item => item.loading || item.isStreaming)
+    },
+    headerButtons() {
+      return [
+        { key: 'minimize', icon: 'el-icon-minus', title: this.$t('ai.minimize') }
+      ]
     }
   },
   methods: {
@@ -272,8 +300,28 @@ export default {
     },
 
     // Public API-like methods
-    closeDialog() { this.reviewMode = false; this.dialogVisible = false },
-    onBeforeClose() { this.reviewMode = false; this.dialogVisible = false },
+    closeDialog() { this.reviewMode = false; this.isMinimized = false; this.dialogVisible = false },
+    onBeforeClose() { this.reviewMode = false; this.isMinimized = false; this.dialogVisible = false },
+
+    // Minimize/Restore methods
+    minimizeDialog() {
+      this.isMinimized = true
+      this.$emit('update:visible', false)
+    },
+    restoreDialog() {
+      this.isMinimized = false
+      this.$emit('update:visible', true)
+    },
+    closeFromMinimized() {
+      this.isMinimized = false
+      this.clearAllCurrent()
+      this.$emit('update:visible', false)
+    },
+    onHeaderButtonClick(key) {
+      if (key === 'minimize') {
+        this.minimizeDialog()
+      }
+    },
 
     copySelectedText() {
       const text = (this.localSelectedText || '').trim()
@@ -878,5 +926,86 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
+/* Minimized floating bar */
+.minimized-bar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  z-index: 2001;
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.minimized-bar:hover {
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(var(--color-primary-rgb), 0.15);
+  border-color: var(--color-primary);
+}
+
+.minimized-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.minimized-content > i {
+  font-size: 18px;
+  color: var(--color-primary);
+}
+
+.minimized-text {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.minimized-status {
+  font-size: 12px;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.minimized-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.minimized-actions .el-button {
+  padding: 6px;
+  font-size: 16px;
+}
+
+/* Minimize transition */
+.minimize-fade-enter-active,
+.minimize-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.minimize-fade-enter,
+.minimize-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+}
+
+@media (max-width: 640px) {
+  .minimized-bar {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    min-width: auto;
+  }
+}
 
 </style>

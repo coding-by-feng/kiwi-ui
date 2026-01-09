@@ -554,7 +554,12 @@ export default {
         loadHistoryFailed: '加载 AI 调用历史失败',
         // 删除确认对话框
         deleteItemTitle: '删除项目',
-        deleteItemConfirm: '确定要删除此项目吗？此操作无法撤销。'
+        deleteItemConfirm: '确定要删除此项目吗？此操作无法撤销。',
+        // 最小化/恢复
+        minimize: '最小化',
+        restore: '恢复',
+        close: '关闭',
+        aiSearch: 'AI 搜索'
     },
 
     // New: audio settings parity

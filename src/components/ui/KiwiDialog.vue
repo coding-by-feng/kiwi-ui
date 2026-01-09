@@ -14,15 +14,28 @@
           <slot name="title">
             <span class="kiwi-dialog__title">{{ title }}</span>
           </slot>
-          <button
-            type="button"
-            class="kiwi-dialog__headerbtn"
-            aria-label="Close"
-            v-if="showClose"
-            @click="handleClose"
-          >
-            <i class="kiwi-dialog__close el-icon-close"></i>
-          </button>
+          <div class="kiwi-dialog__header-actions">
+            <button
+              v-for="btn in customHeaderButtons"
+              :key="btn.key"
+              type="button"
+              class="kiwi-dialog__headerbtn kiwi-dialog__headerbtn--custom"
+              :aria-label="btn.title || btn.key"
+              :title="btn.title"
+              @click="$emit('header-button-click', btn.key)"
+            >
+              <i :class="['kiwi-dialog__close', btn.icon]"></i>
+            </button>
+            <button
+              type="button"
+              class="kiwi-dialog__headerbtn"
+              aria-label="Close"
+              v-if="showClose"
+              @click="handleClose"
+            >
+              <i class="kiwi-dialog__close el-icon-close"></i>
+            </button>
+          </div>
         </div>
         <div class="kiwi-dialog__body" v-if="rendered"><slot></slot></div>
         <div class="kiwi-dialog__footer" v-if="$slots.footer">
@@ -84,7 +97,11 @@ export default {
       default: true
     },
     center: Boolean,
-    destroyOnClose: Boolean
+    destroyOnClose: Boolean,
+    customHeaderButtons: {
+      type: Array,
+      default: () => []
+    }
   },
   data() {
     return {
@@ -206,10 +223,16 @@ export default {
     letter-spacing: 0.02em;
   }
 
-  &__headerbtn {
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     position: absolute;
     top: 20px;
     right: 20px;
+  }
+
+  &__headerbtn {
     padding: 8px;
     background: var(--bg-container);
     border: 1px solid var(--border-color-light);
@@ -225,6 +248,9 @@ export default {
     &:hover {
       background: var(--bg-highlight);
       border-color: var(--color-primary);
+    }
+
+    &:not(&--custom):hover {
       transform: rotate(90deg);
     }
 
