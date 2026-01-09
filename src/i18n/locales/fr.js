@@ -159,12 +159,13 @@ export default {
         clearFilters: 'Effacer les filtres',
         review: 'Révision',
         copy: 'Copier',
+        copyPrompt: 'Copier l\'invite',
         details: 'Détails',
         searchAgain: 'Rechercher à nouveau',
-        aiCallDetails: 'Détails de l’appel IA',
+        aiCallDetails: 'Détails de l\'appel IA',
         promptCopied: 'Invite copiée dans le presse-papiers !',
-        failedToCopy: 'Échec de la copie de l’invite',
-        today: 'Aujourd’hui',
+        failedToCopy: 'Échec de la copie de l\'invite',
+        today: 'Aujourd\'hui',
         yesterday: 'Hier',
         daysAgo: 'Il y a {count} jours',
         invalidDate: 'Date invalide',
@@ -176,32 +177,49 @@ export default {
         noTextSelected: 'Aucun texte sélectionné',
         originalText: 'Texte original',
         selectTextToExplain: 'Sélectionnez le texte à expliquer selon le contexte',
-        expandExplanation: 'Développer l’explication',
-        collapseExplanation: 'Réduire l’explication',
-        closeExplanation: 'Fermer l’explication',
+        expandExplanation: 'Développer l\'explication',
+        collapseExplanation: 'Réduire l\'explication',
+        closeExplanation: 'Fermer l\'explication',
         explanationForSelectedText: 'Explication pour le texte sélectionné',
-        generating: 'Génération de l’explication...',
+        generating: 'Génération de l\'explication...',
         streaming: 'Réponse en cours de diffusion...',
         copyResponseText: 'Copier le texte de réponse',
         textCopiedToClipboard: 'Texte copié dans le presse-papiers !',
-        failedToCopyText: 'Échec de la copie du texte'
+        failedToCopyText: 'Échec de la copie du texte',
+        // Filtres de classification
+        normalItems: 'Éléments normaux',
+        archivedItems: 'Éléments archivés',
+        allItems: 'Tous les éléments',
+        // État de chargement
+        loadingHistory: 'Chargement de l\'historique...',
+        // Actions
+        archive: 'Archiver',
+        // Messages d'archivage/suppression
+        itemArchived: 'Élément archivé avec succès',
+        archiveFailed: 'Échec de l\'archivage',
+        itemDeleted: 'Élément supprimé avec succès',
+        deleteFailed: 'Échec de la suppression',
+        loadHistoryFailed: 'Échec du chargement de l\'historique des appels IA',
+        // Dialogue de confirmation de suppression
+        deleteItemTitle: 'Supprimer l\'élément',
+        deleteItemConfirm: 'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action ne peut pas être annulée.'
     },
 
     // Login section
     login: {
         welcomeBack: 'Bon retour',
-        smartEnglishLearning: 'Plateforme d’apprentissage anglais intelligente',
+        smartEnglishLearning: 'Plateforme d\'apprentissage anglais intelligente',
         features: {
             smartMemory: 'Mémorisation intelligente du vocabulaire',
             pronunciation: 'Pratique de prononciation authentique',
-            personalizedPlan: 'Plan d’apprentissage personnalisé'
+            personalizedPlan: 'Plan d\'apprentissage personnalisé'
         },
-        copyright: '©2025 Plateforme d’apprentissage anglais Kason v2.0',
+        copyright: '©2025 Plateforme d\'apprentissage anglais Kason v2.0',
         useGoogleLogin: 'Se connecter avec un compte Google',
         loginProcessing: 'Traitement...',
         connectingGoogle: 'Connexion à Google...',
         loginFailed: 'Échec de la connexion, veuillez réessayer',
-        accountNotFound: 'Compte introuvable, veuillez contacter l’administrateur',
+        accountNotFound: 'Compte introuvable, veuillez contacter l\'administrateur',
         clipboardAccess: 'Accès au presse-papiers',
         clipboardInstructions: {
             title: 'Pour utiliser le contenu du presse-papiers sur mobile :',
@@ -337,7 +355,7 @@ export default {
         duplicateHotkey: 'Ce raccourci est déjà utilisé',
         invalidHotkey: 'Le raccourci doit inclure au moins une touche modificatrice (Ctrl/Alt/Shift/Cmd)',
         noHotkeysConfigured: 'Aucun raccourci configuré',
-        saveFailed: 'Échec de l’enregistrement',
+        saveFailed: 'Échec de l\'enregistrement',
         invalidConfig: 'Configuration invalide',
         confirmDelete: 'Voulez-vous vraiment supprimer ?',
         confirmClear: 'Vous allez nettoyer et recharger. Continuer ?',
@@ -379,6 +397,6 @@ export default {
         downloadForMac: 'Télécharger pour macOS',
         downloadForWindows: 'Télécharger pour Windows',
         downloadForLinux: 'Télécharger pour Linux',
-        gdriveNote: 'Les téléchargements sont hébergés sur Google Drive. Si le lien ne s’ouvre pas, copiez-le et ouvrez-le dans un nouvel onglet.'
+        gdriveNote: 'Les téléchargements sont hébergés sur Google Drive. Si le lien ne s\'ouvre pas, copiez-le et ouvrez-le dans un nouvel onglet.'
     }
 }

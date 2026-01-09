@@ -177,26 +177,59 @@ export default {
 <style scoped>
 .list-container {
   margin: 20px 0 10px;
+  padding: 0 4px;
 }
 
-/* Collapse card styling aligned with AiResponseDetail */
+/* ========== Glassmorphic Collapse Cards ========== */
+::v-deep .kiwi-collapse {
+  border: none;
+}
+
 ::v-deep .kiwi-collapse .el-collapse-item {
+  position: relative;
   border: 1px solid var(--border-color-light);
-  border-radius: var(--card-border-radius);
+  border-radius: var(--radius-lg, 12px);
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
   margin-bottom: 14px;
   backdrop-filter: var(--backdrop-filter);
+  transition: all var(--transition-normal, 0.3s) ease;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity var(--transition-fast, 0.15s) ease;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(var(--color-primary-rgb, 99, 102, 241), 0.3);
+}
+
+::v-deep .kiwi-collapse .el-collapse-item:hover::before,
+::v-deep .kiwi-collapse .el-collapse-item.is-active::before {
+  opacity: 1;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header {
-  padding: 14px 18px;
+  padding: 14px 18px 14px 22px;
   background: var(--bg-header);
   color: var(--text-primary);
   font-weight: 600;
+  font-size: 15px;
   border-bottom: 1px solid var(--border-color-light);
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal, 0.3s) ease;
+  height: auto;
+  line-height: 1.5;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header:hover {
@@ -208,88 +241,231 @@ export default {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   color: var(--color-primary);
+  background: var(--bg-container);
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__arrow {
+  color: var(--text-secondary);
+  font-weight: 600;
+  transition: transform var(--transition-normal, 0.3s) ease;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__wrap {
   background: var(--bg-card);
-  border-bottom-left-radius: var(--card-border-radius);
-  border-bottom-right-radius: var(--card-border-radius);
+  border-bottom-left-radius: var(--radius-lg, 12px);
+  border-bottom-right-radius: var(--radius-lg, 12px);
   border-bottom: none;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__content {
-  padding: 18px 20px;
+  padding: 18px 20px 18px 22px;
   color: var(--text-primary);
 }
 
+/* ========== Content Styling ========== */
 .collapse-content {
   line-height: 1.7;
 }
 
+.paraphrase-block {
+  position: relative;
+  padding: 12px 14px;
+  background: var(--bg-body);
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color-light);
+  transition: all var(--transition-normal, 0.3s) ease;
+}
+
 .paraphrase-block + .paraphrase-block {
-  margin-top: 10px;
+  margin-top: 12px;
+}
+
+.paraphrase-block:hover {
+  border-color: rgba(var(--color-primary-rgb, 99, 102, 241), 0.25);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 99, 102, 241), 0.08);
 }
 
 .paraphrase-english {
   margin: 0 0 10px 0;
   font-size: 15px;
   color: var(--text-primary);
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 .paraphrase-translation {
+  position: relative;
   background: var(--bg-container);
   border: 1px solid var(--border-color-light);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: var(--radius-md, 8px);
+  padding: 12px 14px 12px 18px;
   color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
+.paraphrase-translation::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--gradient-info);
+  border-radius: 0 2px 2px 0;
+  opacity: 0.6;
+}
+
+/* ========== Action Buttons ========== */
 .collapse-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color-light);
 }
 
 .collapse-action-button {
+  position: relative;
   color: white !important;
   background: var(--gradient-primary) !important;
   border: none !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-md, 8px) !important;
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all var(--transition-normal, 0.3s) ease;
+  overflow: hidden;
+}
+
+.collapse-action-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.collapse-action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 99, 102, 241), 0.35);
+}
+
+.collapse-action-button:hover::before {
+  left: 100%;
 }
 
 .collapse-action-button.info {
   background: var(--gradient-info) !important;
 }
 
+.collapse-action-button.info:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
 .collapse-action-button.danger {
   background: var(--gradient-danger) !important;
 }
 
-.collapse-action-button:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
+.collapse-action-button.danger:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
 }
 
+.collapse-action-button i {
+  font-size: 14px;
+}
+
+/* ========== Pagination Styling ========== */
 .list-pagination {
-  margin-top: 16px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }
 
+::v-deep .list-pagination .el-pagination {
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
+}
+
+::v-deep .list-pagination .btn-prev,
+::v-deep .list-pagination .btn-next {
+  background: var(--bg-container) !important;
+  border-radius: var(--radius-md, 8px) !important;
+  color: var(--text-secondary) !important;
+  transition: all var(--transition-fast, 0.15s) ease;
+}
+
+::v-deep .list-pagination .btn-prev:hover,
+::v-deep .list-pagination .btn-next:hover {
+  color: var(--color-primary) !important;
+  background: var(--bg-body) !important;
+}
+
+::v-deep .list-pagination .el-pager li {
+  background: var(--bg-container) !important;
+  border-radius: var(--radius-md, 8px) !important;
+  color: var(--text-secondary) !important;
+  margin: 0 2px;
+  transition: all var(--transition-fast, 0.15s) ease;
+}
+
+::v-deep .list-pagination .el-pager li:hover {
+  color: var(--color-primary) !important;
+}
+
+::v-deep .list-pagination .el-pager li.active {
+  background: var(--gradient-primary) !important;
+  color: white !important;
+}
+
+/* ========== Mobile Responsive ========== */
 @media (max-width: 768px) {
+  .list-container {
+    padding: 0;
+  }
+
   ::v-deep .kiwi-collapse .el-collapse-item__header {
-    padding: 12px 14px;
+    padding: 12px 14px 12px 18px;
     font-size: 14px;
   }
 
   ::v-deep .kiwi-collapse .el-collapse-item__content {
-    padding: 14px 16px;
+    padding: 14px 16px 14px 18px;
+  }
+
+  .paraphrase-block {
+    padding: 10px 12px;
   }
 
   .paraphrase-english {
     font-size: 14px;
+  }
+
+  .paraphrase-translation {
+    padding: 10px 12px 10px 16px;
+    font-size: 13px;
+  }
+
+  .collapse-actions {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .collapse-action-button {
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+  }
+
+  ::v-deep .list-pagination .el-pagination {
+    padding: 6px 10px;
   }
 }
 </style>

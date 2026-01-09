@@ -222,6 +222,7 @@ export default {
         clearFilters: 'Limpiar filtros',
         review: 'Revisión',
         copy: 'Copiar',
+        copyPrompt: 'Copiar indicador',
         details: 'Detalles',
         searchAgain: 'Buscar de nuevo',
         aiCallDetails: 'Detalles de llamada IA',
@@ -247,7 +248,26 @@ export default {
         streaming: 'Transmitiendo respuesta...',
         copyResponseText: 'Copiar texto de respuesta',
         textCopiedToClipboard: '¡Texto copiado al portapapeles!',
-        failedToCopyText: 'Error al copiar el texto'
+        failedToCopyText: 'Error al copiar el texto',
+        // Diálogo del portapapeles
+        useClipboardContent: '¿Usar contenido del portapapeles: "{text}"?',
+        // Filtros de clasificación
+        normalItems: 'Elementos normales',
+        archivedItems: 'Elementos archivados',
+        allItems: 'Todos los elementos',
+        // Estado de carga
+        loadingHistory: 'Cargando historial...',
+        // Acciones
+        archive: 'Archivar',
+        // Mensajes de archivado/eliminación
+        itemArchived: 'Elemento archivado correctamente',
+        archiveFailed: 'Error al archivar',
+        itemDeleted: 'Elemento eliminado correctamente',
+        deleteFailed: 'Error al eliminar',
+        loadHistoryFailed: 'Error al cargar el historial de llamadas IA',
+        // Diálogo de confirmación de eliminación
+        deleteItemTitle: 'Eliminar elemento',
+        deleteItemConfirm: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.'
     },
 
     // New: audio settings parity

@@ -276,6 +276,7 @@ export default {
         clearFilters: 'フィルターをクリア',
         review: '復習',
         copy: 'コピー',
+        copyPrompt: 'プロンプトをコピー',
         details: '詳細',
         searchAgain: '再検索',
         aiCallDetails: 'AI呼び出しの詳細',
@@ -301,7 +302,26 @@ export default {
         streaming: '応答をストリーミング中...',
         copyResponseText: '応答テキストをコピー',
         textCopiedToClipboard: 'テキストをクリップボードにコピーしました！',
-        failedToCopyText: 'テキストのコピーに失敗しました'
+        failedToCopyText: 'テキストのコピーに失敗しました',
+        // クリップボードダイアログ
+        useClipboardContent: 'クリップボードの内容を使用：「{text}」？',
+        // 分類フィルター
+        normalItems: '通常項目',
+        archivedItems: 'アーカイブ済み項目',
+        allItems: 'すべての項目',
+        // 読み込み状態
+        loadingHistory: '履歴を読み込み中...',
+        // 操作
+        archive: 'アーカイブ',
+        // アーカイブ/削除メッセージ
+        itemArchived: '項目が正常にアーカイブされました',
+        archiveFailed: 'アーカイブに失敗しました',
+        itemDeleted: '項目が正常に削除されました',
+        deleteFailed: '削除に失敗しました',
+        loadHistoryFailed: 'AI利用履歴の読み込みに失敗しました',
+        // 削除確認ダイアログ
+        deleteItemTitle: '項目を削除',
+        deleteItemConfirm: 'この項目を削除してもよろしいですか？この操作は元に戻せません。'
     },
 
     // New: audio settings parity

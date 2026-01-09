@@ -460,6 +460,7 @@ export default {
         clearFilters: 'Clear Filters',
         review: 'Review',
         copy: 'Copy',
+        copyPrompt: 'Copy Prompt',
         details: 'Details',
         searchAgain: 'Search Again',
         aiCallDetails: 'AI Call Details',
@@ -487,7 +488,24 @@ export default {
         textCopiedToClipboard: 'Text copied to clipboard!',
         failedToCopyText: 'Failed to copy text',
         // New for clipboard dialog
-        useClipboardContent: 'Use clipboard content: "{text}"?'
+        useClipboardContent: 'Use clipboard content: "{text}"?',
+        // Classification filters
+        normalItems: 'Normal Items',
+        archivedItems: 'Archived Items',
+        allItems: 'All Items',
+        // Loading state
+        loadingHistory: 'Loading history...',
+        // Actions
+        archive: 'Archive',
+        // Archive/Delete messages
+        itemArchived: 'Item archived successfully',
+        archiveFailed: 'Failed to archive item',
+        itemDeleted: 'Item deleted successfully',
+        deleteFailed: 'Failed to delete item',
+        loadHistoryFailed: 'Failed to load AI call history',
+        // Delete confirmation dialog
+        deleteItemTitle: 'Delete Item',
+        deleteItemConfirm: 'Are you sure you want to delete this item? This action cannot be undone.'
     },
 
     // Audio and BGM

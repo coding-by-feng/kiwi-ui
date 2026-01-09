@@ -509,6 +509,7 @@ export default {
         clearFilters: '清除筛选',
         review: '复习',
         copy: '复制',
+        copyPrompt: '复制提示词',
         details: '详情',
         searchAgain: '再次搜索',
         aiCallDetails: 'AI 调用详情',
@@ -535,8 +536,25 @@ export default {
         copyResponseText: '复制响应文本',
         textCopiedToClipboard: '文本已复制到剪贴板！',
         failedToCopyText: '复制文本失败',
-        // 新增：剪贴板提示
-        useClipboardContent: '使用剪贴板内容：“{text}”？'
+        // 剪贴板提示
+        useClipboardContent: '使用剪贴板内容："{text}"？',
+        // 分类筛选
+        normalItems: '正常项目',
+        archivedItems: '已归档项目',
+        allItems: '全部项目',
+        // 加载状态
+        loadingHistory: '加载历史中...',
+        // 操作
+        archive: '归档',
+        // 归档/删除消息
+        itemArchived: '项目已成功归档',
+        archiveFailed: '归档失败',
+        itemDeleted: '项目已成功删除',
+        deleteFailed: '删除失败',
+        loadHistoryFailed: '加载 AI 调用历史失败',
+        // 删除确认对话框
+        deleteItemTitle: '删除项目',
+        deleteItemConfirm: '确定要删除此项目吗？此操作无法撤销。'
     },
 
     // New: audio settings parity

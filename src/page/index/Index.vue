@@ -304,8 +304,17 @@ export default {
 // Mobile responsive adjustments
 @media (max-width: 768px) {
   .tab_nav {
-    left: 5px;
-    width: calc(100% - 10px);
+    left: 0;
+    top: 0;
+    width: 100%;
+    min-height: 100vh;
+    position: absolute;
+  }
+
+  ::v-deep .el-tabs--border-card {
+    border: none;
+    border-radius: 0;
+    min-height: 100vh;
   }
 
   .language-switcher-container {
@@ -324,7 +333,7 @@ export default {
 </style>
 
 <template>
-  <div class="tab_nav" :style="{width: tabsWidth}">
+  <div class="tab_nav" :style="isMobile ? {} : {width: tabsWidth}">
     <el-tabs id="main-tabs" type="border-card" :active-name="activeName" @tab-click="tabClick">
       <el-tab-pane name="search" lazy>
         <span slot="label"><i class="el-icon-search"></i></span>
@@ -367,7 +376,7 @@ export default {
       <el-tab-pane name="aiHistory" lazy v-if="enabledTabs.aiHistory">
         <span slot="label"><i class="el-icon-time"></i></span>
         <keep-alive>
-          <router-view name="aiHistory" v-if="visitedTabs.aiHistory && isLogin" v-show="activeName==='aiHistory'"></router-view>
+          <router-view name="aiHistory" v-if="visitedTabs.aiHistory && isLogin" v-show="activeName==='aiHistory'" :isActive="activeName==='aiHistory'"></router-view>
         </keep-alive>
         <div v-if="activeName==='aiHistory' && !isLogin" class="login-hint">
           <el-alert type="info" show-icon title="Please log in to view AI history." description="Login to review your previous AI calls."></el-alert>

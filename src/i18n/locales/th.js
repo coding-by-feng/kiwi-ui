@@ -339,6 +339,7 @@ export default {
         clearFilters: 'ล้างตัวกรอง',
         review: 'ทบทวน',
         copy: 'คัดลอก',
+        copyPrompt: 'คัดลอกข้อความ',
         details: 'รายละเอียด',
         searchAgain: 'ค้นหาอีกครั้ง',
         aiCallDetails: 'รายละเอียดการใช้ AI',
@@ -364,7 +365,26 @@ export default {
         streaming: 'กำลังสตรีมคำตอบ...',
         copyResponseText: 'คัดลอกข้อความตอบกลับ',
         textCopiedToClipboard: 'คัดลอกข้อความไปยังคลิปบอร์ดแล้ว!',
-        failedToCopyText: 'คัดลอกข้อความล้มเหลว'
+        failedToCopyText: 'คัดลอกข้อความล้มเหลว',
+        // กล่องโต้ตอบคลิปบอร์ด
+        useClipboardContent: 'ใช้เนื้อหาคลิปบอร์ด: "{text}"?',
+        // ตัวกรองการจัดประเภท
+        normalItems: 'รายการปกติ',
+        archivedItems: 'รายการที่เก็บถาวร',
+        allItems: 'รายการทั้งหมด',
+        // สถานะการโหลด
+        loadingHistory: 'กำลังโหลดประวัติ...',
+        // การดำเนินการ
+        archive: 'เก็บถาวร',
+        // ข้อความเก็บถาวร/ลบ
+        itemArchived: 'เก็บถาวรรายการสำเร็จ',
+        archiveFailed: 'เก็บถาวรล้มเหลว',
+        itemDeleted: 'ลบรายการสำเร็จ',
+        deleteFailed: 'ลบล้มเหลว',
+        loadHistoryFailed: 'โหลดประวัติการใช้ AI ล้มเหลว',
+        // กล่องโต้ตอบยืนยันการลบ
+        deleteItemTitle: 'ลบรายการ',
+        deleteItemConfirm: 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้'
     },
 
     // Moved out of ai: audio settings

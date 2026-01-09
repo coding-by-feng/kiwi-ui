@@ -220,6 +220,7 @@ export default {
         clearFilters: '필터 지우기',
         review: '복습',
         copy: '복사',
+        copyPrompt: '프롬프트 복사',
         details: '세부 정보',
         searchAgain: '다시 검색',
         aiCallDetails: 'AI 호출 세부 정보',
@@ -245,7 +246,26 @@ export default {
         streaming: '응답을 스트리밍 중...',
         copyResponseText: '응답 텍스트 복사',
         textCopiedToClipboard: '텍스트가 클립보드에 복사되었습니다!',
-        failedToCopyText: '텍스트 복사 실패'
+        failedToCopyText: '텍스트 복사 실패',
+        // 클립보드 대화상자
+        useClipboardContent: '클립보드 내용 사용: "{text}"?',
+        // 분류 필터
+        normalItems: '일반 항목',
+        archivedItems: '보관된 항목',
+        allItems: '전체 항목',
+        // 로딩 상태
+        loadingHistory: '기록 로딩 중...',
+        // 작업
+        archive: '보관',
+        // 보관/삭제 메시지
+        itemArchived: '항목이 성공적으로 보관되었습니다',
+        archiveFailed: '보관에 실패했습니다',
+        itemDeleted: '항목이 성공적으로 삭제되었습니다',
+        deleteFailed: '삭제에 실패했습니다',
+        loadHistoryFailed: 'AI 호출 기록 로딩에 실패했습니다',
+        // 삭제 확인 대화상자
+        deleteItemTitle: '항목 삭제',
+        deleteItemConfirm: '이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
     },
 
     // New: audio settings parity
