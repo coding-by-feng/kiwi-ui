@@ -415,6 +415,8 @@ export default {
       // Panel resize state
       isResizing: false,
       leftPanelPercent: 50,
+      splitterMin: 25,
+      splitterMax: 75,
     };
   },
   computed: {
@@ -2663,7 +2665,49 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* Draggable splitter */
+.splitter {
+  width: 8px;
+  cursor: col-resize;
+  background: var(--bg-container);
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splitter::before {
+  content: '';
+  width: 4px;
+  height: 40px;
+  background: var(--border-color-light);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.splitter:hover {
+  background: var(--color-primary-light-5);
+}
+
+.splitter:hover::before {
+  background: var(--color-primary);
+  height: 60px;
+}
+
+.splitter:active {
+  background: var(--color-primary-light-5);
+}
+
+.splitter:active::before {
+  background: var(--color-primary);
 }
 
 .right-panel {
@@ -2671,13 +2715,16 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+  flex: 1;
 }
 
 .video-section {
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   position: relative;
+  min-height: 200px;
 }
 
 .video-container {
@@ -2685,8 +2732,18 @@ export default {
   overflow: hidden;
   position: relative;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   background: #000;
+  aspect-ratio: 16 / 9;
+  max-height: 60vh;
+}
+
+.video-container iframe,
+.video-container #youtube-player-container {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px;
 }
 
 /* Mini loader overlay inside video */
@@ -2731,6 +2788,7 @@ export default {
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+/* Subtitle Context Display - Current subtitle viewer */
 .subtitles-context-display {
   display: flex;
   flex-direction: column;
@@ -2743,51 +2801,66 @@ export default {
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
+  margin-top: 8px;
+  flex-shrink: 0;
 }
 
 .previous-subtitle {
-  padding: 6px 10px;
-  font-size: 11px;
+  padding: 8px 12px;
+  font-size: 12px;
   color: var(--text-secondary);
   background: var(--bg-body);
   border-bottom: 1px solid var(--border-color-light);
   white-space: pre-wrap;
-  line-height: 1.2;
+  line-height: 1.4;
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
+  opacity: 0.7;
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .current-subtitle-display {
   background: var(--gradient-primary);
   color: white;
-  padding: 8px 10px;
+  padding: 12px 16px;
   text-align: center;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
   white-space: pre-wrap;
-  max-height: 80px;
+  max-height: 100px;
   overflow-y: auto;
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
   position: relative;
   -webkit-touch-callout: none;
-  line-height: 1.2;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.current-subtitle-display:hover {
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .next-subtitle {
-  padding: 6px 10px;
-  font-size: 11px;
+  padding: 8px 12px;
+  font-size: 12px;
   color: var(--text-regular);
   background: var(--bg-container);
   border-top: 1px solid var(--border-color-light);
   white-space: pre-wrap;
-  line-height: 1.2;
+  line-height: 1.4;
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
+  opacity: 0.8;
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Subtitles Container */
@@ -2822,56 +2895,78 @@ export default {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
 }
 
-/* Updated Subtitles Header - matching translated-subtitles-header style */
-.subtitles-header {
-  padding: 10px 16px;
-  background: var(--gradient-success);
-  border-bottom: 1px solid var(--border-color-light);
+/* Section Headers - Unified style */
+.subtitles-header,
+.translated-subtitles-header {
+  padding: 12px 16px;
+  background: var(--gradient-primary);
+  border-bottom: none;
   font-size: 13px;
   font-weight: 600;
   color: white;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   position: sticky;
   top: 0;
   z-index: 10;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
+  border-radius: 12px 12px 0 0;
 }
 
-.subtitles-header:hover {
-  opacity: 0.8;
-  transform: translateY(-1px);
+.subtitles-header {
+  background: var(--gradient-success);
 }
 
-.subtitles-header i {
-  font-size: 15px;
+.subtitles-header:hover,
+.translated-subtitles-header:hover {
+  filter: brightness(1.1);
+}
+
+.subtitles-header:active,
+.translated-subtitles-header:active {
+  filter: brightness(0.95);
+}
+
+.subtitles-header i,
+.translated-subtitles-header i {
+  font-size: 16px;
   color: white;
 }
 
 .subtitle-count {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
   margin-left: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 
 .header-toggle-hint {
   margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
-/* New: add a bit of spacing between the download button and the arrow icon */
 .header-action-btn {
-  margin-right: 10px;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.header-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .toggle-arrow {
   font-size: 14px;
   transition: transform 0.3s ease;
   color: white;
+  opacity: 0.9;
 }
 
 .subtitles-wrapper {
@@ -2888,11 +2983,11 @@ export default {
 
 .subtitles-container p {
   margin: 4px 0;
-  padding: 8px 12px;
-  transition: all 0.3s ease;
+  padding: 10px 14px;
+  transition: all 0.25s ease;
   border-radius: 8px;
   cursor: pointer;
-  line-height: 1.4;
+  line-height: 1.5;
   font-size: 14px;
   border: 1px solid transparent;
   position: relative;
@@ -2900,6 +2995,7 @@ export default {
   scroll-margin-top: 20px;
   scroll-margin-bottom: 20px;
   color: var(--text-primary);
+  background: transparent;
 }
 
 .subtitles-container p:hover {
@@ -2917,22 +3013,43 @@ export default {
   bottom: 0;
   width: 3px;
   background: transparent;
+  transition: all 0.25s ease;
 }
 
 /* Subtitle state styles */
 .subtitles-container p.active-subtitle {
-  background: var(--bg-container);
+  background: var(--color-primary-light-5);
   border-color: var(--color-primary);
   box-shadow: var(--shadow-card);
+  transform: translateX(4px);
 }
+
 .subtitles-container p.active-subtitle::before {
   background: var(--color-primary);
+  width: 4px;
 }
+
 .subtitles-container p.past-subtitle {
-  opacity: 0.7;
+  opacity: 0.6;
+  color: var(--text-secondary);
 }
+
+.subtitles-container p.past-subtitle:hover {
+  opacity: 0.9;
+}
+
 .subtitles-container p.future-subtitle {
-  opacity: 0.95;
+  opacity: 0.85;
+}
+
+.subtitles-container p.future-subtitle:hover {
+  opacity: 1;
+}
+
+/* Scroll filler to allow scrolling past last item */
+.scroll-filler {
+  height: 150px;
+  flex-shrink: 0;
 }
 
 /* Translated Subtitles Container */
@@ -2964,26 +3081,6 @@ export default {
 
 .translated-subtitles-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
-}
-
-.translated-subtitles-header {
-  padding: 10px 16px;
-  background: var(--gradient-success);
-  border-bottom: 1px solid var(--border-color-light);
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.translated-subtitles-header i {
-  font-size: 15px;
-  color: white;
 }
 
 .translation-status {
@@ -3103,9 +3200,12 @@ export default {
   align-items: center;
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile */
 @media (max-width: 767px) {
-
+  .youtube-player {
+    height: 100%;
+    min-height: 100vh;
+  }
 
   .input-container {
     padding: 0 10px 6px;
@@ -3123,30 +3223,31 @@ export default {
   }
 
   .input-with-buttons {
-    flex-direction: column;
-    gap: 6px;
-    align-items: stretch;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .url-input {
+    flex: 1;
   }
 
   .action-buttons {
-    width: 100%;
-    justify-content: center;
+    flex-shrink: 0;
     gap: 6px;
     flex-wrap: nowrap;
   }
 
   .load-button {
-    flex: 1;
-    max-width: none;
-    min-width: 80px;
+    min-width: 70px;
     padding: 8px 12px;
     font-size: 12px;
-    height: 32px;
+    height: 36px;
   }
 
   .action-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
     font-size: 12px;
   }
@@ -3190,10 +3291,85 @@ export default {
     display: none;
   }
 
+  .splitter {
+    display: none;
+  }
+
   .content-container {
     padding: 0 10px;
-    height: calc(100vh - 120px);
-    gap: 8px;
+    flex-direction: column;
+    height: auto;
+    flex: 1;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+  }
+
+  .left-panel {
+    flex-shrink: 0;
+  }
+
+  .video-container {
+    aspect-ratio: 16 / 9;
+    max-height: 35vh;
+    min-height: 180px;
+  }
+
+  .subtitles-context-display {
+    margin-top: 8px;
+  }
+
+  .current-subtitle-display {
+    font-size: 14px;
+    padding: 10px 12px;
+    max-height: 80px;
+  }
+
+  .previous-subtitle,
+  .next-subtitle {
+    font-size: 11px;
+    padding: 6px 10px;
+    max-height: 40px;
+  }
+
+  .right-panel {
+    flex: 1;
+    min-height: 300px;
+  }
+
+  .subtitles-container {
+    min-height: 150px;
+    max-height: 250px;
+  }
+
+  .translated-subtitles-container {
+    min-height: 150px;
+    flex: 1;
+  }
+
+  .subtitles-header,
+  .translated-subtitles-header {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .subtitles-wrapper {
+    padding: 10px;
+  }
+
+  .subtitles-container p {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .translation-content {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .subtitles-loading-overlay {
@@ -3210,39 +3386,72 @@ export default {
   }
 }
 
-/* iPad and larger screens */
+/* Tablet screens */
+@media (min-width: 768px) and (max-width: 991px) {
+  .content-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+  }
+
+  .video-container {
+    max-height: 40vh;
+  }
+
+  .splitter {
+    display: none;
+  }
+}
+
+/* Desktop and larger screens */
 @media (min-width: 992px) {
   .content-container {
     flex-direction: row;
-    gap: 25px;
+    gap: 0;
+    align-items: stretch;
   }
 
   .left-panel {
-    width: 50%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .right-panel {
-    width: 50%;
     height: 100%;
-    border-left: 1px solid var(--border-color-light);
-    padding-left: 15px;
+    padding-left: 0;
+    border-left: none;
   }
 
   .video-section {
-    flex: 1 0 auto;
-    min-height: 45vh;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .video-container {
+    max-height: none;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .subtitles-context-display {
+    flex: 0 0 auto;
+    margin-top: 12px;
   }
 
   .subtitles-container {
     flex: 1;
-    height: calc(50% - 25px);
-    margin-bottom: 10px;
+    min-height: 150px;
+    margin-bottom: 12px;
   }
 
   .translated-subtitles-container {
     flex: 1;
-    height: calc(50% - 25px);
+    min-height: 150px;
   }
 
   .url-input-group {

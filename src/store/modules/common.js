@@ -11,7 +11,10 @@ const common = {
         showTag: true,
         showCollapse: true,
         showFullScren: true,
-        website: website
+        website: website,
+        // API loading state management
+        apiLoading: false,
+        apiCancelCallback: null
     },
     actions: {},
     mutations:{
@@ -24,6 +27,21 @@ const common = {
             removeStore({
                 name: 'isLock'
             })
+        },
+        setApiLoading:(state, { loading, cancelCallback }) => {
+            state.apiLoading = loading;
+            state.apiCancelCallback = cancelCallback || null;
+        },
+        cancelApiRequest:(state) => {
+            if (state.apiCancelCallback && typeof state.apiCancelCallback === 'function') {
+                try {
+                    state.apiCancelCallback();
+                } catch (e) {
+                    console.warn('Error cancelling API request:', e);
+                }
+            }
+            state.apiLoading = false;
+            state.apiCancelCallback = null;
         }
     }
 }

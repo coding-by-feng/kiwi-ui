@@ -78,6 +78,22 @@
       </div>
 
       <span slot="footer" class="dialog-footer">
+        <KiwiDropdown class="ai-mode-selector" @command="onAiModeChange" placement="top-start">
+          <KiwiButton size="small" :disabled="reviewMode">
+            {{ selectedAiModeLabel }}
+            <i class="el-icon-arrow-up"></i>
+          </KiwiButton>
+          <template #dropdown>
+            <KiwiDropdownItem
+              v-for="mode in aiModeOptions"
+              :key="mode.value"
+              :command="mode.value"
+              :selected="selectedAiMode === mode.value"
+            >
+              {{ mode.label }}
+            </KiwiDropdownItem>
+          </template>
+        </KiwiDropdown>
         <KiwiButton type="primary" :loading="aiSearchLoading" :disabled="reviewMode || !localSelectedText" @click="aiSearchSelectedText" icon="el-icon-search">
           Search
         </KiwiButton>
@@ -137,12 +153,14 @@ import msgUtil from '@/util/msg'
 import { buildAiTabQuery } from '@/util/aiNavigation'
 import KiwiDialog from '@/components/ui/KiwiDialog.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 const md = new MarkdownIt({ html: true, breaks: false, linkify: true, typographer: true })
 
 export default {
   name: 'AiSelectionPopup',
-  components: { KiwiDialog, KiwiButton },
+  components: { KiwiDialog, KiwiButton, KiwiDropdown, KiwiDropdownItem },
   props: {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
@@ -171,7 +189,8 @@ export default {
       selectionDialogVisible: false,
       selectionSelectedText: '',
       selectionSourceItemId: '',
-      isSmallScreen: false
+      isSmallScreen: false,
+      selectedAiMode: ''
     }
   },
   watch: {
@@ -200,7 +219,8 @@ export default {
             if (!this.reviewMode && t && (!this.nestedItems || this.nestedItems.length === 0)) {
               try {
                 // Always add item, but only auto-start if autoRequest is true
-                const mode = this.isSingleWord(t) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+                // Use the user-selected AI mode
+                const mode = this.selectedAiMode || kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
                 this.addNestedItemWithContext(t, null, mode, this.autoRequest)
               } catch (_) {}
             }
@@ -212,11 +232,44 @@ export default {
     },
     dialogWidth() {
       return this.isSmallScreen ? '95%' : '600px'
+    },
+    aiModeOptions() {
+      const modes = kiwiConsts.SEARCH_AI_MODES
+      return [
+        modes.DIRECTLY_TRANSLATION,
+        modes.TRANSLATION_AND_EXPLANATION,
+        modes.VOCABULARY_EXPLANATION,
+        modes.GRAMMAR_EXPLANATION,
+        modes.GRAMMAR_CORRECTION,
+        modes.SYNONYM,
+        modes.ANTONYM,
+        modes.VOCABULARY_ASSOCIATION,
+        modes.PHRASES_ASSOCIATION,
+        modes.NATURAL_IDIOMATIC_RETOUCH
+      ]
+    },
+    selectedAiModeLabel() {
+      const mode = this.aiModeOptions.find(m => m.value === this.selectedAiMode)
+      return mode ? mode.label : 'Select Mode'
     }
   },
   methods: {
     // Render helper for items
     renderMarkdown(text) { return md.render(this.unescapeContent(text || '')) },
+
+    // AI mode selection
+    onAiModeChange(mode) {
+      this.selectedAiMode = mode
+      localStorage.setItem('ai-selection-popup-mode', mode)
+    },
+    loadSavedAiMode() {
+      const saved = localStorage.getItem('ai-selection-popup-mode')
+      if (saved && this.aiModeOptions.some(m => m.value === saved)) {
+        this.selectedAiMode = saved
+      } else {
+        this.selectedAiMode = kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+      }
+    },
 
     // Public API-like methods
     closeDialog() { this.reviewMode = false; this.dialogVisible = false },
@@ -301,19 +354,15 @@ export default {
     searchOnDictionaryFromDialog() {
       const text = (this.selectionSelectedText || '').trim()
       if (!text) { msgUtil.msgError(this, 'No text selected'); return }
-      const encodedText = encodeURIComponent(text)
-      const nativeLanguage = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
-      const queryParams = new URLSearchParams({
-        active: 'search',
-        selectedMode: 'detail',
-        language: nativeLanguage,
-        originalText: encodedText,
-        now: String(Date.now())
+      const routeData = this.$router.resolve({
+        path: kiwiConsts.ROUTES.DETAIL,
+        query: {
+          active: 'search',
+          selectedMode: 'detail',
+          originalText: text
+        }
       })
-      const dictionaryUrl = `https://kason.app/#/lazy/tools/detail?${queryParams.toString()}`
-      try {
-        window.open(dictionaryUrl, '_blank')
-      } catch (_) {}
+      window.open(routeData.href, '_blank')
       this.handleCloseSelectionDialog()
     },
     explainSelectionFromDialog() {
@@ -476,14 +525,14 @@ export default {
       }
     },
 
-    // Primary search action: if first item, vocabulary/direct; else explanation with last item's selection as context
+    // Primary search action: uses the user-selected AI mode
     aiSearchSelectedText() {
       const text = (this.localSelectedText || '').trim()
       if (!text) {
         this.aiLastError = 'No text selected'
         return
       }
-      
+
       // Check if there is already a pending item for this text (added but not started)
       const pendingItem = (this.nestedItems || []).find(i => i.selectedText === text && !i.loading && !i.responseText && !i.error)
       if (pendingItem) {
@@ -492,15 +541,9 @@ export default {
         return
       }
 
-      const isFirst = (this.nestedItems || []).length === 0
-      if (isFirst) {
-        const mode = this.isSingleWord(text) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-        this.addNestedItemWithContext(text, null, mode, true)
-      } else {
-        const last = this.nestedItems[this.nestedItems.length - 1]
-        const ctx = last ? last.selectedText : null
-        this.addNestedItemWithContext(text, ctx, 'selection-explanation', true)
-      }
+      // Use the user-selected AI mode
+      const mode = this.selectedAiMode || kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+      this.addNestedItemWithContext(text, null, mode, true)
     },
 
     emitOpenInAiTab() {
@@ -645,6 +688,7 @@ export default {
   },
   mounted() {
     this.checkScreenSize()
+    this.loadSavedAiMode()
     window.addEventListener('resize', this.checkScreenSize)
   },
   beforeDestroy() {
@@ -706,6 +750,11 @@ export default {
   flex-wrap: wrap;
   gap: 12px;
   padding: 8px 0 4px;
+}
+
+.ai-mode-selector {
+  width: 180px;
+  flex-shrink: 0;
 }
 
 /* Contextual explanations styling */
@@ -796,6 +845,9 @@ export default {
   .selection-dialog-footer .el-button {
     width: 100%;
     margin-left: 0 !important;
+  }
+  .ai-mode-selector {
+    width: 100%;
   }
 }
 

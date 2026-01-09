@@ -2539,3 +2539,26 @@ body {
     box-shadow: var(--shadow-lg) !important;
   }
 }
+
+// Mobile responsive button styles
+@media (max-width: 768px) {
+  .el-button {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+
+  .el-button--mini {
+    font-size: 11px !important;
+    padding: 5px 8px !important;
+  }
+
+  .el-button--small {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+
+  .el-button--medium {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+}

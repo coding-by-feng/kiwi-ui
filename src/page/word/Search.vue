@@ -53,7 +53,15 @@
               
               <!-- Append Slot (Desktop Only) -->
               <template slot="append" v-if="!isSmallScreen">
-                 <KiwiButton id="search-submit-btn" size="mini" icon="el-icon-search" plain style="border:none; padding: 0 10px; pointer-events: none;"></KiwiButton>
+                 <KiwiButton
+                    id="search-submit-btn"
+                    size="mini"
+                    :icon="apiLoading ? 'el-icon-close' : 'el-icon-search'"
+                    plain
+                    style="border:none; padding: 0 10px;"
+                    :style="{ color: apiLoading ? 'var(--color-danger)' : 'inherit' }"
+                    @click.stop="apiLoading ? handleStopRequest() : null"
+                 ></KiwiButton>
               </template>
             </KiwiInput>
           </div>
@@ -74,7 +82,12 @@
 
           <!-- Mobile Row 4: Submit Button -->
           <div v-if="isSmallScreen" class="mobile-row submit-row">
-            <KiwiButton type="primary" @click="onSubmit" class="mobile-submit-btn" icon="el-icon-search" />
+            <KiwiButton
+              :type="apiLoading ? 'danger' : 'primary'"
+              @click="apiLoading ? handleStopRequest() : onSubmit()"
+              class="mobile-submit-btn"
+              :icon="apiLoading ? 'el-icon-close' : 'el-icon-search'"
+            />
           </div>
           
           <!-- Suggestions Dropdown -->
@@ -173,6 +186,7 @@ import KiwiButton from '@/components/ui/KiwiButton';
 import KiwiDropdown from '@/components/ui/KiwiDropdown';
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem';
 import KiwiDialog from '@/components/ui/KiwiDialog';
+import { mapState, mapMutations } from 'vuex';
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
@@ -219,6 +233,9 @@ export default {
   },
 
   computed: {
+    ...mapState({
+      apiLoading: state => state.common.apiLoading
+    }),
     getWindowWidth() {
       return window.innerWidth
     },
@@ -326,6 +343,17 @@ export default {
   },
   methods: {
     ...wordSearch,
+    ...mapMutations(['cancelApiRequest']),
+
+    // Handle stop/cancel request
+    handleStopRequest() {
+      this.cancelApiRequest();
+      messageCenter.info({
+        message: this.$t('messages.requestCancelled') || 'Request cancelled',
+        duration: 2000
+      });
+    },
+
     // Added: focus helper to reliably target inner input of el-autocomplete
     focusSearchInput() {
       this.$nextTick(() => {

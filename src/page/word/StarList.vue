@@ -104,7 +104,9 @@ export default {
       },
       // dynamic top spacing helpers to avoid overlap with fixed control bar
       controlBarHeight: 0,
-      controlBarOffsetTop: 0
+      controlBarOffsetTop: 0,
+      // control bar fold/expand state
+      isControlBarFolded: false
     }
   },
   async mounted() {
@@ -521,6 +523,10 @@ export default {
       }
       return labels[type] || this.$t('starList.listType.paraphrase')
     },
+    toggleControlBar() {
+      this.isControlBarFolded = !this.isControlBarFolded
+      this.$nextTick(this.updateControlBarMetrics)
+    },
     handleGlobalReviewMode(mode) {
       this.selectReviewMode({ mode, id: 0 })
     },
@@ -542,44 +548,56 @@ export default {
 
   <div class="text item starlist-container" v-loading="loading">
     <!-- Native control bar -->
-    <div class="control-bar" ref="controlBar">
-      <!-- List type selector -->
-      <KiwiDropdown @command="listTypeClick" class="list-type-dropdown">
-        <button class="ctrl-select" :disabled="loading || list.status !== 'list'">
-          {{ getListTypeLabel(list.listType) }}
-          <i class="el-icon-arrow-down"></i>
-        </button>
-        <template slot="dropdown">
-          <KiwiDropdownItem command="paraphrase">{{ $t('starList.listType.paraphrase') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="word">{{ $t('starList.listType.word') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="example">{{ $t('starList.listType.example') }}</KiwiDropdownItem>
-        </template>
-      </KiwiDropdown>
+    <div class="control-bar" :class="{ 'is-folded': isControlBarFolded }" ref="controlBar">
+      <!-- Fold/Expand toggle button -->
+      <button class="ctrl-toggle" @click="toggleControlBar" :title="isControlBarFolded ? $t('common.expand') : $t('common.collapse')">
+        <i :class="isControlBarFolded ? 'el-icon-caret-bottom' : 'el-icon-caret-top'"></i>
+        <span class="toggle-label">{{ isControlBarFolded ? $t('common.expand') : $t('common.collapse') }}</span>
+      </button>
 
-      <!-- Global review mode selector (paraphrase list only) -->
-      <KiwiDropdown v-if="list.listType === 'paraphrase' && list.status === 'list'" @command="handleGlobalReviewMode" class="review-mode-dropdown">
-        <button class="ctrl-select" :disabled="loading">
-          {{ $t('starList.selectReviewModePlaceholder') }}
-          <i class="el-icon-arrow-down"></i>
-        </button>
-        <template slot="dropdown">
-          <KiwiDropdownItem command="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="stockReview">{{ $t('review.stockReview') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="enhanceReview">{{ $t('review.enhanceReview') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="totalReview">{{ $t('review.totalReview') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="stockRead">{{ $t('review.stockRead') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="enhanceRead">{{ $t('review.enhanceRead') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="totalRead">{{ $t('review.totalRead') }}</KiwiDropdownItem>
-          <KiwiDropdownItem command="downloadReviewAudio">{{ $t('review.downloadResources') }}</KiwiDropdownItem>
-        </template>
-      </KiwiDropdown>
+      <!-- Collapsible content -->
+      <div class="control-bar-content" v-show="!isControlBarFolded">
+        <!-- List type selector -->
+        <KiwiDropdown @command="listTypeClick" class="list-type-dropdown">
+          <button class="ctrl-select" :disabled="loading || list.status !== 'list'">
+            {{ getListTypeLabel(list.listType) }}
+            <i class="el-icon-arrow-down"></i>
+          </button>
+          <template slot="dropdown">
+            <KiwiDropdownItem command="paraphrase">{{ $t('starList.listType.paraphrase') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="word">{{ $t('starList.listType.word') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="example">{{ $t('starList.listType.example') }}</KiwiDropdownItem>
+          </template>
+        </KiwiDropdown>
 
-      <!-- Actions -->
-      <button class="ctrl-btn info" @click="goBack" :disabled="loading">{{ $t('common.back') }}</button>
-      <button class="ctrl-btn primary" @click="refresh" :disabled="loading">{{ $t('common.refresh') }}</button>
-      <button class="ctrl-btn primary" @click="handleOperate" :disabled="loading || list.status !== 'list'">{{ $t('common.add') }}</button>
-      <button class="ctrl-btn secondary" @click="operationClick('switch')" :disabled="loading || list.status !== 'list'">{{ list.editMode ? $t('common.done') : $t('common.edit') }}</button>
+        <!-- Global review mode selector (paraphrase list only) -->
+        <KiwiDropdown v-if="list.listType === 'paraphrase' && list.status === 'list'" @command="handleGlobalReviewMode" class="review-mode-dropdown">
+          <button class="ctrl-select" :disabled="loading">
+            {{ $t('starList.selectReviewModePlaceholder') }}
+            <i class="el-icon-arrow-down"></i>
+          </button>
+          <template slot="dropdown">
+            <KiwiDropdownItem command="stockReviewChToEn">{{ $t('review.stockReviewChToEn') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="totalReviewChToEn">{{ $t('review.totalReviewChToEn') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="stockReview">{{ $t('review.stockReview') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="enhanceReview">{{ $t('review.enhanceReview') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="totalReview">{{ $t('review.totalReview') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="stockRead">{{ $t('review.stockRead') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="enhanceRead">{{ $t('review.enhanceRead') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="totalRead">{{ $t('review.totalRead') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="downloadReviewAudio">{{ $t('review.downloadResources') }}</KiwiDropdownItem>
+          </template>
+        </KiwiDropdown>
+
+        <!-- Actions -->
+        <button class="ctrl-btn info" @click="goBack" :disabled="loading">{{ $t('common.back') }}</button>
+        <button class="ctrl-btn primary" @click="refresh" :disabled="loading">{{ $t('common.refresh') }}</button>
+        <button class="ctrl-btn primary" @click="handleOperate" :disabled="loading || list.status !== 'list'">{{ $t('common.add') }}</button>
+        <button class="ctrl-btn secondary" @click="operationClick('switch')" :disabled="loading || list.status !== 'list'">{{ list.editMode ? $t('common.done') : $t('common.edit') }}</button>
+      </div>
+
+      <!-- Folded state indicator -->
+      <span v-if="isControlBarFolded" class="folded-label">{{ getListTypeLabel(list.listType) }}</span>
     </div>
 
     <!-- Simple list instead of el-table -->
@@ -662,168 +680,587 @@ export default {
   padding-top: 8px;
 }
 
+/* Control bar - glassmorphic floating panel */
 .control-bar {
   position: fixed;
   top: 60px;
   left: 35px;
+  right: 35px;
   z-index: 99;
-  display: flex; /* allow better control */
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--gradient-primary);
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  border: 1px solid var(--border-color-light);
   box-shadow: var(--shadow-card);
-  color: #fff;
+  transition: all var(--transition-normal, 0.3s) ease;
 }
 
-/* Make the bar adapt on small screens: wrap into a compact grid and avoid overflow */
+/* Control bar folded state */
+.control-bar.is-folded {
+  padding: 8px 16px;
+}
+
+/* Toggle button for fold/expand - pill style */
+.ctrl-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 10px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-xl, 20px);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ctrl-toggle:hover {
+  background: var(--gradient-primary);
+  color: #fff;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.ctrl-toggle:active {
+  transform: scale(0.98);
+}
+
+.ctrl-toggle i {
+  font-size: 12px;
+  transition: transform var(--transition-fast);
+}
+
+.ctrl-toggle .toggle-label {
+  display: none;
+}
+
+@media (min-width: 481px) {
+  .ctrl-toggle .toggle-label {
+    display: inline;
+  }
+}
+
+/* When folded, make toggle more prominent */
+.control-bar.is-folded .ctrl-toggle {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.control-bar.is-folded .ctrl-toggle:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.35);
+}
+
+/* Control bar content wrapper */
+.control-bar-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
+}
+
+/* Folded label shown when collapsed */
+.folded-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-left: 8px;
+}
+
+/* Make the bar adapt on small screens */
+@media (max-width: 768px) {
+  .control-bar {
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .control-bar.is-folded {
+    padding: 6px 12px;
+  }
+
+  .ctrl-toggle {
+    height: 26px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .control-bar-content {
+    gap: 8px;
+  }
+}
+
 @media (max-width: 480px) {
   .control-bar {
     left: 8px;
-    right: 8px; /* stretch to viewport margins */
-    padding: 6px 8px;
+    right: 8px;
+    padding: 8px 10px;
     gap: 6px;
-    /* switch to grid so controls can wrap cleanly */
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+  }
+
+  .control-bar.is-folded {
+    padding: 6px 10px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .control-bar-content {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .ctrl-btn {
     width: auto;
-    max-width: calc(100vw - 16px);
-    overflow: visible; /* no horizontal scroll */
-    top: 56px;
-  }
-  .ctrl-btn,
-  .ctrl-select {
+    flex: 0 0 auto;
+    padding: 6px 10px;
     font-size: 12px;
-    padding: 6px 8px;
-    white-space: nowrap; /* keep labels on one line inside */
-    width: 100%; /* fill grid cell */
   }
-  /* give the content more top margin to clear the (now taller) bar handled via JS */
-}
 
-/* Ultra small phones: single column stack */
-@media (max-width: 360px) {
-  .control-bar {
-    grid-template-columns: 1fr;
+  .ctrl-select {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .ctrl-toggle {
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .ctrl-toggle i {
+    font-size: 11px;
+  }
+
+  .folded-label {
+    font-size: 13px;
   }
 }
 
-.ctrl-select {
-  appearance: none;
-  -webkit-appearance: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 14px;
-  max-width: 240px; /* prevent overlong select on small screens */
-}
-
-/* Additional small-screen constraints for selects */
-@media (max-width: 480px) {
-  .ctrl-select { max-width: 48vw; }
-}
-
-.ctrl-select:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.ctrl-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  color: #fff;
-}
-.ctrl-btn.primary { background: var(--gradient-primary); }
-.ctrl-btn.info { background: var(--gradient-info); }
-.ctrl-btn.secondary { background: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); }
-.ctrl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* List styling */
-.starlist-list { list-style: none; padding: 0; margin: 0; }
-.starlist-item {
+/* Button group wrapper for action buttons */
+.control-bar .btn-group {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--bg-container);
-  box-shadow: var(--shadow-card);
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.list-name-button {
-  background: var(--gradient-primary);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
+@media (max-width: 480px) {
+  .control-bar .btn-group {
+    justify-content: center;
+  }
+}
+
+/* Control select/trigger buttons */
+.ctrl-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-container);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  flex: 1 1 auto; /* allow the name to take remaining space */
-  min-width: 0; /* so it can shrink and ellipsis */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  transition: var(--transition-fast);
   white-space: nowrap;
 }
 
-.row-select {
-  margin-left: auto;
-  appearance: none;
-  -webkit-appearance: none;
-  background: var(--bg-card);
+.ctrl-select:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  box-shadow: var(--shadow-sm);
+}
+
+.ctrl-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ctrl-select i {
+  font-size: 12px;
+  transition: transform var(--transition-fast);
+}
+
+/* Control buttons */
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctrl-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.4s ease;
+}
+
+.ctrl-btn:hover::after {
+  left: 100%;
+}
+
+.ctrl-btn.primary {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.ctrl-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.35);
+  transform: translateY(-1px);
+}
+
+.ctrl-btn.info {
+  background: var(--gradient-info);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--color-info-rgb), 0.25);
+}
+
+.ctrl-btn.info:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(var(--color-info-rgb), 0.35);
+  transform: translateY(-1px);
+}
+
+.ctrl-btn.secondary {
+  background: var(--bg-container);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 6px 10px;
-  flex: 0 0 auto;
-  max-width: 220px; /* cap width to avoid overflow */
+}
+
+.ctrl-btn.secondary:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.ctrl-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* List styling */
+.starlist-table {
+  padding: 0 4px;
+}
+
+.starlist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.starlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.starlist-item:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.list-name-button {
+  display: inline-flex;
+  align-items: center;
+  background: var(--gradient-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.list-name-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.list-name-button:hover::before {
+  left: 100%;
+}
+
+.list-name-button:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.02);
+}
+
+.list-name-button:active {
+  transform: scale(0.98);
+}
+
+/* Row select dropdown trigger */
+.row-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  background: var(--bg-container);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.row-select:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.row-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row-select i {
+  font-size: 10px;
+  transition: transform var(--transition-fast);
 }
 
 @media (max-width: 480px) {
   .row-select {
-    max-width: 44vw; /* keep dropdown compact on narrow screens */
-    font-size: 12px;
+    padding: 6px 10px;
+    font-size: 11px;
   }
 }
 
-.row-actions { margin-left: auto; display: inline-flex; gap: 8px; }
-.icon-btn { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
-.icon-btn.danger { color: var(--color-danger); border-color: var(--color-danger); }
+/* Row actions */
+.row-actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 8px;
+}
 
-/* Modal */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-container);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-size: 14px;
+}
+
+.icon-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  transform: scale(1.05);
+}
+
+.icon-btn.danger {
+  color: var(--color-danger);
+  border-color: rgba(var(--color-danger-rgb), 0.3);
+}
+
+.icon-btn.danger:hover {
+  color: #fff;
+  background: var(--gradient-danger);
+  border-color: var(--color-danger);
+  box-shadow: 0 0 12px rgba(var(--color-danger-rgb), 0.4);
+}
+
+/* Modal - glassmorphic design */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  animation: fadeIn 0.2s ease;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal {
   width: 90%;
   max-width: 420px;
   background: var(--bg-card);
-  border-radius: 12px;
-  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--backdrop-filter);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
   overflow: hidden;
+  animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .modal-header {
   background: var(--gradient-primary);
   color: #fff;
-  padding: 12px 16px;
+  padding: 16px 20px;
   font-weight: 600;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
-.modal-body { padding: 16px; }
-.modal-label { display: block; font-size: 14px; margin-bottom: 8px; color: var(--text-secondary); }
-.modal-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-card); color: var(--text-primary); }
-.modal-footer { padding: 12px 16px; display: flex; justify-content: flex-end; gap: 10px; }
 
-@media (max-width: 768px) {
-  .control-bar { top: 56px; left: 12px; padding: 6px 10px; gap: 6px; }
+.modal-body {
+  padding: 20px;
+}
+
+.modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.modal-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border-color-light);
+  background: var(--bg-container);
+}
+
+/* Dropdown styling enhancements */
+.list-type-dropdown,
+.review-mode-dropdown,
+.row-review-dropdown {
+  flex-shrink: 0;
+}
+
+::v-deep .kiwi-dropdown-menu {
+  min-width: 160px;
+}
+
+/* Animation for list items */
+.starlist-item {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 </style>

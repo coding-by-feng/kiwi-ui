@@ -126,6 +126,7 @@ import {getStore} from '@/util/store'
 // Import the language utility function
 import { getInitialSelectedLanguage } from '@/util/langUtil';
 import msgUtil from '@/util/msg';
+import { mapMutations } from 'vuex';
 
 const md = new MarkdownIt({
   html: true,
@@ -278,21 +279,25 @@ export default {
       deep: true,
       handler(newQ, oldQ) {
         try {
+          // If user switched away from search tab, don't re-initialize - keep content
+          if (newQ.active && newQ.active !== 'search') {
+            return
+          }
+
+          // Build comparison keys WITHOUT 'now' - it's just a cache-buster and shouldn't trigger re-init
           const newKey = [
             String(newQ.selectedMode || ''),
             String(newQ.language || ''),
             String(newQ.nativeLanguage || ''),
-            String(newQ.originalText || ''),
-            String(newQ.now || '')
+            String(newQ.originalText || '')
           ].join('|')
           const oldKey = [
             String(oldQ && oldQ.selectedMode || ''),
             String(oldQ && oldQ.language || ''),
             String(oldQ && oldQ.nativeLanguage || ''),
-            String(oldQ && oldQ.originalText || ''),
-            String(oldQ && oldQ.now || '')
+            String(oldQ && oldQ.originalText || '')
           ].join('|')
-          // Ignore route churn if core inputs haven’t changed
+          // Ignore route churn if core inputs haven't changed
           if (newKey === oldKey) return
           // Otherwise, re-initialize once with new core inputs
           this.initializeFromRoute()
@@ -303,13 +308,41 @@ export default {
     }
   },
   beforeDestroy() {
-    // Clean up active websocket connections when leaving the page
+    // Only clean up when component is actually destroyed (not just deactivated by keep-alive)
+    // This ensures WebSocket connections continue when switching tabs
+    // Clean up active websocket connections when leaving the page permanently
     this.closeWebSocket('main');
     // Close all selection websockets
     this.closeSelectionResponse();
+    // Clear Vuex store loading state
+    this.setApiLoading({ loading: false, cancelCallback: null });
   },
+  // Note: We intentionally do NOT close WebSocket in deactivated() hook
+  // to allow API calls to continue when user switches tabs
   methods: {
     ...msgUtil,
+    ...mapMutations(['setApiLoading']),
+
+    // Cancel all active WebSocket connections (called from Vuex store when user clicks stop button)
+    cancelAllRequests() {
+      this.closeWebSocket('all');
+      this.apiLoading = false;
+      this.isStreaming = false;
+      this.selectionApiLoading = false;
+      this.isSelectionStreaming = false;
+      // Close all selection explanation websockets
+      if (Array.isArray(this.selectionExplanations)) {
+        this.selectionExplanations.forEach(it => {
+          try { if (it.websocket) { it.websocket.close(); } } catch (e) { /* ignore */ }
+          it.websocket = null;
+          it.apiLoading = false;
+          it.isStreaming = false;
+        });
+      }
+      // Clear Vuex store loading state
+      this.setApiLoading({ loading: false, cancelCallback: null });
+    },
+
     // Safely close websocket(s) by type
     closeWebSocket(type) {
       try {
@@ -353,6 +386,9 @@ export default {
       // Ensure any active streams are closed and stacked explanations cleared
       this.closeWebSocket('all');
       this.closeSelectionResponse();
+
+      // Clear Vuex store loading state since we're starting fresh
+      this.setApiLoading({ loading: false, cancelCallback: null });
 
       // Reset per-request state
       this.apiLoading = false;
@@ -763,6 +799,12 @@ export default {
         that._mainWsAttempts += 1
         that._mainWsHadData = false
         that._mainFallbackInFlight = false
+
+        // Register loading state with Vuex store for Search.vue to display stop button
+        that.setApiLoading({
+          loading: true,
+          cancelCallback: () => that.cancelAllRequests()
+        });
       }
 
       that[loadingKey] = true;
@@ -932,6 +974,9 @@ export default {
           that.isStreaming = false;
           that.apiLoading = false;
 
+          // Clear Vuex store loading state
+          that.setApiLoading({ loading: false, cancelCallback: null });
+
           // Use fullResponse if available (it should be properly formatted)
           // Then post-validate to extract only responseText as the final result
           try {
@@ -1035,6 +1080,9 @@ export default {
       // Stop all loading states immediately
       that.apiLoading = false;
       that.isStreaming = false;
+
+      // Clear Vuex store loading state
+      that.setApiLoading({ loading: false, cancelCallback: null });
 
       // Close WebSocket connection
       that.closeWebSocket('main');

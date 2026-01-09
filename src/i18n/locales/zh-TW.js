@@ -388,6 +388,7 @@ export default {
         clearFilters: '清除篩選',
         review: '複習',
         copy: '複製',
+        copyPrompt: '複製提示詞',
         details: '詳細',
         searchAgain: '再次搜尋',
         aiCallDetails: 'AI 呼叫詳細',
@@ -402,8 +403,25 @@ export default {
         selectedText: '所選文字',
         explainSelection: '解釋選取內容',
         searchOnDictionary: '在字典中搜尋',
-        // 新增：剪貼簿提示
+        // 剪貼簿提示
         useClipboardContent: '使用剪貼簿內容：「{text}」？',
+        // 分類篩選
+        normalItems: '正常項目',
+        archivedItems: '已封存項目',
+        allItems: '全部項目',
+        // 載入狀態
+        loadingHistory: '載入歷史中...',
+        // 操作
+        archive: '封存',
+        // 封存/刪除訊息
+        itemArchived: '項目已成功封存',
+        archiveFailed: '封存失敗',
+        itemDeleted: '項目已成功刪除',
+        deleteFailed: '刪除失敗',
+        loadHistoryFailed: '載入 AI 呼叫歷史失敗',
+        // 刪除確認對話框
+        deleteItemTitle: '刪除項目',
+        deleteItemConfirm: '確定要刪除此項目嗎？此操作無法復原。'
     },
 
     // Messages and notifications (added keys)

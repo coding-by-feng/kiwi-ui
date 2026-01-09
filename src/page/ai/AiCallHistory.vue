@@ -2,7 +2,7 @@
   <div class="ai-call-history">
     <div class="history-header">
       <h2 class="history-title">
-        AI Call History
+        {{ $t('ai.aiCallHistory') }}
       </h2>
     </div>
 
@@ -12,12 +12,12 @@
         <div class="filter-row">
           <KiwiDropdown @command="handleModeFilter">
             <KiwiButton size="small">
-              {{ filterMode ? getModeLabel(filterMode) : 'All Modes' }}
+              {{ filterMode ? getModeLabel(filterMode) : $t('ai.allModes') }}
               <i class="el-icon-arrow-down"></i>
             </KiwiButton>
             <template slot="dropdown">
               <KiwiDropdownItem :command="''">
-                All Modes
+                {{ $t('ai.allModes') }}
               </KiwiDropdownItem>
               <KiwiDropdownItem
                   v-for="mode in searchModes"
@@ -32,12 +32,12 @@
 
           <KiwiDropdown v-if="historyData && historyData.total > 0" @command="handleLanguageFilter">
             <KiwiButton size="small">
-              {{ filterLanguage ? getLanguageLabel(filterLanguage) : 'All Languages' }}
+              {{ filterLanguage ? getLanguageLabel(filterLanguage) : $t('ai.allLanguages') }}
               <i class="el-icon-arrow-down"></i>
             </KiwiButton>
             <template slot="dropdown">
               <KiwiDropdownItem :command="''">
-                All Languages
+                {{ $t('ai.allLanguages') }}
               </KiwiDropdownItem>
               <KiwiDropdownItem
                   v-for="lang in uniqueLanguages"
@@ -54,9 +54,9 @@
               <i class="el-icon-arrow-down"></i>
             </KiwiButton>
             <template slot="dropdown">
-              <KiwiDropdownItem command="normal">Normal Items</KiwiDropdownItem>
-              <KiwiDropdownItem command="archived">Archived Items</KiwiDropdownItem>
-              <KiwiDropdownItem command="all">All Items</KiwiDropdownItem>
+              <KiwiDropdownItem command="normal">{{ $t('ai.normalItems') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="archived">{{ $t('ai.archivedItems') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="all">{{ $t('ai.allItems') }}</KiwiDropdownItem>
             </template>
           </KiwiDropdown>
 
@@ -66,7 +66,7 @@
               icon="el-icon-delete"
               @click="clearFilters"
               v-if="filterMode || filterLanguage || filterClassification">
-            Clear Filters
+            {{ $t('ai.clearFilters') }}
           </KiwiButton>
         </div>
       </div>
@@ -76,8 +76,8 @@
     <div class="history-content" v-if="!loading">
       <div v-if="!historyData || historyData.total === 0" class="empty-state">
         <i class="el-icon-document-remove"></i>
-        <h3>No AI Call History Found</h3>
-        <p>Your AI conversation history will appear here once you start using the AI features.</p>
+        <h3>{{ $t('ai.noHistoryFound') }}</h3>
+        <p>{{ $t('ai.historyDescription') }}</p>
       </div>
 
       <div v-else class="history-list">
@@ -107,7 +107,7 @@
 
           <div class="history-item-content">
             <div class="prompt-preview">
-              <strong>Prompt:</strong>
+              <strong>{{ $t('ai.prompt') }}:</strong>
               <p class="prompt-text">{{ truncateText(record.prompt, 200) }}</p>
             </div>
           </div>
@@ -119,8 +119,8 @@
               size="mini"
               circle
               icon="el-icon-search"
-              aria-label="Review"
-              title="Review"
+              :aria-label="$t('ai.review')"
+              :title="$t('ai.review')"
               @click="searchAgain(record)"
             />
 
@@ -129,8 +129,8 @@
               size="mini"
               circle
               icon="el-icon-document-copy"
-              aria-label="Copy prompt"
-              title="Copy Prompt"
+              :aria-label="$t('ai.copyPrompt')"
+              :title="$t('ai.copyPrompt')"
               @click="copyPrompt(record.prompt)"
             />
 
@@ -139,8 +139,8 @@
               size="mini"
               circle
               icon="el-icon-view"
-              aria-label="Details"
-              title="Details"
+              :aria-label="$t('ai.details')"
+              :title="$t('ai.details')"
               @click="viewDetails(record)"
             />
 
@@ -149,8 +149,8 @@
               size="mini"
               circle
               icon="el-icon-box"
-              aria-label="Archive"
-              title="Archive"
+              :aria-label="$t('ai.archive')"
+              :title="$t('ai.archive')"
               @click="archiveItem(record.id)"
               :loading="archivingIds.includes(record.id)"
             />
@@ -160,8 +160,8 @@
               size="mini"
               circle
               icon="el-icon-delete"
-              aria-label="Delete"
-              title="Delete"
+              :aria-label="$t('common.delete')"
+              :title="$t('common.delete')"
               @click="confirmDelete(record.id)"
               :loading="deletingIds.includes(record.id)"
             />
@@ -180,26 +180,26 @@
       </div>
     </div>
     <div v-else class="loading-state">
-      <i class="el-icon-loading"></i> Loading history...
+      <i class="el-icon-loading"></i> {{ $t('ai.loadingHistory') }}
     </div>
 
     <!-- Detail Dialog -->
     <KiwiDialog
-        title="AI Call Details"
+        :title="$t('ai.aiCallDetails')"
         :visible.sync="detailDialogVisible"
         width="70%"
         class="detail-dialog">
       <div v-if="selectedRecord" class="detail-content">
         <div class="detail-form">
           <div class="detail-row">
-            <label>Mode:</label>
+            <label>{{ $t('ai.mode') }}:</label>
             <KiwiTag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
               {{ getModeLabel(selectedRecord.promptMode) }}
             </KiwiTag>
           </div>
 
           <div class="detail-row">
-            <label>Languages:</label>
+            <label>{{ $t('ai.languages') }}:</label>
             <span class="language-display">
               {{ getLanguageLabel(selectedRecord.targetLanguage) }}
               <span v-if="selectedRecord.nativeLanguage">
@@ -209,21 +209,21 @@
           </div>
 
           <div class="detail-row">
-            <label>Timestamp:</label>
+            <label>{{ $t('ai.timestamp') }}:</label>
             <span>{{ formatFullTimestamp(selectedRecord.timestamp) }}</span>
           </div>
 
           <div class="detail-row full-width">
-            <label>Prompt:</label>
+            <label>{{ $t('ai.prompt') }}:</label>
             <div class="detail-prompt">{{ selectedRecord.prompt }}</div>
           </div>
         </div>
       </div>
 
       <span slot="footer" class="dialog-footer">
-        <KiwiButton @click="detailDialogVisible = false">Close</KiwiButton>
+        <KiwiButton @click="detailDialogVisible = false">{{ $t('common.close') }}</KiwiButton>
         <KiwiButton type="primary" @click="searchAgain(selectedRecord)">
-          Search Again
+          {{ $t('ai.searchAgain') }}
         </KiwiButton>
       </span>
     </KiwiDialog>
@@ -251,6 +251,13 @@ export default {
     KiwiDropdown,
     KiwiDropdownItem
   },
+  props: {
+    // When true, the component is the active tab and should load data
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  },
   data() {
     return {
       loading: false,
@@ -274,6 +281,18 @@ export default {
       archivingIds: [],
       deletingIds: [],
       lastClassificationFilter: 'all'
+    }
+  },
+
+  watch: {
+    // Load data when tab becomes active (and data hasn't been loaded yet)
+    isActive: {
+      handler(newVal) {
+        if (newVal && this.historyData.total === 0 && this.historyData.records.length === 0 && !this.loading) {
+          this.loadHistory();
+        }
+      },
+      immediate: false
     }
   },
 
@@ -321,7 +340,11 @@ export default {
   },
 
   mounted() {
-    this.loadHistory();
+    // Only load history if the tab is currently active
+    // This prevents API calls when switching to other tabs (PDF, Todo, etc.)
+    if (this.isActive) {
+      this.loadHistory();
+    }
   },
 
   methods: {
@@ -338,11 +361,11 @@ export default {
           console.log('Loaded AI call history successfully:', this.historyData);
         } else {
           console.error('API returned error:', response.data);
-          messageCenter.error(response.data.msg || 'Failed to load AI call history');
+          messageCenter.error(response.data.msg || this.$t('ai.loadHistoryFailed'));
         }
       } catch (error) {
         console.error('Error loading AI call history:', error);
-        messageCenter.error('Failed to load AI call history: ' + (error.message || 'Unknown error'));
+        messageCenter.error(this.$t('ai.loadHistoryFailed') + ': ' + (error.message || this.$t('ai.unknown')));
       } finally {
         this.loading = false;
       }
@@ -396,11 +419,11 @@ export default {
 
     getClassificationLabel(value) {
       const labels = {
-        'normal': 'Normal Items',
-        'archived': 'Archived Items',
-        'all': 'All Items'
+        'normal': this.$t('ai.normalItems'),
+        'archived': this.$t('ai.archivedItems'),
+        'all': this.$t('ai.allItems')
       };
-      return labels[value] || 'All Items';
+      return labels[value] || this.$t('ai.allItems');
     },
 
     getModeLabel(modeValue) {
@@ -464,19 +487,19 @@ export default {
     },
 
     formatTimestamp(timestamp) {
-      if (!timestamp) return 'Unknown';
+      if (!timestamp) return this.$t('ai.unknown');
 
       const date = this.parseTimestamp(timestamp);
-      if (!date) return 'Invalid Date';
+      if (!date) return this.$t('ai.invalidDate');
 
       return date.toLocaleString();
     },
 
     formatFullTimestamp(timestamp) {
-      if (!timestamp) return 'Unknown';
+      if (!timestamp) return this.$t('ai.unknown');
 
       const date = this.parseTimestamp(timestamp);
-      if (!date) return 'Invalid Date';
+      if (!date) return this.$t('ai.invalidDate');
 
       return date.toLocaleString();
     },
@@ -504,10 +527,10 @@ export default {
     copyPrompt(prompt) {
       navigator.clipboard.writeText(prompt)
           .then(() => {
-            messageCenter.success('Prompt copied to clipboard!');
+            messageCenter.success(this.$t('ai.promptCopied'));
           })
           .catch(() => {
-            messageCenter.error('Failed to copy prompt');
+            messageCenter.error(this.$t('ai.failedToCopy'));
           });
     },
 
@@ -523,15 +546,15 @@ export default {
       try {
         const response = await archiveAiCallHistory(id);
         if (response.data.success) {
-          messageCenter.success(response.data.data || 'Item archived successfully');
+          messageCenter.success(response.data.data || this.$t('ai.itemArchived'));
           // Reload the history to reflect changes
           this.loadHistory();
         } else {
-          messageCenter.error(response.data.msg || 'Failed to archive item');
+          messageCenter.error(response.data.msg || this.$t('ai.archiveFailed'));
         }
       } catch (error) {
         console.error('Archive failed:', error);
-        const errorMessage = error.response?.data?.msg || 'Failed to archive item';
+        const errorMessage = error.response?.data?.msg || this.$t('ai.archiveFailed');
         messageCenter.error(errorMessage);
       } finally {
         this.archivingIds = this.archivingIds.filter(i => i !== id);
@@ -539,9 +562,9 @@ export default {
     },
 
     confirmDelete(id) {
-      this.$confirm('Are you sure you want to delete this item? This action cannot be undone.', 'Delete Item', {
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
+      this.$confirm(this.$t('ai.deleteItemConfirm'), this.$t('ai.deleteItemTitle'), {
+        confirmButtonText: this.$t('common.delete'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning',
         customClass: 'kiwi-delete-confirm-dialog'
       }).then(() => {
@@ -556,15 +579,15 @@ export default {
       try {
         const response = await deleteAiCallHistory(id);
         if (response.data.success) {
-          messageCenter.success(response.data.data || 'Item deleted successfully');
+          messageCenter.success(response.data.data || this.$t('ai.itemDeleted'));
           // Reload the history to reflect changes
           this.loadHistory();
         } else {
-          messageCenter.error(response.data.msg || 'Failed to delete item');
+          messageCenter.error(response.data.msg || this.$t('ai.deleteFailed'));
         }
       } catch (error) {
         console.error('Delete failed:', error);
-        const errorMessage = error.response?.data?.msg || 'Failed to delete item';
+        const errorMessage = error.response?.data?.msg || this.$t('ai.deleteFailed');
         messageCenter.error(errorMessage);
       } finally {
         this.deletingIds = this.deletingIds.filter(i => i !== id);
