@@ -227,7 +227,12 @@ export default {
         loadHistoryFailed: 'Laden des KI-Aufrufverlaufs fehlgeschlagen',
         // Löschbestätigungsdialog
         deleteItemTitle: 'Element löschen',
-        deleteItemConfirm: 'Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.'
+        deleteItemConfirm: 'Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+        // Minimieren/Wiederherstellen
+        minimize: 'Minimieren',
+        restore: 'Wiederherstellen',
+        close: 'Schließen',
+        aiSearch: 'KI-Suche'
     },
 
     // Login

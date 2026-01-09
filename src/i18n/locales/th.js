@@ -384,7 +384,12 @@ export default {
         loadHistoryFailed: 'โหลดประวัติการใช้ AI ล้มเหลว',
         // กล่องโต้ตอบยืนยันการลบ
         deleteItemTitle: 'ลบรายการ',
-        deleteItemConfirm: 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้'
+        deleteItemConfirm: 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้',
+        // ย่อ/คืนค่า
+        minimize: 'ย่อ',
+        restore: 'คืนค่า',
+        close: 'ปิด',
+        aiSearch: 'ค้นหา AI'
     },
 
     // Moved out of ai: audio settings

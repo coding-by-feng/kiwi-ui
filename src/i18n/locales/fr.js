@@ -202,7 +202,12 @@ export default {
         loadHistoryFailed: 'Échec du chargement de l\'historique des appels IA',
         // Dialogue de confirmation de suppression
         deleteItemTitle: 'Supprimer l\'élément',
-        deleteItemConfirm: 'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action ne peut pas être annulée.'
+        deleteItemConfirm: 'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action ne peut pas être annulée.',
+        // Minimiser/Restaurer
+        minimize: 'Minimiser',
+        restore: 'Restaurer',
+        close: 'Fermer',
+        aiSearch: 'Recherche IA'
     },
 
     // Login section
