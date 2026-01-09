@@ -321,7 +321,12 @@ export default {
         loadHistoryFailed: 'AI利用履歴の読み込みに失敗しました',
         // 削除確認ダイアログ
         deleteItemTitle: '項目を削除',
-        deleteItemConfirm: 'この項目を削除してもよろしいですか？この操作は元に戻せません。'
+        deleteItemConfirm: 'この項目を削除してもよろしいですか？この操作は元に戻せません。',
+        // 最小化/復元
+        minimize: '最小化',
+        restore: '復元',
+        close: '閉じる',
+        aiSearch: 'AI検索'
     },
 
     // New: audio settings parity
