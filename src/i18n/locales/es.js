@@ -267,7 +267,12 @@ export default {
         loadHistoryFailed: 'Error al cargar el historial de llamadas IA',
         // Diálogo de confirmación de eliminación
         deleteItemTitle: 'Eliminar elemento',
-        deleteItemConfirm: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.'
+        deleteItemConfirm: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.',
+        // Minimizar/Restaurar
+        minimize: 'Minimizar',
+        restore: 'Restaurar',
+        close: 'Cerrar',
+        aiSearch: 'Búsqueda IA'
     },
 
     // New: audio settings parity
