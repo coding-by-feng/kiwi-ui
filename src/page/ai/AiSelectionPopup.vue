@@ -228,6 +228,12 @@ export default {
       set(v) {
         this.$emit('update:visible', v)
         if (v) {
+          // Clear browser text selection to avoid messy appearance on mobile
+          try {
+            if (window.getSelection) {
+              window.getSelection().removeAllRanges()
+            }
+          } catch (_) {}
           // On open, sync localSelectedText from prop and add item if needed
           this.$nextTick(() => {
             // Always sync from prop when dialog opens
