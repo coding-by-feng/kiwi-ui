@@ -1545,12 +1545,31 @@ h1 {
 .main-response-content { text-align: left; margin-bottom: 40px; color: var(--text-primary); }
 </style>
 <style lang="scss" scoped>
-// Mobile-specific: prevent native text selection UI to avoid popup conflicts
+// Mobile-specific: allow text selection in content areas while preventing accidental selections elsewhere
 @media (max-width: 768px) {
   .ai-container {
+    // Allow text selection by default
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  // Ensure content areas are selectable
+  .original-text-content,
+  .selection-response-content,
+  .main-response-content,
+  .selected-text-reference {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  // Only disable selection on UI elements like titles and buttons
+  .original-text-title,
+  .selection-response-title,
+  .dialog-footer,
+  .selection-dialog-footer {
     user-select: none;
     -webkit-user-select: none;
-    -webkit-touch-callout: none;
   }
 }
 </style>

@@ -122,6 +122,24 @@
             <i class="el-icon-magic-stick"></i>
           </span>
         </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="loopEnabled"
+              :active-text="isSmallScreen ? '' : 'Loop Video'"
+              @change="onLoopChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-refresh-right"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-refresh"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-refresh"></i>
+          </span>
+        </div>
         <!-- Favorite button moved to top controls bar -->
         <div class="switch-group favorite-top-group">
           <el-tooltip :content="canFavorite ? (isFavorited ? 'Unfavorite this video' : 'Favorite this video') : 'Load a video to favorite'" placement="top">
@@ -353,6 +371,7 @@ export default {
     })();
     return {
       enhancedSubtitlesEnabled: normalizedEnhancedSubtitles,
+      loopEnabled: false,
       videoUrl: null,
       ifTranslation: normalizedIfTranslation,
       autoCenterEnabled: persistedAutoCenter !== false, // Default to true if not set
@@ -1229,6 +1248,16 @@ export default {
         if (this.getLoadedFraction() >= 1) this.stopMiniLoaderPoll();
       }
 
+      // Handle video loop when video ends
+      if (event.data === YT.PlayerState.ENDED && this.loopEnabled) {
+        this.$nextTick(() => {
+          if (this.player && typeof this.player.seekTo === 'function') {
+            this.player.seekTo(0, true);
+            this.player.playVideo();
+          }
+        });
+      }
+
       if (isPlaying) {
         // Re-run auto scroll logic for active subtitle on resume.
         // Auto-collapse controls on small screens when playback starts
@@ -2041,6 +2070,13 @@ export default {
       // Reload subtitles if video is loaded
       if (this.videoReady && this.videoUrl) {
         this.loadSubtitlesInBackground();
+      }
+    },
+
+    onLoopChange(enabled) {
+      // Update the player's loop setting if player is ready
+      if (this.player && typeof this.player.setLoop === 'function') {
+        this.player.setLoop(enabled);
       }
     },
 
