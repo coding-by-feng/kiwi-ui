@@ -282,6 +282,7 @@ module.exports = {
         port: 8080,
         hot: true,
         compress: true,
+        allowedHosts: 'all',
         proxy: {
             '/auth': createProxyConfig('/auth'),
             '/api': createProxyConfig('/api'),
