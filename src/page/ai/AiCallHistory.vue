@@ -30,27 +30,35 @@
             </template>
           </KiwiDropdown>
 
-          <div class="kiwi-select-wrapper" v-if="historyData && historyData.total > 0">
-            <select v-model="filterLanguage" @change="applyFilters" class="kiwi-select">
-              <option value="" selected>All Languages</option>
-              <option
+          <KiwiDropdown v-if="historyData && historyData.total > 0" @command="handleLanguageFilter">
+            <KiwiButton size="small">
+              {{ filterLanguage ? getLanguageLabel(filterLanguage) : 'All Languages' }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem :command="''">
+                All Languages
+              </KiwiDropdownItem>
+              <KiwiDropdownItem
                   v-for="lang in uniqueLanguages"
                   :key="lang"
-                  :value="lang">
+                  :command="lang">
                 {{ getLanguageLabel(lang) }}
-              </option>
-            </select>
-            <i class="el-icon-arrow-down select-arrow"></i>
-          </div>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
-          <div class="kiwi-select-wrapper">
-            <select v-model="filterClassification" @change="applyFilters" class="kiwi-select">
-              <option value="normal">Normal Items</option>
-              <option value="archived">Archived Items</option>
-              <option value="all">All Items</option>
-            </select>
-            <i class="el-icon-arrow-down select-arrow"></i>
-          </div>
+          <KiwiDropdown @command="handleClassificationFilter">
+            <KiwiButton size="small">
+              {{ getClassificationLabel(filterClassification) }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="normal">Normal Items</KiwiDropdownItem>
+              <KiwiDropdownItem command="archived">Archived Items</KiwiDropdownItem>
+              <KiwiDropdownItem command="all">All Items</KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
           <KiwiButton
               type="text"
@@ -374,6 +382,25 @@ export default {
     handleModeFilter(command) {
       this.filterMode = command;
       this.applyFilters();
+    },
+
+    handleLanguageFilter(command) {
+      this.filterLanguage = command;
+      this.applyFilters();
+    },
+
+    handleClassificationFilter(command) {
+      this.filterClassification = command;
+      this.applyFilters();
+    },
+
+    getClassificationLabel(value) {
+      const labels = {
+        'normal': 'Normal Items',
+        'archived': 'Archived Items',
+        'all': 'All Items'
+      };
+      return labels[value] || 'All Items';
     },
 
     getModeLabel(modeValue) {

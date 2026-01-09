@@ -12,17 +12,20 @@
       </div>
       <div class="filter-group">
         <span class="filter-label">{{ $t('todo.frequencyFilter') }}</span>
-        <div class="kiwi-select-wrapper frequency-filter-select">
-          <select :value="frequencyFilter" class="kiwi-select" @change="$emit('update:frequencyFilter', $event.target.value)">
-            <option value="all">{{ $t('common.all') }}</option>
-            <option value="once">{{ $t('todo.freqOnce') }}</option>
-            <option value="daily">{{ $t('todo.freqDaily') }}</option>
-            <option value="weekly">{{ $t('todo.freqWeekly') }}</option>
-            <option value="monthly">{{ $t('todo.freqMonthly') }}</option>
-            <option value="custom">{{ $t('todo.customDays') }}</option>
-          </select>
-          <i class="el-icon-arrow-down select-arrow"></i>
-        </div>
+        <KiwiDropdown @command="handleFrequencyFilter" class="frequency-filter-dropdown">
+          <KiwiButton size="small">
+            {{ getFrequencyLabel(frequencyFilter) }}
+            <i class="el-icon-arrow-down"></i>
+          </KiwiButton>
+          <template slot="dropdown">
+            <KiwiDropdownItem command="all">{{ $t('common.all') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="once">{{ $t('todo.freqOnce') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="daily">{{ $t('todo.freqDaily') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="weekly">{{ $t('todo.freqWeekly') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="monthly">{{ $t('todo.freqMonthly') }}</KiwiDropdownItem>
+            <KiwiDropdownItem command="custom">{{ $t('todo.customDays') }}</KiwiDropdownItem>
+          </template>
+        </KiwiDropdown>
       </div>
       <div class="filter-group">
         <KiwiButton type="warning" size="small" icon="el-icon-refresh-left" @click="$emit('reset-all')">
@@ -37,13 +40,31 @@
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiRadioGroup from '@/components/ui/KiwiRadioGroup.vue'
 import KiwiRadioButton from '@/components/ui/KiwiRadioButton.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 export default {
   name: 'TaskFilters',
-  components: { KiwiButton, KiwiRadioGroup, KiwiRadioButton },
+  components: { KiwiButton, KiwiRadioGroup, KiwiRadioButton, KiwiDropdown, KiwiDropdownItem },
   props: {
     taskFilter: { type: String, required: true },
     frequencyFilter: { type: String, required: true }
+  },
+  methods: {
+    handleFrequencyFilter(command) {
+      this.$emit('update:frequencyFilter', command)
+    },
+    getFrequencyLabel(value) {
+      const labels = {
+        'all': this.$t('common.all'),
+        'once': this.$t('todo.freqOnce'),
+        'daily': this.$t('todo.freqDaily'),
+        'weekly': this.$t('todo.freqWeekly'),
+        'monthly': this.$t('todo.freqMonthly'),
+        'custom': this.$t('todo.customDays')
+      }
+      return labels[value] || this.$t('common.all')
+    }
   }
 }
 </script>

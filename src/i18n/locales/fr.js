@@ -327,7 +327,9 @@ export default {
         hotkey: 'Raccourci',
         pressKeys: 'Appuyez sur des touches...',
         featureTabs: 'Onglets de fonctionnalités',
-        featureTabsTip: 'Afficher ou masquer les onglets dans la barre d\'outils'
+        featureTabsTip: 'Afficher ou masquer les onglets dans la barre d\'outils',
+        uiLanguage: 'Langue de l\'interface',
+        uiLanguageTooltip: 'Langue utilisée pour l\'interface (indépendante de la langue de traduction)'
     },
 
     messages: {

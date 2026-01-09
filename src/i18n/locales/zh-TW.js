@@ -422,6 +422,8 @@ export default {
         learningSettings: '學習設定',
         pronunciationSource: '發音來源',
         nativeLanguage: '母語',
+        uiLanguage: '介面語言',
+        uiLanguageTooltip: '介面顯示的語言（與翻譯語言獨立設定）',
         backgroundMusic: '背景音樂',
         letterSpelling: '字母拼寫',
         englishDefinition: '英文釋義',

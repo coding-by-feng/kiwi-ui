@@ -9,6 +9,39 @@ import store from '@/store'
 import axios from 'axios'
 import {baseUrl, isElectron} from '@/config/env'
 import kiwiConsts from '@/const/kiwiConsts'
+import StatusService from '@/util/status-overlay-service'
+
+// Track active requests for loading indicator
+let activeRequests = 0
+let loadingOverlay = null
+let loadingDebounceTimer = null
+const LOADING_DEBOUNCE_MS = 300 // Only show loading if request takes longer than 300ms
+
+function showGlobalLoading() {
+  if (loadingDebounceTimer) {
+    clearTimeout(loadingDebounceTimer)
+  }
+  loadingDebounceTimer = setTimeout(() => {
+    if (activeRequests > 0 && !loadingOverlay) {
+      loadingOverlay = StatusService.loading({
+        message: 'Loading...',
+        backdrop: false,
+        duration: 0
+      })
+    }
+  }, LOADING_DEBOUNCE_MS)
+}
+
+function hideGlobalLoading() {
+  if (loadingDebounceTimer) {
+    clearTimeout(loadingDebounceTimer)
+    loadingDebounceTimer = null
+  }
+  if (activeRequests <= 0 && loadingOverlay) {
+    loadingOverlay.close()
+    loadingOverlay = null
+  }
+}
 
 // Configure axios defaults
 axios.defaults.timeout = 100000
@@ -46,6 +79,10 @@ NProgress.configure({
 axios.interceptors.request.use(config => {
   NProgress.start()
 
+  // Track active requests and show loading indicator
+  activeRequests++
+  showGlobalLoading()
+
   let isToken = !!(config.headers || {}).isToken
   let token = getStore({ name: 'access_token' })
 
@@ -79,6 +116,11 @@ axios.interceptors.request.use(config => {
 
 axios.interceptors.response.use(res => {
   NProgress.done()
+
+  // Decrement active requests and hide loading indicator
+  activeRequests = Math.max(0, activeRequests - 1)
+  hideGlobalLoading()
+
   const status = String(res.status) || '200'
   // Prefer backend-provided message if available (e.g., "ETag mismatch"), then fallback to mapped/default
   const serverMsg = res && res.data && (res.data.msg || res.data.message)
@@ -107,6 +149,30 @@ axios.interceptors.response.use(res => {
     }
   } catch (e) { /* ignore expiry check errors */ }
 
+  // Handle 503 Service Unavailable - server is down, clear cache and logout without reload
+  if (status === '503') {
+    console.warn('503 Service Unavailable - server is down, clearing cache and redirecting to login.')
+    messageCenter.error({
+      message: 'Server is temporarily unavailable. Please clear cache and try again later.',
+      duration: 5000,
+      showClose: true
+    })
+    // Clear tokens directly without calling LogOut API (which would also fail with 503)
+    store.commit('setAccessToken', '')
+    store.commit('setRefreshToken', '')
+    store.commit('setExpiresIn', '')
+    store.commit('setTokenIssueAt', '')
+    store.commit('setUserName', '')
+    store.commit('clearLock')
+    // Redirect to login without reload to avoid infinite loop
+    if (isElectron) {
+      router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
+    } else {
+      window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
+    }
+    return Promise.reject(new Error('Service Unavailable'))
+  }
+
   // Handle 401 Unauthorized - try refresh token first
   if (String(responseCode.UNAUTHORIZED) === status) {
     if (refreshToken) {
@@ -115,6 +181,13 @@ axios.interceptors.response.use(res => {
           message: responseCode['autoLoginSuccess'],
           showClose: true
         })
+      }).catch(() => {
+        // RefreshToken failed (e.g., server error), redirect to login without reload
+        if (isElectron) {
+          router.push(`${kiwiConsts.ROUTES.DETAIL}?active=login`)
+        } else {
+          window.location.href = `/#${kiwiConsts.ROUTES.DETAIL}?active=login`
+        }
       })
     } else {
       store.dispatch('LogOut').then(() => {
@@ -169,6 +242,11 @@ axios.interceptors.response.use(res => {
   return res
 }, error => {
   NProgress.done()
+
+  // Decrement active requests and hide loading indicator
+  activeRequests = Math.max(0, activeRequests - 1)
+  hideGlobalLoading()
+
   // New: if error response indicates auth failure, force redirect
   try {
     const resp = error && error.response

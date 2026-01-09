@@ -68,16 +68,19 @@
               </div>
               <div class="edit-form-row">
                 <label class="edit-label">{{ $t('todo.frequency') }}:</label>
-                <div class="kiwi-select-wrapper edit-select">
-                  <select v-model="editingTask.frequency" class="kiwi-select">
-                    <option value="once">{{ $t('todo.freqOnce') }}</option>
-                    <option value="daily">{{ $t('todo.freqDaily') }}</option>
-                    <option value="weekly">{{ $t('todo.freqWeekly') }}</option>
-                    <option value="monthly">{{ $t('todo.freqMonthly') }}</option>
-                    <option value="custom">{{ $t('todo.customDays') }}</option>
-                  </select>
-                  <i class="el-icon-arrow-down select-arrow"></i>
-                </div>
+                <KiwiDropdown @command="handleEditFrequencyChange" class="edit-frequency-dropdown">
+                  <KiwiButton size="small">
+                    {{ getFrequencyLabel(editingTask.frequency) }}
+                    <i class="el-icon-arrow-down"></i>
+                  </KiwiButton>
+                  <template slot="dropdown">
+                    <KiwiDropdownItem command="once">{{ $t('todo.freqOnce') }}</KiwiDropdownItem>
+                    <KiwiDropdownItem command="daily">{{ $t('todo.freqDaily') }}</KiwiDropdownItem>
+                    <KiwiDropdownItem command="weekly">{{ $t('todo.freqWeekly') }}</KiwiDropdownItem>
+                    <KiwiDropdownItem command="monthly">{{ $t('todo.freqMonthly') }}</KiwiDropdownItem>
+                    <KiwiDropdownItem command="custom">{{ $t('todo.customDays') }}</KiwiDropdownItem>
+                  </template>
+                </KiwiDropdown>
               </div>
               <div class="edit-form-row" v-if="editingTask.frequency === 'custom'">
                 <label class="edit-label">{{ $t('todo.everyNDays') }}:</label>
@@ -159,10 +162,12 @@
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
 import KiwiTag from '@/components/ui/KiwiTag.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 export default {
   name: 'TaskList',
-  components: { KiwiButton, KiwiInput, KiwiTag },
+  components: { KiwiButton, KiwiInput, KiwiTag, KiwiDropdown, KiwiDropdownItem },
   props: {
     tasks: { type: Array, required: true },
     editingTaskId: { type: [Number, String, null], default: null },
@@ -188,6 +193,19 @@ export default {
       if (confirm(this.$t('todo.confirmDeleteTask'))) {
         this.onDelete(id)
       }
+    },
+    handleEditFrequencyChange(command) {
+      this.editingTask.frequency = command
+    },
+    getFrequencyLabel(value) {
+      const labels = {
+        'once': this.$t('todo.freqOnce'),
+        'daily': this.$t('todo.freqDaily'),
+        'weekly': this.$t('todo.freqWeekly'),
+        'monthly': this.$t('todo.freqMonthly'),
+        'custom': this.$t('todo.customDays')
+      }
+      return labels[value] || this.$t('todo.freqOnce')
     }
   }
 }

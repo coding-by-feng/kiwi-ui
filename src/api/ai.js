@@ -188,6 +188,17 @@ export function downloadVideoScrollingSubtitles(videoUrl) {
     });
 }
 
+export function downloadVideoScrollingSubtitlesEnhanced(videoUrl) {
+    const url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles/scrolling-enhancement?url=${encodeURIComponent(videoUrl)}`;
+    return request({
+        url: url,
+        headers: {
+            isToken: true
+        },
+        method: 'get'
+    });
+}
+
 export function downloadVideoTranslatedSubtitles(videoUrl, language) {
     let url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles/translated?url=${encodeURIComponent(videoUrl)}`;
     if (language) {

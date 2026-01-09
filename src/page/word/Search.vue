@@ -1010,12 +1010,18 @@ export default {
   box-sizing: border-box;
 }
 
-.mobile-submit-btn {
-  width: 100%;
+.submit-row {
   display: flex;
-  justify-content: flex-start; /* Left align */
+  justify-content: flex-start;
+}
+
+.mobile-submit-btn {
+  width: auto;
+  min-width: 44px;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  padding-left: 15px; /* Match input padding */
+  padding: 0 12px;
   height: 40px;
   font-size: 16px;
   border-radius: 8px;

@@ -150,7 +150,9 @@ export default {
         pressKeys: 'Tasten drücken...',
         // Neu: Funktions-Tabs-Einstellungen
         featureTabs: 'Funktions-Tabs',
-        featureTabsTip: 'Tabs in der Werkzeugleiste ein- oder ausblenden'
+        featureTabsTip: 'Tabs in der Werkzeugleiste ein- oder ausblenden',
+        uiLanguage: 'Oberflächensprache',
+        uiLanguageTooltip: 'Sprache der Benutzeroberfläche (unabhängig von der Übersetzungssprache)'
     },
 
     messages: {

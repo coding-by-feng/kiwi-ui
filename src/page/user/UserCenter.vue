@@ -85,6 +85,7 @@
               {{ currentThemeName }} <i class="el-icon-arrow-down"></i>
             </span>
             <template slot="dropdown">
+              <!-- Dark/Neon Themes -->
               <KiwiDropdownItem command="cyberpunk">
                 <span class="theme-option"><i class="theme-dot theme-dot--cyberpunk"></i> CyberPunk</span>
               </KiwiDropdownItem>
@@ -99,6 +100,23 @@
               </KiwiDropdownItem>
               <KiwiDropdownItem command="aurora">
                 <span class="theme-option"><i class="theme-dot theme-dot--aurora"></i> Aurora Borealis</span>
+              </KiwiDropdownItem>
+              <!-- Light Themes -->
+              <KiwiDropdownItem command="clean-white">
+                <span class="theme-option"><i class="theme-dot theme-dot--white"></i> Clean White</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="classic-book">
+                <span class="theme-option"><i class="theme-dot theme-dot--book"></i> Classic Book</span>
+              </KiwiDropdownItem>
+              <!-- Warm/Nature Themes -->
+              <KiwiDropdownItem command="sunset-warm">
+                <span class="theme-option"><i class="theme-dot theme-dot--sunset"></i> Sunset Warm</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="forest-nature">
+                <span class="theme-option"><i class="theme-dot theme-dot--forest"></i> Forest Nature</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="minimal-gray">
+                <span class="theme-option"><i class="theme-dot theme-dot--gray"></i> Minimal Gray</span>
               </KiwiDropdownItem>
             </template>
           </KiwiDropdown>
@@ -137,7 +155,33 @@
           </KiwiDropdown>
         </div>
 
-        <!-- NEW: Clipboard Detection Setting -->
+        <!-- UI Language Setting -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>{{ $t('user.uiLanguage') }}</span>
+            <el-tooltip
+                :content="$t('user.uiLanguageTooltip')"
+                placement="top"
+                effect="dark">
+              <i class="el-icon-question help-icon"></i>
+            </el-tooltip>
+          </div>
+          <KiwiDropdown @command="uiLanguageChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ currentUiLanguageName }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem
+                  v-for="lang in availableUiLanguages"
+                  :key="lang.code"
+                  :command="lang.code">
+                {{ lang.name }}
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
+        </div>
+
+        <!-- Clipboard Detection Setting -->
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.clipboardDetection') }}</span>
@@ -335,7 +379,7 @@ import util from '@/util/util'
 import msgUtil from '@/util/msg'
 import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
 import Bgm from '@/page/bgm/Index'
-import { setLanguage as setUiLanguage } from '@/i18n'
+import { setLanguage as setUiLanguage, getAvailableLanguages } from '@/i18n'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
@@ -364,6 +408,7 @@ export default {
         isEnToEn: getStore({ name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN }),
         bgm: getStore({ name: kiwiConst.CONFIG_KEY.BGM }),
         nativeLang: getStore({ name: kiwiConst.CONFIG_KEY.NATIVE_LANG }),
+        uiLanguage: getStore({ name: kiwiConst.CONFIG_KEY.UI_LANGUAGE }) || 'en',
         clipboardDetection: getStore({ name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION }),
         keepInMindCount: 0,
         rememberCount: 0,
@@ -441,9 +486,21 @@ export default {
         'glassmorphism': 'Glassmorphism',
         'neon-tokyo': 'Neon Tokyo',
         'ocean-depth': 'Ocean Depth',
-        'aurora': 'Aurora Borealis'
+        'aurora': 'Aurora Borealis',
+        'clean-white': 'Clean White',
+        'classic-book': 'Classic Book',
+        'sunset-warm': 'Sunset Warm',
+        'forest-nature': 'Forest Nature',
+        'minimal-gray': 'Minimal Gray'
       }
       return names[this.user.theme] || 'CyberPunk'
+    },
+    availableUiLanguages() {
+      return getAvailableLanguages()
+    },
+    currentUiLanguageName() {
+      const lang = this.availableUiLanguages.find(l => l.code === this.user.uiLanguage)
+      return lang ? lang.name : 'English'
     }
   },
 
@@ -613,14 +670,12 @@ export default {
         type: 'local'
       })
       this.user.nativeLang = command
-      // Map native language to UI language and switch immediately
-      try {
-        const map = kiwiConst.UI_LANGUAGE_MAPPING || {}
-        const ui = map[command]
-        if (ui) {
-          setUiLanguage(ui)
-        }
-      } catch (e) { /* ignore */ }
+      this.$message.success(this.$t('messages.operationSuccess'))
+    },
+
+    uiLanguageChange(langCode) {
+      setUiLanguage(langCode)
+      this.user.uiLanguage = langCode
       this.$message.success(this.$t('messages.operationSuccess'))
     },
 
@@ -1490,6 +1545,33 @@ export default {
   &--aurora {
     background: linear-gradient(135deg, #48d1cc, #9370db, #98fb98);
     box-shadow: 0 0 8px #48d1cc;
+  }
+
+  &--white {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    box-shadow: 0 0 8px #3b82f6;
+    border: 1px solid #e2e8f0;
+  }
+
+  &--book {
+    background: linear-gradient(135deg, #8b5a2b, #8b3a3a);
+    box-shadow: 0 0 8px #8b5a2b;
+    border: 1px solid #d4c4a8;
+  }
+
+  &--sunset {
+    background: linear-gradient(135deg, #ff8c42, #ff6b9d, #ffd93d);
+    box-shadow: 0 0 8px #ff8c42;
+  }
+
+  &--forest {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    box-shadow: 0 0 8px #34d399;
+  }
+
+  &--gray {
+    background: linear-gradient(135deg, #a1a1aa, #71717a);
+    box-shadow: 0 0 6px #a1a1aa;
   }
 }
 

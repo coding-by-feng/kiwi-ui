@@ -271,6 +271,8 @@ export default {
         learningSettings: 'การตั้งค่าการเรียนรู้',
         pronunciationSource: 'แหล่งเสียง',
         nativeLanguage: 'ภาษาแม่',
+        uiLanguage: 'ภาษาส่วนติดต่อผู้ใช้',
+        uiLanguageTooltip: 'ภาษาที่ใช้แสดงข้อความในหน้าจอ (ตั้งค่าแยกจากภาษาแปล)',
         backgroundMusic: 'เพลงพื้นหลัง',
         letterSpelling: 'การสะกดตัวอักษร',
         englishDefinition: 'คำนิยามภาษาอังกฤษ',
