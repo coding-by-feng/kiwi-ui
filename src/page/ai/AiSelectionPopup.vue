@@ -982,9 +982,14 @@ export default {
   gap: 4px;
 }
 
-.minimized-actions .el-button {
-  padding: 6px;
-  font-size: 16px;
+.minimized-actions .kiwi-button {
+  padding: 8px;
+  font-size: 18px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Minimize transition */
@@ -1005,6 +1010,17 @@ export default {
     right: 10px;
     bottom: 10px;
     min-width: auto;
+    padding: 12px 16px;
+  }
+
+  .minimized-actions {
+    gap: 8px;
+  }
+
+  .minimized-actions .kiwi-button {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
   }
 }
 
