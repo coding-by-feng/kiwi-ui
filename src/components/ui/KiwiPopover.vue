@@ -97,36 +97,55 @@ export default {
   position: absolute;
   background: var(--bg-card);
   min-width: 150px;
-  border-radius: 4px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color-light);
-  padding: 12px;
+  padding: 16px;
   z-index: 2000;
   color: var(--text-regular);
-  line-height: 1.4;
-  text-align: justify;
+  line-height: 1.6;
+  text-align: left;
   font-size: 14px;
-  box-shadow: var(--shadow-card);
-  word-break: break-all;
+  box-shadow: var(--shadow-lg),
+              0 0 30px rgba(var(--color-primary-rgb), 0.08);
+  word-break: break-word;
+  backdrop-filter: blur(10px);
+
+  // Gradient accent line
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-full);
+  }
 
   &__title {
     color: var(--text-primary);
-    font-size: 16px;
-    line-height: 1;
-    margin-bottom: 12px;
-    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    font-weight: 600;
+    padding-top: 4px;
+  }
+
+  &__content {
+    color: var(--text-secondary);
   }
 
   &.bottom {
     top: calc(100% + 12px);
     left: 50%;
     transform: translateX(-50%);
-    
+
     .popper__arrow {
       top: -6px;
       left: 50%;
       margin-left: -6px;
       border-bottom-color: var(--border-color-light);
-      
+
       &::after {
         top: 1px;
         margin-left: -5px;
@@ -134,8 +153,60 @@ export default {
       }
     }
   }
-  
-  /* Add other placements as needed */
+
+  &.top {
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+
+    &::before {
+      top: auto;
+      bottom: 0;
+    }
+
+    .popper__arrow {
+      bottom: -6px;
+      left: 50%;
+      margin-left: -6px;
+      border-top-color: var(--border-color-light);
+
+      &::after {
+        bottom: 1px;
+        margin-left: -5px;
+        border-top-color: var(--bg-card);
+      }
+    }
+  }
+
+  &.left {
+    right: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+
+    &::before {
+      left: 0;
+      right: auto;
+      top: 16px;
+      bottom: 16px;
+      width: 2px;
+      height: auto;
+    }
+  }
+
+  &.right {
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+
+    &::before {
+      right: 0;
+      left: auto;
+      top: 16px;
+      bottom: 16px;
+      width: 2px;
+      height: auto;
+    }
+  }
 }
 
 .popper__arrow {
@@ -160,11 +231,14 @@ export default {
   }
 }
 
+// Enhanced animation
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .fade-enter, .fade-leave-to {
   opacity: 0;
-  transform: translate(-50%, -10px);
+  transform: translate(-50%, -8px) scale(0.95);
 }
 </style>

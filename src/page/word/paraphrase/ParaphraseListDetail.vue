@@ -7,6 +7,9 @@ import review from '@/api/review'
 import kiwiConsts from '@/const/kiwiConsts'
 import audioUtil from '../../../util/audioUtil'
 import NoSleep from 'nosleep.js'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
@@ -175,7 +178,10 @@ export default {
     }
   },
   components: {
-    Countdown: () => import('../Countdown.vue')
+    Countdown: () => import('../Countdown.vue'),
+    KiwiDropdown,
+    KiwiDropdownItem,
+    KiwiButton
   },
   data() {
     return {
@@ -1140,20 +1146,20 @@ export default {
     <div style="z-index: 1;">
       <el-card v-if="isReview" class="box-card timer-card">
         <div>
-          <el-dropdown
-              size="mini"
-              split-button type="info" @command="countdownSelectHandle">
-            <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
-            <template v-slot:dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
-                <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
-                <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
-                <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
-                <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
-              </el-dropdown-menu>
+          <KiwiDropdown @command="countdownSelectHandle" class="timer-dropdown">
+            <span class="timer-trigger">
+              <i class="el-icon-stopwatch"></i>
+              <span>{{ countdownText }}</span>
+              <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem :command="{text:'1小时',m:60}">1小时</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'2小时',m:120}">2小时</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'10分钟',m:10}">10分钟</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'20分钟',m:20}">20分钟</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'30分钟',m:30}">30分钟</KiwiDropdownItem>
             </template>
-          </el-dropdown>
+          </KiwiDropdown>
         </div>
         <div v-if="countdownMode">
           <br/>
@@ -1171,20 +1177,20 @@ export default {
               {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏' }}
             </div>
             <div class="collapse-actions">
-              <el-button class="collapse-action-button info"
+              <KiwiButton class="collapse-action-button info"
                          type="text"
                          size="mini"
                          @click="showDetail(item.paraphraseId, index)"
                          title="查看详情">
                 <i class="el-icon-more-outline"></i>
-              </el-button>
-              <el-button class="collapse-action-button danger"
+              </KiwiButton>
+              <KiwiButton class="collapse-action-button danger"
                          type="text"
                          size="mini"
                          @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"
                          title="从收藏移除">
                 <i class="el-icon-remove-outline"></i>
-              </el-button>
+              </KiwiButton>
             </div>
           </div>
         </el-collapse-item>
@@ -1242,12 +1248,12 @@ export default {
             {{ showWordSpelling }}
           </span>
           &nbsp
-          <el-button type="info"
+          <KiwiButton type="info"
                      v-if="isReview && detail.isSleepMode"
                      @click="switchSleepMode"
                      size="mini">
             <i class="el-icon-thumb"></i>
-          </el-button>
+          </KiwiButton>
         </div>
 
         <!-- Detail content card (lightweight, custom styled) -->
@@ -1328,83 +1334,83 @@ export default {
           复习期间如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
         </el-alert>
         <div slot="footer" class="dialog-footer">
-          <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
+          <KiwiButton type="info" @click="stockReviewStart">确定（继续上次复习）</KiwiButton>
         </div>
       </el-dialog>
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
+      <KiwiButton v-if="enableShowDetailIcon" type="info" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
-      </el-button>
-      <el-button type="info"
+      </KiwiButton>
+      <KiwiButton type="info"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
-      </el-button>
-      <el-button type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
+      </KiwiButton>
+      <KiwiButton type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
         <i class="el-icon-d-arrow-left"></i>
-      </el-button>
-      <el-button v-if="showNextPageIcon"
+      </KiwiButton>
+      <KiwiButton v-if="showNextPageIcon"
                  type="info" size="mini" @click="nextPageFun">
         <i class="el-icon-d-arrow-right"></i>
-      </el-button>
+      </KiwiButton>
 
       <br/>
-      <el-button v-if="enableSkipSomeAudioIcon" type="info" size="mini"
+      <KiwiButton v-if="enableSkipSomeAudioIcon" type="info" size="mini"
                  @click="showNext(true)">
         <i class="el-icon-finished"></i>
-      </el-button>
-      <el-button v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
+      </KiwiButton>
+      <KiwiButton v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
         <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
         <i class="el-icon-switch-button" v-if="countdownMode"></i>
-      </el-button>
-      <el-button v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
+      </KiwiButton>
+      <KiwiButton v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
         <i class="el-icon-arrow-left"></i>
-      </el-button>
-      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
+      </KiwiButton>
+      <KiwiButton v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
         <i class="el-icon-arrow-right"></i>
-      </el-button>
-      <el-button type="info"
+      </KiwiButton>
+      <KiwiButton type="info"
                  v-if="enableStopPlayingIcon"
                  @click="stopPlaying"
                  size="mini">
         <i class="el-icon-video-pause"></i>
-      </el-button>
-      <el-button type="info"
+      </KiwiButton>
+      <KiwiButton type="info"
                  v-if="enableRefreshReviseDetailIcon"
                  @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-brush"></i>
-      </el-button>
+      </KiwiButton>
 
       <br/>
 
-      <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
+      <KiwiButton v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
                  type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
-      </el-button>
-      <el-button
+      </KiwiButton>
+      <KiwiButton
           v-if="isEnhanceReviewModel && !detail.isUnfoldOperateIcon"
           type="info" size="mini" @click="keepInMindFun">
         <i class="el-icon-medal"></i>
-      </el-button>
-      <el-button type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
+      </KiwiButton>
+      <KiwiButton type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
-      </el-button>
-      <el-button
+      </KiwiButton>
+      <KiwiButton
           v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
           type="info" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
-      </el-button>
-      <el-button type="info" size="mini"
+      </KiwiButton>
+      <KiwiButton type="info" size="mini"
                  @click="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon">
         <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
         <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>
-      </el-button>
+      </KiwiButton>
 
     </div>
   </div>
@@ -1434,6 +1440,36 @@ export default {
   background: var(--bg-container);
   box-shadow: var(--shadow-card);
   margin-bottom: 14px;
+}
+
+/* Timer dropdown styling */
+.timer-dropdown .timer-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--gradient-info);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(var(--color-info-rgb), 0.3);
+}
+
+.timer-dropdown .timer-trigger i {
+  font-size: 16px;
+}
+
+.timer-dropdown .timer-trigger .el-icon-arrow-down {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.timer-dropdown .timer-trigger:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(var(--color-info-rgb), 0.4);
 }
 
 /* Collapse card styling aligned with AiResponseDetail */

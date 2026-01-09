@@ -8,22 +8,22 @@
                         {{ isShowParaphrase ? item.exampleTranslate : $t('word.hiddenPrompt') }}
                     </div>
                     <div class="collapse-actions">
-                        <el-button
+                        <KiwiButton
                             class="collapse-action-button"
                             type="text"
                             size="mini"
                             @click="isShowParaphrase = !isShowParaphrase"
                             :title="isShowParaphrase ? $t('word.hideDefinition') : $t('word.showDefinition')">
                             <i class="el-icon-s-opportunity"></i>
-                        </el-button>
-                        <el-button
+                        </KiwiButton>
+                        <KiwiButton
                             class="collapse-action-button danger"
                             type="text"
                             size="mini"
                             @click="removeExampleStarListFun(item.exampleId)"
                             :title="$t('word.removeFromCollection')">
                             <i class="el-icon-remove-outline"></i>
-                        </el-button>
+                        </KiwiButton>
                     </div>
                 </div>
             </el-collapse-item>
@@ -46,9 +46,11 @@
 <script>
 import exampleStarList from '@/api/exampleStarList'
 import msgUtil from '@/util/msg'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 export default {
   name: 'exampleStarListDetail',
+  components: { KiwiButton },
   props: {
     tableVisibleToggle: {
       type: Function

@@ -116,7 +116,7 @@
 
   &:hover:not(:disabled):not(.is-disabled) {
     filter: brightness(1.1);
-    box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+    box-shadow: 0 0 20px rgba(var(--color-danger-rgb), 0.4);
   }
 }
 
@@ -128,7 +128,7 @@
 
   &:hover:not(:disabled):not(.is-disabled) {
     filter: brightness(1.1);
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    box-shadow: 0 0 20px rgba(var(--color-success-rgb), 0.4);
   }
 }
 
@@ -140,7 +140,7 @@
 
   &:hover:not(:disabled):not(.is-disabled) {
     filter: brightness(1.1);
-    box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+    box-shadow: 0 0 20px rgba(var(--color-warning-rgb), 0.4);
   }
 }
 
@@ -152,7 +152,82 @@
 
   &:hover:not(:disabled):not(.is-disabled) {
     filter: brightness(1.1);
-    box-shadow: 0 0 20px rgba(0, 204, 255, 0.4);
+    box-shadow: 0 0 20px rgba(var(--color-info-rgb), 0.4);
+  }
+}
+
+// Outline button variants
+.kiwi-btn-outline-primary {
+  @extend .kiwi-btn-base;
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+
+  &:hover:not(:disabled):not(.is-disabled) {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    box-shadow: var(--shadow-glow);
+  }
+}
+
+.kiwi-btn-outline-secondary {
+  @extend .kiwi-btn-base;
+  background: transparent;
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+
+  &:hover:not(:disabled):not(.is-disabled) {
+    background: rgba(var(--color-secondary-rgb), 0.1);
+  }
+}
+
+// Icon button
+.kiwi-btn-icon {
+  @extend .kiwi-btn-base;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--bg-container);
+  border-color: var(--border-color-light);
+  color: var(--text-secondary);
+
+  &:hover:not(:disabled):not(.is-disabled) {
+    background: var(--bg-highlight);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  i {
+    font-size: 18px;
+  }
+}
+
+// Floating action button
+.kiwi-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
+  transition: var(--transition-normal);
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-neon-strong);
+  }
+
+  &:active {
+    transform: scale(1.05);
+  }
+
+  i {
+    font-size: 24px;
   }
 }
 

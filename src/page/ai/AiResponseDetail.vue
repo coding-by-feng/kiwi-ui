@@ -1,7 +1,5 @@
 <template>
   <div class="ai-container">
-    <h1>{{ getTitle }}</h1>
-
     <!-- Beautiful Original Text Display -->
     <div class="original-text-container">
       <h3 class="original-text-title" @click="toggleOriginalText">
@@ -34,22 +32,22 @@
         <i class="el-icon-chat-dot-square"></i>
         Explanation for Selected Text
         <span class="selection-title-controls">
-          <el-button
+          <KiwiButton
               class="fold-selection-button"
               type="text"
               :icon="item.collapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
               @click="toggleExplanationContent(item)"
               :disabled="item.apiLoading"
               :title="item.collapsed ? 'Expand explanation' : 'Collapse explanation'"
-          ></el-button>
-          <el-button
+          />
+          <KiwiButton
               class="close-selection-button"
               type="text"
               icon="el-icon-close"
               @click="closeSingleExplanation(item)"
               :disabled="item.apiLoading"
               title="Close explanation"
-          ></el-button>
+          />
         </span>
       </h3>
       <div class="selected-text-reference">
@@ -96,15 +94,15 @@
         @mouseup="handleTextSelectionFromMainResponse"
         @touchend="handleTextSelectionFromMainResponse"
       ></div>
-      <el-button
+      <KiwiButton
           v-if="!apiLoading && parsedResponseText"
           class="copy-button"
           size="small"
           icon="el-icon-document-copy"
           @click="copyResponseText">
         Copy
-      </el-button>
-      <el-button
+      </KiwiButton>
+      <KiwiButton
           v-if="!apiLoading && parsedResponseText"
           class="regen-button"
           size="small"
@@ -112,7 +110,7 @@
           :title="'Regenerate response'"
           @click="regenerateResponse">
         Regenerate
-      </el-button>
+      </KiwiButton>
     </div>
   </div>
 </template>
@@ -120,6 +118,7 @@
 <script>
 import StatusOverlay from '@/components/common/StatusOverlay.vue'
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 import util from '@/util/util'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it';
@@ -138,7 +137,7 @@ let that;
 
 export default {
   name: 'AiResponseDetail',
-  components: { StatusOverlay, AiSelectionPopup },
+  components: { StatusOverlay, AiSelectionPopup, KiwiButton },
   data() {
     return {
       aiResponseVO: {
@@ -265,6 +264,12 @@ export default {
     }
   },
   watch: {
+    // Clear selectedText when dialog closes so re-selecting same text triggers the watcher
+    selectionDialogVisible(val) {
+      if (!val) {
+        this.selectedText = '';
+      }
+    },
     '$route.query': {
       deep: true,
       handler(newQ, oldQ) {

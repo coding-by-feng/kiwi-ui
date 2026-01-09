@@ -127,11 +127,12 @@ export default {
   line-height: 1;
 
   &__text {
-    font-size: 14px;
-    color: var(--text-regular);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
     display: inline-block;
     vertical-align: middle;
-    margin-left: 10px;
+    margin-left: 12px;
     line-height: 1;
 
     i {
@@ -147,6 +148,37 @@ export default {
   &--circle, &--dashboard {
     display: inline-block;
   }
+
+  // Status colors
+  &.is-success {
+    .kiwi-progress-bar__inner {
+      background: var(--gradient-success);
+      box-shadow: 0 0 10px rgba(var(--color-success-rgb), 0.5);
+    }
+    .kiwi-progress__text {
+      color: var(--color-success);
+    }
+  }
+
+  &.is-warning {
+    .kiwi-progress-bar__inner {
+      background: var(--gradient-warning);
+      box-shadow: 0 0 10px rgba(var(--color-warning-rgb), 0.5);
+    }
+    .kiwi-progress__text {
+      color: var(--color-warning);
+    }
+  }
+
+  &.is-exception {
+    .kiwi-progress-bar__inner {
+      background: var(--gradient-danger);
+      box-shadow: 0 0 10px rgba(var(--color-danger-rgb), 0.5);
+    }
+    .kiwi-progress__text {
+      color: var(--color-danger);
+    }
+  }
 }
 
 .kiwi-progress-bar {
@@ -158,12 +190,13 @@ export default {
   box-sizing: border-box;
 
   &__outer {
-    height: 6px;
-    border-radius: 100px;
-    background-color: var(--border-color-light);
+    height: 8px;
+    border-radius: var(--radius-full);
+    background-color: var(--bg-container);
     overflow: hidden;
     position: relative;
     vertical-align: middle;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   &__inner {
@@ -171,20 +204,49 @@ export default {
     left: 0;
     top: 0;
     height: 100%;
-    background-color: var(--color-primary);
+    background: var(--gradient-primary);
     text-align: right;
-    border-radius: 100px;
+    border-radius: var(--radius-full);
     line-height: 1;
     white-space: nowrap;
-    transition: width 0.6s ease;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.4);
+
+    // Animated shimmer effect
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      animation: progress-shimmer 2s infinite;
+    }
   }
 
   &__innerText {
     display: inline-block;
     vertical-align: middle;
     color: #fff;
-    font-size: 12px;
-    margin: 0 5px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 0 8px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 </style>

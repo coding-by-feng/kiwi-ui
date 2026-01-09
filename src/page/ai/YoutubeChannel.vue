@@ -18,15 +18,9 @@
     </div>
 
     <!-- Loading state -->
-    <!-- Loading state -->
-    <StatusOverlay
-      v-if="loading"
-      :visible="true"
-      status="loading"
-      title="Loading channels..."
-      :backdrop="false"
-      style="position: relative; min-height: 200px;"
-    />
+    <div v-if="loading" class="loading-container">
+      <i class="el-icon-loading"></i>
+    </div>
 
     <!-- Tabs -->
     <div v-else>
@@ -115,7 +109,6 @@
 </template>
 
 <script>
-import StatusOverlay from '@/components/common/StatusOverlay.vue'
 import {
   getChannelList,
   getChannelVideos,
@@ -138,7 +131,7 @@ import KiwiPagination from '@/components/ui/KiwiPagination'
 
 export default {
   name: 'YoutubeChannelManager',
-  components: { StatusOverlay, KiwiInput, KiwiButton, KiwiTabs, KiwiTabPane, KiwiTag, KiwiPagination },
+  components: { KiwiInput, KiwiButton, KiwiTabs, KiwiTabPane, KiwiTag, KiwiPagination },
   data() {
     return {
       activeTabName: 'channels',
@@ -196,7 +189,7 @@ export default {
       this.loading = true
       try {
         const response = await getChannelList(this.channelQuery.current, this.channelQuery.size)
-        if (response.data.code === 1) {
+        if (response.data.code === 0 || response.data.success) {
           this.channels = response.data.data.records || []
           this.channelTotal = response.data.data.total || 0
         } else {
@@ -218,7 +211,7 @@ export default {
       this.submitting = true
       try {
         const response = await submitChannel(this.newChannelInput)
-        if (response.data.code === 1) {
+        if (response.data.code === 0 || response.data.success) {
           this.$message.success('Channel added successfully')
           this.newChannelInput = ''
           this.fetchChannels()
@@ -256,7 +249,7 @@ export default {
       this.loading = true
       try {
         const response = await getChannelVideos(this.selectedChannel.id, this.videoQuery.current, this.videoQuery.size)
-        if (response.data.code === 1) {
+        if (response.data.code === 0 || response.data.success) {
           const records = response.data.data.records || []
           this.videos = records.slice().sort((a, b) => {
             const da = this.parseLocalDateTime(a && a.publishedAt)
@@ -336,17 +329,17 @@ export default {
         if (id) {
           const api = item.favorited ? favoriteVideo : unfavoriteVideo
           res = await api(id)
-          ok = !!(res && res.data && res.data.code === 1)
+          ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
           // If ID path failed and we have URL, fallback to URL endpoint
           if (!ok && url) {
             const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
             res = await apiUrl(url)
-            ok = !!(res && res.data && res.data.code === 1)
+            ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
           }
         } else if (url) {
           const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
           res = await apiUrl(url)
-          ok = !!(res && res.data && res.data.code === 1)
+          ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
         }
 
         if (!ok) {
@@ -380,7 +373,7 @@ export default {
       try {
         const api = item.favorited ? favoriteChannel : unfavoriteChannel
         const res = await api(id)
-        const ok = res && res.data && res.data.code === 1
+        const ok = res && res.data && (res.data.code === 0 || res.data.success)
         if (!ok) {
           // rollback on failure
           item.favorited = prevFavorited
@@ -649,5 +642,23 @@ export default {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 24px;
+  color: var(--color-primary);
+}
+
+.loading-container i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

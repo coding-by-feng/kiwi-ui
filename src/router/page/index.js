@@ -13,7 +13,6 @@ import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
 import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
 import PdfReader from '@/page/pdf/PdfReader.vue'
-import Signature from '@/page/signature/Index.vue' // Import Signature component
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default [{
@@ -42,8 +41,7 @@ export default [{
             todo: TodoView, // Add the todo component
             aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
             aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
-            pdfReader: PdfReader,
-            signature: Signature // Add signature component
+            pdfReader: PdfReader
         },
         children: [{
             path: 'detail',

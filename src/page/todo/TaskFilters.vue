@@ -49,13 +49,18 @@ export default {
 </script>
 
 <style scoped>
+/* Filter Section Container */
 .task-filter-section {
   margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color-light);
 }
 
 .filter-controls {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -63,18 +68,21 @@ export default {
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .filter-label {
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .frequency-filter-select {
-  min-width: 140px;
+  min-width: 150px;
 }
 
 /* Custom Select Styles */
@@ -85,50 +93,109 @@ export default {
 
 .kiwi-select {
   width: 100%;
-  height: 32px; /* Smaller height for filters */
-  padding: 0 30px 0 10px;
-  border-radius: 4px;
+  height: 36px;
+  padding: 0 32px 0 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color-light);
-  background-color: transparent; /* Transparent for cyberpunk theme */
+  background-color: var(--bg-input);
   color: var(--text-primary);
   font-size: 13px;
+  font-weight: 500;
   appearance: none;
   -webkit-appearance: none;
   outline: none;
   cursor: pointer;
-  transition: border-color .2s;
+  transition: all var(--transition-fast);
 }
 
 .kiwi-select:hover {
-  border-color: var(--text-secondary);
+  border-color: var(--color-primary);
 }
 
 .kiwi-select:focus {
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light-9);
 }
 
 .select-arrow {
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-placeholder);
   pointer-events: none;
   font-size: 12px;
+  transition: color var(--transition-fast);
 }
 
+.kiwi-select-wrapper:hover .select-arrow {
+  color: var(--color-primary);
+}
+
+/* Responsive Styles */
 @media (max-width: 768px) {
+  .task-filter-section {
+    padding: 14px 16px;
+  }
+
   .filter-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 14px;
   }
+
   .filter-group {
     width: 100%;
     justify-content: flex-start;
   }
+
   .frequency-filter-select {
     width: 100%;
+    flex: 1;
+  }
+
+  .filter-label {
+    min-width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-filter-section {
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+  }
+
+  .filter-controls {
+    gap: 12px;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filter-label {
+    font-size: 12px;
+  }
+
+  .kiwi-select {
+    height: 34px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .task-filter-section {
+    padding: 10px 12px;
+  }
+
+  .filter-label {
+    font-size: 11px;
+  }
+
+  .kiwi-select {
+    height: 32px;
   }
 }
 </style>

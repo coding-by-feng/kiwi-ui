@@ -17,11 +17,11 @@
         </el-select>
 
         <div class="input-with-buttons">
-          <el-input
+          <KiwiInput
               v-model="videoUrl"
               type="text"
               placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
-              @keyup.enter="loadContent"
+              @keyup.enter.native="loadContent"
               class="url-input"
               :disabled="isLoading"
           />
@@ -31,7 +31,7 @@
               <i v-else class="el-icon-video-play"></i>
               {{ isLoading ? 'Loading...' : 'Load' }}
             </button>
-            <el-button type="info" icon="el-icon-delete" size="small" circle @click="cleanSubtitles" class="action-btn"></el-button>
+            <KiwiButton type="info" icon="el-icon-delete" size="small" circle @click="cleanSubtitles" class="action-btn"></KiwiButton>
           </div>
         </div>
       </div>
@@ -113,7 +113,7 @@
         <!-- Favorite button moved to top controls bar -->
         <div class="switch-group favorite-top-group">
           <el-tooltip :content="canFavorite ? (isFavorited ? 'Unfavorite this video' : 'Favorite this video') : 'Load a video to favorite'" placement="top">
-            <el-button
+            <KiwiButton
                 :icon="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"
                 :class="['favorite-btn', isFavorited ? 'favorited' : '']"
                 circle
@@ -141,39 +141,11 @@
       <p v-else class="status-message compact">{{ statusMessage }}</p>
     </div>
 
-    <!-- Enhanced Subtitles Loading Indicator -->
-    <!-- Enhanced Subtitles Loading Indicator using StatusOverlay -->
-    <StatusOverlay
-      :visible.sync="showSubtitlesLoading"
-      position="top-right"
-      :backdrop="false"
-      :closable="true"
-      :status="subtitleOverlayStatus"
-      :title="subtitleOverlayTitle"
-      :message="subtitleOverlayMessage"
-      :progress="currentProgress"
-      :show-progress="isSubtitlesLoading || isTranslationLoading"
-      @close="handleOverlayClose"
-    >
-      <template #content>
-        <div v-if="subtitlesLoadingComplete" class="subtitles-status">
-          <div class="status-indicators">
-            <span :class="['status-item', subtitles.length > 0 ? 'success' : 'failed']">
-              <i :class="subtitles.length > 0 ? 'el-icon-check' : 'el-icon-close'"></i>
-              Subtitles
-            </span>
-            <span v-if="ifTranslation" :class="['status-item', translatedSubtitles ? 'success' : 'failed']">
-              <i :class="translatedSubtitles ? 'el-icon-check' : 'el-icon-close'"></i>
-              Translation
-            </span>
-            <span v-else class="status-item disabled">
-              <i class="el-icon-minus"></i>
-              Translation off
-            </span>
-          </div>
-        </div>
-      </template>
-    </StatusOverlay>
+    <!-- Subtitles Loading Indicator - only shows during active loading -->
+    <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-loading-indicator">
+      <i class="el-icon-loading"></i>
+      <span>{{ isTranslationLoading ? 'Translating...' : 'Loading subtitles...' }}</span>
+    </div>
 
     <!-- Enhanced Content Container -->
     <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '')">
@@ -265,7 +237,7 @@
             </span>
           <div class="header-toggle-hint">
             <!-- Modified: Download subtitles as TXT in header - only show after translation completes -->
-            <el-button
+            <KiwiButton
                 v-if="!isTranslationLoading && translatedSubtitles && !translatedSubtitlesCollapsed"
                 type="success"
                 :loading="isDownloading"
@@ -328,6 +300,8 @@ import NoSleep from 'nosleep.js';
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import { buildAiTabQuery } from '@/util/aiNavigation'
 import { navigateIfChanged } from '@/util/routerUtil'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
 
 const md = new MarkdownIt({
   html: true,
@@ -338,7 +312,7 @@ const md = new MarkdownIt({
 
 export default {
   name: 'YoutubeSubtitleDownloader',
-  components: { AiSelectionPopup },
+  components: { AiSelectionPopup, KiwiButton, KiwiInput },
   data() {
     const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
     // Normalize stored translation toggle to an actual boolean; default OFF.
@@ -355,6 +329,7 @@ export default {
     return {
       videoUrl: null,
       ifTranslation: normalizedIfTranslation,
+      autoCenterEnabled: persistedAutoCenter !== false, // Default to true if not set
       selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) || null,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
       // Split IDs: backend internal DB id vs YouTube 11-char id
@@ -410,6 +385,10 @@ export default {
       pageHidden: false,
       // New: strong dedupe key for in-flight translation
       currentTranslationKey: null,
+
+      // Panel resize state
+      isResizing: false,
+      leftPanelPercent: 50,
     };
   },
   computed: {
@@ -433,10 +412,6 @@ export default {
     hasSubtitles() {
       return this.subtitles.length > 0 || (this.ifTranslation && this.translatedSubtitles);
     },
-    showSubtitlesLoading() {
-      return (this.isSubtitlesLoading || this.subtitlesLoadingComplete || this.isTranslationLoading) &&
-          this.videoUrl && this.videoUrl !== '';
-    },
     currentProgress() {
       return this.isTranslationLoading ? this.translationProgress : this.subtitlesLoadingProgress;
     },
@@ -458,26 +433,6 @@ export default {
       const text = this.unescapeContent(this.aiResponseText || '');
       return md.render(text);
     },
-    subtitleOverlayStatus() {
-      if (this.isSubtitlesLoading || this.isTranslationLoading) return 'loading';
-      if (this.subtitlesLoadingComplete && this.hasSubtitles) return 'success';
-      if (this.subtitlesLoadingComplete) return 'warning';
-      return 'info';
-    },
-    subtitleOverlayTitle() {
-      if (this.isSubtitlesLoading) return 'Loading Subtitles';
-      if (this.isTranslationLoading) return 'Translating';
-      if (this.subtitlesLoadingComplete && this.hasSubtitles) return 'Ready!';
-      if (this.subtitlesLoadingComplete) return 'No Subtitles';
-      return 'Status';
-    },
-    subtitleOverlayMessage() {
-      if (this.isSubtitlesLoading) return 'Fetching subtitles from source...';
-      if (this.isTranslationLoading) return 'Streaming translation...';
-      if (this.subtitlesLoadingComplete && this.hasSubtitles) return 'Subtitles loaded successfully.';
-      if (this.subtitlesLoadingComplete) return 'Could not load subtitles for this video.';
-      return '';
-    }
   },
   watch: {
 
@@ -575,6 +530,12 @@ export default {
       const v = String(q.favorited).toLowerCase();
       this.isFavorited = v === 'true' || v === '1';
     }
+  },
+  // Reset overlay states when component is deactivated (keep-alive)
+  deactivated() {
+    this.subtitlesLoadingComplete = false;
+    this.isSubtitlesLoading = false;
+    this.isTranslationLoading = false;
   },
   beforeDestroy() {
     this.cleanup();
@@ -1222,6 +1183,10 @@ export default {
       msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
       // Start continuous subtitle sync so index updates during play, pause, and seeks.
       this.startSubtitleSync();
+      // Load subtitles now that player is ready
+      if (this.videoUrl) {
+        this.loadSubtitlesInBackground();
+      }
     },
 
     onPlayerStateChange(event) {
@@ -1303,7 +1268,7 @@ export default {
         } else {
           this.statusMessage = ''; // ensure cleared
         }
-        if (this.videoUrl) this.loadSubtitlesInBackground();
+        // Subtitles are now loaded from onPlayerReady() after videoReady is set
         console.log('[YoutubePlayer] loadContent success');
       } catch (error) {
         console.error('Error loading content:', error);
@@ -1975,7 +1940,8 @@ export default {
       if (this.isSubtitlesLoading || this.isTranslationLoading) {
         this.cancelSubtitlesLoading();
       } else {
-        this.showSubtitlesLoading = false;
+        // Reset the completion state so overlay hides
+        this.subtitlesLoadingComplete = false;
       }
     },
 
@@ -2296,6 +2262,7 @@ export default {
 
 /* Base styles */
 .youtube-player {
+  position: relative;
   padding: 0;
   margin: 0;
   width: 100%;
@@ -2304,6 +2271,34 @@ export default {
   flex-direction: column;
   box-sizing: border-box;
   background: var(--bg-body);
+}
+
+/* Subtitles loading indicator */
+.subtitles-loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.subtitles-loading-indicator i {
+  font-size: 18px;
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 

@@ -5,17 +5,15 @@
         <TodoHeader
           :total-points="totalPoints"
           :current-rank="currentRankDisplay"
-          :sorted-ranks-for-display="sortedRanksForDisplay"
           :rank-progress="rankProgress"
           :get-rank-name="key => getRankName(key)"
           :get-rank-class="name => getRankClass(name)"
           :get-rank-image="name => getRankImage(name)"
           :get-rank-color="name => getRankColor(name)"
-          :get-next-rank-image="() => getNextRankImage()"
-          :on-rank-image-error="e => onRankImageError(e)"
           @demo="createDemoTasks"
           @clear="clearAllData"
           @open-rank-image="openRankImagePreview"
+          @open-all-ranks="openAllRanksDialog"
         />
       </div>
 
@@ -96,46 +94,97 @@
       </div>
     </div>
 
-    <!-- Dialogs -->
-    <KiwiDialog 
-      :visible.sync="showFullScreenRanking" 
-      width="90%" 
-      :title="$t('todo.rankingSystem')" 
-      :show-close="true" 
-      @close="closeFullScreenRanking"
+    <!-- Fullscreen Rank Image Preview -->
+    <div v-if="showRankImagePreview" class="rank-image-overlay" @click="closeRankImagePreview">
+      <div class="rank-image-preview-wrapper" @click.stop>
+        <img
+          :src="selectedRankForPreview ? selectedRankForPreview.image : getRankImage(currentRankDisplay.name)"
+          :alt="selectedRankForPreview ? getRankName(selectedRankForPreview.key) : currentRankDisplay.name"
+          class="rank-image-fullscreen"
+          @error="onRankImageError"
+        />
+        <div class="rank-image-caption">
+          <span class="rank-image-name">{{ selectedRankForPreview ? getRankName(selectedRankForPreview.key) : currentRankDisplay.name }}</span>
+          <span class="rank-image-level">{{ $t('todo.rankLevel', { level: selectedRankForPreview ? selectedRankForPreview.level : currentRankDisplay.level }) }}</span>
+          <span class="rank-image-threshold">{{ selectedRankForPreview ? selectedRankForPreview.threshold : currentRankDisplay.threshold }}+ {{ $t('todo.points') }}</span>
+        </div>
+        <button class="rank-image-close" @click.stop="closeRankImagePreview">
+          <i class="el-icon-close"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- All Rankings Dialog -->
+    <KiwiDialog
+      :visible.sync="showAllRanksDialog"
+      width="90%"
+      :title="$t('todo.rankingSystem')"
+      :show-close="true"
+      custom-class="all-ranks-dialog"
+      @close="showAllRanksDialog = false"
     >
-      <div class="full-screen-ranking-content">
-        <div class="current-rank-showcase">
-          <div class="showcase-rank-icon">
-            <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="showcase-rank-image" />
+      <div class="all-ranks-content">
+        <!-- Current Rank Highlight -->
+        <div class="current-rank-highlight">
+          <div class="highlight-badge">
+            <img
+              :src="getRankImage(currentRankDisplay.name)"
+              :alt="currentRankDisplay.name"
+              class="highlight-image"
+              @error="onRankImageError"
+            />
           </div>
-          <div class="showcase-rank-info">
-            <h3 class="showcase-rank-name">{{ currentRankDisplay.name }}</h3>
-            <p class="showcase-rank-level">{{ $t('todo.rankLevel', { level: currentRankDisplay.level }) }}</p>
-            <p class="showcase-rank-points">{{ totalPoints }} {{ $t('todo.points') }}</p>
+          <div class="highlight-info">
+            <div class="highlight-label">{{ $t('todo.currentRank') }}</div>
+            <div class="highlight-name">{{ currentRankDisplay.name }}</div>
+            <div class="highlight-points">{{ totalPoints }} {{ $t('todo.points') }}</div>
+          </div>
+          <div class="highlight-progress" v-if="currentRankDisplay.nextRankName">
+            <div class="progress-to-next">
+              <span>{{ $t('todo.nextRank', { rank: currentRankDisplay.nextRankName }) }}</span>
+              <span class="points-needed">{{ currentRankDisplay.nextThreshold - totalPoints }} {{ $t('todo.points') }} {{ $t('todo.toGo') }}</span>
+            </div>
+            <KiwiProgress :percentage="rankProgress" :show-text="false" :stroke-width="8" :color="getRankColor(currentRankDisplay.name)" />
+          </div>
+          <div class="highlight-max" v-else>
+            <span class="max-rank-badge">{{ $t('todo.maxRankReached') }}</span>
           </div>
         </div>
 
-        <div class="full-screen-ranks-grid">
-          <div v-for="rank in achievedRanksForDisplay" :key="`fullscreen-rank-${rank.key}-${rank.threshold}`" class="full-screen-rank-item" :class="{ 'current-rank': rank.threshold <= totalPoints }">
-            <img :src="rank.image" :alt="getRankName(rank.key)" class="full-screen-rank-image" />
-            <div class="full-screen-rank-details">
-              <span class="full-screen-rank-name">{{ getRankName(rank.key) }}</span>
-              <span class="full-screen-rank-threshold">{{ rank.threshold }}+ {{ $t('todo.points') }}</span>
+        <!-- All Ranks Grid -->
+        <div class="all-ranks-grid">
+          <div
+            v-for="rank in sortedRanksForDisplay"
+            :key="`all-rank-${rank.key}-${rank.threshold}`"
+            class="rank-card"
+            :class="{
+              'achieved': rank.threshold <= totalPoints,
+              'current': rank.key === currentRankDisplay.key,
+              'locked': rank.threshold > totalPoints,
+              'clickable': rank.threshold <= totalPoints
+            }"
+            @click="rank.threshold <= totalPoints ? openRankDetail(rank) : null"
+          >
+            <div class="rank-card-badge">
+              <img
+                :src="rank.image"
+                :alt="getRankName(rank.key)"
+                class="rank-card-image"
+                @error="onRankImageError"
+              />
+              <div v-if="rank.key === currentRankDisplay.key" class="current-indicator">
+                <i class="el-icon-check"></i>
+              </div>
+              <div v-else-if="rank.threshold > totalPoints" class="locked-indicator">
+                <i class="el-icon-lock"></i>
+              </div>
+            </div>
+            <div class="rank-card-info">
+              <span class="rank-card-name">{{ getRankName(rank.key) }}</span>
+              <span class="rank-card-threshold">{{ rank.threshold }}+ {{ $t('todo.points') }}</span>
             </div>
           </div>
         </div>
-      </div>
-    </KiwiDialog>
-
-    <KiwiDialog 
-      :visible.sync="showRankImagePreview" 
-      fullscreen 
-      :show-close="true" 
-      @close="showRankImagePreview = false"
-    >
-      <div class="rank-image-preview-container" @click="showRankImagePreview = false">
-        <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="rank-image-fullscreen" />
       </div>
     </KiwiDialog>
   </div>
@@ -197,8 +246,9 @@ export default {
       chartType: 'bar',
       editingTaskId: null,
       editingTask: { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 },
-      showFullScreenRanking: false,
       showRankImagePreview: false,
+      showAllRanksDialog: false,
+      selectedRankForPreview: null,
       fallbackRankImage: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" rx="8" fill="#f3f4f6"/><g fill="none" stroke="#cbd5e1" stroke-width="2"><rect x="10" y="10" width="44" height="44" rx="6"/><path d="M16 44l10-12 8 8 6-8 8 12" fill="none"/></g></svg>`),
       // internal holder for analytics summary (reactive)
       _analyticsSummary: { totalPoints: 0, completedCount: 0, successRatePct: 0 }
@@ -257,13 +307,56 @@ export default {
       }
     },
     serverRanksForDisplay() {
-      // merge server ranks with local assets
-      const defs = Array.isArray(this.ranks) ? this.ranks : []
-      return defs.map(r => ({
-        ...r,
-        image: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].image) || '/assets/rankings/beginner.png',
-        color: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].color) || '#595959'
-      }))
+      // merge server ranks with local assets, fallback to all RANK_ASSETS if server data is incomplete
+      const serverDefs = Array.isArray(this.ranks) ? this.ranks : []
+
+      // If server returns ranks, use them merged with local assets
+      if (serverDefs.length >= 20) {
+        return serverDefs.map(r => ({
+          ...r,
+          image: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].image) || '/assets/rankings/beginner.png',
+          color: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].color) || '#595959'
+        }))
+      }
+
+      // Fallback: use all ranks from RANK_ASSETS with default thresholds
+      const defaultThresholds = {
+        legendary: 1000000,
+        mythic: 500000,
+        immortal: 250000,
+        divine: 100000,
+        celestial: 50000,
+        grandmaster: 30000,
+        master: 20000,
+        diamond: 15000,
+        platinum: 12000,
+        gold: 10000,
+        silver: 8000,
+        bronze: 6000,
+        iron: 5000,
+        steel: 4000,
+        stone: 3000,
+        wood: 2000,
+        apprentice: 1500,
+        novice: 1000,
+        trainee: 500,
+        beginner: 0
+      }
+
+      // Merge server data with fallback
+      const serverByKey = {}
+      serverDefs.forEach(r => { serverByKey[r.key] = r })
+
+      return Object.keys(RANK_ASSETS).map(key => {
+        const serverRank = serverByKey[key]
+        return {
+          key,
+          threshold: serverRank ? serverRank.threshold : defaultThresholds[key],
+          level: serverRank ? serverRank.level : (Object.keys(defaultThresholds).length - Object.keys(defaultThresholds).indexOf(key)),
+          image: RANK_ASSETS[key].image,
+          color: RANK_ASSETS[key].color
+        }
+      })
     },
     sortedRanksForDisplay() { return [...this.serverRanksForDisplay].sort((a,b)=> b.threshold - a.threshold) },
     achievedRanksForDisplay() { return this.sortedRanksForDisplay.filter(r=> r.threshold <= this.totalPoints) },
@@ -328,8 +421,19 @@ export default {
     }),
 
     // UI helpers
-    openRankImagePreview() { this.showRankImagePreview = true },
-    closeFullScreenRanking() { this.showFullScreenRanking = false },
+    openRankImagePreview() {
+      this.selectedRankForPreview = null
+      this.showRankImagePreview = true
+    },
+    closeRankImagePreview() {
+      this.showRankImagePreview = false
+      this.selectedRankForPreview = null
+    },
+    openRankDetail(rank) {
+      this.selectedRankForPreview = rank
+      this.showRankImagePreview = true
+    },
+    openAllRanksDialog() { this.showAllRanksDialog = true },
     getEmptyDescription() {
       switch (this.taskFilter) {
         case 'pending': return this.$t('todo.noPendingTasks') || 'No pending tasks'
@@ -677,14 +781,70 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  height: 28px;
-  padding: 0 10px;
+  min-width: 52px;
+  height: 32px;
+  padding: 0 14px;
   border-radius: 999px;
-  background: var(--gradient-success);
+  background: var(--gradient-primary);
   color: #fff;
   font-weight: 700;
-  box-shadow: var(--shadow-card);
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    var(--shadow-card),
+    0 0 20px rgba(var(--color-primary-rgb), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  animation: points-glow 2s ease-in-out infinite;
+}
+
+.points-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.points-badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    var(--shadow-hover),
+    0 0 30px rgba(var(--color-primary-rgb), 0.6),
+    0 0 60px rgba(var(--color-primary-rgb), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.points-badge:hover::before {
+  left: 100%;
+}
+
+@keyframes points-glow {
+  0%, 100% {
+    box-shadow:
+      var(--shadow-card),
+      0 0 20px rgba(var(--color-primary-rgb), 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow:
+      var(--shadow-card),
+      0 0 30px rgba(var(--color-primary-rgb), 0.6),
+      0 0 40px rgba(var(--color-primary-rgb), 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
 }
 
 /* Rank progress: clearer layout without logic changes */
@@ -1919,32 +2079,488 @@ export default {
   .stat-value.enhanced-value { font-size: 18px; }
 }
 
-/* Fullscreen rank image preview: minimal, centered, and not oversized */
-:deep(.rank-image-preview-dialog.is-fullscreen) {
-  background: var(--bg-overlay);
-  box-shadow: none;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-}
-
-:deep(.rank-image-preview-dialog .el-dialog__header) { display: none; }
-:deep(.rank-image-preview-dialog .el-dialog__body) { padding: 0 !important; height: 100vh; }
-
-.rank-image-preview-container {
-  width: 100vw;
-  height: 100vh;
+/* Fullscreen Rank Image Overlay */
+.rank-image-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+.rank-image-preview-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
 }
 
 .rank-image-fullscreen {
-  max-width: min(85vw, 560px);
-  max-height: 80vh;
+  max-width: min(80vw, 500px);
+  max-height: 70vh;
   object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.rank-image-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.rank-image-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.rank-image-level {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rank-image-threshold {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.rank-image-close {
+  position: absolute;
+  top: -50px;
+  right: -10px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.rank-image-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments for fullscreen image */
+@media (max-width: 768px) {
+  .rank-image-fullscreen {
+    max-width: 85vw;
+    max-height: 60vh;
+  }
+
+  .rank-image-name {
+    font-size: 20px;
+  }
+
+  .rank-image-level {
+    font-size: 14px;
+  }
+
+  .rank-image-close {
+    top: -45px;
+    right: 0;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rank-image-fullscreen {
+    max-width: 90vw;
+    max-height: 55vh;
+    border-radius: 12px;
+  }
+
+  .rank-image-caption {
+    margin-top: 16px;
+  }
+
+  .rank-image-name {
+    font-size: 18px;
+  }
+
+  .rank-image-level {
+    font-size: 13px;
+  }
+}
+
+/* All Ranks Dialog Styles */
+:deep(.all-ranks-dialog) {
+  max-width: 900px;
+  margin-top: 5vh !important;
+  margin-bottom: 5vh !important;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.all-ranks-dialog .el-dialog__header) {
+  flex-shrink: 0;
+}
+
+:deep(.all-ranks-dialog .el-dialog__body) {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.all-ranks-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Current Rank Highlight */
+.current-rank-highlight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: var(--gradient-primary);
+  border-radius: 16px;
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.highlight-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.highlight-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.highlight-info {
+  flex: 1;
+  min-width: 150px;
+}
+
+.highlight-label {
+  font-size: 12px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.highlight-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+
+.highlight-points {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.highlight-progress {
+  flex: 1;
+  min-width: 200px;
+}
+
+.progress-to-next {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.points-needed {
+  font-weight: 600;
+}
+
+.highlight-max {
+  display: flex;
+  align-items: center;
+}
+
+.max-rank-badge {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* All Ranks Grid */
+.all-ranks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.rank-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.rank-card.achieved {
+  border-color: var(--color-success);
+  background: var(--color-success-light-9);
+}
+
+.rank-card.current {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light-9);
+  box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.rank-card.locked {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.rank-card.clickable {
+  cursor: pointer;
+}
+
+.rank-card.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.rank-card-badge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.rank-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.current-indicator,
+.locked-indicator {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.current-indicator {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.5);
+}
+
+.locked-indicator {
+  background: var(--text-muted);
+  color: #fff;
+}
+
+.rank-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.rank-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rank-card-threshold {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  background: var(--bg-container);
+  border-radius: 10px;
+}
+
+/* Responsive for All Ranks Dialog */
+@media (max-width: 768px) {
+  .current-rank-highlight {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .highlight-badge {
+    width: 70px;
+    height: 70px;
+  }
+
+  .highlight-info {
+    min-width: 100%;
+  }
+
+  .highlight-name {
+    font-size: 20px;
+  }
+
+  .highlight-progress {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .all-ranks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .rank-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .rank-card-badge {
+    width: 56px;
+    height: 56px;
+  }
+
+  .rank-card-name {
+    font-size: 13px;
+  }
+
+  .rank-card-threshold {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.all-ranks-dialog) {
+    width: 95% !important;
+    margin-top: 2vh !important;
+    margin-bottom: 2vh !important;
+    max-height: 96vh;
+  }
+
+  :deep(.all-ranks-dialog .el-dialog__body) {
+    padding: 16px;
+  }
+
+  .current-rank-highlight {
+    padding: 14px;
+  }
+
+  .highlight-badge {
+    width: 60px;
+    height: 60px;
+  }
+
+  .highlight-name {
+    font-size: 18px;
+  }
+
+  .all-ranks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  .rank-card {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .rank-card-badge {
+    width: 48px;
+    height: 48px;
+  }
+
+  .current-indicator,
+  .locked-indicator {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .rank-card-name {
+    font-size: 12px;
+  }
+
+  .rank-card-threshold {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .all-ranks-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .rank-card {
+    padding: 8px;
+  }
+
+  .rank-card-badge {
+    width: 40px;
+    height: 40px;
+  }
+
+  .rank-card-name {
+    font-size: 11px;
+  }
+
+  .rank-card-threshold {
+    font-size: 9px;
+  }
 }
 </style>

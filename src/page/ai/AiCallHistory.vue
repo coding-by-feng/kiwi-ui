@@ -253,7 +253,7 @@ export default {
       // Filters
       filterMode: '',
       filterLanguage: '',
-      filterClassification: 'normal',
+      filterClassification: 'all',
 
       // Detail dialog
       detailDialogVisible: false,
@@ -265,7 +265,7 @@ export default {
 
       archivingIds: [],
       deletingIds: [],
-      lastClassificationFilter: 'normal'
+      lastClassificationFilter: 'all'
     }
   },
 
@@ -595,11 +595,23 @@ export default {
   gap: 15px;
   align-items: center;
   flex-wrap: wrap;
+  position: relative;
+
+  // Elevate dropdown when active so menu appears above sibling elements
+  ::v-deep .kiwi-dropdown {
+    position: relative;
+    z-index: 1;
+
+    &.is-active {
+      z-index: 100;
+    }
+  }
 }
 
 /* Custom Select Styles */
 .kiwi-select-wrapper {
   position: relative;
+  z-index: 1;
   display: inline-block;
   min-width: 150px;
 }

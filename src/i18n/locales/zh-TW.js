@@ -235,6 +235,16 @@ export default {
         freqEveryNDays: '每 {days} 天',
         addTask: '添加任務',
 
+        // Task form labels and hints
+        taskTitleLabel: '任務標題',
+        taskTitleHint: '給任務取一個清晰、可執行的名稱。例如：「完成晨練」或「複習單字表」。',
+        taskDescLabel: '任務描述',
+        taskDescHint: '添加關於任務的可選詳細資訊。需要做什麼？有什麼具體要求？',
+        pointsLabel: '積分設定',
+        pointsHint: '設定成功的獎勵積分（+）和失敗的懲罰積分（-）。任務越難，積分越高！',
+        frequencyLabel: '重複頻率',
+        frequencyHint: '這個任務多久重複一次？一次性任務完成後會被移除。',
+
         // Status labels
         completed: '✅ 已完成',
         failed: '❌ 已失敗',
@@ -256,9 +266,17 @@ export default {
         // History
         selectDate: '選擇日期',
         noTasksForDate: '所選日期無任務記錄',
+        noHistoryHint: '完成一些任務後會在這裡顯示',
         deleteHistoryRecord: '刪除歷史記錄',
         confirmDeleteHistoryRecord: '確定要刪除此歷史記錄嗎？',
         historyRecordDeleted: '歷史記錄刪除成功！',
+        previousDay: '前一天',
+        nextDay: '後一天',
+        today: '今天',
+        goToToday: '跳轉到今天',
+        tasks: '個任務',
+        restore: '恢復',
+        restoreTask: '恢復任務為待辦',
 
         // Analytics
         barChart: '📊 柱狀圖',
@@ -325,6 +343,7 @@ export default {
         maxRank: '最高段位',
         nextRank: '下一級：{rank}',
         maxRankReached: '已達最高段位',
+        toGo: '還需',
         placeholderImage: '佔位圖',
         ranks: {
             legendary: '傳說',

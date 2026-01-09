@@ -85,14 +85,20 @@ export default {
   align-items: center;
   position: relative;
   font-size: 14px;
-  line-height: 20px;
-  height: 20px;
+  line-height: 22px;
+  height: 22px;
   vertical-align: middle;
   cursor: pointer;
 
   &.is-disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.5;
+
+    .kiwi-switch__core {
+      &:hover {
+        box-shadow: none;
+      }
+    }
   }
 
   &__input {
@@ -107,39 +113,57 @@ export default {
     margin: 0;
     display: inline-block;
     position: relative;
-    width: 40px;
-    height: 20px;
-    border: 1px solid var(--border-color);
+    width: 44px;
+    height: 22px;
+    border: 1px solid var(--border-color-light);
     outline: none;
-    border-radius: 10px;
+    border-radius: 11px;
     box-sizing: border-box;
-    background: var(--bg-card);
-    transition: border-color .3s, background-color .3s;
+    background: var(--bg-container);
+    transition: var(--transition-normal);
 
+    &:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+    }
+
+    // The toggle button
     &:after {
       content: "";
       position: absolute;
-      top: 1px;
-      left: 1px;
-      border-radius: 100%;
-      transition: all .3s;
+      top: 2px;
+      left: 2px;
+      border-radius: 50%;
+      transition: var(--transition-normal);
       width: 16px;
       height: 16px;
-      background-color: var(--text-secondary);
+      background: var(--text-muted);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
   }
 
+  // Checked state with gradient and glow
   &.is-checked {
     .kiwi-switch__core {
       border-color: var(--color-success);
-      background-color: var(--color-success);
+      background: var(--gradient-success);
+      box-shadow: 0 0 12px rgba(var(--color-success-rgb), 0.4);
+
+      &:hover {
+        box-shadow: 0 0 20px rgba(var(--color-success-rgb), 0.5);
+      }
 
       &:after {
-        left: 100%;
-        margin-left: -17px;
-        background-color: #fff;
+        left: calc(100% - 18px);
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
       }
     }
+  }
+
+  // Focus state
+  &:focus-within .kiwi-switch__core {
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2);
   }
 }
 </style>

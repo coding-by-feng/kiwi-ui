@@ -9,6 +9,12 @@
       :close-on-press-escape="true"
     >
       <div class="ai-dialog-content">
+        <!-- Always show the current selected text at the top -->
+        <div v-if="localSelectedText" class="primary-selected-text">
+          <strong>Selected Text:</strong>
+          <div class="selected-text-display">"{{ localSelectedText }}"</div>
+        </div>
+
         <!-- All selections rendered as explanation cards -->
         <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
           <h3 class="selection-response-title">
@@ -169,22 +175,13 @@ export default {
     }
   },
   watch: {
-    // Every time parent selection changes, add a new explanation item
+    // Every time parent selection changes, update localSelectedText
     selectedText(val) {
       const trimmed = (val || '').trim()
       if (!trimmed) return
       this.localSelectedText = trimmed
-      const isFirst = (this.nestedItems || []).length === 0
-      if (isFirst) {
-        // Always add item, but only auto-start if autoRequest is true
-        const mode = this.isSingleWord(trimmed) ? kiwiConsts.SEARCH_AI_MODES.VOCABULARY_EXPLANATION.value : kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-        this.addNestedItemWithContext(trimmed, null, mode, this.autoRequest)
-      } else {
-        const last = this.nestedItems[this.nestedItems.length - 1]
-        const ctx = last ? last.selectedText : null
-        this.addNestedItemWithContext(trimmed, ctx, 'selection-explanation', true)
-      }
-  },
+      // Don't auto-add items here - let the dialog open handler or user action do it
+    },
   },
   computed: {
     dialogVisible: {
@@ -192,8 +189,13 @@ export default {
       set(v) {
         this.$emit('update:visible', v)
         if (v) {
-          // On open, if we have an initial selected text and no items yet, add it as an item
+          // On open, sync localSelectedText from prop and add item if needed
           this.$nextTick(() => {
+            // Always sync from prop when dialog opens
+            const propText = (this.selectedText || '').trim()
+            if (propText) {
+              this.localSelectedText = propText
+            }
             const t = (this.localSelectedText || '').trim()
             if (!this.reviewMode && t && (!this.nestedItems || this.nestedItems.length === 0)) {
               try {
@@ -653,7 +655,34 @@ export default {
 
 <style scoped>
 .ai-dialog-content { padding: 10px 0; }
-/* Removed primary selection preview and main response; using only explanation cards */
+
+/* Primary selected text display at the top */
+.primary-selected-text {
+  background: var(--bg-container);
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid var(--color-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.primary-selected-text strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selected-text-display {
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.6;
+  max-height: 120px;
+  overflow-y: auto;
+  word-break: break-word;
+}
 
 /* Ensure markdown blocks stay left-aligned */
 .selection-response-content p,

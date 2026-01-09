@@ -25,7 +25,8 @@ export default {
         ? { path: this.$route.path, query: { ...this.$route.query } }
         : null,
       // Track if a tab has been visited so we only mount its component after first activation
-      visitedTabs: { [this.$route.query.active || 'search']: true },
+      // Start empty - tabs only load after explicit user click
+      visitedTabs: {},
       // Auth view toggle: 'login' or 'register'
       currentAuthView: 'login'
     }
@@ -78,6 +79,9 @@ export default {
 
     // Validate active tab initially against settings
     this.ensureActiveTabValid()
+
+    // Mark the initial active tab as visited so it renders on page load
+    this.markVisited(this.activeName)
   },
   beforeDestroy() {
     try { window.removeEventListener('enabled-tabs-updated', this.refreshEnabledTabs) } catch (_) {}

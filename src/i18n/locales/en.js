@@ -688,7 +688,7 @@ export default {
         task: 'Task',
         description: 'Description',
         enterTaskTitle: 'Enter task title',
-        enterTaskDescription: 'Enter task description',
+        enterTaskDescription: 'Enter task description (optional)',
         successPoints: 'Success Points',
         failPoints: 'Fail Points',
         frequency: 'Frequency',
@@ -701,6 +701,16 @@ export default {
         customDays: 'Custom Days',
         freqEveryNDays: 'Every {days} days',
         addTask: 'Add Task',
+
+        // Task form labels and hints
+        taskTitleLabel: 'Task Title',
+        taskTitleHint: 'Give your task a clear, actionable name. E.g., "Complete morning workout" or "Review vocabulary list".',
+        taskDescLabel: 'Description',
+        taskDescHint: 'Add optional details about the task. What needs to be done? Any specific requirements?',
+        pointsLabel: 'Points',
+        pointsHint: 'Set reward points for success (+) and penalty points for failure (-). Higher points for harder tasks!',
+        frequencyLabel: 'Frequency',
+        frequencyHint: 'How often should this task repeat? One-time tasks are removed after completion.',
 
         // Status labels
         completed: 'Completed',
@@ -723,9 +733,17 @@ export default {
         // History/Date
         selectDate: 'Select date',
         noTasksForDate: 'No tasks found for selected date',
+        noHistoryHint: 'Complete some tasks to see them here',
         deleteHistoryRecord: 'Delete history record',
         confirmDeleteHistoryRecord: 'Are you sure you want to delete this history record?',
         historyRecordDeleted: 'History record deleted',
+        previousDay: 'Previous day',
+        nextDay: 'Next day',
+        today: 'Today',
+        goToToday: 'Go to Today',
+        tasks: 'tasks',
+        restore: 'Restore',
+        restoreTask: 'Restore task to pending',
 
         // Analytics labels
         barChart: 'Bar Chart',
@@ -792,6 +810,7 @@ export default {
         maxRank: 'Max Rank',
         nextRank: 'Next: {rank}',
         maxRankReached: 'Max rank reached',
+        toGo: 'to go',
         placeholderImage: 'Placeholder',
         ranks: {
             legendary: 'Legendary',

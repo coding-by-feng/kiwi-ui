@@ -60,8 +60,9 @@ export default {
 <style lang="scss" scoped>
 .kiwi-tabs {
   &__header {
-    margin: 0 0 15px;
+    margin: 0 0 20px;
     border-bottom: 1px solid var(--border-color-light);
+    position: relative;
   }
 
   &__nav-wrap {
@@ -71,44 +72,90 @@ export default {
   }
 
   &__nav-scroll {
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    // Hide scrollbar
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   &__nav {
     white-space: nowrap;
     position: relative;
-    transition: transform .3s;
-    float: left;
-    z-index: 2;
+    transition: transform 0.3s ease;
+    display: inline-flex;
+    gap: 4px;
   }
 
   &__item {
     padding: 0 20px;
-    height: 40px;
+    height: 44px;
     box-sizing: border-box;
-    line-height: 40px;
+    line-height: 44px;
     display: inline-block;
     list-style: none;
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     position: relative;
     cursor: pointer;
-    transition: color .3s cubic-bezier(.645,.045,.355,1);
+    transition: var(--transition-fast);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-primary);
+      transition: var(--transition-normal);
+      transform: translateX(-50%);
+      border-radius: var(--radius-full);
+    }
 
     &:hover {
       color: var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.05);
+
+      &::before {
+        width: 50%;
+      }
     }
 
     &.is-active {
       color: var(--color-primary);
-      border-bottom: 2px solid var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.08);
+      font-weight: 600;
+
+      &::before {
+        width: 100%;
+        box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.5);
+      }
     }
 
     &.is-disabled {
       color: var(--text-placeholder);
       cursor: not-allowed;
+      opacity: 0.5;
+
+      &:hover {
+        background: transparent;
+
+        &::before {
+          width: 0;
+        }
+      }
     }
+  }
+
+  &__content {
+    padding: 4px 0;
   }
 }
 </style>

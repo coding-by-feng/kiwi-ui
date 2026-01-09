@@ -12,7 +12,8 @@ function isAxiosResponse(obj) { return !!(obj && obj.config && Object.prototype.
 function ensureServerSuccess(res) {
   const r = res && res.data ? res.data : null
   if (!r || typeof r.code === 'undefined') throw new Error('Invalid API response')
-  if (r.code !== 1) throw new Error(r.msg || 'Request failed')
+  // Accept both code === 0 and code === 1 as success (API returns 0 for success)
+  if (r.code !== 0 && r.code !== 1) throw new Error(r.msg || 'Request failed')
   return r.data
 }
 function headerETag(res) {

@@ -323,6 +323,16 @@ export default {
         // Added formatter string
         freqEveryNDays: '每 {days} 天',
         addTask: '添加任务',
+
+        // Task form labels and hints
+        taskTitleLabel: '任务标题',
+        taskTitleHint: '给任务起一个清晰、可操作的名称。例如："完成晨练" 或 "复习单词表"。',
+        taskDescLabel: '任务描述',
+        taskDescHint: '添加关于任务的可选详细信息。需要做什么？有什么具体要求？',
+        pointsLabel: '积分设置',
+        pointsHint: '设置成功的奖励积分（+）和失败的惩罚积分（-）。任务越难，积分越高！',
+        frequencyLabel: '重复频率',
+        frequencyHint: '这个任务多久重复一次？一次性任务完成后会被移除。',
         completed: '✅ 已完成',
         failed: '❌ 已失败',
         success: '成功',
@@ -343,9 +353,17 @@ export default {
         // 历史/日期
         selectDate: '选择日期',
         noTasksForDate: '所选日期没有找到任务',
+        noHistoryHint: '完成一些任务后会在这里显示',
         deleteHistoryRecord: '删除历史记录',
         confirmDeleteHistoryRecord: '确定要删除该历史记录吗？',
         historyRecordDeleted: '历史记录已删除',
+        previousDay: '前一天',
+        nextDay: '后一天',
+        today: '今天',
+        goToToday: '跳转到今天',
+        tasks: '个任务',
+        restore: '恢复',
+        restoreTask: '恢复任务为待办',
 
         // 图表与统计
         barChart: '📊 柱状图',
@@ -412,6 +430,7 @@ export default {
         maxRank: '最高段位',
         nextRank: '下一段位：{rank}',
         maxRankReached: '已达最高段位',
+        toGo: '还需',
         placeholderImage: '占位图',
         ranks: {
             legendary: '传奇',

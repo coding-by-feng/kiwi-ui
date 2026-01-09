@@ -133,75 +133,105 @@ export default {
 <style lang="scss" scoped>
 .kiwi-pagination {
   white-space: nowrap;
-  padding: 2px 5px;
+  padding: 8px 12px;
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 4px;
+  background: var(--bg-container);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color-light);
 
   &__total {
-    margin-right: 10px;
-    font-weight: 400;
-    color: var(--text-regular);
+    margin-right: 12px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 0 8px;
   }
 
   &__btn {
-    background: transparent;
-    border: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    font-size: 13px;
-    min-width: 35.5px;
-    height: 28px;
-    line-height: 28px;
+    font-size: 14px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-primary);
-    
+    transition: var(--transition-fast);
+
     &:disabled {
       color: var(--text-placeholder);
       cursor: not-allowed;
+      opacity: 0.5;
+      background: transparent;
+      border-color: transparent;
     }
-    
+
     &:hover:not(:disabled) {
       color: var(--color-primary);
+      border-color: var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.1);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.95);
     }
   }
 
   &__pager {
     user-select: none;
     list-style: none;
-    display: inline-block;
-    vertical-align: top;
-    font-size: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 0;
-    margin: 0;
+    margin: 0 4px;
 
     li {
-      padding: 0 4px;
+      padding: 0;
       background: var(--bg-card);
-      vertical-align: top;
-      display: inline-block;
+      border: 1px solid var(--border-color-light);
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       font-size: 13px;
-      min-width: 35.5px;
-      height: 28px;
-      line-height: 28px;
+      font-weight: 500;
+      width: 32px;
+      height: 32px;
       cursor: pointer;
       box-sizing: border-box;
       text-align: center;
-      margin: 0 5px;
-      border-radius: 2px;
       color: var(--text-primary);
-      
+      transition: var(--transition-fast);
+
+      &:hover:not(.active):not(.more) {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+        background: rgba(var(--color-primary-rgb), 0.1);
+      }
+
       &.active {
-        color: var(--color-primary);
+        color: #fff;
+        background: var(--gradient-primary);
+        border-color: var(--color-primary);
         cursor: default;
+        box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.4);
       }
-      
-      &:hover:not(.active) {
-        color: var(--color-primary);
-      }
-      
+
       &.more {
         background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: default;
+        width: 24px;
       }
     }
   }

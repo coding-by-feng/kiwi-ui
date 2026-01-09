@@ -19,7 +19,7 @@
               <span v-if="h.contextSelectedText && h.contextSelectedText !== h.selectedText" class="history-context">in context: "{{ h.contextSelectedText }}"</span>
               <span v-if="h.promptMode && h.promptMode !== 'selection-explanation'" class="history-mode">{{ h.promptMode }}</span>
               <span class="history-time">{{ formatTime(h.timestamp) }}</span>
-              <el-button
+              <KiwiButton
                 class="history-delete-btn"
                 type="text"
                 icon="el-icon-delete"
@@ -32,8 +32,8 @@
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button type="danger" plain :disabled="items.length===0" @click="clearHistory" title="Clear all history">Clear</el-button>
-        <el-button plain @click="localVisible=false">Close</el-button>
+        <KiwiButton type="danger" plain :disabled="items.length===0" @click="clearHistory" title="Clear all history">Clear</KiwiButton>
+        <KiwiButton plain @click="localVisible=false">Close</KiwiButton>
       </span>
     </el-dialog>
   </div>
@@ -41,10 +41,12 @@
 
 <script>
 import MarkdownIt from 'markdown-it'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 const md = new MarkdownIt({ html: true, linkify: true, typographer: true, breaks: false })
 
 export default {
   name: 'SelectionHistory',
+  components: { KiwiButton },
   props: {
     visible: { type: Boolean, default: false },
     resourceKey: { type: String, default: '' }, // pdf file name or video id/title

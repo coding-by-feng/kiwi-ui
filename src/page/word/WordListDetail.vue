@@ -12,19 +12,19 @@
             </div>
           </div>
           <div class="collapse-actions">
-            <el-button class="collapse-action-button" type="text" size="mini"
+            <KiwiButton class="collapse-action-button" type="text" size="mini"
                        @click="isShowParaphrase = !isShowParaphrase"
                        :title="isShowParaphrase ? $t('word.hideDefinition') : $t('word.showDefinition')">
               <i class="el-icon-s-opportunity"></i>
-            </el-button>
-            <el-button class="collapse-action-button info" type="text" size="mini"
+            </KiwiButton>
+            <KiwiButton class="collapse-action-button info" type="text" size="mini"
                        @click="showDetail(item.wordName)" :title="$t('word.showDetails')">
               <i class="el-icon-more-outline"></i>
-            </el-button>
-            <el-button class="collapse-action-button danger" type="text" size="mini"
+            </KiwiButton>
+            <KiwiButton class="collapse-action-button danger" type="text" size="mini"
                        @click="removeWordStarListFun(item.wordId)" :title="$t('word.removeFromCollection')">
               <i class="el-icon-remove-outline"></i>
-            </el-button>
+            </KiwiButton>
           </div>
         </div>
       </el-collapse-item>
@@ -48,9 +48,11 @@
 import wordStarList from '@/api/wordStarList'
 import msgUtil from '@/util/msg'
 import kiwiConsts from '@/const/kiwiConsts'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 export default {
   name: 'wordStarListDetail',
+  components: { KiwiButton },
   props: {
     tableVisibleToggle: {
       type: Function

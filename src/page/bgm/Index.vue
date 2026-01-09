@@ -15,13 +15,13 @@
           {{ $t('audio.management') }}
         </h4>
         <div class="management-buttons">
-          <el-button
+          <KiwiButton
               type="primary"
               @click="cleanDb"
               class="management-button clean-audio-btn"
               :loading="loading">
             {{ $t('audio.cleanAudioData', { count: allDataSize }) }}
-          </el-button>
+          </KiwiButton>
         </div>
       </div>
 
@@ -68,13 +68,13 @@
           <span class="now-playing-text">
             {{ $t('audio.nowPlaying') }}: <strong>{{ bgmData[currentPlayBgmIndex].name }}</strong>
           </span>
-          <el-button
+          <KiwiButton
               type="text"
               @click="playAudioData(currentPlayBgmIndex)"
               class="stop-button">
             <i class="el-icon-video-pause"></i>
             {{ $t('common.pause') }}
-          </el-button>
+          </KiwiButton>
         </div>
       </div>
       
@@ -93,11 +93,13 @@ import {getStore} from "@/util/store";
 import it from "element-ui/src/locale/lang/it";
 import msgUtil from '@/util/msg'
 import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 let that
 
 export default {
   name: 'bgmPage',
+  components: { KiwiButton },
   computed: {
     it() {
       return it

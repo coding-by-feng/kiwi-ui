@@ -77,7 +77,7 @@
           <!-- Username / Password Login -->
           <el-form ref="upForm" :model="upForm" :rules="upRules" label-position="top" class="up-login-form" @submit.native.prevent="handleUsernamePasswordLogin">
             <el-form-item prop="username" :label="$t('auth.usernameOrEmail') || 'Username / Email'">
-              <el-input
+              <KiwiInput
                 v-model.trim="upForm.username"
                 autocomplete="username"
                 :placeholder="$t('auth.usernameOrEmailPlaceholder') || 'Enter your username or email'"
@@ -86,7 +86,7 @@
               />
             </el-form-item>
             <el-form-item prop="password" :label="$t('auth.password') || 'Password'">
-              <el-input
+              <KiwiInput
                 v-model="upForm.password"
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
@@ -96,10 +96,10 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="upLoading" :disabled="upLoading" class="full-width" @click="handleUsernamePasswordLogin">
+              <KiwiButton type="primary" :loading="upLoading" :disabled="upLoading" class="full-width" @click="handleUsernamePasswordLogin">
                 <span v-if="!upLoading">{{ $t('auth.signIn') || 'Sign In' }}</span>
                 <span v-else>{{ $t('auth.processing') || 'Processing...' }}</span>
-              </el-button>
+              </KiwiButton>
             </el-form-item>
           </el-form>
 
@@ -125,13 +125,15 @@
 
 <script>
 import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
 import {mapGetters} from 'vuex'
 import { setStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'GoogleLogin',
-  components: { StatusOverlay },
+  components: { StatusOverlay, KiwiButton, KiwiInput },
   data() {
     return {
       googleLoading: false,
