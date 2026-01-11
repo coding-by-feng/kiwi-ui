@@ -404,5 +404,22 @@ export default {
         downloadForWindows: 'Für Windows herunterladen',
         downloadForLinux: 'Für Linux herunterladen',
         gdriveNote: 'Downloads werden auf Google Drive gehostet. Öffnet sich der Link nicht, kopieren Sie ihn und öffnen Sie ihn in einem neuen Tab.'
+    },
+
+    // Review modes
+    review: {
+        // TTS-Audiogenerierung
+        generatingAudio: 'Audio wird generiert...',
+        audioReady: 'Audio bereit',
+        audioFilesReady: 'Audiodateien bereit',
+        audioFilesFailed: 'Audiodateien fehlgeschlagen',
+        audioGenerationFailed: 'Audiogenerierung fehlgeschlagen, Fallback wird verwendet',
+        audioGenerationInProgress: 'Audiogenerierung läuft bereits',
+        ttsAudioNotEnabled: 'TTS-Audio ist auf dem Server nicht aktiviert',
+        startingAudioGeneration: 'Audiogenerierung wird gestartet...',
+        audioPreparationFailed: 'Audiovorbereitung fehlgeschlagen',
+        prepareAudio: 'Audio vorbereiten',
+        audioGenerationComplete: 'Audiogenerierung abgeschlossen',
+        preparingAudioForReview: 'Audio für Überprüfung wird vorbereitet...'
     }
 }

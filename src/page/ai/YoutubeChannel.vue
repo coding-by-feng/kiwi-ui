@@ -365,7 +365,10 @@ export default {
     },
 
     async toggleChannelFavorite(item) {
-      const id = item.channelId
+      const id = item.channelId || item.id
+      if (!id) {
+        return this.$message.error('No valid channel identifier')
+      }
       if (this.pendingChannelFavorite[id]) return
       this.$set(this.pendingChannelFavorite, id, true)
       const prevFavorited = !!item.favorited

@@ -58,6 +58,11 @@ export default {
       }
     }
   },
+  watch: {
+    visible(val) {
+      this.$emit('visible-change', val)
+    }
+  },
   methods: {
     toggle() {
       if (!this.visible) {

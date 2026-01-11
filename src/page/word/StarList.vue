@@ -4,6 +4,8 @@ import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import kiwiConsts from '@/const/kiwiConsts'
+import audioUtil from '@/util/audioUtil'
+import reviewAudioApi from '@/api/reviewAudio'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
@@ -106,11 +108,25 @@ export default {
       controlBarHeight: 0,
       controlBarOffsetTop: 0,
       // control bar fold/expand state
-      isControlBarFolded: false
+      isControlBarFolded: false,
+      // TTS Audio state
+      ttsAudio: {
+        enabled: false,               // Whether TTS audio is enabled on server
+        isGenerating: false,          // Whether audio generation is in progress
+        generatingListId: null,       // ID of list currently being generated
+        generationProgress: {
+          current: 0,
+          total: 0
+        }
+      },
+      // Track which row's dropdown is currently active (for z-index management)
+      activeDropdownRowId: null
     }
   },
   async mounted() {
     await this.init(false)
+    // Initialize TTS audio system in background
+    this.initTtsAudioSystem()
     this.$nextTick(() => {
       this.updateControlBarMetrics()
       window.addEventListener('resize', this.updateControlBarMetrics, { passive: true })
@@ -531,7 +547,94 @@ export default {
       this.selectReviewMode({ mode, id: 0 })
     },
     handleRowReviewMode(mode, id) {
+      this.activeDropdownRowId = null
       this.selectReviewMode({ mode, id })
+    },
+    handleRowDropdownVisible(rowId, visible) {
+      this.activeDropdownRowId = visible ? rowId : null
+    },
+
+    // ============================================
+    // TTS AUDIO METHODS
+    // ============================================
+
+    /**
+     * Initialize TTS audio system
+     */
+    async initTtsAudioSystem() {
+      try {
+        const config = await audioUtil.initTtsAudioSystem()
+        this.ttsAudio.enabled = config.enabled
+        console.log('TTS Audio enabled:', config.enabled)
+      } catch (e) {
+        console.warn('Failed to init TTS audio:', e)
+        this.ttsAudio.enabled = false
+      }
+    },
+
+    /**
+     * Prepare audio for a specific list
+     * @param {number} listId - List ID to prepare audio for
+     */
+    async prepareAudioForList(listId) {
+      if (this.ttsAudio.isGenerating) {
+        this.$message.warning(this.$t('review.audioGenerationInProgress') || 'Audio generation already in progress')
+        return
+      }
+
+      if (!this.ttsAudio.enabled) {
+        // Try to initialize first
+        await this.initTtsAudioSystem()
+        if (!this.ttsAudio.enabled) {
+          this.$message.warning(this.$t('review.ttsAudioNotEnabled') || 'TTS audio is not enabled on server')
+          return
+        }
+      }
+
+      try {
+        this.ttsAudio.isGenerating = true
+        this.ttsAudio.generatingListId = listId
+        this.ttsAudio.generationProgress = { current: 0, total: 0 }
+
+        this.$message.info(this.$t('review.startingAudioGeneration') || 'Starting audio generation...')
+
+        const result = await audioUtil.generateAndCacheAudioForList(
+          listId,
+          (current, total, paraphraseId, status) => {
+            this.ttsAudio.generationProgress.current = current
+            this.ttsAudio.generationProgress.total = total
+          }
+        )
+
+        if (result.enabled) {
+          const cached = result.cached || {}
+          const successCount = (cached.success?.length || 0) + (cached.cached?.length || 0)
+          const failedCount = cached.failed?.length || 0
+
+          if (successCount > 0) {
+            this.$message.success(`${successCount} ${this.$t('review.audioFilesReady') || 'audio files ready'}`)
+          }
+          if (failedCount > 0) {
+            this.$message.warning(`${failedCount} ${this.$t('review.audioFilesFailed') || 'audio files failed'}`)
+          }
+        } else {
+          this.$message.warning(this.$t('review.ttsAudioNotEnabled') || 'TTS audio is not enabled')
+        }
+      } catch (e) {
+        console.error('Audio preparation failed:', e)
+        this.$message.error(this.$t('review.audioPreparationFailed') || 'Audio preparation failed')
+      } finally {
+        this.ttsAudio.isGenerating = false
+        this.ttsAudio.generatingListId = null
+      }
+    },
+
+    /**
+     * Handle prepare audio button click for a specific row
+     * @param {object} row - List row data
+     */
+    handlePrepareAudio(row) {
+      this.prepareAudioForList(row.id)
     }
   },
   computed: {
@@ -603,11 +706,11 @@ export default {
     <!-- Simple list instead of el-table -->
     <div v-show="tableVisible" class="starlist-table" :style="{ marginTop: listContentTop + 'px' }">
       <ul class="starlist-list">
-        <li v-for="row in list.starListData" :key="row.id" class="starlist-item">
+        <li v-for="row in list.starListData" :key="row.id" class="starlist-item" :class="{ 'dropdown-active': activeDropdownRowId === row.id }">
           <button class="list-name-button" @click="selectOneList(row.id, false)" :disabled="loading">{{ row.listName }}</button>
 
           <!-- Per-row review mode (paraphrase list only, not in edit mode) -->
-          <KiwiDropdown v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode" @command="(mode) => handleRowReviewMode(mode, row.id)" class="row-review-dropdown">
+          <KiwiDropdown v-if="list.listType === 'paraphrase' && list.status === 'list' && !list.editMode" @command="(mode) => handleRowReviewMode(mode, row.id)" @visible-change="(visible) => handleRowDropdownVisible(row.id, visible)" class="row-review-dropdown">
             <button class="row-select" :disabled="loading">
               {{ $t('starList.selectMode') }}
               <i class="el-icon-arrow-down"></i>
@@ -623,6 +726,18 @@ export default {
               <KiwiDropdownItem command="totalRead">{{ $t('review.totalRead') }}</KiwiDropdownItem>
             </template>
           </KiwiDropdown>
+
+          <!-- Audio preparation button (paraphrase list only, not in edit mode) -->
+          <button
+            v-if="list.listType === 'paraphrase' && !list.editMode && ttsAudio.enabled"
+            class="audio-prep-btn"
+            :disabled="ttsAudio.isGenerating"
+            :class="{ 'is-generating': ttsAudio.isGenerating && ttsAudio.generatingListId === row.id }"
+            @click.stop="handlePrepareAudio(row)"
+            :title="$t('review.prepareAudio') || 'Prepare Audio'">
+            <i v-if="ttsAudio.isGenerating && ttsAudio.generatingListId === row.id" class="el-icon-loading"></i>
+            <i v-else class="el-icon-headset"></i>
+          </button>
 
           <!-- Edit actions -->
           <div v-if="list.editMode" class="row-actions">
@@ -676,11 +791,18 @@ export default {
 </template>
 
 <style scoped>
+/* ========================================
+   STARLIST CONTAINER - Enhanced Styles
+   ======================================== */
 .starlist-container {
   padding-top: 8px;
+  min-height: 100vh;
+  position: relative;
 }
 
-/* Control bar - glassmorphic floating panel */
+/* ========================================
+   CONTROL BAR - Glassmorphic Floating Panel
+   ======================================== */
 .control-bar {
   position: fixed;
   top: 60px;
@@ -691,54 +813,98 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--radius-xl);
   background: var(--bg-card);
-  backdrop-filter: var(--backdrop-filter);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-color-light);
-  box-shadow: var(--shadow-card);
-  transition: all var(--transition-normal, 0.3s) ease;
+  box-shadow:
+    var(--shadow-card),
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity, padding;
+}
+
+.control-bar:hover {
+  box-shadow:
+    var(--shadow-card),
+    0 12px 40px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* Control bar folded state */
 .control-bar.is-folded {
-  padding: 8px 16px;
+  padding: 10px 18px;
+  box-shadow:
+    var(--shadow-sm),
+    0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
-/* Toggle button for fold/expand - pill style */
+/* ========================================
+   TOGGLE BUTTON - Pill Style
+   ======================================== */
 .ctrl-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 10px;
-  background: rgba(var(--color-primary-rgb), 0.1);
+  gap: 6px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 12px;
+  background: rgba(var(--color-primary-rgb), 0.12);
   color: var(--color-primary);
   border: none;
-  border-radius: var(--radius-xl, 20px);
+  border-radius: 50px;
   cursor: pointer;
-  transition: all var(--transition-fast) ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctrl-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .ctrl-toggle:hover {
-  background: var(--gradient-primary);
   color: #fff;
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.3);
+  transform: scale(1.05);
+  box-shadow:
+    0 4px 16px rgba(var(--color-primary-rgb), 0.4),
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.ctrl-toggle:hover::before {
+  opacity: 1;
 }
 
 .ctrl-toggle:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
+}
+
+.ctrl-toggle i,
+.ctrl-toggle .toggle-label {
+  position: relative;
+  z-index: 1;
 }
 
 .ctrl-toggle i {
-  font-size: 12px;
-  transition: transform var(--transition-fast);
+  font-size: 14px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ctrl-toggle:hover i {
+  transform: translateY(1px);
 }
 
 .ctrl-toggle .toggle-label {
@@ -751,57 +917,803 @@ export default {
   }
 }
 
-/* When folded, make toggle more prominent */
+/* Folded state toggle - more prominent */
 .control-bar.is-folded .ctrl-toggle {
   background: var(--gradient-primary);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
+  box-shadow:
+    0 4px 12px rgba(var(--color-primary-rgb), 0.35),
+    0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.control-bar.is-folded .ctrl-toggle::before {
+  opacity: 1;
 }
 
 .control-bar.is-folded .ctrl-toggle:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.35);
+  filter: brightness(1.15);
+  box-shadow:
+    0 6px 20px rgba(var(--color-primary-rgb), 0.45),
+    0 0 0 4px rgba(var(--color-primary-rgb), 0.15);
 }
 
-/* Control bar content wrapper */
+/* ========================================
+   CONTROL BAR CONTENT
+   ======================================== */
 .control-bar-content {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
   flex: 1;
+  animation: contentFadeIn 0.3s ease;
 }
 
-/* Folded label shown when collapsed */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Folded label */
 .folded-label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
+  margin-left: 10px;
+  padding: 4px 12px;
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border-radius: 20px;
+  animation: labelSlideIn 0.3s ease;
+}
+
+@keyframes labelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   CONTROL SELECT BUTTONS
+   ======================================== */
+.ctrl-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-container);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctrl-select::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.ctrl-select:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow:
+    0 4px 12px rgba(var(--color-primary-rgb), 0.15),
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.08);
+  transform: translateY(-1px);
+}
+
+.ctrl-select:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.ctrl-select:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ctrl-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ctrl-select i {
+  font-size: 12px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ctrl-select:hover:not(:disabled) i {
+  transform: translateY(2px);
+}
+
+/* ========================================
+   CONTROL BUTTONS
+   ======================================== */
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.2px;
+}
+
+/* Shine effect */
+.ctrl-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.ctrl-btn:hover::after {
+  left: 100%;
+}
+
+/* Primary button */
+.ctrl-btn.primary {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow:
+    0 4px 12px rgba(var(--color-primary-rgb), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ctrl-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow:
+    0 6px 20px rgba(var(--color-primary-rgb), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.ctrl-btn.primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 8px rgba(var(--color-primary-rgb), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Info button */
+.ctrl-btn.info {
+  background: var(--gradient-info);
+  color: #fff;
+  box-shadow:
+    0 4px 12px rgba(var(--color-info-rgb), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ctrl-btn.info:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow:
+    0 6px 20px rgba(var(--color-info-rgb), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.ctrl-btn.info:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secondary button */
+.ctrl-btn.secondary {
+  background: var(--bg-container);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+}
+
+.ctrl-btn.secondary:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.12);
+  transform: translateY(-2px);
+}
+
+.ctrl-btn.secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: grayscale(0.3);
+}
+
+/* ========================================
+   LIST STYLING
+   ======================================== */
+.starlist-table {
+  padding: 0 8px;
+  overflow: visible;
+}
+
+.starlist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+}
+
+/* List items with staggered animation */
+.starlist-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  margin: 14px auto;
+  max-width: 600px;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    var(--shadow-sm),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s;
+  position: relative;
+  overflow: visible;
+  animation: itemSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  /* Reverse stacking order so earlier items appear above later ones for dropdown visibility */
+  z-index: 1;
+}
+
+/* When a dropdown inside an item is active, raise that item above all others */
+.starlist-item:has(.kiwi-dropdown.is-active),
+.starlist-item.dropdown-active {
+  z-index: 100;
+}
+
+/* Staggered animation for list items */
+.starlist-item:nth-child(1) { animation-delay: 0.05s; }
+.starlist-item:nth-child(2) { animation-delay: 0.1s; }
+.starlist-item:nth-child(3) { animation-delay: 0.15s; }
+.starlist-item:nth-child(4) { animation-delay: 0.2s; }
+.starlist-item:nth-child(5) { animation-delay: 0.25s; }
+.starlist-item:nth-child(6) { animation-delay: 0.3s; }
+.starlist-item:nth-child(7) { animation-delay: 0.35s; }
+.starlist-item:nth-child(8) { animation-delay: 0.4s; }
+.starlist-item:nth-child(n+9) { animation-delay: 0.45s; }
+
+@keyframes itemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Subtle gradient overlay on hover */
+.starlist-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-primary-rgb), 0.03),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.starlist-item:hover {
+  border-color: rgba(var(--color-primary-rgb), 0.3);
+  box-shadow:
+    var(--shadow-hover),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(var(--color-primary-rgb), 0.1);
+  transform: translateY(-3px) scale(1.005);
+}
+
+.starlist-item:hover::before {
+  opacity: 1;
+}
+
+.starlist-item:active {
+  transform: translateY(-1px) scale(1);
+}
+
+/* ========================================
+   LIST NAME BUTTON
+   ======================================== */
+.list-name-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 12px rgba(var(--color-primary-rgb), 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  letter-spacing: 0.3px;
+}
+
+/* Shine sweep effect */
+.list-name-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.list-name-button:hover::before {
+  left: 100%;
+}
+
+.list-name-button:hover {
+  filter: brightness(1.1);
+  box-shadow:
+    0 8px 24px rgba(var(--color-primary-rgb), 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+  transform: scale(1.02);
+}
+
+.list-name-button:active {
+  transform: scale(0.98);
+  box-shadow:
+    0 2px 8px rgba(var(--color-primary-rgb), 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.list-name-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+
+/* ========================================
+   ROW SELECT DROPDOWN
+   ======================================== */
+.row-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  background: var(--bg-container);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.row-select::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.row-select:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow:
+    0 4px 12px rgba(var(--color-primary-rgb), 0.15),
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.08);
+  transform: translateY(-1px);
+}
+
+.row-select:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.row-select:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.row-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row-select i {
+  font-size: 11px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.row-select:hover:not(:disabled) i {
+  transform: translateY(2px);
+}
+
+/* ========================================
+   AUDIO PREPARATION BUTTON
+   ======================================== */
+.audio-prep-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(var(--color-success-rgb), 0.1);
+  color: var(--color-success);
+  border: 1.5px solid rgba(var(--color-success-rgb), 0.3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
   margin-left: 8px;
 }
 
-/* Make the bar adapt on small screens */
+.audio-prep-btn i {
+  font-size: 16px;
+}
+
+.audio-prep-btn:hover:not(:disabled) {
+  background: var(--color-success);
+  color: #fff;
+  border-color: var(--color-success);
+  box-shadow:
+    0 4px 12px rgba(var(--color-success-rgb), 0.3),
+    0 0 0 3px rgba(var(--color-success-rgb), 0.1);
+  transform: scale(1.05);
+}
+
+.audio-prep-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.audio-prep-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.audio-prep-btn.is-generating {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ========================================
+   ROW ACTIONS
+   ======================================== */
+.row-actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-container);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  border-radius: inherit;
+}
+
+.icon-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: scale(1.1) rotate(2deg);
+  box-shadow:
+    0 4px 12px rgba(var(--color-primary-rgb), 0.2),
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.icon-btn:hover::before {
+  opacity: 1;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* Danger icon button */
+.icon-btn.danger {
+  color: var(--color-danger);
+  border-color: rgba(var(--color-danger-rgb), 0.3);
+}
+
+.icon-btn.danger::before {
+  background: rgba(var(--color-danger-rgb), 0.1);
+}
+
+.icon-btn.danger:hover {
+  color: #fff;
+  background: var(--gradient-danger);
+  border-color: var(--color-danger);
+  box-shadow:
+    0 4px 16px rgba(var(--color-danger-rgb), 0.4),
+    0 0 0 3px rgba(var(--color-danger-rgb), 0.15);
+  transform: scale(1.1) rotate(-2deg);
+}
+
+/* ========================================
+   MODAL - Glassmorphic Design
+   ======================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: overlayFadeIn 0.3s ease;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px) saturate(150%);
+  }
+}
+
+.modal {
+  width: 90%;
+  max-width: 440px;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    var(--shadow-float),
+    0 24px 80px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: modalBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(-30px);
+  }
+  50% {
+    transform: scale(1.02) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  background: var(--gradient-primary);
+  color: #fff;
+  padding: 18px 24px;
+  font-weight: 600;
+  font-size: 17px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1));
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow:
+    0 0 0 4px rgba(var(--color-primary-rgb), 0.12),
+    0 4px 12px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.modal-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.modal-footer {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  border-top: 1px solid var(--border-color-light);
+  background: rgba(var(--color-primary-rgb), 0.02);
+}
+
+/* ========================================
+   DROPDOWN STYLING
+   ======================================== */
+.list-type-dropdown,
+.review-mode-dropdown,
+.row-review-dropdown {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure dropdown in row appears above other items */
+.row-review-dropdown {
+  z-index: 20;
+}
+
+::v-deep .kiwi-dropdown.is-active {
+  z-index: 9999;
+}
+
+/* Ensure the dropdown menu renders above list items */
+::v-deep .kiwi-dropdown-menu {
+  min-width: 180px;
+  z-index: 9999;
+}
+
+
+/* ========================================
+   BUTTON GROUP
+   ======================================== */
+.control-bar .btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ========================================
+   RESPONSIVE STYLES
+   ======================================== */
 @media (max-width: 768px) {
   .control-bar {
     top: 56px;
     left: 12px;
     right: 12px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     gap: 8px;
   }
 
   .control-bar.is-folded {
-    padding: 6px 12px;
+    padding: 8px 14px;
   }
 
   .ctrl-toggle {
-    height: 26px;
-    padding: 0 8px;
+    height: 30px;
+    padding: 0 10px;
     font-size: 11px;
+  }
+
+  .ctrl-toggle i {
+    font-size: 13px;
   }
 
   .control-bar-content {
     gap: 8px;
+  }
+
+  .starlist-item {
+    padding: 14px 16px;
+    gap: 12px;
+    max-width: 500px;
   }
 }
 
@@ -809,12 +1721,12 @@ export default {
   .control-bar {
     left: 8px;
     right: 8px;
-    padding: 8px 10px;
+    padding: 10px 12px;
     gap: 6px;
   }
 
   .control-bar.is-folded {
-    padding: 6px 10px;
+    padding: 8px 12px;
     flex-direction: row;
     align-items: center;
   }
@@ -831,436 +1743,93 @@ export default {
   .ctrl-btn {
     width: auto;
     flex: 0 0 auto;
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 12px;
   }
 
   .ctrl-select {
     width: auto;
     flex: 0 0 auto;
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 12px;
   }
 
   .ctrl-toggle {
-    min-width: 26px;
-    height: 26px;
-    padding: 0 6px;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
     flex-shrink: 0;
   }
 
   .ctrl-toggle i {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .folded-label {
     font-size: 13px;
+    padding: 3px 10px;
   }
-}
 
-/* Button group wrapper for action buttons */
-.control-bar .btn-group {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 480px) {
   .control-bar .btn-group {
     justify-content: center;
   }
-}
 
-/* Control select/trigger buttons */
-.ctrl-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-container);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  white-space: nowrap;
-}
+  .starlist-item {
+    padding: 12px 14px;
+    margin: 10px auto;
+    max-width: 100%;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 
-.ctrl-select:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.08);
-  box-shadow: var(--shadow-sm);
-}
+  .list-name-button {
+    padding: 10px 14px;
+    font-size: 13px;
+    min-width: 100px;
+  }
 
-.ctrl-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ctrl-select i {
-  font-size: 12px;
-  transition: transform var(--transition-fast);
-}
-
-/* Control buttons */
-.ctrl-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-}
-
-.ctrl-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.4s ease;
-}
-
-.ctrl-btn:hover::after {
-  left: 100%;
-}
-
-.ctrl-btn.primary {
-  background: var(--gradient-primary);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
-}
-
-.ctrl-btn.primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-  box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.35);
-  transform: translateY(-1px);
-}
-
-.ctrl-btn.info {
-  background: var(--gradient-info);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(var(--color-info-rgb), 0.25);
-}
-
-.ctrl-btn.info:hover:not(:disabled) {
-  filter: brightness(1.1);
-  box-shadow: 0 4px 16px rgba(var(--color-info-rgb), 0.35);
-  transform: translateY(-1px);
-}
-
-.ctrl-btn.secondary {
-  background: var(--bg-container);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.ctrl-btn.secondary:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.08);
-}
-
-.ctrl-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.ctrl-btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-/* List styling */
-.starlist-table {
-  padding: 0 4px;
-}
-
-.starlist-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.starlist-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  margin: 12px 0;
-  border: 1px solid var(--border-color-light);
-  border-radius: var(--radius-lg);
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-filter);
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-fast);
-}
-
-.starlist-item:hover {
-  border-color: var(--border-color);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-2px);
-}
-
-.list-name-button {
-  display: inline-flex;
-  align-items: center;
-  background: var(--gradient-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: var(--transition-fast);
-  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.list-name-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  transition: left 0.5s ease;
-}
-
-.list-name-button:hover::before {
-  left: 100%;
-}
-
-.list-name-button:hover {
-  filter: brightness(1.1);
-  box-shadow: var(--shadow-glow);
-  transform: scale(1.02);
-}
-
-.list-name-button:active {
-  transform: scale(0.98);
-}
-
-/* Row select dropdown trigger */
-.row-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  background: var(--bg-container);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.row-select:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.08);
-}
-
-.row-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.row-select i {
-  font-size: 10px;
-  transition: transform var(--transition-fast);
-}
-
-@media (max-width: 480px) {
   .row-select {
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 11px;
   }
-}
 
-/* Row actions */
-.row-actions {
-  margin-left: auto;
-  display: inline-flex;
-  gap: 8px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: var(--bg-container);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  font-size: 14px;
-}
-
-.icon-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.1);
-  transform: scale(1.05);
-}
-
-.icon-btn.danger {
-  color: var(--color-danger);
-  border-color: rgba(var(--color-danger-rgb), 0.3);
-}
-
-.icon-btn.danger:hover {
-  color: #fff;
-  background: var(--gradient-danger);
-  border-color: var(--color-danger);
-  box-shadow: 0 0 12px rgba(var(--color-danger-rgb), 0.4);
-}
-
-/* Modal - glassmorphic design */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-overlay);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal {
-  width: 90%;
-  max-width: 420px;
-  background: var(--bg-card);
-  backdrop-filter: var(--backdrop-filter);
-  border: 1px solid var(--border-color-light);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-float);
-  overflow: hidden;
-  animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-20px);
+  .row-actions {
+    gap: 8px;
   }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
   }
 }
 
-.modal-header {
-  background: var(--gradient-primary);
-  color: #fff;
-  padding: 16px 20px;
-  font-weight: 600;
-  font-size: 16px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: var(--text-secondary);
-}
-
-.modal-input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 14px;
-  transition: var(--transition-fast);
-  box-sizing: border-box;
-}
-
-.modal-input:focus {
+/* ========================================
+   ACCESSIBILITY & FOCUS STATES
+   ======================================== */
+.ctrl-btn:focus-visible,
+.ctrl-select:focus-visible,
+.ctrl-toggle:focus-visible,
+.list-name-button:focus-visible,
+.row-select:focus-visible,
+.icon-btn:focus-visible,
+.modal-input:focus-visible {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+  box-shadow:
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.4),
+    0 0 0 6px rgba(var(--color-primary-rgb), 0.15);
 }
 
-.modal-input::placeholder {
-  color: var(--text-placeholder);
-}
-
-.modal-footer {
-  padding: 16px 20px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  border-top: 1px solid var(--border-color-light);
-  background: var(--bg-container);
-}
-
-/* Dropdown styling enhancements */
-.list-type-dropdown,
-.review-mode-dropdown,
-.row-review-dropdown {
-  flex-shrink: 0;
-}
-
-::v-deep .kiwi-dropdown-menu {
-  min-width: 160px;
-}
-
-/* Animation for list items */
-.starlist-item {
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+/* ========================================
+   REDUCED MOTION PREFERENCE
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 </style>

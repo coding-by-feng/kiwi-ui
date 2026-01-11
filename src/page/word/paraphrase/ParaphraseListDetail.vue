@@ -4,6 +4,7 @@ import msgUtil from '@/util/msg'
 import util from '@/util/util'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import review from '@/api/review'
+import reviewAudioApi from '@/api/reviewAudio'
 import kiwiConsts from '@/const/kiwiConsts'
 import audioUtil from '../../../util/audioUtil'
 import NoSleep from 'nosleep.js'
@@ -253,7 +254,21 @@ export default {
       countdownMode: false,          // Whether countdown timer is active
       countdownTime: new Date().getTime(),  // End time for countdown
       countdownMin: 60,              // Duration in minutes
-      countdownText: '1小时'         // Display text for countdown
+      countdownText: '1小时',         // Display text for countdown
+
+      // TTS Audio state
+      ttsAudio: {
+        enabled: false,              // Whether TTS audio is enabled on server
+        config: null,                // Server audio configuration
+        isGenerating: false,         // Whether batch audio generation is in progress
+        generationProgress: {        // Progress of audio generation
+          current: 0,
+          total: 0,
+          message: ''
+        },
+        currentAudioPlayer: null,    // Current TTS audio player for playback
+        audioStatusMap: new Map()    // Map of paraphraseId -> audio status (available/generating/unavailable)
+      }
     }
   },
   beforeCreate: function () {
@@ -271,6 +286,8 @@ export default {
       noSleep.disable()
       this.detail.isEnableNoSleepMode = false
     }
+    // Clean up TTS audio
+    this.stopTtsAudio()
   },
   watch: {
     'listId'() {
@@ -394,6 +411,7 @@ export default {
           that.isReviewStop = true
           that.isReviewPlaying = false
           that.pauseAllPlayingAudio()
+          that.stopTtsAudio() // Also stop TTS audio when tab is hidden
         } else {
           that.isReviewStop = false
           that.isReviewPlaying = true
@@ -413,6 +431,11 @@ export default {
 
           try {
             await this.initList()
+
+            // Auto-generate TTS audio for review session (runs in background)
+            // Don't await - let it run in parallel while we prepare the first word
+            this.autoGenerateReviewAudio()
+
             await this.initNextReviseDetail(true)
           } catch (e) {
             console.error(e)
@@ -720,7 +743,7 @@ export default {
         // Load details of first word and play audio
         this.showDetail(this.listItems[0].paraphraseId, 0)
             .then(() => {
-              that.detail.audioPlayer.play()
+              that.startAudioPlayback()
             })
       } catch (e) {
         console.error(e)
@@ -734,7 +757,7 @@ export default {
             if (this.isDownloadReviewAudio) {
               ++that.playWordIndex
             } else {
-              that.detail.audioPlayer.play()
+              that.startAudioPlayback()
             }
           })
     },
@@ -774,6 +797,7 @@ export default {
       this.isReviewStop = true
       this.isReviewPlaying = false
       this.pauseAllPlayingAudio()
+      this.stopTtsAudio() // Also stop TTS audio
     },
     async ignoreCurrentReview() {
       console.log('ignoreCurrentReview')
@@ -941,7 +965,10 @@ export default {
         if (this.isChToEn) {
           this.detail.showWord = false
         }
-        let lastIndexPerPage = this.isLastIndexPerPage()
+        // In review mode, use playWordIndex; in non-review mode, use showIndex
+        let lastIndexPerPage = this.isReview
+            ? this.isLastIndexPerPage()
+            : this.detail.showIndex >= this.listItems.length
         let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
         console.log('skipCurrent wordName = ', this.detail.paraphraseVO.wordName)
@@ -955,7 +982,11 @@ export default {
         console.log('skipCurrent this.page.size = ' + this.page.size)
         if (lastPage) {
           let lastPageRemainder = this.page.total % this.page.size
-          if (lastIndexPerPage || (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder)) {
+          // Check if we've reached the end of the current page's items
+          let isAtEndOfPage = this.isReview
+              ? lastIndexPerPage
+              : this.detail.showIndex >= this.listItems.length
+          if (isAtEndOfPage || (lastPageRemainder !== 0 && this.detail.showIndex >= lastPageRemainder)) {
             this.msgWarning(this, '当前已经是最后一页最后一个')
             return
           }
@@ -973,7 +1004,7 @@ export default {
                   if (that.isDownloadReviewAudio) {
                     ++that.playWordIndex
                   } else {
-                    that.detail.audioPlayer.play()
+                    that.startAudioPlayback()
                   }
                 }).catch(e => {
                   this.msgError(that, '初始化下一个释义详情异常!')
@@ -1023,6 +1054,199 @@ export default {
       await this.stopPlaying()
       await this.cleanRevising()
     },
+
+    // ============================================
+    // TTS AUDIO METHODS
+    // ============================================
+
+    /**
+     * Initialize TTS audio system and check server configuration
+     */
+    async initTtsAudioSystem() {
+      try {
+        const config = await audioUtil.initTtsAudioSystem()
+        this.ttsAudio.enabled = config.enabled
+        this.ttsAudio.config = config
+        console.log('TTS Audio system initialized:', config)
+        return config
+      } catch (e) {
+        console.warn('Failed to initialize TTS audio system:', e)
+        this.ttsAudio.enabled = false
+        return { enabled: false }
+      }
+    },
+
+    /**
+     * Auto-generate and cache audio for current review session
+     * Called when starting a review session
+     */
+    async autoGenerateReviewAudio() {
+      if (!this.isReview || !this.listId) {
+        return
+      }
+
+      try {
+        // Initialize TTS system first
+        await this.initTtsAudioSystem()
+
+        if (!this.ttsAudio.enabled) {
+          console.log('TTS audio not enabled, skipping auto-generation')
+          return
+        }
+
+        this.ttsAudio.isGenerating = true
+        this.ttsAudio.generationProgress = { current: 0, total: 0, message: this.$t('review.generatingAudio') || 'Generating audio...' }
+
+        // Use the batch generation API
+        const result = await audioUtil.generateAndCacheAudioForList(
+          this.listId,
+          (current, total, paraphraseId, status) => {
+            this.ttsAudio.generationProgress.current = current
+            this.ttsAudio.generationProgress.total = total
+            this.ttsAudio.audioStatusMap.set(paraphraseId, status === 'success' || status === 'cached' ? kiwiConsts.AUDIO_STATUS.AVAILABLE : kiwiConsts.AUDIO_STATUS.UNAVAILABLE)
+          }
+        )
+
+        console.log('Auto audio generation result:', result)
+
+        if (result.enabled) {
+          const generated = result.generated || {}
+          const cached = result.cached || {}
+          const successCount = (cached.success?.length || 0) + (cached.cached?.length || 0)
+          const failedCount = cached.failed?.length || 0
+
+          if (successCount > 0) {
+            this.notifySuccess(this, this.$t('review.audioReady') || 'Audio Ready', `${successCount} ${this.$t('review.audioFilesReady') || 'audio files ready'}`)
+          }
+          if (failedCount > 0) {
+            console.warn(`${failedCount} audio files failed to generate/cache`)
+          }
+        }
+      } catch (e) {
+        console.error('Auto audio generation failed:', e)
+        this.msgWarning(this, this.$t('review.audioGenerationFailed') || 'Audio generation failed, using fallback')
+      } finally {
+        this.ttsAudio.isGenerating = false
+      }
+    },
+
+    /**
+     * Get TTS audio for a paraphrase (from cache or download)
+     * @param {number} paraphraseId - Paraphrase ID
+     * @returns {Promise<string|null>} Blob URL or null
+     */
+    async getTtsAudioForParaphrase(paraphraseId) {
+      if (!this.ttsAudio.enabled) {
+        return null
+      }
+
+      try {
+        const blobUrl = await audioUtil.getTtsAudioBlobUrl(paraphraseId)
+        if (blobUrl) {
+          this.ttsAudio.audioStatusMap.set(paraphraseId, kiwiConsts.AUDIO_STATUS.AVAILABLE)
+        }
+        return blobUrl
+      } catch (e) {
+        console.warn('Failed to get TTS audio:', e)
+        this.ttsAudio.audioStatusMap.set(paraphraseId, kiwiConsts.AUDIO_STATUS.UNAVAILABLE)
+        return null
+      }
+    },
+
+    /**
+     * Play TTS audio for current paraphrase
+     * Falls back to legacy audio if TTS not available
+     * @param {boolean} autoAdvance - Whether to advance to next word after audio ends
+     */
+    async playTtsAudio(autoAdvance = false) {
+      const paraphraseId = this.detail.paraphraseVO?.paraphraseId
+      if (!paraphraseId) {
+        return false
+      }
+
+      // Stop any currently playing TTS audio
+      if (this.ttsAudio.currentAudioPlayer) {
+        this.ttsAudio.currentAudioPlayer.pause()
+        this.ttsAudio.currentAudioPlayer = null
+      }
+
+      const blobUrl = await this.getTtsAudioForParaphrase(paraphraseId)
+      if (!blobUrl) {
+        console.log('TTS audio not available, using legacy audio')
+        return false
+      }
+
+      try {
+        const audio = new Audio(blobUrl)
+        audio.volume = 0.8
+        this.ttsAudio.currentAudioPlayer = audio
+
+        audio.addEventListener('ended', () => {
+          this.isReviewPlaying = false
+          this.detail.reviewLoading = false
+          URL.revokeObjectURL(blobUrl)
+          // If in review mode and autoAdvance is enabled, move to next word
+          if (autoAdvance && this.isReview && !this.isReviewStop) {
+            ++this.playWordIndex
+            console.log('TTS audio ended, advancing to next word. playWordIndex:', this.playWordIndex)
+          }
+        })
+
+        audio.addEventListener('error', (e) => {
+          console.error('TTS audio playback error:', e)
+          this.isReviewPlaying = false
+          this.detail.reviewLoading = false
+          URL.revokeObjectURL(blobUrl)
+        })
+
+        await audio.play()
+        this.isReviewPlaying = true
+        this.detail.reviewLoading = false
+        return true
+      } catch (e) {
+        console.error('Failed to play TTS audio:', e)
+        return false
+      }
+    },
+
+    /**
+     * Check if TTS audio is available for a paraphrase
+     */
+    getTtsAudioStatus(paraphraseId) {
+      return this.ttsAudio.audioStatusMap.get(paraphraseId) || kiwiConsts.AUDIO_STATUS.UNAVAILABLE
+    },
+
+    /**
+     * Stop TTS audio playback
+     */
+    stopTtsAudio() {
+      if (this.ttsAudio.currentAudioPlayer) {
+        this.ttsAudio.currentAudioPlayer.pause()
+        this.ttsAudio.currentAudioPlayer = null
+      }
+    },
+
+    /**
+     * Start audio playback for current word
+     * Tries TTS audio first, falls back to legacy audio if not available
+     */
+    async startAudioPlayback() {
+      // If TTS is enabled, try TTS audio first
+      if (this.ttsAudio.enabled) {
+        const ttsPlayed = await this.playTtsAudio(true) // autoAdvance = true
+        if (ttsPlayed) {
+          console.log('Playing TTS audio for current word')
+          return
+        }
+        console.log('TTS audio not available, falling back to legacy audio')
+      }
+
+      // Fall back to legacy audio
+      if (this.detail.audioPlayer) {
+        this.detail.audioPlayer.play()
+      }
+    },
+
     extractReviewAudioUrls: function () {
       console.log('this.isLastReviewWordSame() in extractReviewAudioUrls', this.isLastReviewWordSame())
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
@@ -1168,6 +1392,26 @@ export default {
           <br/>
           <Countdown :endTime="countdownTime"
                      @endFun="countdownEndFun"></Countdown>
+        </div>
+        <!-- TTS Audio Generation Progress -->
+        <div v-if="ttsAudio.isGenerating" class="audio-generation-progress">
+          <div class="progress-info">
+            <i class="el-icon-loading"></i>
+            <span>{{ ttsAudio.generationProgress.message }}</span>
+            <span v-if="ttsAudio.generationProgress.total > 0">
+              ({{ ttsAudio.generationProgress.current }}/{{ ttsAudio.generationProgress.total }})
+            </span>
+          </div>
+          <div class="progress-bar" v-if="ttsAudio.generationProgress.total > 0">
+            <div class="progress-fill" :style="{ width: (ttsAudio.generationProgress.current / ttsAudio.generationProgress.total * 100) + '%' }"></div>
+          </div>
+        </div>
+        <!-- TTS Audio Status Indicator -->
+        <div v-else-if="ttsAudio.enabled" class="audio-status-indicator">
+          <span class="audio-status-badge available">
+            <i class="el-icon-headset"></i>
+            TTS Audio
+          </span>
         </div>
       </el-card>
       <el-collapse v-for="(item, index) in listItems" :key="item.paraphraseId || index" accordion class="kiwi-collapse">
@@ -1951,5 +2195,79 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* TTS Audio Generation Progress */
+.audio-generation-progress {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border-radius: var(--radius-md);
+}
+
+.audio-generation-progress .progress-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.audio-generation-progress .progress-info i {
+  color: var(--color-primary);
+  font-size: 16px;
+}
+
+.audio-generation-progress .progress-bar {
+  height: 6px;
+  background: var(--bg-container);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.audio-generation-progress .progress-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* TTS Audio Status Indicator */
+.audio-status-indicator {
+  margin-top: 14px;
+}
+
+.audio-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.audio-status-badge.available {
+  background: rgba(var(--color-success-rgb), 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(var(--color-success-rgb), 0.25);
+}
+
+.audio-status-badge.generating {
+  background: rgba(var(--color-primary-rgb), 0.12);
+  color: var(--color-primary);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+}
+
+.audio-status-badge.unavailable {
+  background: rgba(var(--color-warning-rgb), 0.12);
+  color: var(--color-warning);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.25);
+}
+
+.audio-status-badge i {
+  font-size: 14px;
 }
 </style>

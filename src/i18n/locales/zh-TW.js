@@ -555,5 +555,22 @@ export default {
         playing: '播放中...',
         clickToPlay: '點擊播放',
         nowPlaying: '正在播放'
+    },
+
+    // Review modes
+    review: {
+        // TTS 音訊生成
+        generatingAudio: '正在生成音訊...',
+        audioReady: '音訊就緒',
+        audioFilesReady: '個音訊檔案就緒',
+        audioFilesFailed: '個音訊檔案失敗',
+        audioGenerationFailed: '音訊生成失敗，使用備用方案',
+        audioGenerationInProgress: '音訊生成已在進行中',
+        ttsAudioNotEnabled: '伺服器未啟用TTS音訊',
+        startingAudioGeneration: '開始生成音訊...',
+        audioPreparationFailed: '音訊準備失敗',
+        prepareAudio: '準備音訊',
+        audioGenerationComplete: '音訊生成完成',
+        preparingAudioForReview: '正在準備複習音訊...'
     }
 }

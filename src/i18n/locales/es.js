@@ -384,5 +384,22 @@ export default {
         downloadForWindows: 'Descargar para Windows',
         downloadForLinux: 'Descargar para Linux',
         gdriveNote: 'Las descargas están alojadas en Google Drive. Si el enlace no se abre, cópielo y ábralo en una nueva pestaña.'
+    },
+
+    // Review modes
+    review: {
+        // Generación de audio TTS
+        generatingAudio: 'Generando audio...',
+        audioReady: 'Audio listo',
+        audioFilesReady: 'archivos de audio listos',
+        audioFilesFailed: 'archivos de audio fallidos',
+        audioGenerationFailed: 'Generación de audio fallida, usando respaldo',
+        audioGenerationInProgress: 'La generación de audio ya está en progreso',
+        ttsAudioNotEnabled: 'El audio TTS no está habilitado en el servidor',
+        startingAudioGeneration: 'Iniciando generación de audio...',
+        audioPreparationFailed: 'Preparación de audio fallida',
+        prepareAudio: 'Preparar audio',
+        audioGenerationComplete: 'Generación de audio completa',
+        preparingAudioForReview: 'Preparando audio para revisión...'
     }
 }
