@@ -317,7 +317,20 @@ export default {
         stockReviewChToEn: 'Standard Review (Chinese→English)',
         totalReviewChToEn: 'Complete Review (Chinese→English)',
         downloadResources: 'Download Resources',
-        modeTitle: 'Review Mode'
+        modeTitle: 'Review Mode',
+        // TTS Audio generation
+        generatingAudio: 'Generating audio...',
+        audioReady: 'Audio Ready',
+        audioFilesReady: 'audio files ready',
+        audioFilesFailed: 'audio files failed',
+        audioGenerationFailed: 'Audio generation failed, using fallback',
+        audioGenerationInProgress: 'Audio generation already in progress',
+        ttsAudioNotEnabled: 'TTS audio is not enabled on server',
+        startingAudioGeneration: 'Starting audio generation...',
+        audioPreparationFailed: 'Audio preparation failed',
+        prepareAudio: 'Prepare Audio',
+        audioGenerationComplete: 'Audio generation complete',
+        preparingAudioForReview: 'Preparing audio for review...'
     },
 
     // YouTube features

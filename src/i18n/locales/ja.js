@@ -404,5 +404,22 @@ export default {
         downloadForWindows: 'Windows 版をダウンロード',
         downloadForLinux: 'Linux 版をダウンロード',
         gdriveNote: 'ダウンロードは Google ドライブでホストされています。開けない場合は、リンクをコピーして新しいタブで開いてください。'
+    },
+
+    // Review modes
+    review: {
+        // TTS オーディオ生成
+        generatingAudio: 'オーディオを生成中...',
+        audioReady: 'オーディオ準備完了',
+        audioFilesReady: '個のオーディオファイル準備完了',
+        audioFilesFailed: '個のオーディオファイル失敗',
+        audioGenerationFailed: 'オーディオ生成に失敗しました。フォールバックを使用します',
+        audioGenerationInProgress: 'オーディオ生成はすでに進行中です',
+        ttsAudioNotEnabled: 'TTSオーディオはサーバーで有効になっていません',
+        startingAudioGeneration: 'オーディオ生成を開始...',
+        audioPreparationFailed: 'オーディオの準備に失敗しました',
+        prepareAudio: 'オーディオを準備',
+        audioGenerationComplete: 'オーディオ生成完了',
+        preparingAudioForReview: '復習用オーディオを準備中...'
     }
 }

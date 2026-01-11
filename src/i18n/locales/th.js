@@ -220,7 +220,20 @@ export default {
         refreshingResources: 'กำลังรีเฟรชแหล่งข้อมูลทบทวน',
         reviewNext: 'ทบทวนคำถัดไป',
         downloadNext: 'ดาวน์โหลดคำถัดไป',
-        autoReviewWarning: 'กำลังเริ่มทบทวนอัตโนมัติ กรุณารอสักครู่!'
+        autoReviewWarning: 'กำลังเริ่มทบทวนอัตโนมัติ กรุณารอสักครู่!',
+        // TTS Audio generation
+        generatingAudio: 'กำลังสร้างเสียง...',
+        audioReady: 'เสียงพร้อมแล้ว',
+        audioFilesReady: 'ไฟล์เสียงพร้อมแล้ว',
+        audioFilesFailed: 'ไฟล์เสียงล้มเหลว',
+        audioGenerationFailed: 'การสร้างเสียงล้มเหลว ใช้ทางเลือกสำรอง',
+        audioGenerationInProgress: 'การสร้างเสียงกำลังดำเนินการอยู่แล้ว',
+        ttsAudioNotEnabled: 'เสียง TTS ไม่ได้เปิดใช้งานบนเซิร์ฟเวอร์',
+        startingAudioGeneration: 'เริ่มสร้างเสียง...',
+        audioPreparationFailed: 'การเตรียมเสียงล้มเหลว',
+        prepareAudio: 'เตรียมเสียง',
+        audioGenerationComplete: 'สร้างเสียงเสร็จสมบูรณ์',
+        preparingAudioForReview: 'กำลังเตรียมเสียงสำหรับทบทวน...'
     },
 
     // YouTube features

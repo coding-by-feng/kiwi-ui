@@ -127,6 +127,23 @@ export default {
         DOWNLOAD_REVIEW_AUDIO: 'downloadReviewAudio'
     },
 
+    // New TTS Audio API configuration
+    REVIEW_AUDIO_API: {
+        BASE: '/api/word/review/audio',
+        ENABLED: true  // Can be overridden by server config
+    },
+
+    // Audio status states for UI
+    AUDIO_STATUS: {
+        AVAILABLE: 'available',
+        GENERATING: 'generating',
+        UNAVAILABLE: 'unavailable',
+        CACHED: 'cached'  // Audio is cached in IndexedDB
+    },
+
+    // IndexedDB store for TTS audio (separate from legacy audio)
+    TTS_AUDIO_DB_STORE_NAME: 'TTS_AUDIO_STORE',
+
     GRAMMAR_EN_TO_CH_HINT: new Map()
         .set('article', '冠词')
         .set('simple-present-tense', '一般现在时')

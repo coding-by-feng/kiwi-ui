@@ -382,5 +382,22 @@ export default {
         downloadForWindows: 'Windows 버전 다운로드',
         downloadForLinux: 'Linux 버전 다운로드',
         gdriveNote: '다운로드는 Google 드라이브에 호스팅됩니다. 열리지 않으면 링크를 복사해 새 탭에서 열어주세요.'
+    },
+
+    // Review modes
+    review: {
+        // TTS 오디오 생성
+        generatingAudio: '오디오 생성 중...',
+        audioReady: '오디오 준비 완료',
+        audioFilesReady: '개의 오디오 파일 준비 완료',
+        audioFilesFailed: '개의 오디오 파일 실패',
+        audioGenerationFailed: '오디오 생성 실패, 대체 사용',
+        audioGenerationInProgress: '오디오 생성이 이미 진행 중입니다',
+        ttsAudioNotEnabled: '서버에서 TTS 오디오가 활성화되지 않음',
+        startingAudioGeneration: '오디오 생성 시작...',
+        audioPreparationFailed: '오디오 준비 실패',
+        prepareAudio: '오디오 준비',
+        audioGenerationComplete: '오디오 생성 완료',
+        preparingAudioForReview: '복습용 오디오 준비 중...'
     }
 }

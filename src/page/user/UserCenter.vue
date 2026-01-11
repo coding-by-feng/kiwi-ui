@@ -85,6 +85,10 @@
               {{ currentThemeName }} <i class="el-icon-arrow-down"></i>
             </span>
             <template slot="dropdown">
+              <!-- AI Voice Theme (Default) -->
+              <KiwiDropdownItem command="ai-voice">
+                <span class="theme-option"><i class="theme-dot theme-dot--ai-voice"></i> AI Voice</span>
+              </KiwiDropdownItem>
               <!-- Dark/Neon Themes -->
               <KiwiDropdownItem command="cyberpunk">
                 <span class="theme-option"><i class="theme-dot theme-dot--cyberpunk"></i> CyberPunk</span>
@@ -482,6 +486,7 @@ export default {
     },
     currentThemeName() {
       const names = {
+        'ai-voice': 'AI Voice',
         'cyberpunk': 'CyberPunk',
         'glassmorphism': 'Glassmorphism',
         'neon-tokyo': 'Neon Tokyo',
@@ -493,7 +498,7 @@ export default {
         'forest-nature': 'Forest Nature',
         'minimal-gray': 'Minimal Gray'
       }
-      return names[this.user.theme] || 'CyberPunk'
+      return names[this.user.theme] || 'AI Voice'
     },
     availableUiLanguages() {
       return getAvailableLanguages()
@@ -587,10 +592,10 @@ export default {
       }
 
       if (util.isEmptyStr(this.user.theme)) {
-        setStore({ name: 'theme', content: 'cyberpunk', type: 'local' })
-        this.user.theme = 'cyberpunk'
+        setStore({ name: 'theme', content: 'ai-voice', type: 'local' })
+        this.user.theme = 'ai-voice'
       } else {
-        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'cyberpunk'
+        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'ai-voice'
       }
 
       // Initialize feature tabs visibility
@@ -921,7 +926,7 @@ export default {
         margin: 0 0 8px 0;
         font-size: 20px;
         font-weight: 600;
-        color: #ffffff;
+        color: var(--text-primary);
       }
 
       .user-email {
@@ -1521,6 +1526,11 @@ export default {
   border-radius: 50%;
   display: inline-block;
   box-shadow: 0 0 8px currentColor;
+
+  &--ai-voice {
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    box-shadow: 0 0 8px #8b5cf6;
+  }
 
   &--cyberpunk {
     background: linear-gradient(135deg, #00ffff, #ff00ff);

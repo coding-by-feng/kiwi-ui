@@ -609,7 +609,20 @@ export default {
     review: {
         stockReviewChToEn: '存量复习（汉英）',
         totalReviewChToEn: '全量复习（汉英）',
-        downloadResources: '下载资源'
+        downloadResources: '下载资源',
+        // TTS 音频生成
+        generatingAudio: '正在生成音频...',
+        audioReady: '音频就绪',
+        audioFilesReady: '个音频文件就绪',
+        audioFilesFailed: '个音频文件失败',
+        audioGenerationFailed: '音频生成失败，使用备用方案',
+        audioGenerationInProgress: '音频生成已在进行中',
+        ttsAudioNotEnabled: '服务器未启用TTS音频',
+        startingAudioGeneration: '开始生成音频...',
+        audioPreparationFailed: '音频准备失败',
+        prepareAudio: '准备音频',
+        audioGenerationComplete: '音频生成完成',
+        preparingAudioForReview: '正在准备复习音频...'
     },
 
 
