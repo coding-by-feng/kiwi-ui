@@ -284,18 +284,20 @@ export default {
             return
           }
 
-          // Build comparison keys WITHOUT 'now' - it's just a cache-buster and shouldn't trigger re-init
+          // Build comparison keys - include 'now' to allow explicit retry requests
           const newKey = [
             String(newQ.selectedMode || ''),
             String(newQ.language || ''),
             String(newQ.nativeLanguage || ''),
-            String(newQ.originalText || '')
+            String(newQ.originalText || ''),
+            String(newQ.now || '')
           ].join('|')
           const oldKey = [
             String(oldQ && oldQ.selectedMode || ''),
             String(oldQ && oldQ.language || ''),
             String(oldQ && oldQ.nativeLanguage || ''),
-            String(oldQ && oldQ.originalText || '')
+            String(oldQ && oldQ.originalText || ''),
+            String(oldQ && oldQ.now || '')
           ].join('|')
           // Ignore route churn if core inputs haven't changed
           if (newKey === oldKey) return
