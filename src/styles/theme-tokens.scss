@@ -8,7 +8,7 @@
 // Light, professional, with subtle purple/blue accents
 // ============================================
 :root,
-[data-theme="ai-voice"] {
+[data-theme="white-blue"] {
   // Background colors - clean white with subtle warmth
   --bg-body: #fafbfc;
   --bg-container: #ffffff;
@@ -132,7 +132,7 @@
   --font-weight-bold: 700;
 
   // Animation properties
-  --animation-glow-pulse: ai-voice-pulse 3s ease-in-out infinite;
+  --animation-glow-pulse: white-blue-pulse 3s ease-in-out infinite;
   --animation-shimmer: shimmer 2.5s linear infinite;
   --animation-float: float 4s ease-in-out infinite;
   --animation-neon-flicker: none;
@@ -2585,7 +2585,7 @@ body {
 }
 
 // AI Voice pulse animation
-@keyframes ai-voice-pulse {
+@keyframes white-blue-pulse {
   0%, 100% {
     box-shadow: 0 0 10px rgba(139, 92, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.1);
   }
@@ -2595,7 +2595,7 @@ body {
 }
 
 // AI Voice flicker animation
-@keyframes ai-voice-flicker {
+@keyframes white-blue-flicker {
   0%, 100% {
     opacity: 1;
     filter: brightness(1);
@@ -2650,16 +2650,16 @@ body {
   background: #18181b;
 }
 
-[data-theme="ai-voice"] body {
+[data-theme="white-blue"] body {
   background: #fafbfc;
 }
 
 // ============================================
 // LIGHT THEME ELEMENT UI OVERRIDES
-// For ai-voice, clean-white and classic-book themes
+// For white-blue, clean-white and classic-book themes
 // ============================================
 
-[data-theme="ai-voice"],
+[data-theme="white-blue"],
 [data-theme="clean-white"],
 [data-theme="classic-book"] {
   // Scrollbar for light themes
