@@ -86,8 +86,8 @@
             </span>
             <template slot="dropdown">
               <!-- AI Voice Theme (Default) -->
-              <KiwiDropdownItem command="ai-voice">
-                <span class="theme-option"><i class="theme-dot theme-dot--ai-voice"></i> AI Voice</span>
+              <KiwiDropdownItem command="white-blue">
+                <span class="theme-option"><i class="theme-dot theme-dot--white-blue"></i> AI Voice</span>
               </KiwiDropdownItem>
               <!-- Dark/Neon Themes -->
               <KiwiDropdownItem command="cyberpunk">
@@ -486,7 +486,7 @@ export default {
     },
     currentThemeName() {
       const names = {
-        'ai-voice': 'AI Voice',
+        'white-blue': 'White Blue',
         'cyberpunk': 'CyberPunk',
         'glassmorphism': 'Glassmorphism',
         'neon-tokyo': 'Neon Tokyo',
@@ -592,10 +592,10 @@ export default {
       }
 
       if (util.isEmptyStr(this.user.theme)) {
-        setStore({ name: 'theme', content: 'ai-voice', type: 'local' })
-        this.user.theme = 'ai-voice'
+        setStore({ name: 'theme', content: 'white-blue', type: 'local' })
+        this.user.theme = 'white-blue'
       } else {
-        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'ai-voice'
+        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'white-blue'
       }
 
       // Initialize feature tabs visibility
@@ -1527,7 +1527,7 @@ export default {
   display: inline-block;
   box-shadow: 0 0 8px currentColor;
 
-  &--ai-voice {
+  &--white-blue {
     background: linear-gradient(135deg, #8b5cf6, #3b82f6);
     box-shadow: 0 0 8px #8b5cf6;
   }
