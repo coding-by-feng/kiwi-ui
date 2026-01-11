@@ -846,6 +846,7 @@ export default {
 .selected-text-reference {
   padding: 8px 10px;
   color: var(--text-secondary);
+  text-align: left;
 }
 
 .selection-response-content {
