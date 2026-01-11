@@ -136,8 +136,18 @@ export default {
 
       // Auto placement logic
       if (placement === 'auto') {
-        // Determine vertical placement
-        const verticalPlacement = spaceBelow >= menuRect.height || spaceBelow >= spaceAbove ? 'bottom' : 'top'
+        // Determine vertical placement - prefer the side that can fit the menu
+        let verticalPlacement
+        if (spaceBelow >= menuRect.height) {
+          // Enough space below - use bottom
+          verticalPlacement = 'bottom'
+        } else if (spaceAbove >= menuRect.height) {
+          // Enough space above - use top
+          verticalPlacement = 'top'
+        } else {
+          // Neither side has enough space - use the side with more space
+          verticalPlacement = spaceBelow >= spaceAbove ? 'bottom' : 'top'
+        }
         // Determine horizontal placement
         const horizontalPlacement = spaceRight >= menuRect.width || spaceRight >= spaceLeft ? 'start' : 'end'
         placement = `${verticalPlacement}-${horizontalPlacement}`

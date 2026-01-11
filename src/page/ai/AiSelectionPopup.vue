@@ -261,17 +261,18 @@ export default {
     },
     aiModeOptions() {
       const modes = kiwiConsts.SEARCH_AI_MODES
+      // Reversed order for top-start dropdown placement (first items appear at bottom, closest to trigger)
       return [
-        modes.DIRECTLY_TRANSLATION,
-        modes.TRANSLATION_AND_EXPLANATION,
-        modes.VOCABULARY_EXPLANATION,
-        modes.GRAMMAR_EXPLANATION,
-        modes.GRAMMAR_CORRECTION,
-        modes.SYNONYM,
-        modes.ANTONYM,
-        modes.VOCABULARY_ASSOCIATION,
+        modes.NATURAL_IDIOMATIC_RETOUCH,
         modes.PHRASES_ASSOCIATION,
-        modes.NATURAL_IDIOMATIC_RETOUCH
+        modes.VOCABULARY_ASSOCIATION,
+        modes.ANTONYM,
+        modes.SYNONYM,
+        modes.GRAMMAR_CORRECTION,
+        modes.GRAMMAR_EXPLANATION,
+        modes.VOCABULARY_EXPLANATION,
+        modes.TRANSLATION_AND_EXPLANATION,
+        modes.DIRECTLY_TRANSLATION
       ]
     },
     selectedAiModeLabel() {
