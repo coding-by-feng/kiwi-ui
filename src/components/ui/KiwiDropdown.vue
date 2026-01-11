@@ -69,9 +69,20 @@ export default {
         this.visible = true
         this.$nextTick(() => {
           this.updatePosition()
+          this.scrollToInitialPosition()
         })
       } else {
         this.visible = false
+      }
+    },
+    scrollToInitialPosition() {
+      const menu = this.$refs.menu
+      if (!menu) return
+      // For top placements, scroll to bottom so items closest to trigger are visible first
+      if (this.actualPlacement.startsWith('top')) {
+        menu.scrollTop = menu.scrollHeight
+      } else {
+        menu.scrollTop = 0
       }
     },
     close() {
@@ -157,13 +168,7 @@ export default {
         const horizontalPlacement = spaceRight >= menuRect.width || spaceRight >= spaceLeft ? 'start' : 'end'
         placement = `${verticalPlacement}-${horizontalPlacement}`
       } else {
-        // Adjust if not enough space
-        if (placement.startsWith('bottom') && spaceBelow < menuRect.height && spaceAbove > spaceBelow) {
-          placement = placement.replace('bottom', 'top')
-        } else if (placement.startsWith('top') && spaceAbove < menuRect.height && spaceBelow > spaceAbove) {
-          placement = placement.replace('top', 'bottom')
-        }
-
+        // Only adjust horizontal placement if needed, keep vertical placement as requested
         if (placement.endsWith('start') && spaceRight < menuRect.width && spaceLeft > spaceRight) {
           placement = placement.replace('start', 'end')
         } else if (placement.endsWith('end') && spaceLeft < menuRect.width && spaceRight > spaceLeft) {
@@ -189,14 +194,10 @@ export default {
         }
       }
 
-      // Set max-height based on available space
-      const maxHeight = placement.startsWith('bottom')
-        ? Math.min(320, spaceBelow - 16)
-        : Math.min(320, spaceAbove - 16)
-
-      if (maxHeight < 320) {
-        style.maxHeight = `${Math.max(120, maxHeight)}px`
-      }
+      // Set max-height based on available space, capped at 320px
+      const availableSpace = placement.startsWith('bottom') ? spaceBelow - 16 : spaceAbove - 16
+      const maxHeight = Math.min(320, Math.max(120, availableSpace))
+      style.maxHeight = `${maxHeight}px`
 
       this.menuStyle = style
     }
