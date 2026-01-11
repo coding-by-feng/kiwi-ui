@@ -261,8 +261,11 @@ export default {
     },
     aiModeOptions() {
       const modes = kiwiConsts.SEARCH_AI_MODES
-      // Reversed order for top-start dropdown placement (first items appear at bottom, closest to trigger)
+      // For top-start placement: last items appear at bottom (closest to trigger)
+      // Menu auto-scrolls to bottom on open, so most common options are visible first
       return [
+        modes.AMBIGUOUS_ASSOCIATION_CORRECTION,
+        modes.VOCABULARY_CHARACTER_EXPANSION,
         modes.NATURAL_IDIOMATIC_RETOUCH,
         modes.PHRASES_ASSOCIATION,
         modes.VOCABULARY_ASSOCIATION,
@@ -808,8 +811,36 @@ export default {
 }
 
 .ai-mode-selector {
-  width: 180px;
   flex-shrink: 0;
+}
+
+/* Ensure dropdown menu can show all AI mode items */
+.ai-mode-selector :deep(.kiwi-dropdown-menu) {
+  min-width: 240px;
+}
+
+/* Make AI selection popup dialog transparent and ensure sufficient height for dropdown */
+.ai-selection-popup-wrapper :deep(.kiwi-dialog__wrapper) {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.ai-selection-popup-wrapper :deep(.kiwi-dialog) {
+  background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.95);
+  backdrop-filter: blur(12px);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-selection-popup-wrapper :deep(.kiwi-dialog__body) {
+  flex: 1;
+  min-height: 200px;
+}
+
+.ai-selection-popup-wrapper :deep(.kiwi-dialog__footer) {
+  position: relative;
+  overflow: visible;
+  padding-top: 24px;
 }
 
 /* Contextual explanations styling */
@@ -904,6 +935,12 @@ export default {
   }
   .ai-mode-selector {
     width: 100%;
+  }
+  .ai-mode-selector :deep(.kiwi-dropdown-menu) {
+    left: 0;
+    right: 0;
+    min-width: auto;
+    max-width: calc(100vw - 40px);
   }
 }
 
