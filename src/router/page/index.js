@@ -9,6 +9,7 @@ import UserCenter from '@/page/user/UserCenter'
 import About from '@/page/about/Index'
 import AiResponseDetail from '@/page/ai/AiResponseDetail.vue'
 import AiCallHistory from '@/page/ai/AiCallHistory.vue' // Import the new AI call history component
+import AiConversationGenerator from '@/page/ai/AiConversationGenerator.vue' // AI Conversation Generator
 import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
 import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
@@ -40,7 +41,7 @@ export default [{
             youtubePlayer: YoutubePlayer, // Use the new component here
             todo: TodoView, // Add the todo component
             aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
-            aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
+            aiConversation: AiConversationGenerator, // AI Conversation Generator tab
             pdfReader: PdfReader
         },
         children: [{

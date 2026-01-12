@@ -4,8 +4,6 @@ import wordStarList from '@/api/wordStarList'
 import paraphraseStarList from '@/api/paraphraseStarList'
 import exampleStarList from '@/api/exampleStarList'
 import kiwiConsts from '@/const/kiwiConsts'
-import audioUtil from '@/util/audioUtil'
-import reviewAudioApi from '@/api/reviewAudio'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
@@ -109,24 +107,12 @@ export default {
       controlBarOffsetTop: 0,
       // control bar fold/expand state
       isControlBarFolded: false,
-      // TTS Audio state
-      ttsAudio: {
-        enabled: false,               // Whether TTS audio is enabled on server
-        isGenerating: false,          // Whether audio generation is in progress
-        generatingListId: null,       // ID of list currently being generated
-        generationProgress: {
-          current: 0,
-          total: 0
-        }
-      },
       // Track which row's dropdown is currently active (for z-index management)
       activeDropdownRowId: null
     }
   },
   async mounted() {
     await this.init(false)
-    // Initialize TTS audio system in background
-    this.initTtsAudioSystem()
     this.$nextTick(() => {
       this.updateControlBarMetrics()
       window.addEventListener('resize', this.updateControlBarMetrics, { passive: true })
@@ -552,89 +538,6 @@ export default {
     },
     handleRowDropdownVisible(rowId, visible) {
       this.activeDropdownRowId = visible ? rowId : null
-    },
-
-    // ============================================
-    // TTS AUDIO METHODS
-    // ============================================
-
-    /**
-     * Initialize TTS audio system
-     */
-    async initTtsAudioSystem() {
-      try {
-        const config = await audioUtil.initTtsAudioSystem()
-        this.ttsAudio.enabled = config.enabled
-        console.log('TTS Audio enabled:', config.enabled)
-      } catch (e) {
-        console.warn('Failed to init TTS audio:', e)
-        this.ttsAudio.enabled = false
-      }
-    },
-
-    /**
-     * Prepare audio for a specific list
-     * @param {number} listId - List ID to prepare audio for
-     */
-    async prepareAudioForList(listId) {
-      if (this.ttsAudio.isGenerating) {
-        this.$message.warning(this.$t('review.audioGenerationInProgress') || 'Audio generation already in progress')
-        return
-      }
-
-      if (!this.ttsAudio.enabled) {
-        // Try to initialize first
-        await this.initTtsAudioSystem()
-        if (!this.ttsAudio.enabled) {
-          this.$message.warning(this.$t('review.ttsAudioNotEnabled') || 'TTS audio is not enabled on server')
-          return
-        }
-      }
-
-      try {
-        this.ttsAudio.isGenerating = true
-        this.ttsAudio.generatingListId = listId
-        this.ttsAudio.generationProgress = { current: 0, total: 0 }
-
-        this.$message.info(this.$t('review.startingAudioGeneration') || 'Starting audio generation...')
-
-        const result = await audioUtil.generateAndCacheAudioForList(
-          listId,
-          (current, total, paraphraseId, status) => {
-            this.ttsAudio.generationProgress.current = current
-            this.ttsAudio.generationProgress.total = total
-          }
-        )
-
-        if (result.enabled) {
-          const cached = result.cached || {}
-          const successCount = (cached.success?.length || 0) + (cached.cached?.length || 0)
-          const failedCount = cached.failed?.length || 0
-
-          if (successCount > 0) {
-            this.$message.success(`${successCount} ${this.$t('review.audioFilesReady') || 'audio files ready'}`)
-          }
-          if (failedCount > 0) {
-            this.$message.warning(`${failedCount} ${this.$t('review.audioFilesFailed') || 'audio files failed'}`)
-          }
-        } else {
-          this.$message.warning(this.$t('review.ttsAudioNotEnabled') || 'TTS audio is not enabled')
-        }
-      } catch (e) {
-        console.error('Audio preparation failed:', e)
-        this.$message.error(this.$t('review.audioPreparationFailed') || 'Audio preparation failed')
-      } finally {
-        this.ttsAudio.isGenerating = false
-        this.ttsAudio.generatingListId = null
-      }
-    },
-
-    /**
-     * Handle prepare audio button click for a specific row
-     * @param {object} row - List row data
-     */
-    handlePrepareAudio(row) {
-      this.prepareAudioForList(row.id)
     }
   },
   computed: {
@@ -726,18 +629,6 @@ export default {
               <KiwiDropdownItem command="totalRead">{{ $t('review.totalRead') }}</KiwiDropdownItem>
             </template>
           </KiwiDropdown>
-
-          <!-- Audio preparation button (paraphrase list only, not in edit mode) -->
-          <button
-            v-if="list.listType === 'paraphrase' && !list.editMode && ttsAudio.enabled"
-            class="audio-prep-btn"
-            :disabled="ttsAudio.isGenerating"
-            :class="{ 'is-generating': ttsAudio.isGenerating && ttsAudio.generatingListId === row.id }"
-            @click.stop="handlePrepareAudio(row)"
-            :title="$t('review.prepareAudio') || 'Prepare Audio'">
-            <i v-if="ttsAudio.isGenerating && ttsAudio.generatingListId === row.id" class="el-icon-loading"></i>
-            <i v-else class="el-icon-headset"></i>
-          </button>
 
           <!-- Edit actions -->
           <div v-if="list.editMode" class="row-actions">
@@ -1387,64 +1278,6 @@ export default {
 
 .row-select:hover:not(:disabled) i {
   transform: translateY(2px);
-}
-
-/* ========================================
-   AUDIO PREPARATION BUTTON
-   ======================================== */
-.audio-prep-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: rgba(var(--color-success-rgb), 0.1);
-  color: var(--color-success);
-  border: 1.5px solid rgba(var(--color-success-rgb), 0.3);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-
-.audio-prep-btn i {
-  font-size: 16px;
-}
-
-.audio-prep-btn:hover:not(:disabled) {
-  background: var(--color-success);
-  color: #fff;
-  border-color: var(--color-success);
-  box-shadow:
-    0 4px 12px rgba(var(--color-success-rgb), 0.3),
-    0 0 0 3px rgba(var(--color-success-rgb), 0.1);
-  transform: scale(1.05);
-}
-
-.audio-prep-btn:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
-.audio-prep-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.audio-prep-btn.is-generating {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
 }
 
 /* ========================================

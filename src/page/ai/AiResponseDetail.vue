@@ -1547,12 +1547,108 @@ h1 {
 .main-response-content { text-align: left; margin-bottom: 40px; color: var(--text-primary); }
 </style>
 <style lang="scss" scoped>
-// Mobile-specific: allow text selection in content areas while preventing accidental selections elsewhere
+// Responsive styles for AI Response Detail
+@media (max-width: 992px) {
+  .ai-container {
+    max-width: 100%;
+    padding: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .ai-container {
+    padding: 14px;
     // Allow text selection by default
     user-select: text;
     -webkit-user-select: text;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  // Original text container
+  .original-text-container {
+    margin-bottom: 20px;
+    border-radius: 12px;
+  }
+
+  .original-text-title {
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .title-text {
+    font-size: 14px;
+  }
+
+  .original-text-content {
+    padding: 14px;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  // Selection response container
+  .selection-response-container {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .selection-response-title {
+    font-size: 1.1rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .selection-response-title i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+  }
+
+  .selection-title-controls {
+    margin-left: auto;
+  }
+
+  .selected-text-reference {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+  }
+
+  .selection-response-content {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  // Main response container
+  .response-container {
+    padding-top: 50px;
+  }
+
+  .copy-button,
+  .regen-button {
+    position: static;
+    display: inline-flex;
+    margin-right: 8px;
+    margin-bottom: 12px;
+  }
+
+  .main-response-content {
+    margin-bottom: 20px;
+  }
+
+  // Selection dialog footer
+  .dialog-footer {
+    padding: 14px 16px;
+  }
+
+  .dialog-footer .el-button {
+    padding: 10px 18px;
+    font-size: 13px;
+    min-width: 120px;
+    margin: 4px;
   }
 
   // Ensure content areas are selectable
@@ -1572,6 +1668,147 @@ h1 {
   .selection-dialog-footer {
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  // Inline error styling
+  .inline-error {
+    padding: 8px 10px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ai-container {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .original-text-title {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+
+  .original-text-content {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+
+  .selection-response-container {
+    padding: 14px;
+  }
+
+  .selection-response-title {
+    font-size: 1rem;
+  }
+
+  .response-container {
+    padding-top: 0;
+  }
+
+  .copy-button,
+  .regen-button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+    justify-content: center;
+  }
+
+  .dialog-footer .el-button {
+    width: 100%;
+    margin: 4px 0;
+  }
+
+  .selection-dialog-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .selection-dialog-footer .el-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-container {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+  }
+
+  .original-text-container {
+    margin-bottom: 14px;
+  }
+
+  .original-text-title {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .collapse-icon {
+    font-size: 14px;
+  }
+
+  .original-text-content {
+    padding: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .selection-response-container {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .selection-response-title {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .fold-selection-button,
+  .close-selection-button {
+    padding: 3px 6px;
+    font-size: 1rem;
+  }
+
+  .selected-text-reference {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  .selection-response-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .main-response-content {
+    font-size: 0.95rem;
+  }
+
+  // Selected text preview in dialog
+  .selected-text-preview {
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
+  .selected-text-preview strong {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  .selected-text {
+    font-size: 0.9rem;
+    max-height: 100px;
   }
 }
 </style>

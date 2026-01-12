@@ -85,9 +85,9 @@
               {{ currentThemeName }} <i class="el-icon-arrow-down"></i>
             </span>
             <template slot="dropdown">
-              <!-- AI Voice Theme (Default) -->
+              <!-- White Blue Theme (Default) -->
               <KiwiDropdownItem command="white-blue">
-                <span class="theme-option"><i class="theme-dot theme-dot--white-blue"></i> AI Voice</span>
+                <span class="theme-option"><i class="theme-dot theme-dot--white-blue"></i> White Blue</span>
               </KiwiDropdownItem>
               <!-- Dark/Neon Themes -->
               <KiwiDropdownItem command="cyberpunk">
@@ -498,7 +498,7 @@ export default {
         'forest-nature': 'Forest Nature',
         'minimal-gray': 'Minimal Gray'
       }
-      return names[this.user.theme] || 'AI Voice'
+      return names[this.user.theme] || 'White Blue'
     },
     availableUiLanguages() {
       return getAvailableLanguages()
