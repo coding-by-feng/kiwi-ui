@@ -3,177 +3,107 @@
     <h2 id="youtubeChannelManagerHead">YouTube Channel</h2>
 
     <!-- Channel submission form -->
-    <el-card class="submit-card">
-      <el-input
+    <div class="submit-card">
+      <KiwiInput
           v-model="newChannelInput"
           placeholder="Enter YouTube channel link or name"
           class="input-with-submit"
-          @keyup.enter.native="submitChannel"
+          @keyup.enter="submitChannel"
       >
         <template #append>
-          <el-button icon="el-icon-plus" @click="submitChannel" :loading="submitting">
-          </el-button>
+          <KiwiButton icon="el-icon-plus" @click="submitChannel" :loading="submitting">
+          </KiwiButton>
         </template>
-      </el-input>
-    </el-card>
+      </KiwiInput>
+    </div>
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="3" animated/>
+      <i class="el-icon-loading"></i>
     </div>
 
     <!-- Tabs -->
     <div v-else>
-      <el-tabs v-model="activeTabName" type="border-card">
+      <KiwiTabs v-model="activeTabName" type="border-card">
         <!-- Channels tab -->
-        <el-tab-pane label="My Channels" name="channels">
-          <el-empty v-if="channels.length === 0" description="No channels added yet"></el-empty>
+        <KiwiTabPane label="My Channels" name="channels">
+          <div v-if="channels.length === 0" class="empty-state">No channels added yet</div>
 
-          <!-- Channel list (desktop/tablet) -->
-          <el-table v-else-if="!isSmallScreen"
-              :data="channels"
-              stripe
-              style="width: 100%"
-              @row-click="handleChannelClick">
-            <el-table-column prop="channelName" label="Channel Name" min-width="200" class-name="channel-name-col">
-              <template #default="scope">
-                <div class="channel-name">{{ scope.row.channelName }}</div>
-              </template>
-            </el-table-column>
-            <!-- Favorite toggle -->
-            <el-table-column label="Favorite" width="130" class-name="favorite-col-cell">
-              <template #default="scope">
-                <el-button type="text"
-                           :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                           :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                           :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                           :disabled="!!pendingChannelFavorite[scope.row.channelId]"
-                           @click.stop="toggleChannelFavorite(scope.row)"></el-button>
-              </template>
-            </el-table-column>
-            <el-table-column width="120">
-              <template #default="scope">
-                <el-button type="text" size="small" @click.stop="handleChannelClick(scope.row)">View</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <!-- Channel list (mobile) -->
-          <el-table v-else
-              :data="channels"
-              style="width: 100%">
-            <el-table-column label="Channel">
-              <template #default="scope">
-                <div class="channel-row-mobile clickable" @click="handleChannelClick(scope.row)">
-                  <div class="row-top">
-                    <div class="title-text">{{ scope.row.channelName }}</div>
-                  </div>
-                  <div class="row-bottom">
-                    <el-button type="text"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingChannelFavorite[scope.row.channelId]"
-                               @click.stop="toggleChannelFavorite(scope.row)"></el-button>
-                    <el-button type="text" size="small" class="ml-8" @click.stop="handleChannelClick(scope.row)">View</el-button>
-                  </div>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
+          <!-- Channel list -->
+          <div v-else class="channel-list">
+            <div v-for="channel in channels" :key="channel.channelId" class="channel-item" @click="handleChannelClick(channel)">
+              <div class="channel-content">
+                <div class="channel-name">{{ channel.channelName }}</div>
+              </div>
+              <div class="channel-actions">
+                <KiwiButton type="text"
+                           :icon="channel.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                           :class="['fav-btn', channel.favorited ? 'favorited' : '']"
+                           :aria-pressed="channel.favorited ? 'true' : 'false'"
+                           :disabled="!!pendingChannelFavorite[channel.channelId]"
+                           @click.stop="toggleChannelFavorite(channel)"></KiwiButton>
+                <KiwiButton type="text" size="small" class="ml-8" @click.stop="handleChannelClick(channel)">View</KiwiButton>
+              </div>
+            </div>
+          </div>
 
           <!-- Channel pagination -->
           <div class="pagination-container">
-            <el-pagination
+            <KiwiPagination
                 @size-change="handleChannelSizeChange"
                 @current-change="handleChannelCurrentChange"
-                :current-page="channelQuery.current"
+                :current-page.sync="channelQuery.current"
                 :page-size="channelQuery.size"
-                layout="total, prev, next"
                 :total="channelTotal"
             >
-            </el-pagination>
+            </KiwiPagination>
           </div>
-        </el-tab-pane>
+        </KiwiTabPane>
 
         <!-- Videos Tab for a selected channel -->
-        <el-tab-pane v-if="selectedChannel" :label="'Videos: ' + selectedChannel.channelName" name="videos">
-          <el-page-header @back="goBackToChannels" :content="selectedChannel.channelName" title="" />
+        <KiwiTabPane v-if="selectedChannel" :label="'Videos: ' + selectedChannel.channelName" name="videos">
+          <div class="page-header">
+             <KiwiButton type="text" icon="el-icon-back" @click="goBackToChannels">Back</KiwiButton>
+             <span class="header-title">{{ selectedChannel.channelName }}</span>
+          </div>
 
-          <!-- Desktop/tablet layout now uses stacked multi-line rows to avoid horizontal scroll -->
-          <el-table v-if="!isSmallScreen"
-              :data="videos"
-              style="width: 100%; margin-top: 20px">
-            <el-table-column label="Video">
-              <template #default="scope">
-                <div class="video-row-desktop clickable" @click="openVideoUrl(scope.row.videoLink, scope.row.id, scope.row.favorited)">
-                  <div class="row-top">
-                    <div class="title-text">{{ scope.row.videoTitle }}</div>
-                  </div>
-                  <div class="row-middle" v-if="scope.row.publishedAt">
-                    <span class="rel">{{ formatRelative(scope.row.publishedAt) }}</span>
-                    <span class="sep">·</span>
-                    <span class="abs">{{ formatLocalDateTime(scope.row.publishedAt) }}</span>
-                  </div>
-                  <div class="row-bottom">
-                    <el-tag size="mini" effect="dark">{{ getStatusText(scope.row.status) }}</el-tag>
-                    <el-button type="text"
-                               class="ml-8"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingVideoFavorite[scope.row.id || scope.row.videoLink]"
-                               @click.stop="toggleVideoFavorite(scope.row)"></el-button>
-                  </div>
+          <!-- Video list -->
+          <div class="video-list">
+            <div v-for="video in videos" :key="video.id" class="video-item" @click="openVideoUrl(video.videoLink, video.id, video.favorited)">
+              <div class="video-content">
+                <div class="video-title">{{ video.videoTitle }}</div>
+                <div class="video-meta" v-if="video.publishedAt">
+                  <span class="rel">{{ formatRelative(video.publishedAt) }}</span>
+                  <span class="sep">·</span>
+                  <span class="abs">{{ formatLocalDateTime(video.publishedAt) }}</span>
                 </div>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <!-- Mobile layout: stacked rows, click anywhere -->
-          <el-table v-else
-              :data="videos"
-              style="width: 100%; margin-top: 20px">
-            <el-table-column label="Video">
-              <template #default="scope">
-                <div class="video-row-mobile clickable" @click="openVideoUrl(scope.row.videoLink, scope.row.id, scope.row.favorited)">
-                  <div class="row-top">
-                    <div class="title-text">{{ scope.row.videoTitle }}</div>
-                  </div>
-                  <div class="row-middle" v-if="scope.row.publishedAt">
-                    <span class="rel">{{ formatRelative(scope.row.publishedAt) }}</span>
-                    <span class="sep">·</span>
-                    <span class="abs">{{ formatLocalDateTime(scope.row.publishedAt) }}</span>
-                  </div>
-                  <div class="row-bottom">
-                    <el-tag size="mini" effect="dark">{{ getStatusText(scope.row.status) }}</el-tag>
-                    <el-button type="text"
-                               class="ml-8"
-                               :icon="scope.row.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-                               :class="['fav-btn', scope.row.favorited ? 'favorited' : '']"
-                               :aria-pressed="scope.row.favorited ? 'true' : 'false'"
-                               :disabled="!!pendingVideoFavorite[scope.row.id || scope.row.videoLink]"
-                               @click.stop="toggleVideoFavorite(scope.row)"></el-button>
-                  </div>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
+              </div>
+              <div class="video-actions">
+                <KiwiTag size="mini" effect="dark">{{ getStatusText(video.status) }}</KiwiTag>
+                <KiwiButton type="text"
+                           class="ml-8"
+                           :icon="video.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                           :class="['fav-btn', video.favorited ? 'favorited' : '']"
+                           :aria-pressed="video.favorited ? 'true' : 'false'"
+                           :disabled="!!pendingVideoFavorite[video.id || video.videoLink]"
+                           @click.stop="toggleVideoFavorite(video)"></KiwiButton>
+              </div>
+            </div>
+          </div>
 
           <!-- Video pagination -->
           <div class="pagination-container">
-            <el-pagination
+            <KiwiPagination
                 @size-change="handleVideoSizeChange"
                 @current-change="handleVideoCurrentChange"
-                :current-page="videoQuery.current"
+                :current-page.sync="videoQuery.current"
                 :page-size="videoQuery.size"
-                layout="total, prev, next"
                 :total="videoTotal"
             >
-            </el-pagination>
+            </KiwiPagination>
           </div>
-        </el-tab-pane>
-      </el-tabs>
+        </KiwiTabPane>
+      </KiwiTabs>
     </div>
   </div>
 </template>
@@ -192,8 +122,16 @@ import {
 } from '@/api/ai'
 import kiwiConsts from '@/const/kiwiConsts'
 
+import KiwiInput from '@/components/ui/KiwiInput'
+import KiwiButton from '@/components/ui/KiwiButton'
+import KiwiTabs from '@/components/ui/KiwiTabs'
+import KiwiTabPane from '@/components/ui/KiwiTabPane'
+import KiwiTag from '@/components/ui/KiwiTag'
+import KiwiPagination from '@/components/ui/KiwiPagination'
+
 export default {
-  name: 'YoutubeChannel',
+  name: 'YoutubeChannelManager',
+  components: { KiwiInput, KiwiButton, KiwiTabs, KiwiTabPane, KiwiTag, KiwiPagination },
   data() {
     return {
       activeTabName: 'channels',
@@ -251,7 +189,7 @@ export default {
       this.loading = true
       try {
         const response = await getChannelList(this.channelQuery.current, this.channelQuery.size)
-        if (response.data.code === 1) {
+        if (response.data.code === 0 || response.data.success) {
           this.channels = response.data.data.records || []
           this.channelTotal = response.data.data.total || 0
         } else {
@@ -273,7 +211,7 @@ export default {
       this.submitting = true
       try {
         const response = await submitChannel(this.newChannelInput)
-        if (response.data.code === 1) {
+        if (response.data.code === 0 || response.data.success) {
           this.$message.success('Channel added successfully')
           this.newChannelInput = ''
           this.fetchChannels()
@@ -302,16 +240,20 @@ export default {
       this.selectedChannel = row
       this.activeTabName = 'videos'
       this.videoQuery.current = 1
-      this.selectedChannel.id = row.channelId
+      // Use channelId if available, otherwise fall back to id
+      this.selectedChannel.id = row.channelId || row.id
       await this.fetchVideos()
     },
 
     async fetchVideos() {
-      if (!this.selectedChannel) return
+      if (!this.selectedChannel || !this.selectedChannel.id) {
+        console.error('No valid channel ID for fetching videos')
+        return
+      }
       this.loading = true
       try {
         const response = await getChannelVideos(this.selectedChannel.id, this.videoQuery.current, this.videoQuery.size)
-        if (response.data.code === 1) {
+        if (response.data.code === 0 || response.data.success) {
           const records = response.data.data.records || []
           this.videos = records.slice().sort((a, b) => {
             const da = this.parseLocalDateTime(a && a.publishedAt)
@@ -391,17 +333,17 @@ export default {
         if (id) {
           const api = item.favorited ? favoriteVideo : unfavoriteVideo
           res = await api(id)
-          ok = !!(res && res.data && res.data.code === 1)
+          ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
           // If ID path failed and we have URL, fallback to URL endpoint
           if (!ok && url) {
             const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
             res = await apiUrl(url)
-            ok = !!(res && res.data && res.data.code === 1)
+            ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
           }
         } else if (url) {
           const apiUrl = item.favorited ? favoriteVideoByUrl : unfavoriteVideoByUrl
           res = await apiUrl(url)
-          ok = !!(res && res.data && res.data.code === 1)
+          ok = !!(res && res.data && (res.data.code === 0 || res.data.success))
         }
 
         if (!ok) {
@@ -423,7 +365,10 @@ export default {
     },
 
     async toggleChannelFavorite(item) {
-      const id = item.channelId
+      const id = item.channelId || item.id
+      if (!id) {
+        return this.$message.error('No valid channel identifier')
+      }
       if (this.pendingChannelFavorite[id]) return
       this.$set(this.pendingChannelFavorite, id, true)
       const prevFavorited = !!item.favorited
@@ -435,7 +380,7 @@ export default {
       try {
         const api = item.favorited ? favoriteChannel : unfavoriteChannel
         const res = await api(id)
-        const ok = res && res.data && res.data.code === 1
+        const ok = res && res.data && (res.data.code === 0 || res.data.success)
         if (!ok) {
           // rollback on failure
           item.favorited = prevFavorited
@@ -554,27 +499,6 @@ export default {
 </script>
 
 <style scoped>
-/* Wrap table cells to avoid horizontal scrolling */
-.youtube-channel-manager .el-table .cell {
-  white-space: normal !important;
-  word-break: break-word;
-}
-
-/* Wrap long channel names into multiple lines and avoid horizontal scroll */
-.youtube-channel-manager .el-table td.channel-name-col .cell {
-  white-space: normal !important; /* override element-ui default nowrap */
-  word-break: break-word;
-  line-height: 1.4;
-}
-.youtube-channel-manager .channel-name {
-  white-space: inherit;
-}
-
-/* Add a bit more spacing between Status and Favorite columns */
-.youtube-channel-manager .el-table td.favorite-col-cell .cell {
-  padding-left: 16px; /* increase gap from previous column */
-}
-
 /* Shared stacked row layout for videos (desktop and mobile) */
 .video-row-desktop, .video-row-mobile {
   display: flex;
@@ -588,7 +512,7 @@ export default {
 }
 .video-row-desktop .row-middle, .video-row-mobile .row-middle {
   margin-top: 4px;
-  color: #606266;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 .video-row-desktop .row-middle .rel, .video-row-mobile .row-middle .rel {
@@ -596,7 +520,7 @@ export default {
 }
 .video-row-desktop .row-middle .sep, .video-row-mobile .row-middle .sep {
   margin: 0 6px;
-  color: #909399;
+  color: var(--text-placeholder);
 }
 /* Ensure clear spacing between status tag and favorite icon */
 .video-row-desktop .row-bottom, .video-row-mobile .row-bottom {
@@ -623,10 +547,125 @@ export default {
 .channel-row-mobile .title-text {
   white-space: normal;
   word-break: break-word;
+  color: var(--text-primary);
 }
 
 .clickable { cursor: pointer; }
 .ml-8 { margin-left: 8px; }
-.fav-btn { color: #C0C4CC; }
-.fav-btn.favorited { color: #f7ba2a; }
+.fav-btn { color: var(--text-placeholder); }
+.fav-btn.favorited { color: var(--color-warning); }
+
+/* New Styles for Native Components */
+.channel-list, .video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.channel-item, .video-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.channel-item:hover, .video-item:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.channel-content, .video-content {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16px;
+}
+
+.channel-name, .video-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.video-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.video-meta .rel {
+  font-weight: 500;
+}
+
+.video-meta .sep {
+  margin: 0 6px;
+  color: var(--text-placeholder);
+}
+
+.channel-actions, .video-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color-light);
+}
+
+.submit-card {
+  margin-bottom: 24px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 24px;
+  color: var(--color-primary);
+}
+
+.loading-container i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 </style>

@@ -3,8 +3,14 @@ import {getStore} from '@/util/store'
 import website from '@/const/website'
 import {handleGoogleOAuthCallback} from '@/util/oauth'
 import kiwiConst from '@/const/kiwiConsts'
+import UserLogin from '@/page/login/UserLogin'
+import UserRegister from '@/page/login/UserRegister'
 
 export default {
+  components: {
+    UserLogin,
+    UserRegister
+  },
   data() {
     return {
       tabsWidth: window.innerWidth - 20 + 'px',
@@ -19,7 +25,10 @@ export default {
         ? { path: this.$route.path, query: { ...this.$route.query } }
         : null,
       // Track if a tab has been visited so we only mount its component after first activation
-      visitedTabs: { [this.$route.query.active || 'search']: true }
+      // Start empty - tabs only load after explicit user click
+      visitedTabs: {},
+      // Auth view toggle: 'login' or 'register'
+      currentAuthView: 'login'
     }
   },
   watch: {
@@ -53,6 +62,10 @@ export default {
     },
     isMobile() {
       return window.innerWidth <= 768
+    },
+    // Dynamic component for auth (login/register)
+    authView() {
+      return this.currentAuthView === 'register' ? 'UserRegister' : 'UserLogin'
     }
   },
   mounted() {
@@ -66,6 +79,9 @@ export default {
 
     // Validate active tab initially against settings
     this.ensureActiveTabValid()
+
+    // Mark the initial active tab as visited so it renders on page load
+    this.markVisited(this.activeName)
   },
   beforeDestroy() {
     try { window.removeEventListener('enabled-tabs-updated', this.refreshEnabledTabs) } catch (_) {}
@@ -147,7 +163,7 @@ export default {
       }
 
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
+      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader','aiConversation']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Only starList requires login to view; youtube and aiHistory should be visible with hints when logged out
@@ -203,32 +219,47 @@ export default {
     onLanguageChanged(langCode) {
       console.log('Language changed to:', langCode)
       this.$emit('language-changed', langCode)
+    },
+
+    // Switch to registration view
+    switchToRegister() {
+      this.currentAuthView = 'register'
+    },
+
+    // Switch to login view
+    switchToLogin() {
+      this.currentAuthView = 'login'
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .tab_nav {
   position: absolute;
-  top: 0px;
+  top: 0;
   left: 10px;
   width: calc(100% - 20px);
+  min-height: 100vh;
 }
+
+// Tab styling is now handled globally in theme-tokens.scss
 
 .platform-header {
   height: 50px;
-  background: #545c64;
-  border-bottom: 1px solid #E2E2E2;
+  background: var(--bg-container);
+  border-bottom: 1px solid var(--border-color);
   width: 100%;
   position: absolute;
-  top: 0px;
+  top: 0;
 
-  .el-menu {
-    border-bottom: 1px solid #E2E2E2;
+  ::v-deep .el-menu {
+    border-bottom: 1px solid var(--border-color);
+    background-color: transparent;
 
     .el-menu-item {
       height: 50px;
+      color: var(--text-primary);
 
       i {
         margin-top: 20px;
@@ -237,11 +268,22 @@ export default {
         display: block;
         line-height: 10px;
         text-align: center;
+        color: var(--text-secondary);
       }
 
       span {
         margin-top: -20px;
         line-height: 20px;
+      }
+
+      &:hover,
+      &:focus {
+        background-color: var(--bg-highlight);
+        color: var(--color-primary);
+
+        i {
+          color: var(--color-primary);
+        }
       }
     }
   }
@@ -251,36 +293,33 @@ export default {
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 1000;
+  z-index: var(--z-sticky);
 }
 
-/* Simple login hint spacing */
-.login-hint { padding: 16px; }
+// Simple login hint spacing
+.login-hint {
+  padding: var(--spacing-md);
+}
 
-/* Mobile responsive adjustments */
+// Mobile responsive adjustments
 @media (max-width: 768px) {
   .tab_nav {
-    left: 5px;
-    width: calc(100% - 10px);
+    left: 0;
+    top: 0;
+    width: 100%;
+    min-height: 100vh;
+    position: absolute;
   }
 
   .language-switcher-container {
     top: 5px;
     right: 5px;
   }
-
-  .el-tabs__header {
-    margin-bottom: 10px;
-  }
-
-  .el-tabs__nav-wrap {
-    padding-right: 60px; /* Make room for language switcher */
-  }
 }
 </style>
 
 <template>
-  <div class="tab_nav" :style="{width: tabsWidth}">
+  <div class="tab_nav" :style="isMobile ? {} : {width: tabsWidth}">
     <el-tabs id="main-tabs" type="border-card" :active-name="activeName" @tab-click="tabClick">
       <el-tab-pane name="search" lazy>
         <span slot="label"><i class="el-icon-search"></i></span>
@@ -323,10 +362,20 @@ export default {
       <el-tab-pane name="aiHistory" lazy v-if="enabledTabs.aiHistory">
         <span slot="label"><i class="el-icon-time"></i></span>
         <keep-alive>
-          <router-view name="aiHistory" v-if="visitedTabs.aiHistory && isLogin" v-show="activeName==='aiHistory'"></router-view>
+          <router-view name="aiHistory" v-if="visitedTabs.aiHistory && isLogin" v-show="activeName==='aiHistory'" :isActive="activeName==='aiHistory'"></router-view>
         </keep-alive>
         <div v-if="activeName==='aiHistory' && !isLogin" class="login-hint">
           <el-alert type="info" show-icon title="Please log in to view AI history." description="Login to review your previous AI calls."></el-alert>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane name="aiConversation" lazy v-if="enabledTabs.aiConversation">
+        <span slot="label"><i class="el-icon-chat-dot-round"></i></span>
+        <keep-alive>
+          <router-view name="aiConversation" v-if="visitedTabs.aiConversation && isLogin" v-show="activeName==='aiConversation'"></router-view>
+        </keep-alive>
+        <div v-if="activeName==='aiConversation' && !isLogin" class="login-hint">
+          <el-alert type="info" show-icon title="Please log in to use AI Conversation Generator." description="Login to generate multi-speaker conversations with audio."></el-alert>
         </div>
       </el-tab-pane>
 
@@ -340,7 +389,13 @@ export default {
       <el-tab-pane name="login" lazy v-if="!isLogin">
         <span slot="label"><i class="el-icon-user"></i></span>
         <keep-alive>
-          <router-view name="userLogin" v-if="visitedTabs.login" v-show="activeName==='login'"></router-view>
+          <component
+            v-if="visitedTabs.login"
+            v-show="activeName==='login'"
+            :is="authView"
+            @switch-to-register="switchToRegister"
+            @switch-to-login="switchToLogin"
+          />
         </keep-alive>
       </el-tab-pane>
 

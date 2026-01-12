@@ -76,58 +76,66 @@
 
           <!-- Username / Password Login -->
           <el-form ref="upForm" :model="upForm" :rules="upRules" label-position="top" class="up-login-form" @submit.native.prevent="handleUsernamePasswordLogin">
-            <el-form-item prop="username" :label="$t('auth.username') || 'Username'">
-              <el-input
+            <el-form-item prop="username" :label="$t('auth.usernameOrEmail') || 'Username / Email'">
+              <KiwiInput
                 v-model.trim="upForm.username"
                 autocomplete="username"
-                placeholder="Username"
+                :placeholder="$t('auth.usernameOrEmailPlaceholder') || 'Enter your username or email'"
                 clearable
                 @keyup.enter.native="handleUsernamePasswordLogin"
               />
             </el-form-item>
             <el-form-item prop="password" :label="$t('auth.password') || 'Password'">
-              <el-input
+              <KiwiInput
                 v-model="upForm.password"
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
-                placeholder="Password"
+                :placeholder="$t('auth.passwordPlaceholder') || 'Enter your password'"
                 show-password
                 @keyup.enter.native="handleUsernamePasswordLogin"
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="upLoading" :disabled="upLoading" class="full-width" @click="handleUsernamePasswordLogin">
+              <KiwiButton type="primary" :loading="upLoading" :disabled="upLoading" class="full-width" @click="handleUsernamePasswordLogin">
                 <span v-if="!upLoading">{{ $t('auth.signIn') || 'Sign In' }}</span>
                 <span v-else>{{ $t('auth.processing') || 'Processing...' }}</span>
-              </el-button>
+              </KiwiButton>
             </el-form-item>
           </el-form>
+
+          <!-- Link to Registration -->
+          <div class="auth-link">
+            <span>{{ $t('auth.noAccount') || "Don't have an account?" }}</span>
+            <a href="javascript:void(0)" @click="goToRegister">{{ $t('auth.register') || 'Register' }}</a>
+          </div>
         </div>
       </div>
 
       <!-- Loading Overlay -->
-      <div v-if="pageLoading" class="loading-overlay">
-        <div class="loading-content">
-          <i class="el-icon-loading"></i>
-          <p>{{ loadingText }}</p>
-        </div>
-      </div>
+      <StatusOverlay
+        :visible="pageLoading"
+        status="loading"
+        :backdrop="true"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
 import {mapGetters} from 'vuex'
 import { setStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default {
   name: 'GoogleLogin',
+  components: { StatusOverlay, KiwiButton, KiwiInput },
   data() {
     return {
       googleLoading: false,
       pageLoading: false,
-      loadingText: this.$t('auth.processing'),
 
       // Store Google user info for potential account linking
       pendingGoogleUser: null,
@@ -171,7 +179,7 @@ export default {
       return undefined
     },
 
-    // Username/Password login
+    // Username/Password login using new /auth/login endpoint
     handleUsernamePasswordLogin() {
       if (this.upLoading) return
       const form = this.$refs.upForm
@@ -181,14 +189,19 @@ export default {
           try {
             this.upLoading = true
             this.pageLoading = true
-            this.loadingText = this.$t('auth.processing') || 'Processing...'
 
             const payload = {
               username: (this.upForm.username || '').trim(),
               password: this.upForm.password || ''
             }
 
-            const resp = await this.$http.post(`${kiwiConsts.API_BASE.AUTH}/username-password/login`, payload, { headers: { isToken: false } })
+            // Use new /auth/login endpoint per API documentation
+            const resp = await this.$http.post(`${kiwiConsts.API_BASE.AUTH}/login`, payload, {
+              headers: {
+                isToken: false,
+                'Content-Type': 'application/json'
+              }
+            })
             const body = (resp && resp.data) || {}
             const code = body.code
             const tokens = body.data || body.result || body
@@ -204,7 +217,10 @@ export default {
             }
           } catch (e) {
             console.error('❌ [AUTH] Username/Password login error:', e)
-            const msg = (e && e.message) || this.$t('auth.loginFailed') || 'Login failed'
+            const errResponse = e && e.response && e.response.data
+            const msg = (errResponse && (errResponse.msg || errResponse.message)) ||
+                        (e && e.message) ||
+                        this.$t('auth.loginFailed') || 'Login failed'
             try { this.$message.error(msg) } catch (_) {}
           } finally {
             this.upLoading = false
@@ -212,6 +228,11 @@ export default {
           }
         })
       }
+    },
+
+    // Navigate to registration page
+    goToRegister() {
+      this.$emit('switch-to-register')
     },
 
     // Dynamically ensure gapi.auth2 is available; fallback gracefully
@@ -303,7 +324,6 @@ export default {
 
       try {
         this.googleLoading = true
-        this.loadingText = this.$t('auth.connecting')
         this.pageLoading = true
 
         console.log('⏳ [GOOGLE] Setting loading states')
@@ -445,16 +465,15 @@ export default {
         query: redirectQuery
       })
 
-      // Use replace to avoid extra history entries, and avoid full reload
-      this.$router.replace({
+      // Store the redirect destination and reload the page
+      // The router will pick up this destination after reload
+      sessionStorage.setItem('loginRedirect', JSON.stringify({
         path: redirectPath,
         query: redirectQuery
-      })
+      }))
 
-      // Let Index.vue pick up the new token via getStore without a hard reload
-      this.$nextTick(() => {
-        try { this.$forceUpdate() } catch (_) {}
-      })
+      console.log('🔄 [REDIRECT] Performing full page reload')
+      window.location.href = '/'
     }
   }
 }
@@ -468,7 +487,7 @@ export default {
   position: relative;
   margin-top: var(--header-height);
   min-height: calc(100vh - var(--header-height));
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--bg-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -495,12 +514,11 @@ export default {
   max-width: 1200px;
   height: 100%; // fill available content height (below header)
   max-height: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-  0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--backdrop-filter);
+  border: 1px solid var(--border-color-light);
   overflow: hidden;
   position: relative;
 }
@@ -508,7 +526,7 @@ export default {
 // Left Panel - Brand Section
 .login-left {
   flex: 1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   display: flex;
@@ -630,18 +648,17 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px; // tighten
-  background: rgba(249, 250, 251, 0.5);
+  background: var(--bg-container);
 }
 
 .login-card {
   width: 100%;
   max-width: 420px;
-  background: white;
-  border-radius: 16px;
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
   padding: 28px 22px; // tighten
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-  0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
   opacity: 0;
   animation: slideInRight 1s ease 0.5s forwards;
 }
@@ -663,13 +680,13 @@ export default {
 
   h2 {
     font-size: 22px;
-    color: #374151;
+    color: var(--text-primary);
     margin-bottom: 6px;
     font-weight: 600;
   }
 
   p {
-    color: #6b7280;
+    color: var(--text-secondary);
     font-size: 14px;
     margin: 0;
   }
@@ -682,11 +699,11 @@ export default {
     align-items: center;
     justify-content: center;
     padding: 14px 18px;
-    border: 2px solid #d1d5db;
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--bg-card);
     position: relative;
     min-height: 52px;
 
@@ -697,8 +714,8 @@ export default {
     }
 
     &:hover {
-      border-color: #4285f4;
-      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-hover);
       transform: translateY(-2px);
     }
 
@@ -716,7 +733,7 @@ export default {
     span {
       flex: 1;
       text-align: center;
-      color: #ffffff;
+      color: var(--text-primary);
       font-size: 15px;
       font-weight: 600;
     }
@@ -724,13 +741,13 @@ export default {
     .loading-spinner {
       position: absolute;
       right: 16px;
-      color: #ffffff;
+      color: var(--text-primary);
       font-size: 18px;
     }
 
     &.google-login {
-      border-color: #4285f4;
-      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+      border-color: var(--color-primary);
+      background: var(--gradient-primary);
       color: white;
 
       span {
@@ -738,7 +755,7 @@ export default {
       }
 
       &:hover {
-        box-shadow: 0 6px 20px rgba(66, 133, 244, 0.3);
+        box-shadow: var(--shadow-hover);
         transform: translateY(-3px);
       }
     }
@@ -750,7 +767,7 @@ export default {
   display: flex;
   align-items: center;
   margin: 14px 0;
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -758,7 +775,7 @@ export default {
     content: '';
     flex: 1;
     height: 1px;
-    background: #e5e7eb;
+    background: var(--border-color);
   }
   span {
     margin: 0 10px;
@@ -773,35 +790,26 @@ export default {
   }
 }
 
-// Loading Overlay
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(5px);
-  z-index: 1000;
-}
-
-.loading-content {
+/* Auth link (Login/Register toggle) */
+.auth-link {
   text-align: center;
-  color: #4285f4;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color-light);
+  font-size: 14px;
+  color: var(--text-secondary);
 
-  i {
-    font-size: 32px;
-    margin-bottom: 16px;
-    display: block;
-  }
-
-  p {
-    margin: 0;
-    font-size: 16px;
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
     font-weight: 500;
+    margin-left: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
+
+// Loading Overlay
 </style>

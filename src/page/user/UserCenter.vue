@@ -1,5 +1,5 @@
 <template>
-  <div class="user-center-container">
+  <div>
     <!-- User Profile Header -->
     <div class="user-profile-header">
       <div class="avatar-section">
@@ -11,17 +11,21 @@
         </div>
       </div>
       <div class="user-actions">
-        <el-button
+        <KiwiButton
             type="warning"
             size="small"
             @click="handleClearWebsiteData"
             :loading="clearingWebsiteData"
+            icon="el-icon-delete"
             class="action-button clear-data-button">
           {{ $t('audio.cleanAllCache') }}
-        </el-button>
-        <el-button type="info" size="small" @click="handleLoginOut" class="action-button logout-button">
-          <i class="el-icon-switch-button"></i> {{ $t('user.loginOut') }}
-        </el-button>
+        </KiwiButton>
+        <KiwiButton type="primary" size="small" @click="showPasswordDialog = true" icon="el-icon-lock" class="action-button change-password-btn">
+          {{ $t('user.changePassword') }}
+        </KiwiButton>
+        <KiwiButton type="info" size="small" @click="handleLoginOut" icon="el-icon-switch-button" class="action-button logout-button">
+          {{ $t('user.loginOut') }}
+        </KiwiButton>
       </div>
     </div>
 
@@ -71,40 +75,117 @@
         <i class="el-icon-setting"></i> {{ $t('user.learningSettings') }}
       </h4>
       <div class="settings-grid">
+        <!-- Theme Selection -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>{{ $t('user.theme') }}</span>
+          </div>
+          <KiwiDropdown @command="handleThemeChange" class="custom-dropdown theme-dropdown">
+            <span class="dropdown-trigger">
+              {{ currentThemeName }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <!-- White Blue Theme (Default) -->
+              <KiwiDropdownItem command="white-blue">
+                <span class="theme-option"><i class="theme-dot theme-dot--white-blue"></i> White Blue</span>
+              </KiwiDropdownItem>
+              <!-- Dark/Neon Themes -->
+              <KiwiDropdownItem command="cyberpunk">
+                <span class="theme-option"><i class="theme-dot theme-dot--cyberpunk"></i> CyberPunk</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="glassmorphism">
+                <span class="theme-option"><i class="theme-dot theme-dot--glass"></i> Glassmorphism</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="neon-tokyo">
+                <span class="theme-option"><i class="theme-dot theme-dot--tokyo"></i> Neon Tokyo</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="ocean-depth">
+                <span class="theme-option"><i class="theme-dot theme-dot--ocean"></i> Ocean Depth</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="aurora">
+                <span class="theme-option"><i class="theme-dot theme-dot--aurora"></i> Aurora Borealis</span>
+              </KiwiDropdownItem>
+              <!-- Light Themes -->
+              <KiwiDropdownItem command="clean-white">
+                <span class="theme-option"><i class="theme-dot theme-dot--white"></i> Clean White</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="classic-book">
+                <span class="theme-option"><i class="theme-dot theme-dot--book"></i> Classic Book</span>
+              </KiwiDropdownItem>
+              <!-- Warm/Nature Themes -->
+              <KiwiDropdownItem command="sunset-warm">
+                <span class="theme-option"><i class="theme-dot theme-dot--sunset"></i> Sunset Warm</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="forest-nature">
+                <span class="theme-option"><i class="theme-dot theme-dot--forest"></i> Forest Nature</span>
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="minimal-gray">
+                <span class="theme-option"><i class="theme-dot theme-dot--gray"></i> Minimal Gray</span>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
+        </div>
+
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.pronunciationSource') }}</span>
           </div>
-          <el-dropdown @command="pronunciationSourceChange" trigger="click" class="custom-dropdown">
-            <el-button size="small" type="text" class="dropdown-button">
-              {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down el-icon--right"></i>
-            </el-button>
-            <el-dropdown-menu v-slot:dropdown>
-              <el-dropdown-item command="Cambridge">Cambridge</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <KiwiDropdown @command="pronunciationSourceChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ user.pronunciationSource || $t('common.default') }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="Cambridge">Cambridge</KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
         </div>
 
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.nativeLanguage') }}</span>
           </div>
-          <el-dropdown @command="nativeLangChange" trigger="click" class="custom-dropdown">
-            <el-button size="small" type="text" class="dropdown-button">
-              {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down el-icon--right"></i>
-            </el-button>
-            <el-dropdown-menu v-slot:dropdown>
-              <el-dropdown-item
+          <KiwiDropdown @command="nativeLangChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ tranNativeLang(user.nativeLang) }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem
                   v-for="(code, language) in languageCodes"
                   :key="code"
                   :command="code">
                 {{ language.replaceAll('_', ' ') }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
         </div>
 
-        <!-- NEW: Clipboard Detection Setting -->
+        <!-- UI Language Setting -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>{{ $t('user.uiLanguage') }}</span>
+            <el-tooltip
+                :content="$t('user.uiLanguageTooltip')"
+                placement="top"
+                effect="dark">
+              <i class="el-icon-question help-icon"></i>
+            </el-tooltip>
+          </div>
+          <KiwiDropdown @command="uiLanguageChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ currentUiLanguageName }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem
+                  v-for="lang in availableUiLanguages"
+                  :key="lang.code"
+                  :command="lang.code">
+                {{ lang.name }}
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
+        </div>
+
+        <!-- Clipboard Detection Setting -->
         <div class="setting-item">
           <div class="setting-label">
             <span>{{ $t('user.clipboardDetection') }}</span>
@@ -191,48 +272,105 @@
         <!-- NEW: Feature Tabs Visibility -->
         <div class="setting-item setting-item--feature-tabs">
           <div class="setting-label">
-            <span>{{ $t('user.featureTabs') || 'Feature Tabs' }}</span>
-            <el-tooltip :content="$t('user.featureTabsTip') || 'Show or hide tabs in the toolbar'" placement="top" effect="dark">
+            <span>{{ $t('user.featureTabs') }}</span>
+            <el-tooltip :content="$t('user.featureTabsTip')" placement="top" effect="dark">
               <i class="el-icon-question help-icon"></i>
             </el-tooltip>
           </div>
           <div class="feature-toggles feature-toggles--stacked">
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.todo') || 'Todo' }}</span>
-              <el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)" :aria-label="$t('tabs.todo') || 'Todo'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.todo') }}</span>
+              <el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)" :aria-label="$t('tabs.todo')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.youtube') || 'YouTube' }}</span>
-              <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube') || 'YouTube'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.youtube') }}</span>
+              <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.pdfReader') || 'PDF Reader' }}</span>
+              <span class="feature-label">{{ $t('tabs.pdfReader') }}</span>
               <el-switch
-                v-model="enabledTabsLocal.pdfReader"
-                class="custom-switch"
-                @change="onFeatureToggle('pdfReader', $event)"
-                :aria-label="$t('tabs.pdfReader') || 'PDF Reader'"></el-switch>
+                  v-model="enabledTabsLocal.pdfReader"
+                  class="custom-switch"
+                  @change="onFeatureToggle('pdfReader', $event)"
+                  :aria-label="$t('tabs.pdfReader')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.about') || 'About' }}</span>
-              <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about') || 'About'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.about') }}</span>
+              <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about')"></el-switch>
             </div>
             <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.vocabularyReview') || 'Vocabulary Review' }}</span>
-              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview') || 'Vocabulary Review'"></el-switch>
+              <span class="feature-label">{{ $t('tabs.vocabularyReview') }}</span>
+              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview')"></el-switch>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- NEW: Audio (BGM) Section embedded into User Center -->
-    <div class="settings-section">
-      <h4 class="section-title">
-        <i class="el-icon-headset"></i> {{ $t('audio.title') }}
-      </h4>
-      <Bgm />
-    </div>
+    <!-- Audio (BGM) Section - no wrapper, Bgm has its own styling -->
+    <Bgm />
+
+    <!-- Password Change Dialog -->
+    <el-dialog
+      :title="$t('user.changePassword')"
+      :visible.sync="showPasswordDialog"
+      width="400px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="!changingPassword"
+      :show-close="!changingPassword"
+      custom-class="password-dialog"
+      @closed="resetPasswordForm"
+    >
+      <el-form
+        ref="passwordForm"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-position="top"
+        class="password-change-form"
+        @submit.native.prevent="handleChangePassword"
+      >
+        <el-form-item :label="$t('user.currentPassword')" prop="oldPassword">
+          <KiwiInput
+            v-model="passwordForm.oldPassword"
+            type="password"
+            :placeholder="$t('user.currentPasswordPlaceholder')"
+            show-password
+            autocomplete="current-password"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('user.newPassword')" prop="newPassword">
+          <KiwiInput
+            v-model="passwordForm.newPassword"
+            type="password"
+            :placeholder="$t('user.newPasswordPlaceholder')"
+            show-password
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('user.confirmNewPassword')" prop="confirmPassword">
+          <KiwiInput
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            :placeholder="$t('user.confirmNewPasswordPlaceholder')"
+            show-password
+            autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <KiwiButton @click="showPasswordDialog = false" :disabled="changingPassword">
+          {{ $t('common.cancel') }}
+        </KiwiButton>
+        <KiwiButton
+          type="primary"
+          :loading="changingPassword"
+          :disabled="changingPassword"
+          @click="handleChangePassword"
+        >
+          {{ $t('common.confirm') }}
+        </KiwiButton>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -245,13 +383,17 @@ import util from '@/util/util'
 import msgUtil from '@/util/msg'
 import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
 import Bgm from '@/page/bgm/Index'
-import { setLanguage as setUiLanguage } from '@/i18n'
+import { setLanguage as setUiLanguage, getAvailableLanguages } from '@/i18n'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
 
 const USER_NAME = 'user_name'
 
 export default {
   name: 'UserCenter',
-  components: { Bgm },
+  components: { Bgm, KiwiDropdown, KiwiDropdownItem, KiwiButton, KiwiInput },
   data() {
     return {
       userInfo: {
@@ -270,10 +412,12 @@ export default {
         isEnToEn: getStore({ name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN }),
         bgm: getStore({ name: kiwiConst.CONFIG_KEY.BGM }),
         nativeLang: getStore({ name: kiwiConst.CONFIG_KEY.NATIVE_LANG }),
+        uiLanguage: getStore({ name: kiwiConst.CONFIG_KEY.UI_LANGUAGE }) || 'en',
         clipboardDetection: getStore({ name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION }),
         keepInMindCount: 0,
         rememberCount: 0,
-        reviewCount: 0
+        reviewCount: 0,
+        theme: getStore({ name: 'theme' }) || 'CyberPunk'
       },
 
       // Ensure this object exists before the first render to avoid runtime errors in v-model bindings
@@ -281,7 +425,33 @@ export default {
 
       languageCodes: kiwiConst.TRANSLATION_LANGUAGE_CODE,
 
-      clearingWebsiteData: false
+      clearingWebsiteData: false,
+
+      // Password change dialog
+      showPasswordDialog: false,
+      changingPassword: false,
+      passwordForm: {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+    }
+  },
+
+  created() {
+    // Initialize password validation rules with i18n
+    this.passwordRules = {
+      oldPassword: [
+        { required: true, message: () => this.$t('user.currentPasswordRequired'), trigger: 'blur' }
+      ],
+      newPassword: [
+        { required: true, message: () => this.$t('user.newPasswordRequired'), trigger: 'blur' },
+        { min: 6, message: () => this.$t('user.passwordTooShort'), trigger: 'blur' }
+      ],
+      confirmPassword: [
+        { required: true, message: () => this.$t('user.confirmPasswordRequired'), trigger: 'blur' },
+        { validator: this.validateConfirmPassword, trigger: 'blur' }
+      ]
     }
   },
 
@@ -313,6 +483,29 @@ export default {
     clipboardDetectionEnabled: {
       get() { return this.user.clipboardDetection === kiwiConst.CLIPBOARD_DETECTION.ENABLE },
       set(val) { this.user.clipboardDetection = val ? kiwiConst.CLIPBOARD_DETECTION.ENABLE : kiwiConst.CLIPBOARD_DETECTION.DISABLE }
+    },
+    currentThemeName() {
+      const names = {
+        'white-blue': 'White Blue',
+        'cyberpunk': 'CyberPunk',
+        'glassmorphism': 'Glassmorphism',
+        'neon-tokyo': 'Neon Tokyo',
+        'ocean-depth': 'Ocean Depth',
+        'aurora': 'Aurora Borealis',
+        'clean-white': 'Clean White',
+        'classic-book': 'Classic Book',
+        'sunset-warm': 'Sunset Warm',
+        'forest-nature': 'Forest Nature',
+        'minimal-gray': 'Minimal Gray'
+      }
+      return names[this.user.theme] || 'White Blue'
+    },
+    availableUiLanguages() {
+      return getAvailableLanguages()
+    },
+    currentUiLanguageName() {
+      const lang = this.availableUiLanguages.find(l => l.code === this.user.uiLanguage)
+      return lang ? lang.name : 'English'
     }
   },
 
@@ -333,9 +526,9 @@ export default {
     initializeSettings() {
       // migrate/remove Local pronunciation source, keep only Cambridge
       if (
-        util.isEmptyStr(this.user.pronunciationSource) ||
-        this.user.pronunciationSource === (kiwiConst.PRONUNCIATION_SOURCE && kiwiConst.PRONUNCIATION_SOURCE.LOCAL) ||
-        this.user.pronunciationSource === 'Local'
+          util.isEmptyStr(this.user.pronunciationSource) ||
+          this.user.pronunciationSource === (kiwiConst.PRONUNCIATION_SOURCE && kiwiConst.PRONUNCIATION_SOURCE.LOCAL) ||
+          this.user.pronunciationSource === 'Local'
       ) {
         setStore({
           name: kiwiConst.CONFIG_KEY.PRONUNCIATION_SOURCE,
@@ -398,6 +591,13 @@ export default {
         this.user.clipboardDetection = kiwiConst.CLIPBOARD_DETECTION.DISABLE
       }
 
+      if (util.isEmptyStr(this.user.theme)) {
+        setStore({ name: 'theme', content: 'white-blue', type: 'local' })
+        this.user.theme = 'white-blue'
+      } else {
+        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'white-blue'
+      }
+
       // Initialize feature tabs visibility
       try {
         const stored = getStore({ name: kiwiConst.CONFIG_KEY.ENABLED_TABS })
@@ -410,6 +610,9 @@ export default {
       } catch (e) {
         this.enabledTabsLocal = { ...kiwiConst.DEFAULT_ENABLED_TABS }
       }
+
+      // Apply theme
+      this.applyTheme(this.user.theme)
     },
 
     // Utility methods
@@ -472,14 +675,12 @@ export default {
         type: 'local'
       })
       this.user.nativeLang = command
-      // Map native language to UI language and switch immediately
-      try {
-        const map = kiwiConst.UI_LANGUAGE_MAPPING || {}
-        const ui = map[command]
-        if (ui) {
-          setUiLanguage(ui)
-        }
-      } catch (e) { /* ignore */ }
+      this.$message.success(this.$t('messages.operationSuccess'))
+    },
+
+    uiLanguageChange(langCode) {
+      setUiLanguage(langCode)
+      this.user.uiLanguage = langCode
       this.$message.success(this.$t('messages.operationSuccess'))
     },
 
@@ -577,11 +778,11 @@ export default {
         const updated = { ...this.enabledTabsLocal, [key]: !!enabled }
         this.enabledTabsLocal = updated
         setStore({ name: kiwiConst.CONFIG_KEY.ENABLED_TABS, content: updated, type: 'local' })
-        this.$message.success(this.$t('messages.operationSuccess') || 'Saved')
+        this.$message.success(this.$t('messages.operationSuccess'))
         try { window.dispatchEvent(new Event('enabled-tabs-updated')) } catch (_) {}
       } catch (e) {
         console.error('Failed to save feature tabs setting', e)
-        this.$message.error(this.$t('messages.saveFailed') || 'Save failed')
+        this.$message.error(this.$t('messages.saveFailed'))
       }
     },
 
@@ -608,34 +809,108 @@ export default {
           .catch(error => {
             console.error('Error loading review count:', error)
           })
+    },
+
+    // Theme handling
+    handleThemeChange(theme) {
+      const normalized = (theme || 'cyberpunk').toLowerCase()
+      this.user.theme = normalized
+      setStore({
+        name: 'theme',
+        content: normalized,
+        type: 'local'
+      })
+      this.applyTheme(normalized)
+      this.$message.success(`Theme switched to ${normalized}`)
+    },
+    applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme)
+    },
+
+    // Password change validation
+    validateConfirmPassword(rule, value, callback) {
+      if (value !== this.passwordForm.newPassword) {
+        callback(new Error(this.$t('user.passwordMismatch')))
+      } else {
+        callback()
+      }
+    },
+
+    // Password change handler
+    async handleChangePassword() {
+      if (this.changingPassword) return
+
+      const form = this.$refs.passwordForm
+      if (!form) return
+
+      form.validate(async (valid) => {
+        if (!valid) return
+
+        try {
+          this.changingPassword = true
+
+          // Build form data as URL-encoded parameters
+          const params = new URLSearchParams()
+          params.append('oldPassword', this.passwordForm.oldPassword)
+          params.append('newPassword', this.passwordForm.newPassword)
+
+          const response = await this.$http.post('/api/upms/user/change-password', params, {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+
+          const data = response && response.data
+          if (data && (data.code === 0 || data.success === true)) {
+            this.$message.success(this.$t('user.passwordChangeSuccess'))
+            // Close dialog and reset form
+            this.showPasswordDialog = false
+            this.resetPasswordForm()
+          } else {
+            const msg = (data && (data.msg || data.message)) || this.$t('user.passwordChangeFailed')
+            this.$message.error(msg)
+          }
+        } catch (error) {
+          console.error('Password change error:', error)
+          const errResponse = error && error.response && error.response.data
+          const msg = (errResponse && (errResponse.msg || errResponse.message)) ||
+                      (error && error.message) ||
+                      this.$t('user.passwordChangeFailed')
+          this.$message.error(msg)
+        } finally {
+          this.changingPassword = false
+        }
+      })
+    },
+
+    // Reset password form
+    resetPasswordForm() {
+      this.passwordForm = {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+      if (this.$refs.passwordForm) {
+        this.$refs.passwordForm.resetFields()
+      }
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.user-center-container {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
-  overflow: hidden;
-  animation: fadeInUp 0.6s ease;
-}
-
 .user-profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  background: white;
+  background: var(--bg-header);
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
+  backdrop-filter: var(--backdrop-filter);
+  transition: all 0.3s ease;
 
   .avatar-section {
     display: flex;
@@ -643,7 +918,7 @@ export default {
     gap: 16px;
 
     .user-avatar {
-      border: 3px solid #409eff;
+      border: 3px solid var(--color-primary);
     }
 
     .user-basic-info {
@@ -651,16 +926,12 @@ export default {
         margin: 0 0 8px 0;
         font-size: 20px;
         font-weight: 600;
-        color: #2c3e50;
-        background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-primary);
       }
 
       .user-email {
         margin: 0 0 8px 0;
-        color: #666;
+        color: var(--text-regular);
         font-size: 14px;
       }
     }
@@ -673,89 +944,80 @@ export default {
   }
 }
 
+// Action buttons - unified styling without !important
 .action-button {
-  border: none !important;
-  color: white !important;
-  padding: 12px 20px !important;
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border: none;
+  color: #fff;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
 
   &:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+    filter: brightness(1.1);
   }
 
   &:active {
-    transform: translateY(0px) !important;
-  }
-}
-
-/* Logout Button Styling */
-.logout-button {
-  @extend .action-button;
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
-
-  &:hover {
-    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-    color: white !important;
+    transform: translateY(0);
   }
 
   &:focus {
-    background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-    color: white !important;
-    box-shadow: 0 0 0 2px rgba(144, 147, 153, 0.3) !important;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-light-5);
   }
+}
+
+.logout-button {
+  background: var(--gradient-info);
 }
 
 .clear-data-button {
-  @extend .action-button;
-  background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%) !important;
+  background: var(--gradient-danger);
+}
 
-  &:hover {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
-    color: white !important;
-  }
-
-  &:focus {
-    background: linear-gradient(135deg, #d1941a 0%, #e6a621 100%) !important;
-    color: white !important;
-    box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.3) !important;
-  }
+.change-password-btn {
+  background: var(--gradient-primary);
 }
 
 /* Custom Divider */
 .custom-divider {
-  border-top: 1px solid rgba(64, 158, 255, 0.2);
+  border-top: 1px solid var(--divider-color);
   margin: 24px 0;
 }
 
 .statistics-section,
 .settings-section {
   margin-bottom: 32px;
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(64, 158, 255, 0.1);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
+  backdrop-filter: var(--backdrop-filter);
+  transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: static;
+  overflow: visible;
 }
 
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0 0 20px 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-text);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 
   i {
-    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -765,34 +1027,34 @@ export default {
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 
   .stat-card {
     color: white;
-    padding: 20px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: var(--card-border-radius);
     text-align: center;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--shadow-hover);
     }
 
     &.remember-card {
-      background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+      background: var(--gradient-success);
     }
 
     &.review-card {
-      background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+      background: var(--gradient-primary);
     }
 
     &.master-card {
-      background: linear-gradient(135deg, #e6a23c 0%, #f7ba2a 100%);
+      background: var(--gradient-danger);
     }
 
     &::before {
@@ -800,27 +1062,27 @@ export default {
       position: absolute;
       top: 0;
       right: 0;
-      width: 60px;
-      height: 60px;
+      width: 40px;
+      height: 40px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 50%;
       transform: translate(30%, -30%);
     }
 
     .stat-icon {
-      width: 40px;
-      height: 40px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 12px;
+      margin: 0 auto 8px;
       position: relative;
       z-index: 1;
       background: rgba(255, 255, 255, 0.2);
 
       i {
-        font-size: 20px;
+        font-size: 14px;
       }
     }
 
@@ -829,13 +1091,13 @@ export default {
       z-index: 1;
 
       h5 {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 700;
-        margin: 0 0 4px 0;
+        margin: 0 0 2px 0;
       }
 
       p {
-        font-size: 14px;
+        font-size: 11px;
         margin: 0;
         opacity: 0.9;
       }
@@ -853,14 +1115,22 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border: 1px solid rgba(64, 158, 255, 0.2);
+    border: 1px solid var(--border-color-light);
     border-radius: 12px;
-    transition: all 0.3s ease;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    background: var(--bg-container);
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+
+    // When dropdown inside is active, elevate this setting-item
+    &:has(.is-active) {
+      z-index: 100;
+    }
 
     &:hover {
-      border-color: rgba(64, 158, 255, 0.4);
-      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-hover);
       transform: translateY(-1px);
     }
 
@@ -869,16 +1139,16 @@ export default {
       align-items: center;
       gap: 8px;
       font-weight: 500;
-      color: #2c3e50;
+      color: var(--text-primary);
 
       .help-icon {
-        color: #909399;
+        color: var(--text-secondary);
         font-size: 14px;
         margin-left: 4px;
         cursor: help;
 
         &:hover {
-          color: #409eff;
+          color: var(--color-primary);
         }
       }
     }
@@ -917,183 +1187,56 @@ export default {
 
       .feature-label {
         min-width: 120px;
-        color: #2c3e50;
+        color: var(--text-primary);
         font-weight: 500;
       }
     }
   }
 }
 
-/* Custom Dropdown Styling */
+// Custom Dropdown Styling
 .custom-dropdown {
-  .dropdown-button {
-    border: none !important;
-    padding: 8px 12px !important;
-    color: #409eff !important;
-    font-weight: 500 !important;
-    background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-    border-radius: 8px !important;
-    transition: all 0.3s ease !important;
 
-    &:hover {
-      color: #3a8ee6 !important;
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
-      transform: translateY(-1px) !important;
+  .dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+    font-size: 14px;
+    background: var(--bg-container);
+    border: 1px solid var(--border-color-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+
+    i {
+      font-size: 12px;
+      transition: var(--transition-fast);
     }
 
-    &:focus {
-      color: #3a8ee6 !important;
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.2) 0%, rgba(103, 194, 58, 0.2) 100%) !important;
-      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3) !important;
+    &:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+
+      i {
+        transform: translateY(2px);
+      }
     }
   }
 }
 
-/* Custom Switch Styling - Applied to ALL switches */
+// Switch styling is now handled globally in theme-tokens.scss
+// Custom switch class kept for backwards compatibility
 .custom-switch {
-  ::v-deep .el-switch__core {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e8eaed 100%) !important;
-    border: 2px solid #dcdfe6 !important;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  ::v-deep .el-switch.is-checked .el-switch__core {
-    background: linear-gradient(135deg, #1890ff 0%, #40a9ff 50%, #69c0ff 100%) !important;
-    border-color: #1890ff !important;
-    box-shadow:
-        0 0 0 2px rgba(24, 144, 255, 0.2),
-        0 2px 8px rgba(24, 144, 255, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-  }
-
-  ::v-deep .el-switch__action {
-    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.15),
-        0 1px 2px rgba(0, 0, 0, 0.1) !important;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-
-  ::v-deep .el-switch.is-checked .el-switch__action {
-    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%) !important;
-    border-color: rgba(24, 144, 255, 0.3) !important;
-    box-shadow:
-        0 3px 6px rgba(24, 144, 255, 0.25),
-        0 1px 3px rgba(24, 144, 255, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-  }
-
-  &:hover ::v-deep .el-switch__core {
-    background: linear-gradient(135deg, #e8eaed 0%, #d3d4d6 100%) !important;
-    border-color: #c0c4cc !important;
-    transform: scale(1.02) !important;
-    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  &:hover ::v-deep .el-switch.is-checked .el-switch__core {
-    background: linear-gradient(135deg, #0050b3 0%, #1890ff 50%, #40a9ff 100%) !important;
-    border-color: #0050b3 !important;
-    box-shadow:
-        0 0 0 3px rgba(24, 144, 255, 0.25),
-        0 4px 12px rgba(24, 144, 255, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-    transform: scale(1.02) !important;
-  }
-
-  &:hover ::v-deep .el-switch__action {
-    transform: scale(1.05) !important;
-    box-shadow:
-        0 4px 8px rgba(0, 0, 0, 0.2),
-        0 2px 4px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  &:hover ::v-deep .el-switch.is-checked .el-switch__action {
-    box-shadow:
-        0 4px 8px rgba(24, 144, 255, 0.3),
-        0 2px 4px rgba(24, 144, 255, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  }
+  // Global styles apply automatically
 }
 
-/* Add a subtle glow effect for ALL enabled switches */
-.custom-switch ::v-deep .el-switch.is-checked {
-  position: relative;
+// Tag styling is now handled globally in theme-tokens.scss
+// Additional tag styles can be added here if needed
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(135deg, rgba(24, 144, 255, 0.2) 0%, rgba(64, 169, 255, 0.1) 100%);
-    border-radius: 14px;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
-}
-
-/* Custom Tag Styling */
-::v-deep .el-tag {
-  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-  border: 1px solid rgba(64, 158, 255, 0.3) !important;
-  color: #409eff !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-
-  &.el-tag--success {
-    background: linear-gradient(135deg, rgba(103, 194, 58, 0.1) 0%, rgba(133, 206, 97, 0.1) 100%) !important;
-    border-color: rgba(103, 194, 58, 0.3) !important;
-    color: #67c23a !important;
-  }
-
-  &.el-tag--warning {
-    background: linear-gradient(135deg, rgba(230, 162, 60, 0.1) 0%, rgba(247, 186, 42, 0.1) 100%) !important;
-    border-color: rgba(230, 162, 60, 0.3) !important;
-    color: #e6a23c !important;
-  }
-
-  &.el-tag--info {
-    background: linear-gradient(135deg, rgba(144, 147, 153, 0.1) 0%, rgba(96, 98, 102, 0.1) 100%) !important;
-    border-color: rgba(144, 147, 153, 0.3) !important;
-    color: #909399 !important;
-  }
-}
-
-/* Dropdown Menu Styling */
-::v-deep .el-dropdown-menu {
-  border: 1px solid rgba(64, 158, 255, 0.2) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  padding: 8px 0 !important;
-  background: white !important;
-
-  .el-dropdown-menu__item {
-    padding: 10px 16px !important;
-    color: #2c3e50 !important;
-    font-weight: 500 !important;
-    transition: all 0.3s ease !important;
-
-    &:hover {
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-      color: #409eff !important;
-    }
-
-    &:focus {
-      background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%) !important;
-      color: #409eff !important;
-    }
-  }
-}
+// Dropdown menu styling is now handled globally in theme-tokens.scss
 
 /* Responsive design */
 @media (max-width: 768px) {
@@ -1107,6 +1250,21 @@ export default {
     gap: 16px;
     text-align: center;
     padding: 16px;
+
+    .avatar-section {
+      width: 100%;
+    }
+
+    .user-actions {
+      width: 100%;
+      flex-direction: column;
+      gap: 10px;
+
+      .action-button {
+        width: 100%;
+        margin: 0;
+      }
+    }
   }
 
   .statistics-section,
@@ -1121,27 +1279,27 @@ export default {
   }
 
   .stats-cards {
-    gap: 12px;
+    gap: 10px;
 
     .stat-card {
-      padding: 16px;
+      padding: 10px;
 
       .stat-icon {
-        width: 35px;
-        height: 35px;
-        margin-bottom: 10px;
+        width: 24px;
+        height: 24px;
+        margin-bottom: 6px;
 
         i {
-          font-size: 18px;
+          font-size: 12px;
         }
       }
 
       .stat-content h5 {
-        font-size: 20px;
+        font-size: 16px;
       }
 
       .stat-content p {
-        font-size: 13px;
+        font-size: 10px;
       }
     }
   }
@@ -1162,25 +1320,52 @@ export default {
     align-items: stretch;
 
     .feature-toggles {
-      grid-template-columns: 1fr !important;
+      grid-template-columns: 1fr;
       justify-items: start;
     }
 
     .setting-label {
-      justify-content: flex-start !important;
+      justify-content: flex-start;
       text-align: left;
     }
   }
 
-  .logout-button {
-    padding: 10px 16px !important;
-    font-size: 14px !important;
+  .logout-button,
+  .change-password-btn,
+  .clear-data-button {
+    padding: 10px 16px;
+    font-size: 14px;
   }
 
   .section-title {
     font-size: 14px;
     justify-content: center;
     text-align: center;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .user-profile-header {
+    padding: 12px;
+    gap: 12px;
+
+    .user-basic-info h3 {
+      font-size: 16px;
+    }
+
+    .user-actions {
+      gap: 8px;
+
+      .action-button {
+        padding: 8px 12px;
+        font-size: 13px;
+
+        i {
+          margin-right: 4px;
+        }
+      }
+    }
   }
 }
 
@@ -1219,7 +1404,7 @@ export default {
       right: 20px;
       width: 16px;
       height: 16px;
-      border: 2px solid #409eff;
+      border: 2px solid var(--color-primary);
       border-top: 2px solid transparent;
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -1232,10 +1417,7 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-/* Smooth transitions for all interactive elements */
-* {
-  transition: all 0.3s ease;
-}
+/* Note: Removed universal transition rule to prevent z-index/stacking issues */
 
 /* Custom scrollbar for dropdown menus */
 ::v-deep .el-dropdown-menu {
@@ -1244,17 +1426,181 @@ export default {
   }
 
   &::-webkit-scrollbar-track {
-    background: rgba(64, 158, 255, 0.1);
+    background: var(--bg-body);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    background: var(--gradient-primary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+    background: var(--gradient-primary);
+    filter: brightness(1.1);
+  }
+}
+
+/* Password Change Dialog Styling */
+::v-deep .password-dialog {
+  border-radius: var(--card-border-radius);
+  background: var(--bg-card);
+
+  .el-dialog__header {
+    background: var(--gradient-primary);
+    border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+    padding: 16px 20px;
+
+    .el-dialog__title {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .el-dialog__headerbtn .el-dialog__close {
+      color: var(--text-primary);
+
+      &:hover {
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+    background: var(--bg-card);
+  }
+
+  .el-dialog__footer {
+    padding: 12px 20px 20px;
+    border-top: 1px solid var(--border-color-light);
+    background: var(--bg-card);
+  }
+}
+
+/* Password Change Form Styling */
+.password-change-form {
+  ::v-deep .el-form-item {
+    margin-bottom: 20px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .el-form-item__label {
+      color: var(--text-primary);
+      font-weight: 500;
+      padding-bottom: 6px;
+    }
+
+    .el-input__inner {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      transition: var(--transition-normal);
+
+      &:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px var(--color-primary-light-9);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  ::v-deep .password-dialog {
+    width: 90%;
+  }
+}
+
+/* Theme Selector Styles */
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px currentColor;
+
+  &--white-blue {
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    box-shadow: 0 0 8px #8b5cf6;
+  }
+
+  &--cyberpunk {
+    background: linear-gradient(135deg, #00ffff, #ff00ff);
+    box-shadow: 0 0 8px #00ffff;
+  }
+
+  &--glass {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 0 8px #667eea;
+  }
+
+  &--tokyo {
+    background: linear-gradient(135deg, #ff4081, #00e5ff);
+    box-shadow: 0 0 8px #ff4081;
+  }
+
+  &--ocean {
+    background: linear-gradient(135deg, #64ffda, #00bfff);
+    box-shadow: 0 0 8px #64ffda;
+  }
+
+  &--aurora {
+    background: linear-gradient(135deg, #48d1cc, #9370db, #98fb98);
+    box-shadow: 0 0 8px #48d1cc;
+  }
+
+  &--white {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    box-shadow: 0 0 8px #3b82f6;
+    border: 1px solid #e2e8f0;
+  }
+
+  &--book {
+    background: linear-gradient(135deg, #8b5a2b, #8b3a3a);
+    box-shadow: 0 0 8px #8b5a2b;
+    border: 1px solid #d4c4a8;
+  }
+
+  &--sunset {
+    background: linear-gradient(135deg, #ff8c42, #ff6b9d, #ffd93d);
+    box-shadow: 0 0 8px #ff8c42;
+  }
+
+  &--forest {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    box-shadow: 0 0 8px #34d399;
+  }
+
+  &--gray {
+    background: linear-gradient(135deg, #a1a1aa, #71717a);
+    box-shadow: 0 0 6px #a1a1aa;
+  }
+}
+
+.theme-dropdown ::v-deep .el-dropdown-menu__item {
+  padding: 12px 20px !important;
+
+  &:hover .theme-dot {
+    animation: glow-pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
   }
 }
 </style>

@@ -1,0 +1,1377 @@
+<template>
+  <div class="ai-conversation-generator">
+    <!-- Header -->
+    <div class="generator-header">
+      <h2 class="generator-title">
+        <i class="el-icon-chat-dot-round"></i>
+        AI Conversation Generator
+      </h2>
+      <p class="generator-subtitle">Generate realistic multi-speaker conversations with TTS audio</p>
+    </div>
+
+    <!-- Mode Toggle: Generator / History -->
+    <div class="mode-toggle">
+      <KiwiButton
+        :type="currentMode === 'generator' ? 'primary' : 'default'"
+        size="small"
+        @click="currentMode = 'generator'">
+        <i class="el-icon-edit"></i> Generate
+      </KiwiButton>
+      <KiwiButton
+        :type="currentMode === 'history' ? 'primary' : 'default'"
+        size="small"
+        @click="currentMode = 'history'; loadConversationList()">
+        <i class="el-icon-time"></i> History
+      </KiwiButton>
+    </div>
+
+    <!-- Generator Mode -->
+    <div v-show="currentMode === 'generator'" class="generator-content">
+      <!-- Input Form -->
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">Conversation Topic</label>
+          <KiwiInput
+            v-model="form.prompt"
+            type="textarea"
+            :rows="3"
+            placeholder="Describe the conversation topic... e.g., Two friends discussing their favorite travel destinations"
+            :disabled="isGenerating"
+            clearable
+          />
+        </div>
+
+        <div class="options-row">
+          <div class="option-group">
+            <label class="form-label">Accent</label>
+            <KiwiDropdown @command="handleAccentChange" :disabled="isGenerating">
+              <KiwiButton size="small" :disabled="isGenerating">
+                {{ getAccentLabel(form.accent) }}
+                <i class="el-icon-arrow-down"></i>
+              </KiwiButton>
+              <template slot="dropdown">
+                <KiwiDropdownItem
+                  v-for="accent in accentOptions"
+                  :key="accent.value"
+                  :command="accent.value">
+                  {{ accent.label }}
+                </KiwiDropdownItem>
+              </template>
+            </KiwiDropdown>
+          </div>
+
+          <div class="option-group">
+            <label class="form-label">Duration</label>
+            <KiwiDropdown @command="handleDurationChange" :disabled="isGenerating">
+              <KiwiButton size="small" :disabled="isGenerating">
+                {{ getDurationLabel(form.duration) }}
+                <i class="el-icon-arrow-down"></i>
+              </KiwiButton>
+              <template slot="dropdown">
+                <KiwiDropdownItem
+                  v-for="duration in durationOptions"
+                  :key="duration.value"
+                  :command="duration.value">
+                  {{ duration.label }}
+                </KiwiDropdownItem>
+              </template>
+            </KiwiDropdown>
+          </div>
+
+          <div class="option-group">
+            <label class="form-label">Speakers</label>
+            <KiwiDropdown @command="handleSpeakerCountChange" :disabled="isGenerating">
+              <KiwiButton size="small" :disabled="isGenerating">
+                {{ form.speakerCount }} speakers
+                <i class="el-icon-arrow-down"></i>
+              </KiwiButton>
+              <template slot="dropdown">
+                <KiwiDropdownItem :command="2">2 speakers</KiwiDropdownItem>
+                <KiwiDropdownItem :command="3">3 speakers</KiwiDropdownItem>
+                <KiwiDropdownItem :command="4">4 speakers</KiwiDropdownItem>
+              </template>
+            </KiwiDropdown>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <KiwiButton
+            type="primary"
+            icon="el-icon-video-play"
+            :loading="isGenerating"
+            :disabled="!form.prompt.trim() || isGenerating"
+            @click="generateConversation">
+            {{ isGenerating ? 'Generating...' : 'Generate Conversation' }}
+          </KiwiButton>
+
+          <KiwiButton
+            v-if="isGenerating"
+            type="danger"
+            icon="el-icon-close"
+            @click="cancelGeneration">
+            Cancel
+          </KiwiButton>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div v-if="isGenerating" class="progress-section">
+        <div class="loading-indicator">
+          <i class="el-icon-loading"></i>
+          <span>{{ progressText || 'This may take a moment...' }}</span>
+        </div>
+      </div>
+
+      <!-- Current Conversation Display -->
+      <div v-if="currentConversation.topic" class="conversation-display">
+        <div class="conversation-header">
+          <h3 class="conversation-topic">{{ currentConversation.topic }}</h3>
+          <div class="speakers-list">
+            <span
+              v-for="speaker in currentConversation.speakers"
+              :key="speaker.id"
+              class="speaker-badge"
+              :style="{ borderColor: getSpeakerColor(speaker.speakerIndex) }">
+              <span class="speaker-initial" :style="{ backgroundColor: getSpeakerColor(speaker.speakerIndex) }">{{ getSpeakerInitial(speaker.name) }}</span>
+              {{ speaker.name }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="playback-controls" v-if="messages.length > 0">
+          <KiwiButton
+            :type="isPlayingAll ? 'danger' : 'primary'"
+            size="small"
+            :icon="isPlayingAll ? 'el-icon-video-pause' : 'el-icon-video-play'"
+            @click="togglePlayAll">
+            {{ isPlayingAll ? 'Stop' : 'Play All' }}
+          </KiwiButton>
+          <span class="total-duration" v-if="totalDuration > 0">
+            Total: {{ formatDuration(totalDuration) }}
+          </span>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-container" ref="chatContainer">
+          <div
+            v-for="(msg, index) in messages"
+            :key="msg.id"
+            class="chat-message"
+            :class="{ 'is-playing': currentPlayingId === msg.id }"
+            :style="{ borderLeftColor: getSpeakerColor(getSpeakerIndex(msg.speakerId)) }">
+            <div class="message-header">
+              <span class="speaker-name">
+                <span class="speaker-initial-small" :style="{ backgroundColor: getSpeakerColor(getSpeakerIndex(msg.speakerId)) }">{{ getSpeakerInitial(msg.speakerName) }}</span>
+                {{ msg.speakerName }}
+              </span>
+            </div>
+            <p
+              class="message-text selectable-text"
+              @mouseup="handleMessageSelection"
+              @touchend.passive="handleMessageSelection">
+              {{ msg.text }}
+            </p>
+            <div class="message-footer">
+              <KiwiButton
+                size="mini"
+                :type="currentPlayingId === msg.id ? 'success' : 'default'"
+                :icon="currentPlayingId === msg.id ? 'el-icon-video-pause' : 'el-icon-video-play'"
+                @click="playAudio(msg)">
+                {{ currentPlayingId === msg.id ? 'Playing' : 'Play' }}
+              </KiwiButton>
+              <span class="duration">{{ formatDuration(msg.audioDurationMs) }}</span>
+              <span class="sequence">#{{ msg.sequence }}</span>
+            </div>
+          </div>
+
+          <!-- Loading placeholders -->
+          <div v-if="isGenerating && pendingCount > 0" class="loading-placeholders">
+            <div
+              v-for="n in pendingCount"
+              :key="'placeholder-' + n"
+              class="chat-message placeholder">
+              <div class="placeholder-line short"></div>
+              <div class="placeholder-line"></div>
+              <div class="placeholder-line medium"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="!isGenerating" class="empty-state">
+        <i class="el-icon-chat-dot-round"></i>
+        <h3>Create Your First Conversation</h3>
+        <p>Enter a topic above and click "Generate" to create a realistic multi-speaker conversation with audio.</p>
+      </div>
+    </div>
+
+    <!-- History Mode -->
+    <div v-show="currentMode === 'history'" class="history-content">
+      <div v-if="loadingHistory" class="loading-state">
+        <i class="el-icon-loading"></i>
+        <p>Loading conversations...</p>
+      </div>
+
+      <div v-else-if="conversationList.length === 0" class="empty-state">
+        <i class="el-icon-folder-opened"></i>
+        <h3>No Conversations Yet</h3>
+        <p>Generate your first conversation to see it here.</p>
+      </div>
+
+      <div v-else class="history-list">
+        <div
+          v-for="conv in conversationList"
+          :key="conv.id"
+          class="history-item"
+          @click="loadConversation(conv.id)">
+          <div class="history-item-header">
+            <h4 class="history-topic">{{ conv.topic }}</h4>
+            <KiwiTag :type="getStatusTagType(conv.status)" size="small">
+              {{ conv.status }}
+            </KiwiTag>
+          </div>
+          <div class="history-item-meta">
+            <span><i class="el-icon-time"></i> {{ formatDate(conv.createTime) }}</span>
+            <span><i class="el-icon-headset"></i> {{ getAccentLabel(conv.accent) }}</span>
+            <span><i class="el-icon-timer"></i> ~{{ conv.durationMinutes }} min</span>
+          </div>
+          <div class="history-item-actions">
+            <KiwiButton
+              size="mini"
+              type="danger"
+              icon="el-icon-delete"
+              circle
+              @click.stop="confirmDeleteConversation(conv.id)">
+            </KiwiButton>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden Audio Element -->
+    <audio
+      ref="audioPlayer"
+      @ended="onAudioEnded"
+      @error="onAudioError"
+    />
+
+    <!-- AI Selection Popup for text selection -->
+    <AiSelectionPopup
+      :visible.sync="selectionPopupVisible"
+      :selected-text="selectionPopupText"
+      :title="$t('ai.aiSearch') || 'AI Search'"
+      :auto-request="true"
+      @open-ai-tab="handleOpenAiTab"
+    />
+  </div>
+</template>
+
+<script>
+import { getStore } from '@/util/store'
+import kiwiConsts from '@/const/kiwiConsts'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import KiwiTag from '@/components/ui/KiwiTag.vue'
+import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
+import {
+  getConversationList,
+  getConversationById,
+  deleteConversation,
+  getConversationConfig
+} from '@/api/conversation'
+
+export default {
+  name: 'AiConversationGenerator',
+  components: {
+    KiwiButton,
+    KiwiInput,
+    KiwiDropdown,
+    KiwiDropdownItem,
+    KiwiTag,
+    AiSelectionPopup
+  },
+  data() {
+    return {
+      currentMode: 'generator',
+      form: {
+        prompt: '',
+        accent: 'UK',
+        duration: 'FIVE_MINUTES',
+        speakerCount: 2
+      },
+      accentOptions: [
+        { value: 'US', label: 'American English' },
+        { value: 'UK', label: 'British English' },
+        { value: 'AU', label: 'Australian English' },
+        { value: 'IN', label: 'Indian English' }
+      ],
+      durationOptions: [
+        { value: 'TWO_MINUTES', label: '~2 minutes' },
+        { value: 'FIVE_MINUTES', label: '~5 minutes' },
+        { value: 'TEN_MINUTES', label: '~10 minutes' }
+      ],
+      isGenerating: false,
+      progress: 0,
+      progressText: '',
+      currentConversation: {
+        id: null,
+        topic: '',
+        speakers: []
+      },
+      messages: [],
+      totalMessageCount: 0,
+      currentPlayingId: null,
+      isPlayingAll: false,
+      playAllQueue: [],
+      conversationList: [],
+      loadingHistory: false,
+      abortController: null,
+      speakerColors: ['#4A90D9', '#E74C3C', '#27AE60', '#9B59B6'],
+      // Selection popup state
+      selectionPopupVisible: false,
+      selectionPopupText: ''
+    }
+  },
+  computed: {
+    pendingCount() {
+      return Math.max(0, this.totalMessageCount - this.messages.length)
+    },
+    totalDuration() {
+      return this.messages.reduce((sum, msg) => sum + (msg.audioDurationMs || 0), 0)
+    }
+  },
+  mounted() {
+    this.loadConfig()
+  },
+  beforeDestroy() {
+    this.cancelGeneration()
+    this.stopAudio()
+  },
+  methods: {
+    async loadConfig() {
+      try {
+        const response = await getConversationConfig()
+        if (response.data.code === 0) {
+          console.log('Conversation config loaded:', response.data.data)
+        }
+      } catch (error) {
+        console.error('Failed to load config:', error)
+      }
+    },
+
+    handleAccentChange(accent) {
+      this.form.accent = accent
+    },
+
+    handleDurationChange(duration) {
+      this.form.duration = duration
+    },
+
+    handleSpeakerCountChange(count) {
+      this.form.speakerCount = count
+    },
+
+    getAccentLabel(value) {
+      const option = this.accentOptions.find(o => o.value === value)
+      return option ? option.label : value
+    },
+
+    getDurationLabel(value) {
+      const option = this.durationOptions.find(o => o.value === value)
+      return option ? option.label : value
+    },
+
+    getSpeakerColor(index) {
+      return this.speakerColors[index % this.speakerColors.length]
+    },
+
+    getSpeakerIndex(speakerId) {
+      const speaker = this.currentConversation.speakers.find(s => s.id === speakerId)
+      return speaker ? speaker.speakerIndex : 0
+    },
+
+    getSpeakerInitial(name) {
+      if (!name) return '?'
+      return name.charAt(0).toUpperCase()
+    },
+
+    // Handle text selection in chat messages
+    handleMessageSelection(event) {
+      try {
+        const sel = window.getSelection && window.getSelection()
+        if (!sel || sel.rangeCount === 0) return
+        const text = (sel.toString() || '').trim()
+        if (!text || text.length < 2) return
+
+        // Open the selection popup with the selected text
+        this.selectionPopupText = text
+        this.selectionPopupVisible = true
+      } catch (_) { /* ignore */ }
+    },
+
+    // Handle open in AI tab event from selection popup
+    handleOpenAiTab({ text, query }) {
+      if (query) {
+        const routeData = this.$router.resolve({ path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query })
+        window.open(routeData.href, '_blank')
+      }
+    },
+
+    formatDuration(ms) {
+      if (!ms) return '0s'
+      const seconds = Math.round(ms / 1000)
+      if (seconds < 60) return `${seconds}s`
+      const minutes = Math.floor(seconds / 60)
+      const remainingSeconds = seconds % 60
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return ''
+      const date = new Date(dateStr)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    },
+
+    getStatusTagType(status) {
+      switch (status) {
+        case 'COMPLETED': return 'success'
+        case 'GENERATING_SCRIPT':
+        case 'GENERATING_AUDIO': return 'warning'
+        case 'FAILED': return 'danger'
+        default: return 'info'
+      }
+    },
+
+    async generateConversation() {
+      if (!this.form.prompt.trim() || this.isGenerating) return
+
+      this.isGenerating = true
+      this.progress = 0
+      this.progressText = 'Initializing...'
+      this.messages = []
+      this.currentConversation = { id: null, topic: '', speakers: [] }
+      this.totalMessageCount = 0
+
+      const token = getStore({ name: 'access_token' })
+      if (!token) {
+        this.$message.error('Please login to generate conversations')
+        this.isGenerating = false
+        return
+      }
+
+      this.abortController = new AbortController()
+
+      try {
+        const response = await fetch(`${kiwiConsts.API_BASE.AI_BIZ}/conversation/generate/stream`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify({
+            prompt: this.form.prompt,
+            accent: this.form.accent,
+            duration: this.form.duration,
+            speakerCount: this.form.speakerCount
+          }),
+          signal: this.abortController.signal
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              const jsonStr = line.substring(5).trim()
+              if (jsonStr) {
+                try {
+                  const event = JSON.parse(jsonStr)
+                  this.handleSSEEvent(event)
+                } catch (e) {
+                  console.error('Failed to parse SSE data:', e)
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Generation cancelled')
+          this.progressText = 'Cancelled'
+        } else {
+          console.error('Generation failed:', error)
+          this.$message.error('Failed to generate conversation: ' + error.message)
+        }
+      } finally {
+        this.isGenerating = false
+        this.abortController = null
+      }
+    },
+
+    handleSSEEvent(event) {
+      switch (event.eventType) {
+        case 'metadata':
+          this.currentConversation = {
+            id: event.data.conversationId,
+            topic: event.data.topic,
+            speakers: event.data.speakers
+          }
+          this.totalMessageCount = event.data.totalMessageCount
+          this.progressText = `Generating conversation: ${event.data.topic}`
+          break
+
+        case 'message':
+          this.messages.push(event.data)
+          this.$nextTick(() => {
+            this.scrollToBottom()
+          })
+          break
+
+        case 'progress':
+          this.progress = event.data.percentage
+          this.progressText = `Generated ${event.data.completed} of ${event.data.total} messages`
+          break
+
+        case 'complete':
+          this.progress = 100
+          this.progressText = 'Conversation generated successfully!'
+          this.$message.success('Conversation generated!')
+          break
+
+        case 'error':
+          console.error('SSE error:', event.data)
+          this.$message.warning(event.data.message)
+          break
+      }
+    },
+
+    cancelGeneration() {
+      if (this.abortController) {
+        this.abortController.abort()
+      }
+    },
+
+    scrollToBottom() {
+      const container = this.$refs.chatContainer
+      if (container) {
+        container.scrollTop = container.scrollHeight
+      }
+    },
+
+    playAudio(msg) {
+      if (this.currentPlayingId === msg.id) {
+        this.stopAudio()
+        return
+      }
+
+      const audioPlayer = this.$refs.audioPlayer
+      if (!audioPlayer) return
+
+      const audioUrl = `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${this.currentConversation.id}/audio/${msg.id}`
+      const token = getStore({ name: 'access_token' })
+
+      // For authenticated audio streaming, we need to fetch with auth header
+      this.fetchAndPlayAudio(audioUrl, token, msg.id)
+    },
+
+    async fetchAndPlayAudio(url, token, messageId) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch audio')
+        }
+
+        const blob = await response.blob()
+        const audioPlayer = this.$refs.audioPlayer
+        audioPlayer.src = URL.createObjectURL(blob)
+        audioPlayer.play()
+        this.currentPlayingId = messageId
+      } catch (error) {
+        console.error('Failed to play audio:', error)
+        this.$message.error('Failed to play audio')
+        this.currentPlayingId = null
+      }
+    },
+
+    stopAudio() {
+      const audioPlayer = this.$refs.audioPlayer
+      if (audioPlayer) {
+        audioPlayer.pause()
+        audioPlayer.currentTime = 0
+      }
+      this.currentPlayingId = null
+      this.isPlayingAll = false
+      this.playAllQueue = []
+    },
+
+    togglePlayAll() {
+      if (this.isPlayingAll) {
+        this.stopAudio()
+      } else {
+        this.isPlayingAll = true
+        this.playAllQueue = [...this.messages]
+        this.playNextInQueue()
+      }
+    },
+
+    playNextInQueue() {
+      if (this.playAllQueue.length === 0) {
+        this.isPlayingAll = false
+        this.currentPlayingId = null
+        return
+      }
+
+      const nextMsg = this.playAllQueue.shift()
+      this.playAudio(nextMsg)
+    },
+
+    onAudioEnded() {
+      this.currentPlayingId = null
+      if (this.isPlayingAll) {
+        this.playNextInQueue()
+      }
+    },
+
+    onAudioError() {
+      this.currentPlayingId = null
+      if (this.isPlayingAll) {
+        this.playNextInQueue()
+      }
+    },
+
+    async loadConversationList() {
+      this.loadingHistory = true
+      try {
+        const response = await getConversationList()
+        if (response.data.code === 0) {
+          this.conversationList = response.data.data || []
+        }
+      } catch (error) {
+        console.error('Failed to load conversation list:', error)
+        this.$message.error('Failed to load conversation history')
+      } finally {
+        this.loadingHistory = false
+      }
+    },
+
+    async loadConversation(id) {
+      try {
+        const response = await getConversationById(id)
+        if (response.data.code === 0) {
+          const data = response.data.data
+          this.currentConversation = {
+            id: data.id,
+            topic: data.topic,
+            speakers: data.speakers
+          }
+          this.messages = data.messages || []
+          this.totalMessageCount = this.messages.length
+          this.currentMode = 'generator'
+        }
+      } catch (error) {
+        console.error('Failed to load conversation:', error)
+        this.$message.error('Failed to load conversation')
+      }
+    },
+
+    confirmDeleteConversation(id) {
+      this.$confirm('Are you sure you want to delete this conversation?', 'Delete Conversation', {
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        type: 'warning'
+      }).then(() => {
+        this.deleteConversation(id)
+      }).catch(() => {})
+    },
+
+    async deleteConversation(id) {
+      try {
+        const response = await deleteConversation(id)
+        if (response.data.code === 0) {
+          this.$message.success('Conversation deleted')
+          this.loadConversationList()
+        }
+      } catch (error) {
+        console.error('Failed to delete conversation:', error)
+        this.$message.error('Failed to delete conversation')
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.ai-conversation-generator {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--bg-body);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  min-height: 600px;
+}
+
+/* Header */
+.generator-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.generator-title {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+
+  i {
+    margin-right: 8px;
+    color: var(--color-primary);
+  }
+}
+
+.generator-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+/* Form Section */
+.form-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.options-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.option-group {
+  flex: 1;
+  min-width: 140px;
+}
+
+.action-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+
+  i {
+    font-size: 20px;
+    color: var(--color-primary);
+    animation: spin 1s linear infinite;
+  }
+}
+
+.progress-text {
+  margin: 10px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Conversation Display */
+.conversation-display {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.conversation-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color-light);
+  background: var(--bg-highlight);
+}
+
+.conversation-topic {
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.speakers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.speaker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-container);
+  border-radius: 20px;
+  border-left: 3px solid;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.speaker-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Playback Controls */
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.total-duration {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Chat Container */
+.chat-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.chat-message {
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--bg-container);
+  border-radius: 12px;
+  border-left: 4px solid;
+  transition: all 0.2s ease;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.is-playing {
+    background: var(--bg-highlight);
+    box-shadow: 0 0 0 2px var(--color-primary);
+  }
+
+  &.placeholder {
+    border-left-color: var(--border-color-light);
+    animation: pulse 1.5s infinite;
+  }
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.speaker-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.speaker-initial-small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.message-text {
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+  color: var(--text-regular);
+}
+
+/* Selectable text for AI selection popup */
+.selectable-text {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+  cursor: text;
+}
+
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.duration {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.sequence {
+  font-size: 11px;
+  color: var(--text-placeholder);
+}
+
+/* Placeholder Animation */
+.placeholder-line {
+  height: 14px;
+  background: linear-gradient(90deg, var(--border-color-light) 25%, var(--bg-highlight) 50%, var(--border-color-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+
+  &.short {
+    width: 30%;
+  }
+
+  &.medium {
+    width: 60%;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+
+  i {
+    font-size: 64px;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    opacity: 0.35;
+  }
+
+  h3 {
+    color: var(--text-primary);
+    margin: 20px 0 10px 0;
+  }
+
+  p {
+    margin-bottom: 0;
+    line-height: 1.6;
+    color: var(--text-regular);
+  }
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+
+  i {
+    font-size: 32px;
+    margin-bottom: 16px;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* History List */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.history-topic {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history-item-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+
+  i {
+    margin-right: 4px;
+  }
+}
+
+.history-item-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .history-item:hover & {
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .ai-conversation-generator {
+    max-width: 100%;
+    margin: 0 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ai-conversation-generator {
+    padding: 16px;
+    margin: 0 8px;
+    min-height: auto;
+  }
+
+  .generator-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+
+  .generator-title {
+    font-size: 20px;
+  }
+
+  .generator-subtitle {
+    font-size: 13px;
+  }
+
+  .mode-toggle {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+
+  .form-section {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .options-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .option-group {
+    min-width: 100%;
+  }
+
+  .action-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .action-row .kiwi-button {
+    width: 100%;
+  }
+
+  .conversation-header {
+    padding: 14px;
+  }
+
+  .conversation-topic {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .speakers-list {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .speaker-badge {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .playback-controls {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .chat-container {
+    max-height: 400px;
+    padding: 12px;
+  }
+
+  .chat-message {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .message-header {
+    margin-bottom: 8px;
+  }
+
+  .speaker-name {
+    font-size: 13px;
+  }
+
+  .message-text {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .message-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .history-list {
+    gap: 10px;
+  }
+
+  .history-item {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .history-item-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .history-topic {
+    font-size: 15px;
+  }
+
+  .history-item-meta {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .history-item-actions {
+    position: static;
+    opacity: 1;
+    margin-top: 10px;
+  }
+
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+    margin: 16px 0 8px 0;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-conversation-generator {
+    padding: 12px;
+    margin: 0 4px;
+    border-radius: 12px;
+  }
+
+  .generator-header {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .generator-title {
+    font-size: 18px;
+  }
+
+  .generator-subtitle {
+    font-size: 12px;
+  }
+
+  .mode-toggle {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mode-toggle .kiwi-button {
+    width: 100%;
+  }
+
+  .form-section {
+    padding: 12px;
+  }
+
+  .form-label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .conversation-header {
+    padding: 12px;
+  }
+
+  .conversation-topic {
+    font-size: 15px;
+  }
+
+  .chat-container {
+    max-height: 350px;
+    padding: 10px;
+  }
+
+  .chat-message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-left-width: 3px;
+  }
+
+  .speaker-name {
+    font-size: 12px;
+  }
+
+  .message-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .history-item {
+    padding: 12px;
+  }
+
+  .history-topic {
+    font-size: 14px;
+  }
+
+  .progress-text {
+    font-size: 13px;
+  }
+}
+</style>

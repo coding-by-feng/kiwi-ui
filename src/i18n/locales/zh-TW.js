@@ -81,7 +81,7 @@ export default {
         google: '使用Google帳戶登入',
         connecting: '正在連接Google...',
         processing: '處理中...',
-        loginFailed: 'Google登入失敗，請重試',
+        loginFailed: '登入失敗，請重試',
         accountNotFound: '帳戶未找到，請聯絡管理員',
         loginSuccess: '登入成功',
         logout: '登出',
@@ -102,9 +102,48 @@ export default {
         },
         copyright: '©2025 Kason英語學習平台 v2.0',
         username: '使用者名稱',
+        usernameOrEmail: '使用者名稱 / 電子郵件',
         password: '密碼',
         signIn: '登入',
-        or: '或'
+        or: '或',
+        // 註冊相關
+        createAccount: '建立帳戶',
+        register: '註冊',
+        registerSubtitle: '加入我們，開始學習',
+        registering: '註冊中...',
+        registerSuccess: '註冊成功！請登入。',
+        registerFailed: '註冊失敗，請重試',
+        email: '電子郵件',
+        confirmPassword: '確認密碼',
+        realName: '姓名（選填）',
+        // 佔位符
+        usernamePlaceholder: '請輸入使用者名稱',
+        usernameOrEmailPlaceholder: '請輸入使用者名稱或電子郵件',
+        passwordPlaceholder: '請輸入密碼',
+        emailPlaceholder: '請輸入電子郵件地址',
+        confirmPasswordPlaceholder: '請再次輸入密碼',
+        realNamePlaceholder: '請輸入姓名',
+        // 驗證訊息
+        usernameRequired: '使用者名稱不能為空',
+        usernameLength: '使用者名稱長度需為3-20個字元',
+        usernamePattern: '使用者名稱只能包含字母、數字和底線',
+        usernameNotAvailable: '使用者名稱已被使用',
+        emailRequired: '電子郵件不能為空',
+        emailInvalid: '請輸入有效的電子郵件地址',
+        emailNotAvailable: '電子郵件已被註冊',
+        passwordRequired: '密碼不能為空',
+        passwordTooShort: '密碼長度至少為6個字元',
+        confirmPasswordRequired: '請確認密碼',
+        passwordMismatch: '兩次密碼輸入不一致',
+        realNameTooLong: '姓名不能超過50個字元',
+        // 密碼強度
+        passwordWeak: '弱',
+        passwordFair: '一般',
+        passwordGood: '良好',
+        passwordStrong: '強',
+        // 導航連結
+        noAccount: '還沒有帳戶？',
+        alreadyHaveAccount: '已有帳戶？'
     },
 
     // New: complete login block
@@ -148,7 +187,25 @@ export default {
         // 新增模式
         vocabularyCharacterExpansion: '詞形擴展',
         ambiguousAssociationCorrection: '歧義關聯糾正',
+        naturalIdiomaticRetouch: '自然地道潤色',
         selectMode: '選擇模式'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '輸入詞彙',
+        directTranslation: '輸入任何內容',
+        explanation: '輸入任何內容',
+        grammarExplanation: '輸入任何內容',
+        grammarCorrection: '輸入任何內容',
+        synonym: '輸入詞彙',
+        antonym: '輸入詞彙',
+        vocabularyAssociation: '輸入任何內容',
+        phrasesAssociation: '輸入任何內容',
+        // New modes
+        vocabularyCharacterExpansion: '輸入任何內容',
+        ambiguousAssociationCorrection: '輸入任何內容',
+        naturalIdiomaticRetouch: '輸入需要潤色的文本'
     },
 
     // Todo Gamification
@@ -178,6 +235,16 @@ export default {
         freqEveryNDays: '每 {days} 天',
         addTask: '添加任務',
 
+        // Task form labels and hints
+        taskTitleLabel: '任務標題',
+        taskTitleHint: '給任務取一個清晰、可執行的名稱。例如：「完成晨練」或「複習單字表」。',
+        taskDescLabel: '任務描述',
+        taskDescHint: '添加關於任務的可選詳細資訊。需要做什麼？有什麼具體要求？',
+        pointsLabel: '積分設定',
+        pointsHint: '設定成功的獎勵積分（+）和失敗的懲罰積分（-）。任務越難，積分越高！',
+        frequencyLabel: '重複頻率',
+        frequencyHint: '這個任務多久重複一次？一次性任務完成後會被移除。',
+
         // Status labels
         completed: '✅ 已完成',
         failed: '❌ 已失敗',
@@ -199,9 +266,17 @@ export default {
         // History
         selectDate: '選擇日期',
         noTasksForDate: '所選日期無任務記錄',
+        noHistoryHint: '完成一些任務後會在這裡顯示',
         deleteHistoryRecord: '刪除歷史記錄',
         confirmDeleteHistoryRecord: '確定要刪除此歷史記錄嗎？',
         historyRecordDeleted: '歷史記錄刪除成功！',
+        previousDay: '前一天',
+        nextDay: '後一天',
+        today: '今天',
+        goToToday: '跳轉到今天',
+        tasks: '個任務',
+        restore: '恢復',
+        restoreTask: '恢復任務為待辦',
 
         // Analytics
         barChart: '📊 柱狀圖',
@@ -268,6 +343,7 @@ export default {
         maxRank: '最高段位',
         nextRank: '下一級：{rank}',
         maxRankReached: '已達最高段位',
+        toGo: '還需',
         placeholderImage: '佔位圖',
         ranks: {
             legendary: '傳說',
@@ -312,6 +388,7 @@ export default {
         clearFilters: '清除篩選',
         review: '複習',
         copy: '複製',
+        copyPrompt: '複製提示詞',
         details: '詳細',
         searchAgain: '再次搜尋',
         aiCallDetails: 'AI 呼叫詳細',
@@ -326,13 +403,84 @@ export default {
         selectedText: '所選文字',
         explainSelection: '解釋選取內容',
         searchOnDictionary: '在字典中搜尋',
-        // 新增：剪貼簿提示
+        // 剪貼簿提示
         useClipboardContent: '使用剪貼簿內容：「{text}」？',
+        // 分類篩選
+        normalItems: '正常項目',
+        archivedItems: '已封存項目',
+        allItems: '全部項目',
+        // 載入狀態
+        loadingHistory: '載入歷史中...',
+        // 操作
+        archive: '封存',
+        // 封存/刪除訊息
+        itemArchived: '項目已成功封存',
+        archiveFailed: '封存失敗',
+        itemDeleted: '項目已成功刪除',
+        deleteFailed: '刪除失敗',
+        loadHistoryFailed: '載入 AI 呼叫歷史失敗',
+        // 刪除確認對話框
+        deleteItemTitle: '刪除項目',
+        deleteItemConfirm: '確定要刪除此項目嗎？此操作無法復原。',
+        // 最小化/恢復
+        minimize: '最小化',
+        restore: '恢復',
+        close: '關閉',
+        aiSearch: 'AI 搜尋'
     },
 
     // Messages and notifications (added keys)
     messages: {
         switchedModeHotkey: '已透過 {key} 切換模式'
+    },
+
+    // User Center
+    user: {
+        profile: '個人資料',
+        loginOut: '登出',
+        learningStats: '學習統計',
+        todayRemembered: '今日已記',
+        todayReviewed: '今日已複習',
+        todayMastered: '今日已掌握',
+        learningSettings: '學習設定',
+        pronunciationSource: '發音來源',
+        nativeLanguage: '母語',
+        uiLanguage: '介面語言',
+        uiLanguageTooltip: '介面顯示的語言（與翻譯語言獨立設定）',
+        backgroundMusic: '背景音樂',
+        letterSpelling: '字母拼寫',
+        englishDefinition: '英文釋義',
+        messageHints: '訊息提示',
+        playExamples: '播放例句',
+        englishToEnglish: '英英模式',
+        defaultLanguage: '預設語言',
+        unknownLanguage: '未知語言',
+        clipboardDetection: '剪貼簿偵測',
+        clipboardDetectionTooltip: '切換分頁或搜尋框為空時，自動偵測剪貼簿內容並提示使用',
+        featureTabs: '功能標籤',
+        featureTabsTip: '在工具列中顯示或隱藏標籤',
+        registerSource: {
+            local: '本機註冊',
+            google: 'Google 註冊',
+            wechat: '微信註冊',
+            qq: 'QQ 註冊',
+            unknown: '未知來源'
+        },
+        // 密碼修改
+        changePassword: '修改密碼',
+        currentPassword: '目前密碼',
+        newPassword: '新密碼',
+        confirmNewPassword: '確認新密碼',
+        currentPasswordPlaceholder: '請輸入目前密碼',
+        newPasswordPlaceholder: '請輸入新密碼',
+        confirmNewPasswordPlaceholder: '請再次輸入新密碼',
+        passwordMismatch: '兩次輸入的密碼不一致',
+        passwordTooShort: '密碼長度至少為6個字元',
+        passwordChangeSuccess: '密碼修改成功',
+        passwordChangeFailed: '密碼修改失敗',
+        currentPasswordRequired: '請輸入目前密碼',
+        newPasswordRequired: '請輸入新密碼',
+        confirmPasswordRequired: '請確認新密碼'
     },
 
     // Tabs labels for feature toggles
@@ -393,5 +541,36 @@ export default {
         downloadForWindows: '下載 Windows 版本',
         downloadForLinux: '下載 Linux 版本',
         gdriveNote: '下載檔托管於 Google Drive，若無法開啟，請複製連結至新分頁。'
+    },
+
+    // Audio settings
+    audio: {
+        title: '音訊設定',
+        management: '音訊管理',
+        cleanAudioData: '清理音訊資料，共 {count}',
+        cleanAllCache: '清理所有快取',
+        backgroundMusic: '背景音樂',
+        audioCleanedSuccess: '音訊資料清理成功',
+        cacheCleanedSuccess: '所有快取清理成功',
+        playing: '播放中...',
+        clickToPlay: '點擊播放',
+        nowPlaying: '正在播放'
+    },
+
+    // Review modes
+    review: {
+        // TTS 音訊生成
+        generatingAudio: '正在生成音訊...',
+        audioReady: '音訊就緒',
+        audioFilesReady: '個音訊檔案就緒',
+        audioFilesFailed: '個音訊檔案失敗',
+        audioGenerationFailed: '音訊生成失敗，使用備用方案',
+        audioGenerationInProgress: '音訊生成已在進行中',
+        ttsAudioNotEnabled: '伺服器未啟用TTS音訊',
+        startingAudioGeneration: '開始生成音訊...',
+        audioPreparationFailed: '音訊準備失敗',
+        prepareAudio: '準備音訊',
+        audioGenerationComplete: '音訊生成完成',
+        preparingAudioForReview: '正在準備複習音訊...'
     }
 }

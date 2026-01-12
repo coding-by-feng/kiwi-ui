@@ -7,6 +7,9 @@ import review from '@/api/review'
 import kiwiConsts from '@/const/kiwiConsts'
 import audioUtil from '../../../util/audioUtil'
 import NoSleep from 'nosleep.js'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 const playCountOnce = 20 // 复习模式每页加载的单词个数
 const readCountOnce = 20 // 阅读模式每页加载的单词个数
@@ -175,7 +178,10 @@ export default {
     }
   },
   components: {
-    Countdown: () => import('../Countdown.vue')
+    Countdown: () => import('../Countdown.vue'),
+    KiwiDropdown,
+    KiwiDropdownItem,
+    KiwiButton
   },
   data() {
     return {
@@ -247,7 +253,7 @@ export default {
       countdownMode: false,          // Whether countdown timer is active
       countdownTime: new Date().getTime(),  // End time for countdown
       countdownMin: 60,              // Duration in minutes
-      countdownText: '1小时'         // Display text for countdown
+      countdownText: '1小时'          // Display text for countdown
     }
   },
   beforeCreate: function () {
@@ -407,6 +413,7 @@ export default {
 
           try {
             await this.initList()
+
             await this.initNextReviseDetail(true)
           } catch (e) {
             console.error(e)
@@ -489,10 +496,13 @@ export default {
     },
     async initDefaultListFun() {
       await this.getListItems(this.page, this.listId).then(response => {
-        this.listItems = response.data.data.records
-        this.page.pages = response.data.data.pages
-        this.page.total = response.data.data.total
-        this.page.current = response.data.data.current
+        const data = response.data.data
+        // Handle both old format (records) and new format (content)
+        this.listItems = data.content || data.records
+        this.page.pages = data.totalPages || data.pages
+        this.page.total = data.totalElements || data.total
+        // API returns 0-indexed page number, convert to 1-indexed if needed
+        this.page.current = data.number !== undefined ? data.number + 1 : data.current
       }).catch(e => {
         console.error(e)
       })
@@ -671,7 +681,7 @@ export default {
         }
         let audio = this.createNewAudio()
         if (this.source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-          audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+          audio.src = '/api/word/pronunciation/downloadVoice/' + id
         } else {
           audio.src = sourceUrl
         }
@@ -735,7 +745,7 @@ export default {
     },
     getPronunciationUrl: function (first) {
       if (this.source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-        return '/wordBiz/word/pronunciation/downloadVoice/' + first.pronunciationId
+        return '/api/word/pronunciation/downloadVoice/' + first.pronunciationId
       } else {
         return first.sourceUrl
       }
@@ -932,7 +942,10 @@ export default {
         if (this.isChToEn) {
           this.detail.showWord = false
         }
-        let lastIndexPerPage = this.isLastIndexPerPage()
+        // In review mode, use playWordIndex; in non-review mode, use showIndex
+        let lastIndexPerPage = this.isReview
+            ? this.isLastIndexPerPage()
+            : this.detail.showIndex >= this.listItems.length
         let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
         console.log('skipCurrent wordName = ', this.detail.paraphraseVO.wordName)
@@ -946,7 +959,11 @@ export default {
         console.log('skipCurrent this.page.size = ' + this.page.size)
         if (lastPage) {
           let lastPageRemainder = this.page.total % this.page.size
-          if (lastIndexPerPage || (lastPageRemainder !== 0 && this.detail.showIndex === lastPageRemainder)) {
+          // Check if we've reached the end of the current page's items
+          let isAtEndOfPage = this.isReview
+              ? lastIndexPerPage
+              : this.detail.showIndex >= this.listItems.length
+          if (isAtEndOfPage || (lastPageRemainder !== 0 && this.detail.showIndex >= lastPageRemainder)) {
             this.msgWarning(this, '当前已经是最后一页最后一个')
             return
           }
@@ -1014,6 +1031,7 @@ export default {
       await this.stopPlaying()
       await this.cleanRevising()
     },
+
     extractReviewAudioUrls: function () {
       console.log('this.isLastReviewWordSame() in extractReviewAudioUrls', this.isLastReviewWordSame())
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
@@ -1140,20 +1158,20 @@ export default {
     <div style="z-index: 1;">
       <el-card v-if="isReview" class="box-card timer-card">
         <div>
-          <el-dropdown
-              size="mini"
-              split-button type="info" @command="countdownSelectHandle">
-            <i class="el-icon-stopwatch">&nbsp;</i>{{ countdownText }}
-            <template v-slot:dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item :command="{text:'1小时',m:60}">1小时</el-dropdown-item>
-                <el-dropdown-item :command="{text:'2小时',m:120}">2小时</el-dropdown-item>
-                <el-dropdown-item :command="{text:'10分钟',m:10}">10分钟</el-dropdown-item>
-                <el-dropdown-item :command="{text:'20分钟',m:20}">20分钟</el-dropdown-item>
-                <el-dropdown-item :command="{text:'30分钟',m:30}">30分钟</el-dropdown-item>
-              </el-dropdown-menu>
+          <KiwiDropdown @command="countdownSelectHandle" class="timer-dropdown">
+            <span class="timer-trigger">
+              <i class="el-icon-stopwatch"></i>
+              <span>{{ countdownText }}</span>
+              <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem :command="{text:'1小时',m:60}">1小时</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'2小时',m:120}">2小时</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'10分钟',m:10}">10分钟</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'20分钟',m:20}">20分钟</KiwiDropdownItem>
+              <KiwiDropdownItem :command="{text:'30分钟',m:30}">30分钟</KiwiDropdownItem>
             </template>
-          </el-dropdown>
+          </KiwiDropdown>
         </div>
         <div v-if="countdownMode">
           <br/>
@@ -1171,20 +1189,20 @@ export default {
               {{ isShowParaphrase ? item.meaningChinese : '释义已隐藏' }}
             </div>
             <div class="collapse-actions">
-              <el-button class="collapse-action-button info"
+              <KiwiButton class="collapse-action-button info"
                          type="text"
                          size="mini"
                          @click="showDetail(item.paraphraseId, index)"
                          title="查看详情">
                 <i class="el-icon-more-outline"></i>
-              </el-button>
-              <el-button class="collapse-action-button danger"
+              </KiwiButton>
+              <KiwiButton class="collapse-action-button danger"
                          type="text"
                          size="mini"
                          @click="removeParaphraseStarListFun(item.paraphraseId, item.listId)"
                          title="从收藏移除">
                 <i class="el-icon-remove-outline"></i>
-              </el-button>
+              </KiwiButton>
             </div>
           </div>
         </el-collapse-item>
@@ -1209,6 +1227,7 @@ export default {
           ref="detailDialog"
           :visible.sync="detail.dialogVisible"
           fullscreen
+          custom-class="paraphrase-detail-dialog"
           width="100%">
         <div slot="title" class="dialog-title-bar">
           <v-touch
@@ -1241,12 +1260,12 @@ export default {
             {{ showWordSpelling }}
           </span>
           &nbsp
-          <el-button type="info"
+          <KiwiButton type="info"
                      v-if="isReview && detail.isSleepMode"
                      @click="switchSleepMode"
                      size="mini">
             <i class="el-icon-thumb"></i>
-          </el-button>
+          </KiwiButton>
         </div>
 
         <!-- Detail content card (lightweight, custom styled) -->
@@ -1327,83 +1346,83 @@ export default {
           复习期间如果被异常打断，可以点击恢复复习按钮，将重新开始当前页的复习；
         </el-alert>
         <div slot="footer" class="dialog-footer">
-          <el-button type="info" @click="stockReviewStart">确定（继续上次复习）</el-button>
+          <KiwiButton type="info" @click="stockReviewStart">确定（继续上次复习）</KiwiButton>
         </div>
       </el-dialog>
     </div>
     <div v-if="enableOperationIcon"
          style="position: fixed; bottom: 15px; right: 15px; z-index: 2147483646; text-align: right; line-height: 30px;">
-      <el-button v-if="enableShowDetailIcon" type="info" size="mini"
+      <KiwiButton v-if="enableShowDetailIcon" type="info" size="mini"
                  @click="showDetail(detail.paraphraseVO.paraphraseId, detail.showIndex)">
         <i class="el-icon-document"></i>
-      </el-button>
-      <el-button type="info"
+      </KiwiButton>
+      <KiwiButton type="info"
                  v-if="enableSleepModeIcon"
                  @click="switchSleepMode"
                  size="mini">
         <i class="el-icon-thumb"></i>
-      </el-button>
-      <el-button type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
+      </KiwiButton>
+      <KiwiButton type="info" size="mini" v-if="showPreviousPageIcon" @click="previousPageFun">
         <i class="el-icon-d-arrow-left"></i>
-      </el-button>
-      <el-button v-if="showNextPageIcon"
+      </KiwiButton>
+      <KiwiButton v-if="showNextPageIcon"
                  type="info" size="mini" @click="nextPageFun">
         <i class="el-icon-d-arrow-right"></i>
-      </el-button>
+      </KiwiButton>
 
       <br/>
-      <el-button v-if="enableSkipSomeAudioIcon" type="info" size="mini"
+      <KiwiButton v-if="enableSkipSomeAudioIcon" type="info" size="mini"
                  @click="showNext(true)">
         <i class="el-icon-finished"></i>
-      </el-button>
-      <el-button v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
+      </KiwiButton>
+      <KiwiButton v-if="enableStopwatchIcon" type="info" size="mini" @click="switchStopWatchMode">
         <i class="el-icon-stopwatch" v-if="!countdownMode"></i>
         <i class="el-icon-switch-button" v-if="countdownMode"></i>
-      </el-button>
-      <el-button v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
+      </KiwiButton>
+      <KiwiButton v-if="enableShowPreviousIcon" type="info" size="mini" @click="showPrevious">
         <i class="el-icon-arrow-left"></i>
-      </el-button>
-      <el-button v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
+      </KiwiButton>
+      <KiwiButton v-if="enableShowNextIcon" type="info" size="mini" @click="showNext(false)">
         <i class="el-icon-arrow-right"></i>
-      </el-button>
-      <el-button type="info"
+      </KiwiButton>
+      <KiwiButton type="info"
                  v-if="enableStopPlayingIcon"
                  @click="stopPlaying"
                  size="mini">
         <i class="el-icon-video-pause"></i>
-      </el-button>
-      <el-button type="info"
+      </KiwiButton>
+      <KiwiButton type="info"
                  v-if="enableRefreshReviseDetailIcon"
                  @click="refreshReviseDetail"
                  size="mini">
         <i class="el-icon-brush"></i>
-      </el-button>
+      </KiwiButton>
 
       <br/>
 
-      <el-button v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
+      <KiwiButton v-if="isStockReviewModel && !detail.isUnfoldOperateIcon"
                  type="info" size="mini" @click="rememberOneFun">
         <i class="el-icon-success"></i>
-      </el-button>
-      <el-button
+      </KiwiButton>
+      <KiwiButton
           v-if="isEnhanceReviewModel && !detail.isUnfoldOperateIcon"
           type="info" size="mini" @click="keepInMindFun">
         <i class="el-icon-medal"></i>
-      </el-button>
-      <el-button type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
+      </KiwiButton>
+      <KiwiButton type="info" v-if="detail.paraphraseVO.wordName && !detail.isUnfoldOperateIcon"
                  size="mini" @click="handleShowDetail">
         <i class="el-icon-open"></i>
-      </el-button>
-      <el-button
+      </KiwiButton>
+      <KiwiButton
           v-if="detail.paraphraseVO.paraphraseId && !detail.isUnfoldOperateIcon"
           type="info" size="mini" @click="forgetOneFun">
         <i class="el-icon-question"></i>
-      </el-button>
-      <el-button type="info" size="mini"
+      </KiwiButton>
+      <KiwiButton type="info" size="mini"
                  @click="detail.isUnfoldOperateIcon = !detail.isUnfoldOperateIcon">
         <i class="el-icon-s-unfold" v-if="!detail.isUnfoldOperateIcon"></i>
         <i class="el-icon-s-fold" v-if="detail.isUnfoldOperateIcon"></i>
-      </el-button>
+      </KiwiButton>
 
     </div>
   </div>
@@ -1412,6 +1431,7 @@ export default {
 <style scoped>
 .list-container {
   margin: 20px 0 10px;
+  padding: 0 4px;
 }
 
 /* Ensure any top buttons/toolbar doesn't overlap the list */
@@ -1423,261 +1443,474 @@ export default {
 .dialog-title-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* Timer card aligned with AiResponseDetail aesthetic */
+/* Timer card - glassmorphic design */
 .timer-card {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 14px;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
+  padding: 16px;
 }
 
-/* Collapse card styling aligned with AiResponseDetail */
+/* Timer dropdown styling */
+.timer-dropdown .timer-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--gradient-info);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 2px 12px rgba(var(--color-info-rgb), 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-dropdown .timer-trigger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.timer-dropdown .timer-trigger:hover::before {
+  left: 100%;
+}
+
+.timer-dropdown .timer-trigger i {
+  font-size: 18px;
+}
+
+.timer-dropdown .timer-trigger .el-icon-arrow-down {
+  font-size: 12px;
+  margin-left: 4px;
+  transition: transform var(--transition-fast);
+}
+
+.timer-dropdown .timer-trigger:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 20px rgba(var(--color-info-rgb), 0.45);
+  transform: translateY(-1px);
+}
+
+/* Collapse card styling - modern glassmorphic design */
 ::v-deep .kiwi-collapse .el-collapse-item {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   margin-bottom: 14px;
+  transition: var(--transition-fast);
+}
+
+::v-deep .kiwi-collapse .el-collapse-item:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header {
-  padding: 14px 18px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: #fff;
+  padding: 16px 20px;
+  background: var(--bg-container);
+  color: var(--text-primary);
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+  font-size: 15px;
+  border-bottom: 1px solid var(--border-color-light);
+  transition: var(--transition-fast);
+  position: relative;
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--gradient-primary);
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__header:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  color: var(--color-primary);
+  background: var(--bg-highlight);
+}
+
+::v-deep .kiwi-collapse .el-collapse-item__header:hover::before {
+  opacity: 1;
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item.is-active > .el-collapse-item__header {
+  color: var(--color-primary);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
+::v-deep .kiwi-collapse .el-collapse-item.is-active > .el-collapse-item__header::before {
+  opacity: 1;
+}
+
 ::v-deep .kiwi-collapse .el-collapse-item__wrap {
-  background: #fff;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  background: var(--bg-card);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
 }
 
 ::v-deep .kiwi-collapse .el-collapse-item__content {
-  padding: 18px 20px;
-  color: #2c3e50;
+  padding: 20px;
+  color: var(--text-primary);
 }
 
 .collapse-content {
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .paraphrase-english {
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   font-size: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
+  line-height: 1.7;
 }
 
 .paraphrase-translation {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px;
-  color: #495057;
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: var(--transition-fast);
+}
+
+.paraphrase-translation:hover {
+  border-color: var(--border-color);
+  background: var(--bg-highlight);
 }
 
 .collapse-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color-light);
 }
 
 .collapse-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   color: #fff !important;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
+  background: var(--gradient-primary) !important;
   border: none !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-md) !important;
+  padding: 0 !important;
+  transition: var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.collapse-action-button i {
+  font-size: 16px;
 }
 
 .collapse-action-button.info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
+  background: var(--gradient-info) !important;
+  box-shadow: 0 2px 8px rgba(var(--color-info-rgb), 0.25);
 }
 
 .collapse-action-button.danger {
-  background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%) !important;
+  background: var(--gradient-danger) !important;
+  box-shadow: 0 2px 8px rgba(var(--color-danger-rgb), 0.25);
 }
 
 .collapse-action-button:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
+  filter: brightness(1.1);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-glow);
+}
+
+.collapse-action-button:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .list-pagination {
-  margin-top: 16px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }
 
-/* Detail dialog content styles (aligned with AiResponseDetail) */
+/* Detail dialog content styles - modern card design */
 .detail-card {
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  padding: 16px 16px 40px 16px;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  margin-bottom: 100px;
 }
 
 .detail-meta {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  background: #8c939d;
-  padding: 6px 8px;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .meta-tag {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  background: var(--gradient-primary);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
   font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
 }
 
 .pronunciations {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  background: #8c939d;
-  padding: 6px 8px;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .pronunciation-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #eef5ff;
-  color: #2c3e50;
-  border: 1px solid #d6e4ff;
-  border-radius: 16px;
-  padding: 4px 10px;
-  font-size: 12px;
+  gap: 8px;
+  background: var(--bg-container);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 8px 14px;
+  font-size: 13px;
   cursor: pointer;
   user-select: none;
+  transition: var(--transition-fast);
+}
+
+.pronunciation-badge:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  box-shadow: var(--shadow-sm);
+}
+
+.pronunciation-badge i {
+  font-size: 14px;
 }
 
 .paraphrase-content {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .phrase-list {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .phrase-chip {
-  display: inline-block;
-  background: #eef2f7;
-  border: 1px solid #e1e5ea;
-  color: #4a5568;
-  border-radius: 12px;
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-container);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  padding: 4px 12px;
   font-size: 12px;
-  margin: 0 6px 6px 0;
+  transition: var(--transition-fast);
+}
+
+.phrase-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+::v-deep .paraphrase-detail-dialog {
+  background: var(--bg-body);
+}
+
+::v-deep .paraphrase-detail-dialog .el-dialog__header {
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  border-bottom: 1px solid var(--border-color-light);
+  padding: 16px 20px;
+}
+
+::v-deep .paraphrase-detail-dialog .el-dialog__body {
+  background: var(--bg-body);
+  color: var(--text-primary);
+  padding: 20px;
+}
+
+::v-deep .paraphrase-detail-dialog .el-dialog__close {
+  color: var(--text-secondary);
+  font-size: 20px;
+}
+
+::v-deep .paraphrase-detail-dialog .el-dialog__close:hover {
+  color: var(--color-primary);
 }
 
 .paraphrase-codes {
-  color: #6c757d;
+  color: var(--text-muted);
   font-size: 13px;
-  margin: 4px 0 6px 0;
+  margin: 4px 0 8px 0;
+  font-style: italic;
 }
 
 .paraphrase-english-text {
   word-wrap: break-word;
   overflow: hidden;
-  color: #2c3e50;
-  line-height: 1.7;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.8;
 }
 
 .translation-box {
-  margin-top: 8px;
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px;
-  color: #495057;
+  margin-top: 12px;
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.7;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.translation-box:hover {
+  border-color: var(--border-color);
+  background: var(--bg-highlight);
 }
 
 .info-notice {
-  margin-top: 12px;
-  background: #f8f9fa;
-  border: 1px dashed #d4edda;
-  color: #2f855a;
-  border-radius: 8px;
-  padding: 10px 12px;
+  margin-top: 16px;
+  background: rgba(var(--color-success-rgb), 0.08);
+  border: 1px dashed var(--color-success);
+  color: var(--color-success);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   text-align: center;
+  font-size: 14px;
 }
 
 .example-item {
-  margin-top: 12px;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  background: #fff;
-  padding: 12px;
+  margin-top: 16px;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.example-item:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .example-title {
   font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 8px;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .example-translation {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 10px;
-  color: #495057;
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  transition: var(--transition-fast);
+}
+
+.example-translation:hover {
+  border-color: var(--border-color);
 }
 
 .word-spelling {
-  font-size: larger;
-  font-weight: bolder;
-  font-family: sans-serif;
-  color: #606266;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-primary);
   cursor: pointer;
+  transition: var(--transition-fast);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.word-spelling:hover {
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
 }
 
 .sleep-tip-badge {
-  display: inline-block;
-  background: rgba(255,255,255,0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 8px;
-  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 13px;
+  margin: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.sleep-tip-badge i {
+  font-size: 16px;
+}
+
+/* Floating action buttons - improved styling */
+.list-container > div[style*="position: fixed"] {
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-filter);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: var(--shadow-card);
 }
 
 @media (max-width: 768px) {
   ::v-deep .kiwi-collapse .el-collapse-item__header {
-    padding: 12px 14px;
+    padding: 14px 16px;
     font-size: 14px;
   }
 
   ::v-deep .kiwi-collapse .el-collapse-item__content {
-    padding: 14px 16px;
+    padding: 16px;
   }
 
   .paraphrase-english {
@@ -1685,7 +1918,121 @@ export default {
   }
 
   .detail-card {
-    padding: 12px 12px 24px 12px;
+    padding: 16px;
+    margin-bottom: 80px;
   }
+
+  .collapse-action-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .collapse-action-button i {
+    font-size: 14px;
+  }
+
+  .word-spelling {
+    font-size: 18px;
+  }
+
+  .example-title {
+    font-size: 14px;
+  }
+
+  .translation-box,
+  .example-translation {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+/* Animation for collapse items */
+::v-deep .kiwi-collapse .el-collapse-item {
+  animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TTS Audio Generation Progress */
+.audio-generation-progress {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border-radius: var(--radius-md);
+}
+
+.audio-generation-progress .progress-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.audio-generation-progress .progress-info i {
+  color: var(--color-primary);
+  font-size: 16px;
+}
+
+.audio-generation-progress .progress-bar {
+  height: 6px;
+  background: var(--bg-container);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.audio-generation-progress .progress-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* TTS Audio Status Indicator */
+.audio-status-indicator {
+  margin-top: 14px;
+}
+
+.audio-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.audio-status-badge.available {
+  background: rgba(var(--color-success-rgb), 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(var(--color-success-rgb), 0.25);
+}
+
+.audio-status-badge.generating {
+  background: rgba(var(--color-primary-rgb), 0.12);
+  color: var(--color-primary);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+}
+
+.audio-status-badge.unavailable {
+  background: rgba(var(--color-warning-rgb), 0.12);
+  color: var(--color-warning);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.25);
+}
+
+.audio-status-badge i {
+  font-size: 14px;
 }
 </style>

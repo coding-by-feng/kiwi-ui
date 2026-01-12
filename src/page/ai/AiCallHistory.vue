@@ -2,91 +2,106 @@
   <div class="ai-call-history">
     <div class="history-header">
       <h2 class="history-title">
-        AI Call History
+        {{ $t('ai.aiCallHistory') }}
       </h2>
     </div>
 
     <!-- Filters -->
     <div class="filters-container" v-if="!loading">
-      <el-card class="filter-card">
+      <div class="filter-card">
         <div class="filter-row">
-          <el-select
-              v-model="filterMode"
-              placeholder="Filter by Mode"
-              size="small"
-              clearable
-              @change="applyFilters"
-              v-if="historyData && historyData.total > 0">
-            <el-option label="All Modes" value=""></el-option>
-            <el-option
-                v-for="mode in uniqueModes"
-                :key="mode"
-                :label="getModeLabel(mode)"
-                :value="mode">
-            </el-option>
-          </el-select>
+          <KiwiDropdown @command="handleModeFilter">
+            <KiwiButton size="small">
+              {{ filterMode ? getModeLabel(filterMode) : $t('ai.allModes') }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem :command="''">
+                {{ $t('ai.allModes') }}
+              </KiwiDropdownItem>
+              <KiwiDropdownItem
+                  v-for="mode in searchModes"
+                  :key="mode.value"
+                  :command="mode.value">
+                <span :class="'mode-option-' + getModeTagType(mode.value)">
+                  {{ mode.label }}
+                </span>
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
-          <el-select
-              v-model="filterLanguage"
-              placeholder="Filter by Language"
-              size="small"
-              clearable
-              @change="applyFilters"
-              v-if="historyData && historyData.total > 0">
-            <el-option label="All Languages" value=""></el-option>
-            <el-option
-                v-for="lang in uniqueLanguages"
-                :key="lang"
-                :label="getLanguageLabel(lang)"
-                :value="lang">
-            </el-option>
-          </el-select>
+          <KiwiDropdown v-if="historyData && historyData.total > 0" @command="handleLanguageFilter">
+            <KiwiButton size="small">
+              {{ filterLanguage ? getLanguageLabel(filterLanguage) : $t('ai.allLanguages') }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem :command="''">
+                {{ $t('ai.allLanguages') }}
+              </KiwiDropdownItem>
+              <KiwiDropdownItem
+                  v-for="lang in uniqueLanguages"
+                  :key="lang"
+                  :command="lang">
+                {{ getLanguageLabel(lang) }}
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
-          <el-select
-              v-model="filterClassification"
-              placeholder="Filter by Status"
-              size="small"
-              clearable
-              @change="applyFilters">
-            <el-option label="Normal Items" value="normal"></el-option>
-            <el-option label="Archived Items" value="archived"></el-option>
-            <el-option label="All Items" value="all"></el-option>
-          </el-select>
+          <KiwiDropdown @command="handleClassificationFilter">
+            <KiwiButton size="small">
+              {{ getClassificationLabel(filterClassification) }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="normal">{{ $t('ai.normalItems') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="archived">{{ $t('ai.archivedItems') }}</KiwiDropdownItem>
+              <KiwiDropdownItem command="all">{{ $t('ai.allItems') }}</KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
 
-          <el-button
+          <KiwiButton
               type="text"
               size="small"
               icon="el-icon-delete"
               @click="clearFilters"
               v-if="filterMode || filterLanguage || filterClassification">
-            Clear Filters
-          </el-button>
+            {{ $t('ai.clearFilters') }}
+          </KiwiButton>
         </div>
-      </el-card>
+      </div>
     </div>
 
     <!-- History List -->
-    <div class="history-content" v-loading="loading">
+    <div class="history-content" v-if="!loading">
       <div v-if="!historyData || historyData.total === 0" class="empty-state">
         <i class="el-icon-document-remove"></i>
-        <h3>No AI Call History Found</h3>
-        <p>Your AI conversation history will appear here once you start using the AI features.</p>
+        <h3>{{ $t('ai.noHistoryFound') }}</h3>
+        <p>{{ $t('ai.historyDescription') }}</p>
       </div>
 
       <div v-else class="history-list">
-        <el-card
+        <div
             v-for="record in filteredRecords"
             :key="record.id"
-            class="history-item"
-            shadow="hover">
+            class="history-item">
           <div class="history-item-header">
             <div class="mode-info">
-              <el-tag
-                  :type="getModeTagType(record.promptMode)"
-                  :class="getModeClass()"
-                  size="small">
-                {{ getModeLabel(record.promptMode) }}
-              </el-tag>
+              <div class="mode-tags">
+                <KiwiTag
+                    :type="getModeTagType(record.promptMode)"
+                    :class="getModeClass()"
+                    size="small">
+                  {{ getModeLabel(record.promptMode) }}
+                </KiwiTag>
+                <KiwiTag
+                    v-if="record.archived"
+                    type="info"
+                    size="small"
+                    class="archived-tag">
+                  {{ $t('ai.archived') }}
+                </KiwiTag>
+              </div>
               <div class="language-info">
                 <span class="language-tag">{{ getLanguageLabel(record.targetLanguage) }}</span>
                 <span v-if="record.nativeLanguage" class="native-language">
@@ -101,147 +116,168 @@
 
           <div class="history-item-content">
             <div class="prompt-preview">
-              <strong>Prompt:</strong>
+              <strong>{{ $t('ai.prompt') }}:</strong>
               <p class="prompt-text">{{ truncateText(record.prompt, 200) }}</p>
             </div>
           </div>
 
           <div class="history-item-actions">
             <!-- Icon-only compact action buttons with tooltips -->
-            <el-tooltip content="Review" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-search"
-                :aria-label="'Review'"
-                @click="searchAgain(record)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-search"
+              :aria-label="$t('ai.review')"
+              :title="$t('ai.review')"
+              @click="searchAgain(record)"
+            />
 
-            <el-tooltip content="Copy" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-document-copy"
-                :aria-label="'Copy prompt'"
-                @click="copyPrompt(record.prompt)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-document-copy"
+              :aria-label="$t('ai.copyPrompt')"
+              :title="$t('ai.copyPrompt')"
+              @click="copyPrompt(record.prompt)"
+            />
 
-            <el-tooltip content="Details" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-view"
-                :aria-label="'Details'"
-                @click="viewDetails(record)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-view"
+              :aria-label="$t('ai.details')"
+              :title="$t('ai.details')"
+              @click="viewDetails(record)"
+            />
 
-            <el-tooltip content="Archive" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-box"
-                :aria-label="'Archive'"
-                @click="archiveItem(record.id)"
-                :loading="archivingIds.includes(record.id)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-box"
+              :aria-label="$t('ai.archive')"
+              :title="$t('ai.archive')"
+              @click="archiveItem(record.id)"
+              :loading="archivingIds.includes(record.id)"
+            />
 
-            <el-tooltip content="Delete" placement="top">
-              <el-button
-                class="action-btn"
-                size="mini"
-                circle
-                icon="el-icon-delete"
-                :aria-label="'Delete'"
-                @click="confirmDelete(record.id)"
-                :loading="deletingIds.includes(record.id)"
-              />
-            </el-tooltip>
+            <KiwiButton
+              class="action-btn"
+              size="mini"
+              circle
+              icon="el-icon-delete"
+              :aria-label="$t('common.delete')"
+              :title="$t('common.delete')"
+              @click="confirmDelete(record.id)"
+              :loading="deletingIds.includes(record.id)"
+            />
           </div>
-        </el-card>
+        </div>
 
         <!-- Pagination -->
         <div class="pagination-container" v-if="historyData.total > pageSize">
-          <el-pagination
+          <KiwiPagination
               @current-change="handlePageChange"
               :current-page="currentPage"
               :page-size="pageSize"
-              :total="historyData.total"
-              layout="prev, pager, next, jumper, total"
-              background>
-          </el-pagination>
+              :total="historyData.total">
+          </KiwiPagination>
         </div>
       </div>
     </div>
+    <div v-else class="loading-state">
+      <i class="el-icon-loading"></i> {{ $t('ai.loadingHistory') }}
+    </div>
 
     <!-- Detail Dialog -->
-    <el-dialog
-        title="AI Call Details"
+    <KiwiDialog
+        :title="$t('ai.aiCallDetails')"
         :visible.sync="detailDialogVisible"
         width="70%"
         class="detail-dialog">
       <div v-if="selectedRecord" class="detail-content">
-        <el-form label-position="left" label-width="120px">
-          <el-form-item label="Mode:">
-            <el-tag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
+        <div class="detail-form">
+          <div class="detail-row">
+            <label>{{ $t('ai.mode') }}:</label>
+            <KiwiTag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
               {{ getModeLabel(selectedRecord.promptMode) }}
-            </el-tag>
-          </el-form-item>
+            </KiwiTag>
+          </div>
 
-          <el-form-item label="Languages:">
+          <div class="detail-row">
+            <label>{{ $t('ai.languages') }}:</label>
             <span class="language-display">
               {{ getLanguageLabel(selectedRecord.targetLanguage) }}
               <span v-if="selectedRecord.nativeLanguage">
                 → {{ getLanguageLabel(selectedRecord.nativeLanguage) }}
               </span>
             </span>
-          </el-form-item>
+          </div>
 
-          <el-form-item label="Timestamp:">
-            {{ formatFullTimestamp(selectedRecord.timestamp) }}
-          </el-form-item>
+          <div class="detail-row">
+            <label>{{ $t('ai.timestamp') }}:</label>
+            <span>{{ formatFullTimestamp(selectedRecord.timestamp) }}</span>
+          </div>
 
-          <el-form-item label="Prompt:">
+          <div class="detail-row full-width">
+            <label>{{ $t('ai.prompt') }}:</label>
             <div class="detail-prompt">{{ selectedRecord.prompt }}</div>
-          </el-form-item>
-        </el-form>
+          </div>
+        </div>
       </div>
 
       <span slot="footer" class="dialog-footer">
-        <el-button @click="detailDialogVisible = false">Close</el-button>
-        <el-button type="primary" @click="searchAgain(selectedRecord)">
-          Search Again
-        </el-button>
+        <KiwiButton @click="detailDialogVisible = false">{{ $t('common.close') }}</KiwiButton>
+        <KiwiButton type="primary" @click="searchAgain(selectedRecord)">
+          {{ $t('ai.searchAgain') }}
+        </KiwiButton>
       </span>
-    </el-dialog>
+    </KiwiDialog>
   </div>
 </template>
 
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
 import messageCenter from '@/util/msg';
-import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai'; // Removed callAiChatCompletion
+import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai';
+import KiwiButton from '@/components/ui/KiwiButton.vue';
+import KiwiTag from '@/components/ui/KiwiTag.vue';
+import KiwiPagination from '@/components/ui/KiwiPagination.vue';
+import KiwiDialog from '@/components/ui/KiwiDialog.vue';
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue';
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue';
 
 export default {
   name: 'AiCallHistory',
+  components: {
+    KiwiButton,
+    KiwiTag,
+    KiwiPagination,
+    KiwiDialog,
+    KiwiDropdown,
+    KiwiDropdownItem
+  },
+  props: {
+    // When true, the component is the active tab and should load data
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  },
   data() {
     return {
       loading: false,
       currentPage: 1,
       pageSize: 10,
-      historyData: null,
+      historyData: { total: 0, records: [] },
 
       // Filters
       filterMode: '',
       filterLanguage: '',
-      filterClassification: 'normal',
+      filterClassification: 'all',
 
       // Detail dialog
       detailDialogVisible: false,
@@ -253,7 +289,19 @@ export default {
 
       archivingIds: [],
       deletingIds: [],
-      lastClassificationFilter: 'normal'
+      lastClassificationFilter: 'all'
+    }
+  },
+
+  watch: {
+    // Load data when tab becomes active (and data hasn't been loaded yet)
+    isActive: {
+      handler(newVal) {
+        if (newVal && this.historyData.total === 0 && this.historyData.records.length === 0 && !this.loading) {
+          this.loadHistory();
+        }
+      },
+      immediate: false
     }
   },
 
@@ -301,7 +349,11 @@ export default {
   },
 
   mounted() {
-    this.loadHistory();
+    // Only load history if the tab is currently active
+    // This prevents API calls when switching to other tabs (PDF, Todo, etc.)
+    if (this.isActive) {
+      this.loadHistory();
+    }
   },
 
   methods: {
@@ -313,16 +365,16 @@ export default {
         // Use the extracted API function with filter parameter
         const response = await getAiCallHistory(this.currentPage, this.pageSize, this.filterClassification);
 
-        if (response.data.code === 1) {
+        if (response.data.success) {
           this.historyData = response.data.data;
           console.log('Loaded AI call history successfully:', this.historyData);
         } else {
           console.error('API returned error:', response.data);
-          messageCenter.error(response.data.msg || 'Failed to load AI call history');
+          messageCenter.error(response.data.msg || this.$t('ai.loadHistoryFailed'));
         }
       } catch (error) {
         console.error('Error loading AI call history:', error);
-        messageCenter.error('Failed to load AI call history: ' + (error.message || 'Unknown error'));
+        messageCenter.error(this.$t('ai.loadHistoryFailed') + ': ' + (error.message || this.$t('ai.unknown')));
       } finally {
         this.loading = false;
       }
@@ -351,12 +403,36 @@ export default {
       this.filterLanguage = '';
       this.filterClassification = '';
       this.lastClassificationFilter = '';
-      
+
       // If we had a classification filter, reload data to get all items
       if (hadClassificationFilter) {
         this.currentPage = 1;
         this.loadHistory();
       }
+    },
+
+    handleModeFilter(command) {
+      this.filterMode = command;
+      this.applyFilters();
+    },
+
+    handleLanguageFilter(command) {
+      this.filterLanguage = command;
+      this.applyFilters();
+    },
+
+    handleClassificationFilter(command) {
+      this.filterClassification = command;
+      this.applyFilters();
+    },
+
+    getClassificationLabel(value) {
+      const labels = {
+        'normal': this.$t('ai.normalItems'),
+        'archived': this.$t('ai.archivedItems'),
+        'all': this.$t('ai.allItems')
+      };
+      return labels[value] || this.$t('ai.allItems');
     },
 
     getModeLabel(modeValue) {
@@ -376,9 +452,9 @@ export default {
         [kiwiConsts.SEARCH_AI_MODES.ANTONYM.value]: 'warning',
         [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_ASSOCIATION.value]: 'primary',
         [kiwiConsts.SEARCH_AI_MODES.PHRASES_ASSOCIATION.value]: 'info',
-        // New modes
         [kiwiConsts.SEARCH_AI_MODES.VOCABULARY_CHARACTER_EXPANSION.value]: 'warning',
-        [kiwiConsts.SEARCH_AI_MODES.AMBIGUOUS_ASSOCIATION_CORRECTION.value]: 'danger'
+        [kiwiConsts.SEARCH_AI_MODES.AMBIGUOUS_ASSOCIATION_CORRECTION.value]: 'danger',
+        [kiwiConsts.SEARCH_AI_MODES.NATURAL_IDIOMATIC_RETOUCH.value]: 'primary'
       };
       return map[modeValue] || 'primary';
     },
@@ -398,44 +474,41 @@ export default {
       return languageCode;
     },
 
-    // Convert array-based timestamp to Date object
-    arrayToDate(timestampArray) {
-      if (!Array.isArray(timestampArray) || timestampArray.length < 6) {
+    // Convert timestamp to Date object (supports both ISO string and array formats)
+    parseTimestamp(timestamp) {
+      if (!timestamp) {
         return null;
       }
 
-      // Array format: [year, month, day, hour, minute, second]
-      // Note: JavaScript months are 0-based, so we need to subtract 1 from month
-      const [year, month, day, hour, minute, second] = timestampArray;
-      return new Date(year, month - 1, day, hour, minute, second);
+      // Handle ISO 8601 string format: "2025-11-18T16:54:06"
+      if (typeof timestamp === 'string') {
+        const date = new Date(timestamp);
+        return isNaN(date.getTime()) ? null : date;
+      }
+
+      // Handle array format: [year, month, day, hour, minute, second]
+      if (Array.isArray(timestamp) && timestamp.length >= 6) {
+        const [year, month, day, hour, minute, second] = timestamp;
+        return new Date(year, month - 1, day, hour, minute, second);
+      }
+
+      return null;
     },
 
     formatTimestamp(timestamp) {
-      if (!timestamp) return 'Unknown';
+      if (!timestamp) return this.$t('ai.unknown');
 
-      const date = this.arrayToDate(timestamp);
-      if (!date) return 'Invalid Date';
+      const date = this.parseTimestamp(timestamp);
+      if (!date) return this.$t('ai.invalidDate');
 
-      const now = new Date();
-      const diffTime = now - date;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) {
-        return 'Today ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } else if (diffDays === 1) {
-        return 'Yesterday ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } else if (diffDays <= 7) {
-        return diffDays + ' days ago';
-      } else {
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
+      return date.toLocaleString();
     },
 
     formatFullTimestamp(timestamp) {
-      if (!timestamp) return 'Unknown';
+      if (!timestamp) return this.$t('ai.unknown');
 
-      const date = this.arrayToDate(timestamp);
-      if (!date) return 'Invalid Date';
+      const date = this.parseTimestamp(timestamp);
+      if (!date) return this.$t('ai.invalidDate');
 
       return date.toLocaleString();
     },
@@ -463,10 +536,10 @@ export default {
     copyPrompt(prompt) {
       navigator.clipboard.writeText(prompt)
           .then(() => {
-            messageCenter.success('Prompt copied to clipboard!');
+            messageCenter.success(this.$t('ai.promptCopied'));
           })
           .catch(() => {
-            messageCenter.error('Failed to copy prompt');
+            messageCenter.error(this.$t('ai.failedToCopy'));
           });
     },
 
@@ -481,16 +554,16 @@ export default {
       this.archivingIds.push(id);
       try {
         const response = await archiveAiCallHistory(id);
-        if (response.data.code === 1) {
-          messageCenter.success(response.data.data || 'Item archived successfully');
+        if (response.data.success) {
+          messageCenter.success(response.data.data || this.$t('ai.itemArchived'));
           // Reload the history to reflect changes
           this.loadHistory();
         } else {
-          messageCenter.error(response.data.msg || 'Failed to archive item');
+          messageCenter.error(response.data.msg || this.$t('ai.archiveFailed'));
         }
       } catch (error) {
         console.error('Archive failed:', error);
-        const errorMessage = error.response?.data?.msg || 'Failed to archive item';
+        const errorMessage = error.response?.data?.msg || this.$t('ai.archiveFailed');
         messageCenter.error(errorMessage);
       } finally {
         this.archivingIds = this.archivingIds.filter(i => i !== id);
@@ -498,10 +571,11 @@ export default {
     },
 
     confirmDelete(id) {
-      this.$confirm('Are you sure you want to delete this item? This action cannot be undone.', 'Delete Item', {
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
+      this.$confirm(this.$t('ai.deleteItemConfirm'), this.$t('ai.deleteItemTitle'), {
+        confirmButtonText: this.$t('common.delete'),
+        cancelButtonText: this.$t('common.cancel'),
+        type: 'warning',
+        customClass: 'kiwi-delete-confirm-dialog'
       }).then(() => {
         this.deleteItem(id);
       }).catch(() => {
@@ -513,16 +587,16 @@ export default {
       this.deletingIds.push(id);
       try {
         const response = await deleteAiCallHistory(id);
-        if (response.data.code === 1) {
-          messageCenter.success(response.data.data || 'Item deleted successfully');
+        if (response.data.success) {
+          messageCenter.success(response.data.data || this.$t('ai.itemDeleted'));
           // Reload the history to reflect changes
           this.loadHistory();
         } else {
-          messageCenter.error(response.data.msg || 'Failed to delete item');
+          messageCenter.error(response.data.msg || this.$t('ai.deleteFailed'));
         }
       } catch (error) {
         console.error('Delete failed:', error);
-        const errorMessage = error.response?.data?.msg || 'Failed to delete item';
+        const errorMessage = error.response?.data?.msg || this.$t('ai.deleteFailed');
         messageCenter.error(errorMessage);
       } finally {
         this.deletingIds = this.deletingIds.filter(i => i !== id);
@@ -532,26 +606,15 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .ai-call-history {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
-  background: linear-gradient(180deg, #f8faff 0%, #f3f5fb 100%);
-  border-radius: 18px;
-  box-shadow: 0 18px 48px rgba(42, 63, 107, 0.06);
-  --history-surface: #ffffff;
-  --history-surface-soft: rgba(255, 255, 255, 0.75);
-  --history-border: #dfe4ef;
-  --history-border-strong: #c3cce2;
-  --history-muted: #6b7280;
-  --history-muted-soft: #9ca3af;
-  --history-heading: #1f2933;
-  --history-accent: #3a7afe;
-  --history-accent-strong: #2155d9;
-  --history-accent-soft: #eef2ff;
-  --history-shadow: 0 16px 32px rgba(54, 78, 166, 0.08);
-  --history-shadow-hover: 0 22px 44px rgba(41, 62, 123, 0.14);
+  background: var(--bg-body);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  min-height: 600px;
 }
 
 /* Header */
@@ -561,12 +624,12 @@ export default {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 18px;
-  border-bottom: 1px solid var(--history-border);
+  border-bottom: 1px solid var(--border-color-light);
 }
 
 .history-title {
   margin: 0;
-  color: var(--history-heading);
+  color: var(--text-primary);
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -578,11 +641,12 @@ export default {
 }
 
 .filter-card {
-  background: linear-gradient(135deg, var(--history-surface) 0%, var(--history-surface-soft) 100%);
-  border: 1px solid var(--history-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
   border-radius: 16px;
-  box-shadow: var(--history-shadow);
-  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--backdrop-filter);
+  padding: 16px;
 }
 
 .filter-row {
@@ -590,36 +654,106 @@ export default {
   gap: 15px;
   align-items: center;
   flex-wrap: wrap;
-  padding: 16px;
+  position: relative;
+
+  // Elevate dropdown when active so menu appears above sibling elements
+  ::v-deep .kiwi-dropdown {
+    position: relative;
+    z-index: 1;
+
+    &.is-active {
+      z-index: 100;
+    }
+  }
 }
 
-.filter-row .el-select {
+/* Custom Select Styles */
+.kiwi-select-wrapper {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
   min-width: 150px;
+}
+
+.kiwi-select {
+  width: 100%;
+  height: 36px;
+  padding: 0 30px 0 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color-light);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.kiwi-select:hover {
+  border-color: var(--text-secondary);
+}
+
+.kiwi-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-placeholder);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+/* Mode option colors in dropdown */
+.mode-option-primary {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.mode-option-info {
+  color: var(--color-info);
+  font-weight: 500;
+}
+
+.mode-option-warning {
+  color: var(--color-warning);
+  font-weight: 500;
+}
+
+.mode-option-danger {
+  color: var(--color-danger);
+  font-weight: 500;
 }
 
 /* Empty State */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: var(--history-muted);
+  color: var(--text-secondary);
 }
 
 .empty-state i {
   font-size: 64px;
-  color: var(--history-accent);
+  color: var(--color-primary);
   margin-bottom: 20px;
   opacity: 0.35;
 }
 
 .empty-state h3 {
-  color: var(--history-heading);
+  color: var(--text-primary);
   margin: 20px 0 10px 0;
 }
 
 .empty-state p {
   margin-bottom: 30px;
   line-height: 1.6;
-  color: var(--history-muted-soft);
+  color: var(--text-regular);
 }
 
 /* History List */
@@ -632,17 +766,18 @@ export default {
 .history-item {
   margin-bottom: 0;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  border: 1px solid var(--history-border);
+  border: 1px solid var(--border-color-light);
   border-radius: 16px;
-  background: var(--history-surface);
-  box-shadow: var(--history-shadow);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
+  padding: 20px;
 }
 
 .history-item:hover {
   transform: translateY(-4px);
-  box-shadow: var(--history-shadow-hover);
-  border-color: var(--history-border-strong);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-primary);
 }
 
 .history-item-header {
@@ -656,6 +791,19 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.archived-tag {
+  opacity: 0.85;
 }
 
 .language-info {
@@ -663,34 +811,36 @@ export default {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: var(--history-muted);
+  color: var(--text-secondary);
 }
 
 .language-tag {
-  background: var(--history-accent-soft);
+  background: var(--bg-container);
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
-  border: 1px solid rgba(58, 122, 254, 0.15);
-  color: var(--history-accent-strong);
+  border: 1px solid var(--border-color-light);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 .native-language {
-  color: var(--history-muted-soft);
+  color: var(--text-regular);
   font-weight: 500;
 }
 
 .timestamp {
-  color: var(--history-muted-soft);
+  color: var(--text-secondary);
   font-size: 13px;
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  margin-left: 12px;
 }
 
 .timestamp i {
-  color: var(--history-accent);
+  color: var(--color-primary);
 }
 
 .history-item-content {
@@ -698,20 +848,20 @@ export default {
 }
 
 .prompt-preview strong {
-  color: var(--history-heading);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .prompt-text {
   margin: 8px 0 0 0;
   padding: 18px;
-  background: linear-gradient(135deg, rgba(58, 122, 254, 0.08) 0%, rgba(58, 122, 254, 0.03) 100%);
+  background: var(--bg-container);
   border-radius: 12px;
-  border: 1px solid rgba(58, 122, 254, 0.12);
+  border: 1px solid var(--border-color-light);
   line-height: 1.8;
-  color: var(--history-heading);
+  color: var(--text-primary);
   word-break: break-word;
-  box-shadow: inset 0 1px 3px rgba(25, 44, 84, 0.06);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .history-item-actions {
@@ -719,7 +869,7 @@ export default {
   align-items: center;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid var(--history-border);
+  border-top: 1px solid var(--border-color-light);
   /* Keep on a single line with horizontal scroll if needed */
   flex-wrap: nowrap;
   white-space: nowrap;
@@ -730,143 +880,126 @@ export default {
 
 /* Compact icon-only action button */
 .history-item-actions .action-btn {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  border: 1px solid rgba(58, 122, 254, 0.18) !important;
-  background: var(--history-surface) !important;
-  color: var(--history-accent-strong) !important;
-  box-shadow: none !important;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-color-light);
+  background: var(--bg-card);
+  color: var(--color-primary);
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .history-item-actions .action-btn:hover:not(.is-loading) {
-  background: var(--history-accent-soft) !important;
-  color: var(--history-accent) !important;
-  border-color: rgba(58, 122, 254, 0.4) !important;
+  background: var(--bg-container);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .history-item-actions .action-btn:active {
-  transform: none !important;
+  transform: none;
 }
 
 .history-item-actions .action-btn [class^="el-icon-"],
 .history-item-actions .action-btn [class*=" el-icon-"] {
   font-size: 16px;
 }
+</style>
 
-/* Override previous large/button styles within actions for these icon buttons */
-.history-item-actions .action-btn.el-button--primary,
-.history-item-actions .action-btn.el-button--info,
-.history-item-actions .action-btn.el-button--danger {
-  background: var(--history-surface) !important;
-  color: var(--history-accent-strong) !important;
+<style lang="scss">
+/* Global styles for the delete confirmation dialog - uses !important to override Element UI defaults */
+.kiwi-delete-confirm-dialog {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color-light) !important;
+  border-radius: var(--card-border-radius, 16px) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: var(--backdrop-filter);
+  -webkit-backdrop-filter: var(--backdrop-filter);
+  padding-bottom: 20px !important;
+
+  .el-message-box__title {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+  }
+
+  .el-message-box__content {
+    color: var(--text-secondary) !important;
+  }
+
+  .el-message-box__status {
+    color: var(--color-warning) !important;
+  }
+
+  .el-message-box__close {
+    color: var(--text-secondary);
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+
+  // Buttons in the dialog
+  .el-button {
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: var(--transition-normal);
+  }
+
+  // Cancel button
+  .el-button--default {
+    background: transparent !important;
+    border: 1px solid var(--border-color-light) !important;
+    color: var(--text-primary) !important;
+
+    &:hover {
+      background: var(--bg-container) !important;
+      border-color: var(--color-primary) !important;
+      color: var(--color-primary) !important;
+    }
+  }
+
+  // Delete/Confirm button
+  .el-button--primary {
+    background: var(--color-danger) !important;
+    border-color: var(--color-danger) !important;
+    color: #fff !important;
+
+    &:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 15px rgba(var(--color-danger-rgb), 0.4);
+      transform: translateY(-1px);
+    }
+  }
 }
+</style>
 
-/* Remove previous button sizing overrides inside actions */
-.history-item-actions .el-button {
-  border-radius: 8px;
-  /* Keep other buttons (if any) reasonable, but our .action-btn overrides apply with !important */
-}
+<style lang="scss" scoped>
+// Filter row button styles
+.filter-row ::v-deep .el-button {
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-card);
+  border: none;
+  padding: 8px 18px;
+  background: var(--gradient-primary);
+  color: #fff;
 
-
-.filter-row .el-button {
-  border-radius: 999px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  transition: all 0.25s ease !important;
-  box-shadow: 0 8px 16px rgba(58, 122, 254, 0.2) !important;
-  border: none !important;
-  padding: 8px 18px !important;
-  background: linear-gradient(135deg, var(--history-accent) 0%, #8aa6ff 100%) !important;
-  color: #fff !important;
-}
-
-.filter-row .el-button:hover {
-  background: linear-gradient(135deg, var(--history-accent-strong) 0%, #6a8cff 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 12px 24px rgba(58, 122, 254, 0.25) !important;
-  color: #fff !important;
-}
-
-.filter-row .el-button:focus {
-  background: linear-gradient(135deg, var(--history-accent-strong) 0%, #6a8cff 100%) !important;
-  box-shadow: 0 0 0 3px rgba(58, 122, 254, 0.25) !important;
-  color: #fff !important;
-}
-
-.filter-row .el-button:active {
-  transform: translateY(0px) !important;
-}
-
-/* Responsive design for small screens */
-@media (max-width: 768px) {
-  .ai-call-history {
-    padding: 18px;
-    border-radius: 16px;
-    box-shadow: 0 14px 36px rgba(42, 63, 107, 0.08);
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
   }
 
-  .history-title {
-    font-size: 20px;
+  &:focus {
+    box-shadow: 0 0 0 3px var(--border-color-light);
   }
-  
-  .filter-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
-  }
-  
-  .filter-row .el-select {
-    min-width: unset;
-    width: 100%;
-  }
-  
-  /* Keep actions on a single line; allow horizontal scroll on mobile */
-  .history-item-actions {
-    gap: 10px;
-    padding-top: 12px;
-  }
-  
-}
 
-@media (max-width: 480px) {
-  .ai-call-history {
-    padding: 14px;
-    border-radius: 14px;
-  }
-  
-  .history-title {
-    font-size: 18px;
-  }
-  
-  .filter-row {
-    padding: 10px;
-  }
-  
-  /* Ensure action buttons remain single-line with scroll */
-  .history-item-actions {
-    gap: 10px;
-    padding-top: 12px;
-  }
-  
-  .history-item-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .timestamp {
-    align-self: flex-end;
-    font-size: 12px;
-  }
-  
-  .prompt-text {
-    padding: 12px;
-    font-size: 14px;
+  &:active {
+    transform: translateY(0);
   }
 }
 
@@ -876,7 +1009,7 @@ export default {
   justify-content: center;
   margin-top: 30px;
   padding-top: 24px;
-  border-top: 1px solid var(--history-border);
+  border-top: 1px solid var(--border-color-light);
 }
 
 /* Detail Dialog */
@@ -886,118 +1019,380 @@ export default {
 }
 
 .detail-prompt {
-  background: linear-gradient(135deg, rgba(58, 122, 254, 0.08) 0%, rgba(58, 122, 254, 0.03) 100%);
+  background: var(--bg-container);
   padding: 22px;
-  border-radius: 12px;
-  border: 1px solid rgba(58, 122, 254, 0.18); /* place base border first */
-  border-left: 4px solid var(--history-accent); /* then accent left border so it's not overwritten */
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color-light);
+  border-left: 4px solid var(--color-primary);
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 300px;
   overflow-y: auto;
-  box-shadow: inset 0 1px 3px rgba(25, 44, 84, 0.08);
-  color: var(--history-heading);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
 }
 
 .language-display {
   font-weight: 600;
-  color: var(--history-heading);
+  color: var(--text-primary);
 }
 
 .dialog-footer {
   text-align: center;
+
+  .el-button {
+    margin: 0 8px;
+  }
 }
 
-.dialog-footer .el-button {
-  margin: 0 8px;
+// AI mode tag - force white text for gradient backgrounds
+.ai-mode-tag {
+  color: #ffffff;
 }
-
-/* Element UI tag customization */
-.el-tag {
-  border-radius: 999px;
-  font-weight: 600;
-  border: none;
-  padding: 4px 12px;
-  box-shadow: 0 6px 16px rgba(58, 122, 254, 0.18);
-}
-
-.el-tag--primary {
-  background: linear-gradient(135deg, #3a7afe 0%, #64e3ff 100%);
-  color: #fff;
-}
-
-.el-tag--success {
-  background: linear-gradient(135deg, #34d399 0%, #22b573 100%);
-  color: #fff;
-}
-
-.el-tag--warning {
-  background: linear-gradient(135deg, #f6ad55 0%, #f97316 100%);
-  color: #fff;
-}
-
-.el-tag--danger {
-  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
-  color: #fff;
-}
-
-.el-tag--info {
-  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-  color: #fff;
-}
-
 
 /* Responsive Design */
+@media (max-width: 992px) {
+  .ai-call-history {
+    max-width: 100%;
+    margin: 0 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .ai-call-history {
-    padding: 18px;
-    border-radius: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    margin: 0 8px;
+    min-height: auto;
   }
 
   .history-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     align-items: stretch;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+
+  .history-title {
+    font-size: 20px;
   }
 
   .header-actions {
     display: flex;
     gap: 10px;
+
+    .el-button {
+      margin-left: 0;
+      flex: 1;
+    }
   }
 
-  .header-actions .el-button {
-    margin-left: 0;
-    flex: 1;
+  .filters-container {
+    margin-bottom: 16px;
+  }
+
+  .filter-card {
+    padding: 12px;
+    border-radius: 12px;
   }
 
   .filter-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+
+    .el-select,
+    .kiwi-select-wrapper {
+      min-width: auto;
+      width: 100%;
+    }
+
+    ::v-deep .el-button,
+    ::v-deep .kiwi-button {
+      width: 100%;
+      justify-content: center;
+    }
   }
 
-  .filter-row .el-select {
-    min-width: auto;
+  .history-list {
+    gap: 12px;
+  }
+
+  .history-item {
+    padding: 14px;
+    border-radius: 12px;
   }
 
   .history-item-header {
     flex-direction: column;
     gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .mode-info {
+    gap: 6px;
+  }
+
+  .language-info {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .language-tag {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .timestamp {
+    font-size: 12px;
+  }
+
+  .history-item-content {
+    margin-bottom: 12px;
+  }
+
+  .prompt-preview strong {
+    font-size: 13px;
+  }
+
+  .prompt-text {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+    border-radius: 10px;
   }
 
   .history-item-actions {
     justify-content: flex-start;
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .history-item-actions .action-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .history-item-actions .action-btn [class^="el-icon-"],
+  .history-item-actions .action-btn [class*=" el-icon-"] {
+    font-size: 14px;
+  }
+
+  .pagination-container {
+    margin-top: 20px;
+    padding-top: 16px;
   }
 
   .detail-dialog {
     width: 95% !important;
   }
+
+  .detail-content {
+    max-height: 50vh;
+  }
+
+  .detail-form {
+    .detail-row {
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+
+      label {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .detail-prompt {
+    padding: 14px;
+    font-size: 14px;
+    max-height: 200px;
+  }
+
+  .dialog-footer {
+    flex-direction: column;
+    gap: 8px;
+
+    .el-button,
+    .kiwi-button {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+    margin: 16px 0 8px 0;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
 }
 
-.ai-mode-tag { /* force white font for all AI mode tags */
-  color: #ffffff !important;
+@media (max-width: 640px) {
+  .ai-call-history {
+    padding: 14px;
+    margin: 0 6px;
+  }
+
+  .history-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .history-title {
+    font-size: 18px;
+  }
+
+  .filter-card {
+    padding: 10px;
+  }
+
+  .history-item {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .history-item-header {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .prompt-text {
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .history-item-actions .action-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
 }
-.ai-mode-tag ::v-deep(*) {
-  color: #ffffff !important;
+
+@media (max-width: 480px) {
+  .ai-call-history {
+    padding: 12px;
+    border-radius: 12px;
+    margin: 0 4px;
+  }
+
+  .history-header {
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .history-title {
+    font-size: 17px;
+  }
+
+  .filter-card {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .filter-row {
+    gap: 8px;
+
+    ::v-deep .el-button,
+    ::v-deep .kiwi-button {
+      font-size: 13px;
+      padding: 6px 12px;
+    }
+  }
+
+  .history-list {
+    gap: 10px;
+  }
+
+  .history-item {
+    padding: 10px;
+  }
+
+  .mode-info {
+    gap: 5px;
+  }
+
+  .language-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .native-language {
+    font-size: 11px;
+  }
+
+  .timestamp {
+    font-size: 11px;
+  }
+
+  .prompt-preview strong {
+    font-size: 12px;
+  }
+
+  .prompt-text {
+    padding: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .history-item-actions {
+    gap: 6px;
+    padding-top: 8px;
+  }
+
+  .history-item-actions .action-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  .history-item-actions .action-btn [class^="el-icon-"],
+  .history-item-actions .action-btn [class*=" el-icon-"] {
+    font-size: 13px;
+  }
+
+  .pagination-container {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .detail-prompt {
+    padding: 10px;
+    font-size: 13px;
+    max-height: 150px;
+  }
+
+  .empty-state {
+    padding: 30px 12px;
+  }
+
+  .empty-state i {
+    font-size: 40px;
+  }
+
+  .empty-state h3 {
+    font-size: 16px;
+    margin: 12px 0 6px 0;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
 }
 </style>
