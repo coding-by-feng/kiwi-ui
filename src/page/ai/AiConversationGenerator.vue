@@ -1105,6 +1105,7 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
+  padding-right: 40px; /* Reserve space for delete button */
 }
 
 .history-topic {
@@ -1260,6 +1261,7 @@ export default {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
+    padding-right: 0; /* Reset padding since delete button is static on mobile */
   }
 
   .history-topic {
