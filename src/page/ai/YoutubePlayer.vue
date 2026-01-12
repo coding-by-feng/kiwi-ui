@@ -330,6 +330,7 @@ import NoSleep from 'nosleep.js';
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import { buildAiTabQuery } from '@/util/aiNavigation'
 import { navigateIfChanged } from '@/util/routerUtil'
+import { createAIStream, createYouTubeSubtitleStream } from '@/util/sseClient'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
@@ -403,30 +404,36 @@ export default {
       selectedText: '',
       // Use dialog instead of small bubble for selection actions and AI streaming
       showSelectionPopup: false,
+      // AI search streaming state
+      aiStreamAbort: null,
+      aiResponseText: '',
+      aiSearchLoading: false,
+      aiIsStreaming: false,
+      aiRequestId: '',
+      aiLastError: '',
       isPlaying: false,
       videoReady: false,
       // New: flag for YouTube IFrame API readiness
       youtubeApiReady: false,
 
-      // WebSocket streaming (subtitles translation)
-      websocket: null,
-      wsUrl: '/api/ai/ws/ytb/subtitle',
+      // SSE streaming (subtitles translation)
+      subtitleEventSource: null, // EventSource for subtitle translation
+      subtitleAbortFn: null, // Abort function for SSE stream
+      sseUrl: '/api/ai/sse/ytb/subtitle',
       isTranslationLoading: false,
       translationProgress: 0,
       translationChunks: [],
-      wsConnectionStatus: 'disconnected',
+      sseConnectionStatus: 'disconnected',
       streamingStartTime: null,
       streamingBuffer: '',
       shouldShowTranslationContainer: false,
 
-      // WS stability state
-      wsHeartbeatInterval: null,
-      wsReconnectTimer: null,
-      wsReconnectAttempts: 0,
-      wsShouldReconnect: false,
-      wsSessionId: '',
+      // SSE stability state
+      sseReconnectTimer: null,
+      sseReconnectAttempts: 0,
+      sseShouldReconnect: false,
+      sseSessionId: '',
       lastTranslationRequest: null,
-      connectingPromise: null, // Track pending connection
       pageHidden: false,
       // New: strong dedupe key for in-flight translation
       currentTranslationKey: null,
@@ -686,7 +693,7 @@ export default {
     cleanup() {
       // Global cleanup (component destroy)
       this.stopSubtitleSync();
-      this.disconnectWebSocket();
+      this.disconnectSSE();
       this.clearPlayerInitTimeout && this.clearPlayerInitTimeout();
       if (this.player) {
         try { this.player.destroy(); } catch(_) {}
@@ -769,8 +776,8 @@ export default {
     onVisibilityChange() {
       this.pageHidden = document.hidden;
       if (!this.pageHidden) {
-        // On becoming visible, if translation was in progress and socket is down, try to resume
-        if (this.isTranslationLoading && (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)) {
+        // On becoming visible, if translation was in progress and SSE is down, try to resume
+        if (this.isTranslationLoading && !this.subtitleEventSource) {
           this.scheduleReconnect(200);
         }
       }
@@ -779,7 +786,7 @@ export default {
       // Browsers may suspend timers; keep minimal state; we'll resume on pageshow
     },
     onPageShow() {
-      if (this.isTranslationLoading && (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)) {
+      if (this.isTranslationLoading && !this.subtitleEventSource) {
         this.scheduleReconnect(200);
       }
     },
@@ -804,139 +811,30 @@ export default {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
     },
 
-    // WebSocket optimized streaming
-    async connectWebSocket() {
-      if (this.websocket?.readyState === WebSocket.OPEN) {
-        return Promise.resolve();
+    // SSE streaming for subtitle translation
+    disconnectSSE() {
+      if (this.subtitleEventSource) {
+        try { this.subtitleEventSource.close(); } catch (_) {}
+        this.subtitleEventSource = null;
+        this.sseConnectionStatus = 'disconnected';
       }
-
-      // Reuse existing connection attempt if in progress
-      if (this.connectingPromise) {
-        return this.connectingPromise;
+      if (this.subtitleAbortFn) {
+        try { this.subtitleAbortFn(); } catch (_) {}
+        this.subtitleAbortFn = null;
       }
-
-      this.disconnectWebSocket();
-
-      this.connectingPromise = new Promise((resolve, reject) => {
-        this.wsConnectionStatus = 'connecting';
-        const token = getStore({name: 'access_token'});
-
-        if (!token) {
-          const error = new Error('Authentication token not found');
-          this.handleWebSocketError(error, 'Authentication token not found. Please login again.');
-          this.connectingPromise = null;
-          reject(error);
-          return;
-        }
-
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}${this.wsUrl}?access_token=${encodeURIComponent(token)}`;
-
-        this.websocket = new WebSocket(wsUrl);
-
-        const connectionTimeout = setTimeout(() => {
-          if (this.wsConnectionStatus !== 'connected') {
-            try { this.websocket?.close(); } catch (_) {}
-            this.connectingPromise = null;
-            reject(new Error('WebSocket connection timeout'));
-          }
-        }, 10000);
-
-        this.websocket.onopen = () => {
-          clearTimeout(connectionTimeout);
-          this.wsConnectionStatus = 'connected';
-          this.connectingPromise = null; // Clear promise on success
-          // Start heartbeat keepalive (best-effort; may be throttled in background)
-          this.wsHeartbeatInterval = setInterval(() => {
-            try {
-              if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-                this.websocket.send(JSON.stringify({ type: 'ping', ts: Date.now() }));
-              }
-            } catch (_) {}
-          }, 25000);
-          resolve();
-        };
-
-        this.websocket.onmessage = this.handleWebSocketMessage;
-
-        this.websocket.onclose = (event) => {
-          clearTimeout(connectionTimeout);
-          this.wsConnectionStatus = 'disconnected';
-          this.websocket = null;
-          if (this.connectingPromise) this.connectingPromise = null; // Ensure cleared
-
-          if (event.code === 1008 || event.code === 1011) {
-            this.handleWebSocketError(new Error('Authentication failed'), 'Authentication failed. Please login again.');
-          }
-
-          // Unexpected close during active translation -> schedule reconnect
-          if (this.isTranslationLoading && this.wsShouldReconnect) {
-            this.scheduleReconnect();
-          }
-        };
-
-        this.websocket.onerror = (error) => {
-          clearTimeout(connectionTimeout);
-          this.wsConnectionStatus = 'error';
-          if (this.connectingPromise) this.connectingPromise = null; // Ensure cleared
-          // If initial connect, reject; otherwise we'll attempt reconnect
-          if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
-            this.handleWebSocketError(error, 'Failed to connect to translation service.');
-            reject(error);
-          }
-        };
-      });
-
-      return this.connectingPromise;
-    },
-
-    disconnectWebSocket() {
-      if (this.websocket) {
-        // Prevent onclose from triggering reconnect logic
-        this.websocket.onclose = null;
-        this.websocket.onerror = null;
-        this.websocket.onmessage = null;
-        this.websocket.close();
-        this.websocket = null;
-        this.wsConnectionStatus = 'disconnected';
-      }
-      if (this.wsHeartbeatInterval) {
-        clearInterval(this.wsHeartbeatInterval);
-        this.wsHeartbeatInterval = null;
+      if (this.sseReconnectTimer) {
+        clearTimeout(this.sseReconnectTimer);
+        this.sseReconnectTimer = null;
       }
     },
 
-    handleWebSocketMessage(event) {
-      try {
-        const response = JSON.parse(event.data);
-
-        if (response.type === 'pong') {
-          // Heartbeat reply; nothing to do
-          return;
-        }
-
-        switch (response.type) {
-          case 'connected':
-            console.log('WebSocket connected:', response.message);
-            break;
-          case 'started':
-            this.handleTranslationStarted();
-            break;
-          case 'chunk':
-            this.handleTranslationChunk(response.chunk);
-            break;
-          case 'completed':
-            this.handleTranslationCompleted(response);
-            break;
-          case 'error':
-            this.handleTranslationError(response);
-            break;
-          default:
-            console.warn('Unknown WebSocket message type:', response.type);
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-        msgUtil.msgError(this, 'Failed to parse translation response');
+    handleSSEError(error, message) {
+      console.error('SSE error:', error);
+      // Avoid noisy toasts if we already have translated content or not actively loading
+      if (this.isTranslationLoading || !this.translatedSubtitles) {
+        msgUtil.msgError(this, message, 3000);
+      } else {
+        console.warn('Suppressing SSE error toast because content is already present.');
       }
     },
 
@@ -949,7 +847,7 @@ export default {
       this.streamingBuffer = '';
       this.shouldShowTranslationContainer = true;
       this.translatedSubtitlesCollapsed = false; // Keep expanded during streaming
-      this.wsShouldReconnect = true;
+      this.sseShouldReconnect = true;
       if (this.noSleep && this.isSafariOrIOS()) {
         // Best-effort: enable wake lock-like behavior on mobile Safari
         try { this.noSleep.enable(); } catch (_) {}
@@ -985,8 +883,9 @@ export default {
       this.isTranslationLoading = false;
       this.translationProgress = 100;
       this.subtitlesLoadingComplete = true;
-      this.wsShouldReconnect = false;
+      this.sseShouldReconnect = false;
       this.currentTranslationKey = null;
+      this.subtitleEventSource = null;
 
       if (response.fullResponse) {
         this.translatedSubtitles = response.fullResponse;
@@ -1013,8 +912,9 @@ export default {
       this.translationProgress = 0;
       this.subtitlesLoadingComplete = true;
       this.shouldShowTranslationContainer = false; // Hide container on error
-      this.wsShouldReconnect = false;
+      this.sseShouldReconnect = false;
       this.currentTranslationKey = null;
+      this.subtitleEventSource = null;
 
       this.stopProgressAnimation();
 
@@ -1032,16 +932,6 @@ export default {
 
       msgUtil.msgError(this, errorMessage, 3000);
       this.disableNoSleep();
-    },
-
-    handleWebSocketError(error, message) {
-      console.error('WebSocket error:', error);
-      // Avoid noisy toasts if we already have translated content or not actively loading
-      if (this.isTranslationLoading || !this.translatedSubtitles) {
-        msgUtil.msgError(this, message, 3000);
-      } else {
-        console.warn('Suppressing WS error toast because content is already present.');
-      }
     },
 
     async requestTranslation(videoUrl, language) {
@@ -1068,34 +958,55 @@ export default {
       this.translatedSubtitlesCollapsed = false;
 
       // Generate session ID early
-      this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
-      this.wsShouldReconnect = true;
+      this.sseSessionId = 'sse_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+      this.sseShouldReconnect = true;
 
       // Update last request immediately to prevent race conditions
-      this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.wsSessionId };
+      this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.sseSessionId };
 
-      try {
-        await this.connectWebSocket();
+      // Close any existing SSE connection
+      this.disconnectSSE();
 
-        if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
-          throw new Error('WebSocket is not open');
+      // Create SSE stream using EventSource
+      const { eventSource, close } = createYouTubeSubtitleStream({
+        videoUrl,
+        language,
+        requestType: 'translated',
+        callbacks: {
+          onStarted: (data) => {
+            console.log('SSE started:', data.message);
+            this.handleTranslationStarted();
+          },
+          onProgress: (data) => {
+            console.log(`Progress: ${data.currentStep}/${data.totalSteps} - ${data.currentStepDescription}`);
+          },
+          onChunk: (chunk) => {
+            this.handleTranslationChunk(chunk);
+          },
+          onCompleted: (data) => {
+            this.handleTranslationCompleted(data);
+          },
+          onError: (error) => {
+            this.handleTranslationError(error);
+          },
+          onConnectionError: (message) => {
+            // Connection error - may auto-reconnect
+            console.warn('SSE connection error:', message);
+            if (this.isTranslationLoading && this.sseShouldReconnect) {
+              this.scheduleReconnect();
+            }
+          }
         }
+      });
 
-        const request = {
-          videoUrl: videoUrl,
-          language: language,
-          requestType: 'translated',
-          timestamp: Date.now(),
-          sessionId: this.wsSessionId
-        };
+      this.subtitleEventSource = eventSource;
 
-        this.websocket.send(JSON.stringify(request));
-      } catch (error) {
-        this.handleWebSocketError(error, 'Failed to start translation: ' + (error && error.message ? error.message : 'unknown error'));
+      if (!eventSource) {
+        this.handleSSEError(new Error('Failed to create SSE stream'), 'Failed to start translation');
         this.isTranslationLoading = false;
         this.subtitlesLoadingComplete = true;
         this.shouldShowTranslationContainer = false;
-        this.wsShouldReconnect = false;
+        this.sseShouldReconnect = false;
         this.currentTranslationKey = null;
         this.disableNoSleep();
       }
@@ -1103,26 +1014,18 @@ export default {
 
     // Reconnect with incremental backoff and resume request
     scheduleReconnect(initialDelay) {
-      if (!this.wsShouldReconnect) return;
-      if (this.wsReconnectTimer) return;
-      const attempt = ++this.wsReconnectAttempts;
+      if (!this.sseShouldReconnect) return;
+      if (this.sseReconnectTimer) return;
+      const attempt = ++this.sseReconnectAttempts;
       const delay = typeof initialDelay === 'number' ? initialDelay : Math.min(1000 * Math.pow(2, attempt - 1), 8000);
-      this.wsReconnectTimer = setTimeout(async () => {
-        this.wsReconnectTimer = null;
-        try {
-          await this.connectWebSocket();
-          if (this.lastTranslationRequest && this.isTranslationLoading) {
-            const resumeRequest = {
-              ...this.lastTranslationRequest,
-              timestamp: Date.now()
-            };
-            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-              this.websocket.send(JSON.stringify(resumeRequest));
-            }
-          }
-        } catch (e) {
-          // Keep trying while allowed
-          if (this.wsShouldReconnect) this.scheduleReconnect();
+      this.sseReconnectTimer = setTimeout(() => {
+        this.sseReconnectTimer = null;
+        if (this.lastTranslationRequest && this.isTranslationLoading) {
+          // Re-initiate the request
+          this.requestTranslation(
+            this.lastTranslationRequest.videoUrl,
+            this.lastTranslationRequest.language
+          );
         }
       }, delay);
     },
@@ -1342,8 +1245,8 @@ export default {
 
     resetStates() {
       this.cleanupPlayer && this.cleanupPlayer();
-      this.wsShouldReconnect = false; // Prevent reconnects during reset
-      this.disconnectWebSocket(); // Ensure previous connection is closed
+      this.sseShouldReconnect = false; // Prevent reconnects during reset
+      this.disconnectSSE(); // Ensure previous connection is closed
       this.isLoading = true;
       this.videoReady = false;
       this.subtitles = [];
@@ -1744,69 +1647,29 @@ export default {
       this.aiIsStreaming = true;
       this.aiRequestId = this.generateRequestId();
 
-      // Token
-      const token = getStore({name: 'access_token'});
-      if (!token) {
-        this.aiSearchLoading = false;
-        this.aiIsStreaming = false;
-        this.aiLastError = 'Authentication token not found. Please login again.';
-        msgUtil.msgError(this, this.aiLastError);
-        return;
-      }
+      // Close any existing AI stream
+      this.closeAiStream(true);
 
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const aiBase = kiwiConsts.API_BASE.AI_BIZ.replace(/^http(s)?:\/\//, '');
-      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`;
-
-      try { this.closeAiStream(); } catch (_) {}
-      try { this.aiWebsocket = new WebSocket(wsUrl); } catch (e) {
-        this.aiSearchLoading = false;
-        this.aiIsStreaming = false;
-        this.aiLastError = 'Failed to open WebSocket';
-        msgUtil.msgError(this, this.aiLastError);
-        return;
-      }
-
-      this.aiWebsocket.onopen = () => {
-        const request = {
-          prompt: prompt,
-          promptMode: promptMode,
-          targetLanguage: targetLanguage,
-          nativeLanguage: nativeLanguage,
-          aiUrl: wsUrl,
+      // Create SSE stream for AI
+      const { abort } = createAIStream({
+        body: {
+          prompt,
+          promptMode,
+          targetLanguage,
+          nativeLanguage,
           timestamp: Date.now(),
           requestId: this.aiRequestId
-        };
-        try {
-          this.aiWebsocket.send(JSON.stringify(request));
-        } catch (e) {
-          this.handleAiStreamError('Failed to send request');
-        }
-      };
-
-      this.aiWebsocket.onmessage = (event) => {
-        let response;
-        try {
-          response = JSON.parse(event.data);
-        } catch (error) {
-          this.handleAiStreamError('Failed to parse response');
-          return;
-        }
-
-        switch (response.type) {
-          case 'connected':
-            // no-op
-            break;
-          case 'started':
+        },
+        callbacks: {
+          onStarted: () => {
             this.aiIsStreaming = true;
-            break;
-          case 'chunk':
-            if (response.chunk) {
-              this.aiResponseText += response.chunk;
+          },
+          onChunk: (chunk) => {
+            if (chunk) {
+              this.aiResponseText += chunk;
             }
-            break;
-          case 'completed':
+          },
+          onCompleted: (response) => {
             this.aiIsStreaming = false;
             this.aiSearchLoading = false;
             try {
@@ -1822,40 +1685,29 @@ export default {
                 this.aiResponseText = response.fullResponse;
               }
             }
-            try { this.aiWebsocket && this.aiWebsocket.close(); } catch (_) {}
-            this.aiWebsocket = null;
-            break;
-          case 'error':
-            this.handleAiStreamError((response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : ''));
-            break;
-          default:
-            // ignore
-            break;
+            this.aiStreamAbort = null;
+          },
+          onError: (error) => {
+            this.handleAiStreamError((error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''));
+          }
         }
-      };
+      });
 
-      this.aiWebsocket.onerror = () => {
-        this.handleAiStreamError('WebSocket connection error');
-      };
-
-      this.aiWebsocket.onclose = () => {
-        this.aiSearchLoading = false;
-        this.aiIsStreaming = false;
-      };
+      this.aiStreamAbort = abort;
     },
 
     handleAiStreamError(message) {
       this.aiSearchLoading = false;
       this.aiIsStreaming = false;
       this.aiLastError = message || 'AI streaming error';
-      try { this.aiWebsocket && this.aiWebsocket.close(); } catch (_) {}
-      this.aiWebsocket = null;
+      try { if (this.aiStreamAbort) { this.aiStreamAbort(); } } catch (_) {}
+      this.aiStreamAbort = null;
       msgUtil.msgError(this, this.aiLastError);
     },
 
     closeAiStream(silent) {
-      try { if (this.aiWebsocket) { this.aiWebsocket.close(); } } catch (_) {}
-      this.aiWebsocket = null;
+      try { if (this.aiStreamAbort) { this.aiStreamAbort(); } } catch (_) {}
+      this.aiStreamAbort = null;
       this.aiSearchLoading = false;
       this.aiIsStreaming = false;
       if (!silent) {
@@ -1996,7 +1848,7 @@ export default {
         this.isTranslationLoading = false;
         this.translationProgress = 0;
         this.currentTranslationKey = null;
-        this.disconnectWebSocket();
+        this.disconnectSSE();
       }
 
       msgUtil.msgSuccess(this, 'Loading cancelled', 2000);
@@ -2027,9 +1879,9 @@ export default {
         }
       } else if (!enabled) {
         this.shouldShowTranslationContainer = false;
-        this.wsShouldReconnect = false;
+        this.sseShouldReconnect = false;
         this.currentTranslationKey = null;
-        this.disconnectWebSocket();
+        this.disconnectSSE();
       }
     },
 
