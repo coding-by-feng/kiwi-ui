@@ -200,7 +200,8 @@ export default {
         about: true,
         aiHistory: true, // New: AI History tab enabled by default
         pdfReader: true,
-        signature: true
+        signature: true,
+        aiConversation: true // AI Conversation Generator tab
     }),
 
     DB_NAME: 'KIWI_VOCABULARY',

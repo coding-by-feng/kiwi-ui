@@ -87,12 +87,21 @@
             class="history-item">
           <div class="history-item-header">
             <div class="mode-info">
-              <KiwiTag
-                  :type="getModeTagType(record.promptMode)"
-                  :class="getModeClass()"
-                  size="small">
-                {{ getModeLabel(record.promptMode) }}
-              </KiwiTag>
+              <div class="mode-tags">
+                <KiwiTag
+                    :type="getModeTagType(record.promptMode)"
+                    :class="getModeClass()"
+                    size="small">
+                  {{ getModeLabel(record.promptMode) }}
+                </KiwiTag>
+                <KiwiTag
+                    v-if="record.archived"
+                    type="info"
+                    size="small"
+                    class="archived-tag">
+                  {{ $t('ai.archived') }}
+                </KiwiTag>
+              </div>
               <div class="language-info">
                 <span class="language-tag">{{ getLanguageLabel(record.targetLanguage) }}</span>
                 <span v-if="record.nativeLanguage" class="native-language">
@@ -782,6 +791,19 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.archived-tag {
+  opacity: 0.85;
 }
 
 .language-info {
@@ -813,6 +835,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  margin-left: 12px;
 }
 
 .timestamp i {
@@ -1028,16 +1052,27 @@ export default {
 }
 
 /* Responsive Design */
+@media (max-width: 992px) {
+  .ai-call-history {
+    max-width: 100%;
+    margin: 0 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .ai-call-history {
-    padding: 18px;
-    border-radius: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    margin: 0 8px;
+    min-height: auto;
   }
 
   .history-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     align-items: stretch;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
   }
 
   .history-title {
@@ -1054,56 +1089,310 @@ export default {
     }
   }
 
+  .filters-container {
+    margin-bottom: 16px;
+  }
+
+  .filter-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
   .filter-row {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    padding: 12px;
 
-    .el-select {
+    .el-select,
+    .kiwi-select-wrapper {
       min-width: auto;
       width: 100%;
     }
+
+    ::v-deep .el-button,
+    ::v-deep .kiwi-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .history-list {
+    gap: 12px;
+  }
+
+  .history-item {
+    padding: 14px;
+    border-radius: 12px;
   }
 
   .history-item-header {
     flex-direction: column;
     gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .mode-info {
+    gap: 6px;
+  }
+
+  .language-info {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .language-tag {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .timestamp {
+    font-size: 12px;
+  }
+
+  .history-item-content {
+    margin-bottom: 12px;
+  }
+
+  .prompt-preview strong {
+    font-size: 13px;
+  }
+
+  .prompt-text {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+    border-radius: 10px;
   }
 
   .history-item-actions {
     justify-content: flex-start;
-    gap: 10px;
-    padding-top: 12px;
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .history-item-actions .action-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .history-item-actions .action-btn [class^="el-icon-"],
+  .history-item-actions .action-btn [class*=" el-icon-"] {
+    font-size: 14px;
+  }
+
+  .pagination-container {
+    margin-top: 20px;
+    padding-top: 16px;
   }
 
   .detail-dialog {
-    width: 95%;
+    width: 95% !important;
+  }
+
+  .detail-content {
+    max-height: 50vh;
+  }
+
+  .detail-form {
+    .detail-row {
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+
+      label {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .detail-prompt {
+    padding: 14px;
+    font-size: 14px;
+    max-height: 200px;
+  }
+
+  .dialog-footer {
+    flex-direction: column;
+    gap: 8px;
+
+    .el-button,
+    .kiwi-button {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+    margin: 16px 0 8px 0;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    margin-bottom: 20px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .ai-call-history {
     padding: 14px;
-    border-radius: 14px;
+    margin: 0 6px;
+  }
+
+  .history-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
   }
 
   .history-title {
     font-size: 18px;
   }
 
-  .filter-row {
+  .filter-card {
     padding: 10px;
   }
 
+  .history-item {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .history-item-header {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .prompt-text {
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .history-item-actions .action-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-call-history {
+    padding: 12px;
+    border-radius: 12px;
+    margin: 0 4px;
+  }
+
+  .history-header {
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .history-title {
+    font-size: 17px;
+  }
+
+  .filter-card {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .filter-row {
+    gap: 8px;
+
+    ::v-deep .el-button,
+    ::v-deep .kiwi-button {
+      font-size: 13px;
+      padding: 6px 12px;
+    }
+  }
+
+  .history-list {
+    gap: 10px;
+  }
+
+  .history-item {
+    padding: 10px;
+  }
+
+  .mode-info {
+    gap: 5px;
+  }
+
+  .language-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .native-language {
+    font-size: 11px;
+  }
+
   .timestamp {
-    align-self: flex-end;
+    font-size: 11px;
+  }
+
+  .prompt-preview strong {
     font-size: 12px;
   }
 
   .prompt-text {
-    padding: 12px;
-    font-size: 14px;
+    padding: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .history-item-actions {
+    gap: 6px;
+    padding-top: 8px;
+  }
+
+  .history-item-actions .action-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  .history-item-actions .action-btn [class^="el-icon-"],
+  .history-item-actions .action-btn [class*=" el-icon-"] {
+    font-size: 13px;
+  }
+
+  .pagination-container {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .detail-prompt {
+    padding: 10px;
+    font-size: 13px;
+    max-height: 150px;
+  }
+
+  .empty-state {
+    padding: 30px 12px;
+  }
+
+  .empty-state i {
+    font-size: 40px;
+  }
+
+  .empty-state h3 {
+    font-size: 16px;
+    margin: 12px 0 6px 0;
+  }
+
+  .empty-state p {
+    font-size: 13px;
   }
 }
 </style>

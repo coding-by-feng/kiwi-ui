@@ -163,7 +163,7 @@ export default {
       }
 
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader']
+      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader','aiConversation']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Only starList requires login to view; youtube and aiHistory should be visible with hints when logged out
@@ -311,23 +311,9 @@ export default {
     position: absolute;
   }
 
-  ::v-deep .el-tabs--border-card {
-    border: none;
-    border-radius: 0;
-    min-height: 100vh;
-  }
-
   .language-switcher-container {
     top: 5px;
     right: 5px;
-  }
-
-  ::v-deep .el-tabs__header {
-    margin-bottom: 10px;
-  }
-
-  ::v-deep .el-tabs__nav-wrap {
-    padding-right: 60px; // Make room for language switcher
   }
 }
 </style>
@@ -380,6 +366,16 @@ export default {
         </keep-alive>
         <div v-if="activeName==='aiHistory' && !isLogin" class="login-hint">
           <el-alert type="info" show-icon title="Please log in to view AI history." description="Login to review your previous AI calls."></el-alert>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane name="aiConversation" lazy v-if="enabledTabs.aiConversation">
+        <span slot="label"><i class="el-icon-chat-dot-round"></i></span>
+        <keep-alive>
+          <router-view name="aiConversation" v-if="visitedTabs.aiConversation && isLogin" v-show="activeName==='aiConversation'"></router-view>
+        </keep-alive>
+        <div v-if="activeName==='aiConversation' && !isLogin" class="login-hint">
+          <el-alert type="info" show-icon title="Please log in to use AI Conversation Generator." description="Login to generate multi-speaker conversations with audio."></el-alert>
         </div>
       </el-tab-pane>
 

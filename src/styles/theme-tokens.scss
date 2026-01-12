@@ -2710,6 +2710,79 @@ body {
   }
 }
 
+// Mobile responsive tab bar styles
+@media (max-width: 768px) {
+  .el-tabs--border-card {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+
+    > .el-tabs__header {
+      .el-tabs__nav-wrap {
+        // Enable horizontal scrolling for overflow tabs
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; // Firefox
+        &::-webkit-scrollbar {
+          display: none; // Chrome/Safari
+        }
+      }
+
+      .el-tabs__nav-scroll {
+        overflow: visible !important;
+      }
+
+      .el-tabs__nav {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+      }
+
+      .el-tabs__item {
+        height: 40px !important;
+        line-height: 40px !important;
+        padding: 0 12px !important;
+        flex-shrink: 0;
+
+        i {
+          font-size: 16px !important;
+        }
+
+        // Smaller underline effect on mobile
+        &::after {
+          height: 2px;
+        }
+      }
+    }
+
+    > .el-tabs__content {
+      padding: 12px !important;
+      min-height: calc(100vh - 60px);
+    }
+  }
+}
+
+// Extra small screens (< 480px) - more compact tabs
+@media (max-width: 480px) {
+  .el-tabs--border-card {
+    > .el-tabs__header {
+      .el-tabs__item {
+        height: 36px !important;
+        line-height: 36px !important;
+        padding: 0 10px !important;
+
+        i {
+          font-size: 14px !important;
+        }
+      }
+    }
+
+    > .el-tabs__content {
+      padding: 8px !important;
+    }
+  }
+}
+
 // Mobile responsive button styles
 @media (max-width: 768px) {
   .el-button {

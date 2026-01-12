@@ -265,3 +265,64 @@ export function getVideoTitle(videoUrl) {
         method: 'get'
     })
 }
+
+// ==================== AI Conversation Generator API ====================
+
+/**
+ * Get conversation generator configuration
+ */
+export function getConversationConfig() {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/config`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * Get conversation by ID
+ */
+export function getConversationById(id) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${id}`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * List user's conversations
+ */
+export function listConversations() {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/list`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * Delete conversation (soft delete)
+ */
+export function deleteConversation(id) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${id}`,
+        method: 'delete',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * Get audio stream URL for a message
+ */
+export function getConversationAudioUrl(conversationId, messageId) {
+    return `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${conversationId}/audio/${messageId}`
+}
