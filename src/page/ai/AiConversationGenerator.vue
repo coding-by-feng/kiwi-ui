@@ -689,6 +689,8 @@ export default {
           }
           this.messages = data.messages || []
           this.totalMessageCount = this.messages.length
+          // Populate the form prompt with the topic from history
+          this.form.prompt = data.topic || ''
           this.currentMode = 'generator'
         }
       } catch (error) {
