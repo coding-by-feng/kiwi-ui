@@ -141,7 +141,27 @@ export default {
         antonym: '反義語',
         vocabularyAssociation: '語彙関連',
         phrasesAssociation: 'フレーズ関連',
+        vocabularyCharacterExpansion: '語彙文字展開',
+        ambiguousAssociationCorrection: '曖昧な関連付けの修正',
+        naturalIdiomaticRetouch: '自然で慣用的なリタッチ',
         selectMode: 'モードを選択'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '語彙を入力',
+        directTranslation: '何でも入力',
+        explanation: '何でも入力',
+        grammarExplanation: '何でも入力',
+        grammarCorrection: '何でも入力',
+        synonym: '語彙を入力',
+        antonym: '語彙を入力',
+        vocabularyAssociation: '何でも入力',
+        phrasesAssociation: '何でも入力',
+        // New modes
+        vocabularyCharacterExpansion: '何でも入力',
+        ambiguousAssociationCorrection: '何でも入力',
+        naturalIdiomaticRetouch: 'リタッチするテキストを入力'
     },
 
     // Todo Gamification
@@ -256,6 +276,7 @@ export default {
         clearFilters: 'フィルターをクリア',
         review: '復習',
         copy: 'コピー',
+        copyPrompt: 'プロンプトをコピー',
         details: '詳細',
         searchAgain: '再検索',
         aiCallDetails: 'AI呼び出しの詳細',
@@ -281,7 +302,31 @@ export default {
         streaming: '応答をストリーミング中...',
         copyResponseText: '応答テキストをコピー',
         textCopiedToClipboard: 'テキストをクリップボードにコピーしました！',
-        failedToCopyText: 'テキストのコピーに失敗しました'
+        failedToCopyText: 'テキストのコピーに失敗しました',
+        // クリップボードダイアログ
+        useClipboardContent: 'クリップボードの内容を使用：「{text}」？',
+        // 分類フィルター
+        normalItems: '通常項目',
+        archivedItems: 'アーカイブ済み項目',
+        allItems: 'すべての項目',
+        // 読み込み状態
+        loadingHistory: '履歴を読み込み中...',
+        // 操作
+        archive: 'アーカイブ',
+        // アーカイブ/削除メッセージ
+        itemArchived: '項目が正常にアーカイブされました',
+        archiveFailed: 'アーカイブに失敗しました',
+        itemDeleted: '項目が正常に削除されました',
+        deleteFailed: '削除に失敗しました',
+        loadHistoryFailed: 'AI利用履歴の読み込みに失敗しました',
+        // 削除確認ダイアログ
+        deleteItemTitle: '項目を削除',
+        deleteItemConfirm: 'この項目を削除してもよろしいですか？この操作は元に戻せません。',
+        // 最小化/復元
+        minimize: '最小化',
+        restore: '復元',
+        close: '閉じる',
+        aiSearch: 'AI検索'
     },
 
     // New: audio settings parity
@@ -306,7 +351,9 @@ export default {
         pressKeys: 'キーを押してください...',
         // 追加：機能タブ設定
         featureTabs: '機能タブ',
-        featureTabsTip: 'ツールバーのタブを表示/非表示'
+        featureTabsTip: 'ツールバーのタブを表示/非表示',
+        uiLanguage: 'インターフェース言語',
+        uiLanguageTooltip: 'インターフェースに使用される言語（翻訳言語とは独立）'
     },
 
     messages: {
@@ -357,5 +404,22 @@ export default {
         downloadForWindows: 'Windows 版をダウンロード',
         downloadForLinux: 'Linux 版をダウンロード',
         gdriveNote: 'ダウンロードは Google ドライブでホストされています。開けない場合は、リンクをコピーして新しいタブで開いてください。'
+    },
+
+    // Review modes
+    review: {
+        // TTS オーディオ生成
+        generatingAudio: 'オーディオを生成中...',
+        audioReady: 'オーディオ準備完了',
+        audioFilesReady: '個のオーディオファイル準備完了',
+        audioFilesFailed: '個のオーディオファイル失敗',
+        audioGenerationFailed: 'オーディオ生成に失敗しました。フォールバックを使用します',
+        audioGenerationInProgress: 'オーディオ生成はすでに進行中です',
+        ttsAudioNotEnabled: 'TTSオーディオはサーバーで有効になっていません',
+        startingAudioGeneration: 'オーディオ生成を開始...',
+        audioPreparationFailed: 'オーディオの準備に失敗しました',
+        prepareAudio: 'オーディオを準備',
+        audioGenerationComplete: 'オーディオ生成完了',
+        preparingAudioForReview: '復習用オーディオを準備中...'
     }
 }

@@ -111,7 +111,7 @@ export default {
         google: 'Use Google Account to Login',
         connecting: 'Connecting to Google...',
         processing: 'Processing...',
-        loginFailed: 'Google login failed, please try again',
+        loginFailed: 'Login failed, please try again',
         accountNotFound: 'Account not found, please contact administrator',
         loginSuccess: 'Login successful',
         logout: 'Logout',
@@ -132,9 +132,48 @@ export default {
         },
         copyright: '©2025 Kason English Learning Platform v2.0',
         username: 'Username',
+        usernameOrEmail: 'Username / Email',
         password: 'Password',
         signIn: 'Sign In',
-        or: 'OR'
+        or: 'OR',
+        // Registration
+        createAccount: 'Create Account',
+        register: 'Register',
+        registerSubtitle: 'Join us and start learning',
+        registering: 'Registering...',
+        registerSuccess: 'Registration successful! Please login.',
+        registerFailed: 'Registration failed, please try again',
+        email: 'Email',
+        confirmPassword: 'Confirm Password',
+        realName: 'Name (Optional)',
+        // Placeholders
+        usernamePlaceholder: 'Enter your username',
+        usernameOrEmailPlaceholder: 'Enter your username or email',
+        passwordPlaceholder: 'Enter your password',
+        emailPlaceholder: 'Enter your email address',
+        confirmPasswordPlaceholder: 'Confirm your password',
+        realNamePlaceholder: 'Enter your name',
+        // Validation messages
+        usernameRequired: 'Username is required',
+        usernameLength: 'Username must be 3-20 characters',
+        usernamePattern: 'Username can only contain letters, numbers, and underscores',
+        usernameNotAvailable: 'Username is already taken',
+        emailRequired: 'Email is required',
+        emailInvalid: 'Please enter a valid email address',
+        emailNotAvailable: 'Email is already registered',
+        passwordRequired: 'Password is required',
+        passwordTooShort: 'Password must be at least 6 characters',
+        confirmPasswordRequired: 'Please confirm your password',
+        passwordMismatch: 'Passwords do not match',
+        realNameTooLong: 'Name must be less than 50 characters',
+        // Password strength
+        passwordWeak: 'Weak',
+        passwordFair: 'Fair',
+        passwordGood: 'Good',
+        passwordStrong: 'Strong',
+        // Navigation links
+        noAccount: "Don't have an account?",
+        alreadyHaveAccount: 'Already have an account?'
     },
 
     // Search modes
@@ -152,6 +191,7 @@ export default {
         // New modes
         vocabularyCharacterExpansion: 'Vocabulary Character Expansion',
         ambiguousAssociationCorrection: 'Ambiguous Association Correction',
+        naturalIdiomaticRetouch: 'Natural Idiomatic Retouch',
         selectMode: 'Select Mode'
     },
 
@@ -168,7 +208,8 @@ export default {
         phrasesAssociation: 'Enter anything',
         // New modes
         vocabularyCharacterExpansion: 'Enter anything',
-        ambiguousAssociationCorrection: 'Enter anything'
+        ambiguousAssociationCorrection: 'Enter anything',
+        naturalIdiomaticRetouch: 'Input text to retouch'
     },
 
     // Word details
@@ -276,7 +317,20 @@ export default {
         stockReviewChToEn: 'Standard Review (Chinese→English)',
         totalReviewChToEn: 'Complete Review (Chinese→English)',
         downloadResources: 'Download Resources',
-        modeTitle: 'Review Mode'
+        modeTitle: 'Review Mode',
+        // TTS Audio generation
+        generatingAudio: 'Generating audio...',
+        audioReady: 'Audio Ready',
+        audioFilesReady: 'audio files ready',
+        audioFilesFailed: 'audio files failed',
+        audioGenerationFailed: 'Audio generation failed, using fallback',
+        audioGenerationInProgress: 'Audio generation already in progress',
+        ttsAudioNotEnabled: 'TTS audio is not enabled on server',
+        startingAudioGeneration: 'Starting audio generation...',
+        audioPreparationFailed: 'Audio preparation failed',
+        prepareAudio: 'Prepare Audio',
+        audioGenerationComplete: 'Audio generation complete',
+        preparingAudioForReview: 'Preparing audio for review...'
     },
 
     // YouTube features
@@ -325,8 +379,11 @@ export default {
         todayReviewed: 'Reviewed Today',
         todayMastered: 'Mastered Today',
         learningSettings: 'Learning Settings',
+        theme: 'Theme',
         pronunciationSource: 'Pronunciation Source',
         nativeLanguage: 'Native Language',
+        uiLanguage: 'UI Language',
+        uiLanguageTooltip: 'Language used for the interface text (independent of translation language)',
         backgroundMusic: 'Background Music',
         letterSpelling: 'Letter Spelling',
         englishDefinition: 'English Definition',
@@ -352,7 +409,22 @@ export default {
         pressKeys: 'Press keys...',
         // Added: Feature tabs settings
         featureTabs: 'Feature Tabs',
-        featureTabsTip: 'Show or hide tabs in the toolbar'
+        featureTabsTip: 'Show or hide tabs in the toolbar',
+        // Password change
+        changePassword: 'Change Password',
+        currentPassword: 'Current Password',
+        newPassword: 'New Password',
+        confirmNewPassword: 'Confirm New Password',
+        currentPasswordPlaceholder: 'Enter your current password',
+        newPasswordPlaceholder: 'Enter your new password',
+        confirmNewPasswordPlaceholder: 'Confirm your new password',
+        passwordMismatch: 'New passwords do not match',
+        passwordTooShort: 'Password must be at least 6 characters',
+        passwordChangeSuccess: 'Password changed successfully',
+        passwordChangeFailed: 'Failed to change password',
+        currentPasswordRequired: 'Current password is required',
+        newPasswordRequired: 'New password is required',
+        confirmPasswordRequired: 'Please confirm your new password'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
@@ -401,6 +473,7 @@ export default {
         clearFilters: 'Clear Filters',
         review: 'Review',
         copy: 'Copy',
+        copyPrompt: 'Copy Prompt',
         details: 'Details',
         searchAgain: 'Search Again',
         aiCallDetails: 'AI Call Details',
@@ -428,7 +501,29 @@ export default {
         textCopiedToClipboard: 'Text copied to clipboard!',
         failedToCopyText: 'Failed to copy text',
         // New for clipboard dialog
-        useClipboardContent: 'Use clipboard content: "{text}"?'
+        useClipboardContent: 'Use clipboard content: "{text}"?',
+        // Classification filters
+        normalItems: 'Normal Items',
+        archivedItems: 'Archived Items',
+        allItems: 'All Items',
+        // Loading state
+        loadingHistory: 'Loading history...',
+        // Actions
+        archive: 'Archive',
+        // Archive/Delete messages
+        itemArchived: 'Item archived successfully',
+        archiveFailed: 'Failed to archive item',
+        itemDeleted: 'Item deleted successfully',
+        deleteFailed: 'Failed to delete item',
+        loadHistoryFailed: 'Failed to load AI call history',
+        // Delete confirmation dialog
+        deleteItemTitle: 'Delete Item',
+        deleteItemConfirm: 'Are you sure you want to delete this item? This action cannot be undone.',
+        // Minimize/Restore
+        minimize: 'Minimize',
+        restore: 'Restore',
+        close: 'Close',
+        aiSearch: 'AI Search'
     },
 
     // Audio and BGM
@@ -436,7 +531,7 @@ export default {
         title: 'Audio Settings',
         management: 'Audio Management',
         cleanAudioData: 'Clean audio data, totally {count}',
-        cleanAllCache: 'Clean all cache',
+        cleanAllCache: 'Clean All Cache',
         backgroundMusic: 'Background Music',
         audioCleanedSuccess: 'Audio data cleaned successfully',
         cacheCleanedSuccess: 'All cache cleaned successfully',
@@ -631,7 +726,7 @@ export default {
         task: 'Task',
         description: 'Description',
         enterTaskTitle: 'Enter task title',
-        enterTaskDescription: 'Enter task description',
+        enterTaskDescription: 'Enter task description (optional)',
         successPoints: 'Success Points',
         failPoints: 'Fail Points',
         frequency: 'Frequency',
@@ -644,6 +739,16 @@ export default {
         customDays: 'Custom Days',
         freqEveryNDays: 'Every {days} days',
         addTask: 'Add Task',
+
+        // Task form labels and hints
+        taskTitleLabel: 'Task Title',
+        taskTitleHint: 'Give your task a clear, actionable name. E.g., "Complete morning workout" or "Review vocabulary list".',
+        taskDescLabel: 'Description',
+        taskDescHint: 'Add optional details about the task. What needs to be done? Any specific requirements?',
+        pointsLabel: 'Points',
+        pointsHint: 'Set reward points for success (+) and penalty points for failure (-). Higher points for harder tasks!',
+        frequencyLabel: 'Frequency',
+        frequencyHint: 'How often should this task repeat? One-time tasks are removed after completion.',
 
         // Status labels
         completed: 'Completed',
@@ -666,9 +771,17 @@ export default {
         // History/Date
         selectDate: 'Select date',
         noTasksForDate: 'No tasks found for selected date',
+        noHistoryHint: 'Complete some tasks to see them here',
         deleteHistoryRecord: 'Delete history record',
         confirmDeleteHistoryRecord: 'Are you sure you want to delete this history record?',
         historyRecordDeleted: 'History record deleted',
+        previousDay: 'Previous day',
+        nextDay: 'Next day',
+        today: 'Today',
+        goToToday: 'Go to Today',
+        tasks: 'tasks',
+        restore: 'Restore',
+        restoreTask: 'Restore task to pending',
 
         // Analytics labels
         barChart: 'Bar Chart',
@@ -735,6 +848,7 @@ export default {
         maxRank: 'Max Rank',
         nextRank: 'Next: {rank}',
         maxRankReached: 'Max rank reached',
+        toGo: 'to go',
         placeholderImage: 'Placeholder',
         ranks: {
             legendary: 'Legendary',

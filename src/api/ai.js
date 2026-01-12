@@ -1,17 +1,6 @@
 import request from '@/router/axios'
 import kiwiConsts from '@/const/kiwiConsts'
 
-export function callAiChatCompletion(selectedMode, targetLanguage, nativeLanguage, originalText) {
-    console.log('callAiChatCompletion selectedMode: ' + selectedMode + ' targetLanguage: ' + targetLanguage + ' nativeLanguage: ' + nativeLanguage + ' originalText: ' + originalText)
-    return request({
-        url: `${kiwiConsts.API_BASE.AI_BIZ}/v2/${selectedMode}/${targetLanguage}/${nativeLanguage}/${encodeURIComponent(encodeURIComponent(originalText))}`,
-        headers: {
-            isToken: true
-        },
-        method: 'get'
-    })
-}
-
 // AI Call History API calls
 export function getAiCallHistory(current, size, filter = null) {
     const params = {
@@ -86,7 +75,7 @@ export function submitChannel(channelLinkOrName) {
 
 export function getChannelVideos(channelId, current, size) {
     return request({
-        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/videos`,
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/id/${channelId}/videos`,
         method: 'get',
         params: {
             current: current,
@@ -101,7 +90,7 @@ export function getChannelVideos(channelId, current, size) {
 // Favorites API
 export function favoriteChannel(channelId) {
   return request({
-    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/id/${channelId}/favorite`,
     method: 'post',
     headers: { isToken: true }
   })
@@ -109,7 +98,7 @@ export function favoriteChannel(channelId) {
 
 export function unfavoriteChannel(channelId) {
   return request({
-    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/${channelId}/favorite`,
+    url: `${kiwiConsts.API_BASE.AI_BIZ}/ytb/channel/id/${channelId}/favorite`,
     method: 'delete',
     headers: { isToken: true }
   })
@@ -199,6 +188,17 @@ export function downloadVideoScrollingSubtitles(videoUrl) {
     });
 }
 
+export function downloadVideoScrollingSubtitlesEnhanced(videoUrl) {
+    const url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles/scrolling-enhancement?url=${encodeURIComponent(videoUrl)}`;
+    return request({
+        url: url,
+        headers: {
+            isToken: true
+        },
+        method: 'get'
+    });
+}
+
 export function downloadVideoTranslatedSubtitles(videoUrl, language) {
     let url = `${kiwiConsts.API_BASE.AI_BIZ}/ytb/video/subtitles/translated?url=${encodeURIComponent(videoUrl)}`;
     if (language) {
@@ -264,4 +264,65 @@ export function getVideoTitle(videoUrl) {
         },
         method: 'get'
     })
+}
+
+// ==================== AI Conversation Generator API ====================
+
+/**
+ * Get conversation generator configuration
+ */
+export function getConversationConfig() {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/config`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * Get conversation by ID
+ */
+export function getConversationById(id) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${id}`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * List user's conversations
+ */
+export function listConversations() {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/list`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * Delete conversation (soft delete)
+ */
+export function deleteConversation(id) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${id}`,
+        method: 'delete',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+/**
+ * Get audio stream URL for a message
+ */
+export function getConversationAudioUrl(conversationId, messageId) {
+    return `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${conversationId}/audio/${messageId}`
 }

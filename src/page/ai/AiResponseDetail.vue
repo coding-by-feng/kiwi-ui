@@ -1,9 +1,7 @@
 <template>
   <div class="ai-container">
-    <h1>{{ getTitle }}</h1>
-
     <!-- Beautiful Original Text Display -->
-    <div class="original-text-container">
+    <div v-if="showOriginalTextContainer" class="original-text-container">
       <h3 class="original-text-title" @click="toggleOriginalText">
         <span class="title-text">Original Text(Select text to explain based on the sentences context)</span>
         <i :class="originalTextCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'" class="collapse-icon"></i>
@@ -20,52 +18,13 @@
     </div>
 
     <!-- Selection Popup Modal -->
-    <el-dialog
-        title="Explain Selected Text"
-        :visible.sync="selectionDialogVisible"
-        width="500px"
-        :before-close="handleCloseSelectionDialog"
-    >
-      <div class="selection-dialog-content">
-        <div class="selected-text-preview">
-          <strong>Selected Text:</strong>
-          <div class="selected-text">{{ selectedText }}</div>
-        </div>
-
-        <div class="dialog-actions">
-          <p>Would you like to get an explanation for the selected text?</p>
-        </div>
-      </div>
-
-      <div slot="footer" class="selection-dialog-footer">
-        <el-button
-            size="small"
-            type="success"
-            plain
-            icon="el-icon-document-copy"
-            :disabled="!selectedText"
-            @click="copySelectedText"
-        >
-          Copy Selection
-        </el-button>
-        <el-button
-            size="small"
-            type="info"
-            @click="searchOnDictionary"
-            icon="el-icon-search"
-        >
-          Search on Dictionary
-        </el-button>
-        <el-button
-            size="small"
-            type="primary"
-            @click="explainSelectedText"
-            :loading="selectionApiLoading"
-        >
-          Explain Selection
-        </el-button>
-      </div>
-    </el-dialog>
+    <!-- Selection Popup Modal -->
+    <AiSelectionPopup
+      :visible.sync="selectionDialogVisible"
+      :selectedText="selectedText"
+      title="Explain Selected Text"
+      :auto-request="false"
+    />
 
     <!-- Multiple Selection Response Displays -->
     <div v-for="item in selectionExplanations" :key="item.id" class="selection-response-container">
@@ -73,22 +32,22 @@
         <i class="el-icon-chat-dot-square"></i>
         Explanation for Selected Text
         <span class="selection-title-controls">
-          <el-button
+          <KiwiButton
               class="fold-selection-button"
               type="text"
               :icon="item.collapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'"
               @click="toggleExplanationContent(item)"
               :disabled="item.apiLoading"
               :title="item.collapsed ? 'Expand explanation' : 'Collapse explanation'"
-          ></el-button>
-          <el-button
+          />
+          <KiwiButton
               class="close-selection-button"
               type="text"
               icon="el-icon-close"
               @click="closeSingleExplanation(item)"
               :disabled="item.apiLoading"
               title="Close explanation"
-          ></el-button>
+          />
         </span>
       </h3>
       <div class="selected-text-reference">
@@ -102,8 +61,14 @@
           @mouseup="handleTextSelectionFromExplanation($event, item)"
           @touchend="handleTextSelectionFromExplanation($event, item)"
       >
-        <div v-show="item.isStreaming" class="streaming-indicator">
-          <i class="el-icon-loading"></i> Generating explanation...
+        <div v-show="item.isStreaming" class="streaming-indicator-wrapper" style="position: relative; min-height: 60px;">
+          <StatusOverlay
+            :visible="true"
+            status="loading"
+            title="Generating explanation..."
+            :backdrop="false"
+            style="position: absolute;"
+          />
         </div>
         <div v-html="parseMarkdown(item.responseText)"></div>
       </div>
@@ -111,8 +76,14 @@
 
     <!-- Original Response Container -->
     <div class="response-container">
-      <div v-show="isStreaming" class="streaming-indicator">
-        <i class="el-icon-loading"></i> Streaming response...
+      <div v-show="isStreaming" class="streaming-indicator-wrapper" style="position: relative; min-height: 60px;">
+        <StatusOverlay
+          :visible="true"
+          status="loading"
+          title="Streaming response..."
+          :backdrop="false"
+          style="position: absolute;"
+        />
       </div>
       <div v-if="lastErrorMessage" class="inline-error">{{ lastErrorMessage }}</div>
       <div
@@ -123,15 +94,15 @@
         @mouseup="handleTextSelectionFromMainResponse"
         @touchend="handleTextSelectionFromMainResponse"
       ></div>
-      <el-button
+      <KiwiButton
           v-if="!apiLoading && parsedResponseText"
           class="copy-button"
           size="small"
           icon="el-icon-document-copy"
           @click="copyResponseText">
         Copy
-      </el-button>
-      <el-button
+      </KiwiButton>
+      <KiwiButton
           v-if="!apiLoading && parsedResponseText"
           class="regen-button"
           size="small"
@@ -139,20 +110,23 @@
           :title="'Regenerate response'"
           @click="regenerateResponse">
         Regenerate
-      </el-button>
+      </KiwiButton>
     </div>
   </div>
 </template>
 
 <script>
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
 import util from '@/util/util'
 import kiwiConsts from '@/const/kiwiConsts'
 import MarkdownIt from 'markdown-it';
 import {getStore} from '@/util/store'
-import { callAiChatCompletion } from '@/api/ai'
 // Import the language utility function
 import { getInitialSelectedLanguage } from '@/util/langUtil';
 import msgUtil from '@/util/msg';
+import { mapMutations } from 'vuex';
 
 const md = new MarkdownIt({
   html: true,
@@ -164,6 +138,7 @@ let that;
 
 export default {
   name: 'AiResponseDetail',
+  components: { StatusOverlay, AiSelectionPopup, KiwiButton },
   data() {
     return {
       aiResponseVO: {
@@ -264,6 +239,10 @@ export default {
         return originalText;
       }
     },
+    // Modes that don't need the original text container (vocabulary-focused modes)
+    showOriginalTextContainer() {
+      return !kiwiConsts.AI_MODES_WITHOUT_ORIGINAL_TEXT.includes(this.validSelectedMode);
+    },
     defaultTargetLanguage() {
       // Use the extracted utility function to get the language for the current mode
       if (this.$route.query.language) {
@@ -277,8 +256,8 @@ export default {
       return getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) ? getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     },
     isWsOnly() {
-      // Force wsOnly off to avoid repeated refreshes and duplicate calls
-      return false
+      // Always use WebSocket only, no HTTP fallback
+      return true
     },
     coreQueryKey() {
       const q = this.$route && this.$route.query ? this.$route.query : {}
@@ -290,23 +269,37 @@ export default {
     }
   },
   watch: {
+    // Clear selectedText when dialog closes so re-selecting same text triggers the watcher
+    selectionDialogVisible(val) {
+      if (!val) {
+        this.selectedText = '';
+      }
+    },
     '$route.query': {
       deep: true,
       handler(newQ, oldQ) {
         try {
+          // If user switched away from search tab, don't re-initialize - keep content
+          if (newQ.active && newQ.active !== 'search') {
+            return
+          }
+
+          // Build comparison keys - include 'now' to allow explicit retry requests
           const newKey = [
             String(newQ.selectedMode || ''),
             String(newQ.language || ''),
             String(newQ.nativeLanguage || ''),
-            String(newQ.originalText || '')
+            String(newQ.originalText || ''),
+            String(newQ.now || '')
           ].join('|')
           const oldKey = [
             String(oldQ && oldQ.selectedMode || ''),
             String(oldQ && oldQ.language || ''),
             String(oldQ && oldQ.nativeLanguage || ''),
-            String(oldQ && oldQ.originalText || '')
+            String(oldQ && oldQ.originalText || ''),
+            String(oldQ && oldQ.now || '')
           ].join('|')
-          // Ignore route churn if core inputs haven’t changed
+          // Ignore route churn if core inputs haven't changed
           if (newKey === oldKey) return
           // Otherwise, re-initialize once with new core inputs
           this.initializeFromRoute()
@@ -317,13 +310,41 @@ export default {
     }
   },
   beforeDestroy() {
-    // Clean up active websocket connections when leaving the page
+    // Only clean up when component is actually destroyed (not just deactivated by keep-alive)
+    // This ensures WebSocket connections continue when switching tabs
+    // Clean up active websocket connections when leaving the page permanently
     this.closeWebSocket('main');
     // Close all selection websockets
     this.closeSelectionResponse();
+    // Clear Vuex store loading state
+    this.setApiLoading({ loading: false, cancelCallback: null });
   },
+  // Note: We intentionally do NOT close WebSocket in deactivated() hook
+  // to allow API calls to continue when user switches tabs
   methods: {
     ...msgUtil,
+    ...mapMutations(['setApiLoading']),
+
+    // Cancel all active WebSocket connections (called from Vuex store when user clicks stop button)
+    cancelAllRequests() {
+      this.closeWebSocket('all');
+      this.apiLoading = false;
+      this.isStreaming = false;
+      this.selectionApiLoading = false;
+      this.isSelectionStreaming = false;
+      // Close all selection explanation websockets
+      if (Array.isArray(this.selectionExplanations)) {
+        this.selectionExplanations.forEach(it => {
+          try { if (it.websocket) { it.websocket.close(); } } catch (e) { /* ignore */ }
+          it.websocket = null;
+          it.apiLoading = false;
+          it.isStreaming = false;
+        });
+      }
+      // Clear Vuex store loading state
+      this.setApiLoading({ loading: false, cancelCallback: null });
+    },
+
     // Safely close websocket(s) by type
     closeWebSocket(type) {
       try {
@@ -367,6 +388,9 @@ export default {
       // Ensure any active streams are closed and stacked explanations cleared
       this.closeWebSocket('all');
       this.closeSelectionResponse();
+
+      // Clear Vuex store loading state since we're starting fresh
+      this.setApiLoading({ loading: false, cancelCallback: null });
 
       // Reset per-request state
       this.apiLoading = false;
@@ -777,6 +801,12 @@ export default {
         that._mainWsAttempts += 1
         that._mainWsHadData = false
         that._mainFallbackInFlight = false
+
+        // Register loading state with Vuex store for Search.vue to display stop button
+        that.setApiLoading({
+          loading: true,
+          cancelCallback: () => that.cancelAllRequests()
+        });
       }
 
       that[loadingKey] = true;
@@ -844,13 +874,15 @@ export default {
         }
       };
 
+      let retryScheduled = false
       const maybeRetryOrFallback = () => {
         // Only for main, only if no data yet
         if (isSelection) return
         if (that._mainWsHadData) return
-        const wsOnly = that.isWsOnly === true
+        if (retryScheduled) return // Prevent duplicate retry from onerror + onclose
         // Retry up to max attempts
         if (that._mainWsAttempts < that._mainWsMaxAttempts) {
+          retryScheduled = true
           const backoff = 200 * Math.pow(2, that._mainWsAttempts - 1) // 200ms, 400ms
           console.log(`WS retry ${that._mainWsAttempts} scheduled in ${backoff}ms`)
           setTimeout(() => {
@@ -868,13 +900,8 @@ export default {
           }, backoff)
         } else if (!that._mainFallbackInFlight) {
           that._mainFallbackInFlight = true
-          if (wsOnly) {
-            console.log('WS-only mode: skipping HTTP fallback and surfacing error')
-            that.handleError('Realtime connection failed. Please try again or check your network.');
-          } else {
-            console.log('WS failed to start streaming; falling back to HTTP API')
-            that.fetchViaHttpFallback()
-          }
+          console.log('WS retries exhausted, surfacing error')
+          that.handleError('Realtime connection failed. Please try again or check your network.');
         }
       }
 
@@ -893,29 +920,6 @@ export default {
         that[streamingKey] = false;
         if (!isSelection) maybeRetryOrFallback()
       };
-    },
-
-    // HTTP fallback when WS cannot be established
-    async fetchViaHttpFallback() {
-      try {
-        const info = this._lastMainRequest
-        if (!info) throw new Error('No request context for fallback')
-        const res = await callAiChatCompletion(info.selectedMode, info.targetLanguage, info.nativeLanguage, info.decodedText)
-        const data = (res && res.data && res.data.data) || ''
-        // Post-validate fallback payload to ensure only responseText is used
-        const extracted = this.extractResponseTextFromPayload(data)
-        const finalText = (typeof extracted === 'string' && extracted.length > 0)
-          ? extracted
-          : (typeof data === 'string' ? data : JSON.stringify(data))
-        this.aiResponseVO.responseText = finalText
-        this.apiLoading = false
-        this.isStreaming = false
-        this.lastErrorMessage = ''
-        this.persistNow()
-      } catch (e) {
-        console.error('HTTP fallback failed:', e && (e.message || e))
-        this.handleError('AI request failed (WS and HTTP). Please try again later.')
-      }
     },
 
     // Simplified main AI request method
@@ -971,6 +975,9 @@ export default {
           console.log('AI streaming completed');
           that.isStreaming = false;
           that.apiLoading = false;
+
+          // Clear Vuex store loading state
+          that.setApiLoading({ loading: false, cancelCallback: null });
 
           // Use fullResponse if available (it should be properly formatted)
           // Then post-validate to extract only responseText as the final result
@@ -1043,8 +1050,8 @@ export default {
               : that.selectionResponseText;
             const extracted = this.extractResponseTextFromPayload(finalPayload);
             that.selectionResponseText = (typeof extracted === 'string' && extracted.length > 0)
-              ? extracted
-              : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+                ? extracted
+                : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
           } catch (_) {
             if (response.fullResponse) {
               that.selectionResponseText = response.fullResponse;
@@ -1075,6 +1082,9 @@ export default {
       // Stop all loading states immediately
       that.apiLoading = false;
       that.isStreaming = false;
+
+      // Clear Vuex store loading state
+      that.setApiLoading({ loading: false, cancelCallback: null });
 
       // Close WebSocket connection
       that.closeWebSocket('main');
@@ -1213,258 +1223,243 @@ export default {
 }
 </script>
 
+
+
 <style scoped>
-/* Original Text Container Styles */
+.ai-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-primary);
+}
+
+h1 {
+  text-align: center;
+  color: var(--text-primary);
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Original Text Styling */
 .original-text-container {
-  margin: 20px 0 30px 0;
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 30px;
   overflow: hidden;
+  border: 1px solid var(--border-color-light);
+  transition: all 0.3s ease;
+  backdrop-filter: var(--backdrop-filter);
+}
+
+.original-text-container:hover {
+  box-shadow: var(--shadow-hover);
 }
 
 .original-text-title {
+  background: var(--bg-header);
+  padding: 15px 20px;
   margin: 0;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   cursor: pointer;
   user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: all 0.3s ease;
 }
 
 .original-text-title:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
-  transform: translateY(-1px);
+  background: var(--bg-container);
 }
 
 .title-text {
-  flex: 1;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .collapse-icon {
-  font-size: 14px;
-  transition: transform 0.3s ease;
+  color: var(--icon-color);
+  transition: transform 0.3s;
 }
 
 .original-text-content {
   padding: 20px;
-  font-size: 15px;
+  font-size: 1.1rem;
   line-height: 1.8;
-  color: #2c3e50;
-  background: white;
-  cursor: text;
-  user-select: text;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
+  color: var(--text-primary);
   white-space: pre-wrap;
-  word-wrap: break-word;
-  transition: all 0.3s ease;
-  overflow: hidden;
 }
 
-.original-text-content:hover {
-  background: #fafbfc;
-}
-
-.original-text-content::selection {
-  background: rgba(64, 158, 255, 0.2);
-  color: #2c3e50;
-}
-
-.original-text-content::-moz-selection {
-  background: rgba(64, 158, 255, 0.2);
-  color: #2c3e50;
-}
-
-/* Selection Dialog Styles */
+/* Selection Popup Styling */
 .selection-dialog-content {
   padding: 10px 0;
 }
 
 .selected-text-preview {
+  background: var(--bg-container);
+  padding: 15px;
+  border-radius: 8px;
   margin-bottom: 20px;
+  border-left: 4px solid var(--color-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.selected-text-preview strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .selected-text {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 8px;
   font-style: italic;
-  color: #495057;
+  color: var(--text-primary);
   line-height: 1.6;
-  max-height: 120px;
+  max-height: 150px;
   overflow-y: auto;
 }
 
-/* Selection Response Container Styles */
+.dialog-actions {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+/* Multiple Selection Response Styling */
 .selection-response-container {
-  margin: 30px 0;
-  border: 1px solid #d4edda;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  background: var(--bg-card);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 25px;
+  padding: 25px;
+  border: 1px solid var(--border-color-light);
   position: relative;
-  overflow: hidden;
+  animation: slideIn 0.4s ease-out;
+  backdrop-filter: var(--backdrop-filter);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .selection-response-title {
-  margin: 0;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  position: relative;
+  color: var(--color-primary);
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--divider-color);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  font-size: 1.3rem;
 }
 
 .selection-response-title i {
-  margin-right: 8px;
+  margin-right: 10px;
+  font-size: 1.4rem;
 }
 
-/* Selection title controls styling */
 .selection-title-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  margin-left: auto;
+  display: flex;
+  gap: 5px;
 }
 
 .fold-selection-button,
 .close-selection-button {
-  color: white !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 4px 8px !important;
-  font-size: 16px !important;
-  transition: all 0.3s ease;
-  border-radius: 4px !important;
-  min-width: auto !important;
+  padding: 4px 8px;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
 }
 
-.fold-selection-button:hover:not(.is-disabled),
-.close-selection-button:hover:not(.is-disabled) {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-}
-
-.fold-selection-button:focus,
-.close-selection-button:focus {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-}
-
-.fold-selection-button.is-disabled,
-.close-selection-button.is-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.fold-selection-button:hover,
+.close-selection-button:hover {
+  color: var(--color-primary);
+  background-color: var(--bg-container);
+  border-radius: 4px;
 }
 
 .selected-text-reference {
-  background: rgba(23, 162, 184, 0.1);
-  border-bottom: 1px solid rgba(23, 162, 184, 0.2);
-  padding: 12px 20px;
-  font-size: 13px;
-  color: #0c7489;
-  font-style: italic;
+  background: var(--bg-container);
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  border-left: 3px solid var(--color-info);
 }
 
 .selection-response-content {
-  padding: 20px;
-  background: white;
-  min-height: 60px;
-  line-height: 1.7;
-  color: #2c3e50;
+  line-height: 1.8;
+  color: var(--text-primary);
+  font-size: 1.05rem;
 }
 
-/* Existing styles */
-.response-container > div {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-}
-
+/* Main Response Styling */
 .response-container {
   position: relative;
   padding-top: 40px;
 }
 
-
 .copy-button {
   position: absolute;
   top: 0;
   right: 0;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-  border: none !important;
-  color: white !important;
-  transition: all 0.3s ease;
-  border-radius: 6px !important;
-}
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+  transition: var(--transition-normal);
+  border-radius: var(--radius-md);
 
-.copy-button:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-}
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
 
-.copy-button:focus {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3);
-}
+  &:focus {
+    opacity: 0.9;
+    box-shadow: 0 0 0 2px var(--color-primary-light-9);
+  }
 
-.copy-button:active {
-  transform: translateY(0px);
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .regen-button {
   position: absolute;
   top: 0;
   right: 100px;
-  background: linear-gradient(135deg, #f56c6c 0%, #d9534f 100%) !important;
-  border: none !important;
-  color: white !important;
-  transition: all 0.3s ease;
-  border-radius: 6px !important;
+  background: var(--gradient-danger);
+  border: none;
+  color: white;
+  transition: var(--transition-normal);
+  border-radius: var(--radius-md);
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  &:focus {
+    opacity: 0.9;
+    color: white;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
-.regen-button:hover {
-  background: linear-gradient(135deg, #e55b5b 0%, #c9302c 100%) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 108, 108, 0.3);
-}
-
-.regen-button:focus {
-  background: linear-gradient(135deg, #e55b5b 0%, #c9302c 100%) !important;
-  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.3);
-}
-
-.regen-button:active {
-  transform: translateY(0px);
-}
-
-.streaming-indicator {
-  color: #409EFF;
-  font-style: italic;
-  margin-bottom: 10px;
-}
-
-.streaming-indicator i {
-  margin-right: 5px;
-}
 
 /* Dialog footer styles */
 .dialog-footer {
@@ -1480,12 +1475,12 @@ export default {
   border-radius: 8px;
   min-width: 140px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .dialog-footer .el-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
 }
 
 .dialog-footer .el-button:active {
@@ -1494,36 +1489,28 @@ export default {
 
 /* Dictionary button specific styling */
 .dialog-footer .el-button--info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
-  border: none !important;
-  color: white !important;
-}
+  background: var(--gradient-info);
+  border: none;
+  color: white;
 
-.dialog-footer .el-button--info:hover {
-  background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-  color: white !important;
-}
-
-.dialog-footer .el-button--info:focus {
-  background: linear-gradient(135deg, #82848a 0%, #565a5f 100%) !important;
-  color: white !important;
+  &:hover,
+  &:focus {
+    opacity: 0.9;
+    color: white;
+  }
 }
 
 /* Primary button (Explain Selection) specific styling */
 .dialog-footer .el-button--primary {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-  border: none !important;
-  color: white !important;
-}
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
 
-.dialog-footer .el-button--primary:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  color: white !important;
-}
-
-.dialog-footer .el-button--primary:focus {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%) !important;
-  color: white !important;
+  &:hover,
+  &:focus {
+    opacity: 0.9;
+    color: white;
+  }
 }
 
 /* Align footer buttons in Explain Selected Text dialog */
@@ -1549,13 +1536,279 @@ export default {
 }
 
 .inline-error {
-  color: #f56c6c;
-  background: #fdecea;
-  border: 1px solid #f5c2c0;
+  color: var(--color-danger);
+  background: rgba(245, 108, 108, 0.1);
+  border: 1px solid rgba(245, 108, 108, 0.2);
   border-radius: 6px;
   padding: 10px 12px;
   margin-bottom: 12px;
 }
 
-.main-response-content { text-align: left; margin-bottom: 40px; }
+.main-response-content { text-align: left; margin-bottom: 40px; color: var(--text-primary); }
+</style>
+<style lang="scss" scoped>
+// Responsive styles for AI Response Detail
+@media (max-width: 992px) {
+  .ai-container {
+    max-width: 100%;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ai-container {
+    padding: 14px;
+    // Allow text selection by default
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  // Original text container
+  .original-text-container {
+    margin-bottom: 20px;
+    border-radius: 12px;
+  }
+
+  .original-text-title {
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .title-text {
+    font-size: 14px;
+  }
+
+  .original-text-content {
+    padding: 14px;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  // Selection response container
+  .selection-response-container {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .selection-response-title {
+    font-size: 1.1rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .selection-response-title i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+  }
+
+  .selection-title-controls {
+    margin-left: auto;
+  }
+
+  .selected-text-reference {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+  }
+
+  .selection-response-content {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  // Main response container
+  .response-container {
+    padding-top: 50px;
+  }
+
+  .copy-button,
+  .regen-button {
+    position: static;
+    display: inline-flex;
+    margin-right: 8px;
+    margin-bottom: 12px;
+  }
+
+  .main-response-content {
+    margin-bottom: 20px;
+  }
+
+  // Selection dialog footer
+  .dialog-footer {
+    padding: 14px 16px;
+  }
+
+  .dialog-footer .el-button {
+    padding: 10px 18px;
+    font-size: 13px;
+    min-width: 120px;
+    margin: 4px;
+  }
+
+  // Ensure content areas are selectable
+  .original-text-content,
+  .selection-response-content,
+  .main-response-content,
+  .selected-text-reference {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  // Only disable selection on UI elements like titles and buttons
+  .original-text-title,
+  .selection-response-title,
+  .dialog-footer,
+  .selection-dialog-footer {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  // Inline error styling
+  .inline-error {
+    padding: 8px 10px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ai-container {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .original-text-title {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+
+  .original-text-content {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+
+  .selection-response-container {
+    padding: 14px;
+  }
+
+  .selection-response-title {
+    font-size: 1rem;
+  }
+
+  .response-container {
+    padding-top: 0;
+  }
+
+  .copy-button,
+  .regen-button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 8px;
+    justify-content: center;
+  }
+
+  .dialog-footer .el-button {
+    width: 100%;
+    margin: 4px 0;
+  }
+
+  .selection-dialog-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .selection-dialog-footer .el-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-container {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+  }
+
+  .original-text-container {
+    margin-bottom: 14px;
+  }
+
+  .original-text-title {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .collapse-icon {
+    font-size: 14px;
+  }
+
+  .original-text-content {
+    padding: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .selection-response-container {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .selection-response-title {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .fold-selection-button,
+  .close-selection-button {
+    padding: 3px 6px;
+    font-size: 1rem;
+  }
+
+  .selected-text-reference {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  .selection-response-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .main-response-content {
+    font-size: 0.95rem;
+  }
+
+  // Selected text preview in dialog
+  .selected-text-preview {
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
+  .selected-text-preview strong {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  .selected-text {
+    font-size: 0.9rem;
+    max-height: 100px;
+  }
+}
 </style>

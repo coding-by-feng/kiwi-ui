@@ -1,120 +1,192 @@
 <template>
-  <div class="todo-gamification">
-    <el-card class="main-card">
-      <div slot="header">
+  <div>
+    <div class="main-card">
+      <div class="card-header">
         <TodoHeader
           :total-points="totalPoints"
           :current-rank="currentRankDisplay"
-          :sorted-ranks-for-display="sortedRanksForDisplay"
           :rank-progress="rankProgress"
           :get-rank-name="key => getRankName(key)"
           :get-rank-class="name => getRankClass(name)"
           :get-rank-image="name => getRankImage(name)"
           :get-rank-color="name => getRankColor(name)"
-          :get-next-rank-image="() => getNextRankImage()"
-          :on-rank-image-error="e => onRankImageError(e)"
           @demo="createDemoTasks"
           @clear="clearAllData"
           @open-rank-image="openRankImagePreview"
+          @open-all-ranks="openAllRanksDialog"
         />
       </div>
 
-      <el-tabs v-model="activeTab" type="card" class="responsive-tabs">
-        <el-tab-pane :label="$t('todo.taskList')" name="tasks">
-          <TaskInput :new-task="newTask" :on-add="() => addTask()" />
-          <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
-          <TaskList
-            :tasks="filteredTasks"
-            :editing-task-id="editingTaskId"
-            :editing-task="editingTask"
-            :empty-description="emptyDescriptionText"
-            :get-task-status-class="s => getTaskStatusClass(s)"
-            :get-frequency-text="(f, d) => getFrequencyText(f, d)"
-            :should-show-done-tag="t => shouldShowDoneTag(t)"
-            :should-show-status-display="t => shouldShowStatusDisplay(t)"
-            :get-completion-tag-type="t => getCompletionTagType(t)"
-            :get-completion-tag-text="t => getCompletionTagText(t)"
-            :should-show-status-actions="t => shouldShowStatusActions(t)"
-            :should-show-reset-action="t => shouldShowResetAction(t)"
-            :on-complete="(id, status) => completeTask(id, status)"
-            :on-start-edit="t => startTaskEdit(t)"
-            :on-save-edit="id => saveTaskEdit(id)"
-            :on-cancel-edit="() => cancelTaskEdit()"
-            :on-delete="id => deleteTask(id)"
-            :on-reset-status="id => resetTaskStatus(id)"
-          />
-        </el-tab-pane>
-
-        <el-tab-pane :label="$t('todo.history')" name="history">
-          <HistoryPanel
-            :selected-date="selectedDate"
-            :history-tasks="historyTasks"
-            :format-date="d => formatDate(d)"
-            :format-time="d => formatTime(d)"
-            :get-task-status-class="s => getTaskStatusClass(s)"
-            :on-date-changed="d => loadHistoryForDate(d)"
-            :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
-          />
-        </el-tab-pane>
-
-        <el-tab-pane :label="$t('todo.trash')" name="trash">
-          <TrashList
-            :trashed-tasks="trashedTasks"
-            :format-date="d => formatDate(d)"
-            :on-restore-task="id => restoreTask(id)"
-            :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
-            :on-clear-trash-click="() => clearTrash()"
-          />
-        </el-tab-pane>
-
-        <el-tab-pane :label="$t('todo.analytics')" name="analytics">
-          <AnalyticsPanel
-            :chart-type.sync="chartType"
-            :monthly-data="getMonthlyData()"
-            :current-month-points="currentMonthPoints"
-            :current-month-completed="currentMonthCompleted"
-            :success-rate="successRate"
-          />
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
-
-
-    <el-dialog :visible.sync="showFullScreenRanking" width="90%" :before-close="closeFullScreenRanking" custom-class="full-screen-ranking-modal" :show-close="false">
-      <div class="full-screen-ranking-header">
-        <h2 class="modal-title">{{ $t('todo.rankingSystem') }}</h2>
-        <el-button type="primary" icon="el-icon-close" circle @click="closeFullScreenRanking" class="close-btn"></el-button>
-      </div>
-
-      <div class="full-screen-ranking-content">
-        <div class="current-rank-showcase">
-          <div class="showcase-rank-icon">
-            <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="showcase-rank-image" />
+      <div class="card-body">
+        <!-- Custom Tabs -->
+        <div class="kiwi-tabs">
+          <div class="kiwi-tabs-header">
+            <div 
+              v-for="tab in tabs" 
+              :key="tab.name" 
+              class="kiwi-tab-item" 
+              :class="{ active: activeTab === tab.name }"
+              @click="activeTab = tab.name"
+            >
+              {{ $t(tab.label) }}
+            </div>
           </div>
-          <div class="showcase-rank-info">
-            <h3 class="showcase-rank-name">{{ currentRankDisplay.name }}</h3>
-            <p class="showcase-rank-level">{{ $t('todo.rankLevel', { level: currentRankDisplay.level }) }}</p>
-            <p class="showcase-rank-points">{{ totalPoints }} {{ $t('todo.points') }}</p>
-          </div>
-        </div>
+          
+          <div class="kiwi-tabs-content">
+            <div v-if="activeTab === 'tasks'" class="tab-pane fade-in">
+              <TaskInput :new-task="newTask" :on-add="() => addTask()" />
+              <TaskFilters :task-filter.sync="taskFilter" :frequency-filter.sync="frequencyFilter" @reset-all="resetAllTaskStatuses" />
+              <TaskList
+                :tasks="filteredTasks"
+                :editing-task-id="editingTaskId"
+                :editing-task="editingTask"
+                :empty-description="emptyDescriptionText"
+                :get-task-status-class="s => getTaskStatusClass(s)"
+                :get-frequency-text="(f, d) => getFrequencyText(f, d)"
+                :should-show-done-tag="t => shouldShowDoneTag(t)"
+                :should-show-status-display="t => shouldShowStatusDisplay(t)"
+                :get-completion-tag-type="t => getCompletionTagType(t)"
+                :get-completion-tag-text="t => getCompletionTagText(t)"
+                :should-show-status-actions="t => shouldShowStatusActions(t)"
+                :should-show-reset-action="t => shouldShowResetAction(t)"
+                :on-complete="(id, status) => completeTask(id, status)"
+                :on-start-edit="t => startTaskEdit(t)"
+                :on-save-edit="id => saveTaskEdit(id)"
+                :on-cancel-edit="() => cancelTaskEdit()"
+                :on-delete="id => deleteTask(id)"
+                :on-reset-status="id => resetTaskStatus(id)"
+              />
+            </div>
 
-        <div class="full-screen-ranks-grid">
-          <div v-for="rank in achievedRanksForDisplay" :key="`fullscreen-rank-${rank.key}-${rank.threshold}`" class="full-screen-rank-item" :class="{ 'current-rank': rank.threshold <= totalPoints }">
-            <img :src="rank.image" :alt="getRankName(rank.key)" class="full-screen-rank-image" />
-            <div class="full-screen-rank-details">
-              <span class="full-screen-rank-name">{{ getRankName(rank.key) }}</span>
-              <span class="full-screen-rank-threshold">{{ rank.threshold }}+ {{ $t('todo.points') }}</span>
+            <div v-if="activeTab === 'history'" class="tab-pane fade-in">
+              <HistoryPanel
+                :selected-date="selectedDate"
+                :history-tasks="historyTasks"
+                :format-date="d => formatDate(d)"
+                :format-time="d => formatTime(d)"
+                :get-task-status-class="s => getTaskStatusClass(s)"
+                :on-date-changed="d => loadHistoryForDate(d)"
+                :on-delete-history-record="(id, originalDate) => deleteHistoryRecord(id, originalDate)"
+              />
+            </div>
+
+            <div v-if="activeTab === 'trash'" class="tab-pane fade-in">
+              <TrashList
+                :trashed-tasks="trashedTasks"
+                :format-date="d => formatDate(d)"
+                :on-restore-task="id => restoreTask(id)"
+                :on-permanently-delete-task="id => permanentlyDeleteTask(id)"
+                :on-clear-trash-click="() => clearTrash()"
+              />
+            </div>
+
+            <div v-if="activeTab === 'analytics'" class="tab-pane fade-in">
+              <AnalyticsPanel
+                :chart-type.sync="chartType"
+                :monthly-data="getMonthlyData()"
+                :current-month-points="currentMonthPoints"
+                :current-month-completed="currentMonthCompleted"
+                :success-rate="successRate"
+              />
             </div>
           </div>
         </div>
       </div>
-    </el-dialog>
+    </div>
 
-    <el-dialog :visible.sync="showRankImagePreview" fullscreen :show-close="false" custom-class="rank-image-preview-dialog">
-      <div class="rank-image-preview-container" @click="showRankImagePreview = false">
-        <img :src="getRankImage(currentRankDisplay.name)" :alt="currentRankDisplay.name" class="rank-image-fullscreen" />
+    <!-- Fullscreen Rank Image Preview -->
+    <div v-if="showRankImagePreview" class="rank-image-overlay" @click="closeRankImagePreview">
+      <div class="rank-image-preview-wrapper" @click.stop>
+        <img
+          :src="selectedRankForPreview ? selectedRankForPreview.image : getRankImage(currentRankDisplay.name)"
+          :alt="selectedRankForPreview ? getRankName(selectedRankForPreview.key) : currentRankDisplay.name"
+          class="rank-image-fullscreen"
+          @error="onRankImageError"
+        />
+        <div class="rank-image-caption">
+          <span class="rank-image-name">{{ selectedRankForPreview ? getRankName(selectedRankForPreview.key) : currentRankDisplay.name }}</span>
+          <span class="rank-image-level">{{ $t('todo.rankLevel', { level: selectedRankForPreview ? selectedRankForPreview.level : currentRankDisplay.level }) }}</span>
+          <span class="rank-image-threshold">{{ selectedRankForPreview ? selectedRankForPreview.threshold : currentRankDisplay.threshold }}+ {{ $t('todo.points') }}</span>
+        </div>
+        <button class="rank-image-close" @click.stop="closeRankImagePreview">
+          <i class="el-icon-close"></i>
+        </button>
       </div>
-    </el-dialog>
+    </div>
+
+    <!-- All Rankings Dialog -->
+    <KiwiDialog
+      :visible.sync="showAllRanksDialog"
+      width="90%"
+      :title="$t('todo.rankingSystem')"
+      :show-close="true"
+      custom-class="all-ranks-dialog"
+      @close="showAllRanksDialog = false"
+    >
+      <div class="all-ranks-content">
+        <!-- Current Rank Highlight -->
+        <div class="current-rank-highlight">
+          <div class="highlight-badge">
+            <img
+              :src="getRankImage(currentRankDisplay.name)"
+              :alt="currentRankDisplay.name"
+              class="highlight-image"
+              @error="onRankImageError"
+            />
+          </div>
+          <div class="highlight-info">
+            <div class="highlight-label">{{ $t('todo.currentRank') }}</div>
+            <div class="highlight-name">{{ currentRankDisplay.name }}</div>
+            <div class="highlight-points">{{ totalPoints }} {{ $t('todo.points') }}</div>
+          </div>
+          <div class="highlight-progress" v-if="currentRankDisplay.nextRankName">
+            <div class="progress-to-next">
+              <span>{{ $t('todo.nextRank', { rank: currentRankDisplay.nextRankName }) }}</span>
+              <span class="points-needed">{{ currentRankDisplay.nextThreshold - totalPoints }} {{ $t('todo.points') }} {{ $t('todo.toGo') }}</span>
+            </div>
+            <KiwiProgress :percentage="rankProgress" :show-text="false" :stroke-width="8" :color="getRankColor(currentRankDisplay.name)" />
+          </div>
+          <div class="highlight-max" v-else>
+            <span class="max-rank-badge">{{ $t('todo.maxRankReached') }}</span>
+          </div>
+        </div>
+
+        <!-- All Ranks Grid -->
+        <div class="all-ranks-grid">
+          <div
+            v-for="rank in sortedRanksForDisplay"
+            :key="`all-rank-${rank.key}-${rank.threshold}`"
+            class="rank-card"
+            :class="{
+              'achieved': rank.threshold <= totalPoints,
+              'current': rank.key === currentRankDisplay.key,
+              'locked': rank.threshold > totalPoints,
+              'clickable': rank.threshold <= totalPoints
+            }"
+            @click="rank.threshold <= totalPoints ? openRankDetail(rank) : null"
+          >
+            <div class="rank-card-badge">
+              <img
+                :src="rank.image"
+                :alt="getRankName(rank.key)"
+                class="rank-card-image"
+                @error="onRankImageError"
+              />
+              <div v-if="rank.key === currentRankDisplay.key" class="current-indicator">
+                <i class="el-icon-check"></i>
+              </div>
+              <div v-else-if="rank.threshold > totalPoints" class="locked-indicator">
+                <i class="el-icon-lock"></i>
+              </div>
+            </div>
+            <div class="rank-card-info">
+              <span class="rank-card-name">{{ getRankName(rank.key) }}</span>
+              <span class="rank-card-threshold">{{ rank.threshold }}+ {{ $t('todo.points') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </KiwiDialog>
   </div>
 </template>
 
@@ -152,12 +224,21 @@ const RANK_ASSETS = {
   beginner: { color: '#595959', image: '/assets/rankings/beginner.png' }
 }
 
+import KiwiDialog from '@/components/ui/KiwiDialog.vue'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+
 export default {
   name: 'TodoGamification',
-  components: { TodoHeader, TaskInput, TaskFilters, TaskList, HistoryPanel, TrashList, AnalyticsPanel },
+  components: { TodoHeader, TaskInput, TaskFilters, TaskList, HistoryPanel, TrashList, AnalyticsPanel, KiwiDialog, KiwiButton },
   data() {
     return {
       activeTab: 'tasks',
+      tabs: [
+        { name: 'tasks', label: 'todo.taskList' },
+        { name: 'history', label: 'todo.history' },
+        { name: 'trash', label: 'todo.trash' },
+        { name: 'analytics', label: 'todo.analytics' }
+      ],
       taskFilter: 'all',
       frequencyFilter: 'all',
       newTask: { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 },
@@ -165,8 +246,9 @@ export default {
       chartType: 'bar',
       editingTaskId: null,
       editingTask: { title: '', description: '', successPoints: 10, failPoints: -5, frequency: 'once', customDays: 7 },
-      showFullScreenRanking: false,
       showRankImagePreview: false,
+      showAllRanksDialog: false,
+      selectedRankForPreview: null,
       fallbackRankImage: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" rx="8" fill="#f3f4f6"/><g fill="none" stroke="#cbd5e1" stroke-width="2"><rect x="10" y="10" width="44" height="44" rx="6"/><path d="M16 44l10-12 8 8 6-8 8 12" fill="none"/></g></svg>`),
       // internal holder for analytics summary (reactive)
       _analyticsSummary: { totalPoints: 0, completedCount: 0, successRatePct: 0 }
@@ -225,13 +307,56 @@ export default {
       }
     },
     serverRanksForDisplay() {
-      // merge server ranks with local assets
-      const defs = Array.isArray(this.ranks) ? this.ranks : []
-      return defs.map(r => ({
-        ...r,
-        image: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].image) || '/assets/rankings/beginner.png',
-        color: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].color) || '#595959'
-      }))
+      // merge server ranks with local assets, fallback to all RANK_ASSETS if server data is incomplete
+      const serverDefs = Array.isArray(this.ranks) ? this.ranks : []
+
+      // If server returns ranks, use them merged with local assets
+      if (serverDefs.length >= 20) {
+        return serverDefs.map(r => ({
+          ...r,
+          image: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].image) || '/assets/rankings/beginner.png',
+          color: (RANK_ASSETS[r.key] && RANK_ASSETS[r.key].color) || '#595959'
+        }))
+      }
+
+      // Fallback: use all ranks from RANK_ASSETS with default thresholds
+      const defaultThresholds = {
+        legendary: 1000000,
+        mythic: 500000,
+        immortal: 250000,
+        divine: 100000,
+        celestial: 50000,
+        grandmaster: 30000,
+        master: 20000,
+        diamond: 15000,
+        platinum: 12000,
+        gold: 10000,
+        silver: 8000,
+        bronze: 6000,
+        iron: 5000,
+        steel: 4000,
+        stone: 3000,
+        wood: 2000,
+        apprentice: 1500,
+        novice: 1000,
+        trainee: 500,
+        beginner: 0
+      }
+
+      // Merge server data with fallback
+      const serverByKey = {}
+      serverDefs.forEach(r => { serverByKey[r.key] = r })
+
+      return Object.keys(RANK_ASSETS).map(key => {
+        const serverRank = serverByKey[key]
+        return {
+          key,
+          threshold: serverRank ? serverRank.threshold : defaultThresholds[key],
+          level: serverRank ? serverRank.level : (Object.keys(defaultThresholds).length - Object.keys(defaultThresholds).indexOf(key)),
+          image: RANK_ASSETS[key].image,
+          color: RANK_ASSETS[key].color
+        }
+      })
     },
     sortedRanksForDisplay() { return [...this.serverRanksForDisplay].sort((a,b)=> b.threshold - a.threshold) },
     achievedRanksForDisplay() { return this.sortedRanksForDisplay.filter(r=> r.threshold <= this.totalPoints) },
@@ -296,8 +421,19 @@ export default {
     }),
 
     // UI helpers
-    openRankImagePreview() { this.showRankImagePreview = true },
-    closeFullScreenRanking() { this.showFullScreenRanking = false },
+    openRankImagePreview() {
+      this.selectedRankForPreview = null
+      this.showRankImagePreview = true
+    },
+    closeRankImagePreview() {
+      this.showRankImagePreview = false
+      this.selectedRankForPreview = null
+    },
+    openRankDetail(rank) {
+      this.selectedRankForPreview = rank
+      this.showRankImagePreview = true
+    },
+    openAllRanksDialog() { this.showAllRanksDialog = true },
     getEmptyDescription() {
       switch (this.taskFilter) {
         case 'pending': return this.$t('todo.noPendingTasks') || 'No pending tasks'
@@ -520,21 +656,40 @@ export default {
 }
 
 .main-card {
-  border-radius: 2px;
+  border-radius: var(--card-border-radius);
   overflow: hidden;
+  background: transparent; /* Transparent for cyberpunk theme */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+/* Dark mode support via CSS variables if available, or media query */
+@media (prefers-color-scheme: dark) {
+  .main-card {
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 }
 
 .header {
-  background-color: #f5f7fa;
+  background: transparent; /* Let the main card's glass effect show through */
   padding: 16px;
-  border-bottom: 1px solid #e4e7ec;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
 }
 
 .header-title {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .header-controls {
@@ -595,11 +750,11 @@ export default {
   .rank-info .rank-name {
     font-size: 14px;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text-primary);
   }
   .rank-info .rank-level {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-secondary);
   }
 
   /* Make header buttons a touch larger and consistent on big screens */
@@ -619,21 +774,77 @@ export default {
 
 .points-label {
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .points-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  height: 28px;
-  padding: 0 10px;
+  min-width: 52px;
+  height: 32px;
+  padding: 0 14px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #10b981, #34d399);
+  background: var(--gradient-primary);
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    var(--shadow-card),
+    0 0 20px rgba(var(--color-primary-rgb), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  animation: points-glow 2s ease-in-out infinite;
+}
+
+.points-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.points-badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    var(--shadow-hover),
+    0 0 30px rgba(var(--color-primary-rgb), 0.6),
+    0 0 60px rgba(var(--color-primary-rgb), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.points-badge:hover::before {
+  left: 100%;
+}
+
+@keyframes points-glow {
+  0%, 100% {
+    box-shadow:
+      var(--shadow-card),
+      0 0 20px rgba(var(--color-primary-rgb), 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow:
+      var(--shadow-card),
+      0 0 30px rgba(var(--color-primary-rgb), 0.6),
+      0 0 40px rgba(var(--color-primary-rgb), 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
 }
 
 /* Rank progress: clearer layout without logic changes */
@@ -647,17 +858,17 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 12px;
   margin-bottom: 6px;
 }
 
 .rank-progress .progress-percentage {
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
 }
 .rank-progress .progress-percentage.max-rank {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .rank-progress-bar {
@@ -667,7 +878,7 @@ export default {
 .next-rank-info .next-rank-text,
 .max-rank-info .max-rank-text {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* Responsive header controls */
@@ -754,11 +965,6 @@ export default {
     max-width: var(--hdr-btn-size) !important;
   }
 }
-
-@media (max-width: 480px) {
-  .todo-gamification { --hdr-btn-size: 32px; }
-}
-
 @media (max-width: 360px) {
   .todo-gamification { --hdr-btn-size: 30px; }
 }
@@ -816,57 +1022,53 @@ export default {
 
 /* Color variants */
 .control-btn.btn-primary {
-  background-color: #409eff;
-  border-color: #409eff;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 .control-btn.btn-primary:hover {
-  background-color: #337ecc;
-  border-color: #337ecc;
+  opacity: 0.9;
 }
 .control-btn.btn-primary:focus {
-  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 0 0 3px var(--color-primary-light-5);
 }
 
 .control-btn.btn-success {
-  background-color: #67c23a;
-  border-color: #67c23a;
+  background-color: var(--color-success);
+  border-color: var(--color-success);
 }
 .control-btn.btn-success:hover {
-  background-color: #52a832;
-  border-color: #52a832;
+  opacity: 0.9;
 }
 .control-btn.btn-success:focus {
-  box-shadow: 0 0 0 3px rgba(103, 194, 58, 0.2);
+  box-shadow: 0 0 0 3px var(--color-success-light-5);
 }
 
 .control-btn.btn-info {
-  background-color: #909399;
-  border-color: #909399;
+  background-color: var(--color-info);
+  border-color: var(--color-info);
 }
 .control-btn.btn-info:hover {
-  background-color: #767a80;
-  border-color: #767a80;
+  opacity: 0.9;
 }
 .control-btn.btn-info:focus {
-  box-shadow: 0 0 0 3px rgba(144, 147, 153, 0.2);
+  box-shadow: 0 0 0 3px var(--color-info-light-5);
 }
 
 .control-btn.btn-danger {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 .control-btn.btn-danger:hover {
-  background-color: #dd6161;
-  border-color: #dd6161;
+  opacity: 0.9;
 }
 .control-btn.btn-danger:focus {
-  box-shadow: 0 0 0 3px rgba(245, 108, 108, 0.2);
+  box-shadow: 0 0 0 3px var(--color-danger-light-5);
 }
 
 /* Task input and form styles */
 .task-input-section {
   padding: 20px;
-  background-color: #fafbfc;
+  background-color: var(--bg-body);
   border-radius: 8px;
   margin-bottom: 20px;
   text-align: left; /* ensure left alignment on all screens */
@@ -927,15 +1129,15 @@ export default {
   margin-bottom: 10px;
   cursor: pointer;
   user-select: none;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
-  background: #f0f2f5;
-  border: 1px solid #e4e7ec;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 .task-input-toggle:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.25);
+  box-shadow: 0 0 0 2px var(--border-color-light);
 }
 .toggle-icon {
   transition: transform 0.2s ease;
@@ -984,7 +1186,7 @@ export default {
 
 .filter-label {
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -1068,11 +1270,13 @@ export default {
 
 .task-card {
   transition: all 0.3s ease;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-hover);
 }
 
 .task-content {
@@ -1090,12 +1294,12 @@ export default {
   margin: 0 0 8px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .task-description {
   margin: 0 0 12px 0;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -1147,7 +1351,7 @@ export default {
 
 .edit-label {
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
@@ -1185,7 +1389,7 @@ export default {
   gap: 8px;
   flex-wrap: wrap;
   padding-top: 12px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 1px solid var(--border-color);
   margin-top: 8px;
 }
 
@@ -1253,7 +1457,7 @@ export default {
   margin: 0 0 16px 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .history-tasks {
@@ -1286,13 +1490,13 @@ export default {
 .history-task-title {
   font-size: 1.15rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
   line-height: 1.4;
 }
 
 .history-task-description {
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
   margin: 0;
   font-size: 14px;
@@ -1349,56 +1553,92 @@ export default {
   height: 32px;
 }
 
-/* Responsive tabs */
-.responsive-tabs {
-  width: 100%;
-}
-
-.responsive-tabs .el-tabs__header {
-  margin-bottom: 0;
-}
-
-.responsive-tabs .el-tabs__nav-wrap {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.responsive-tabs .el-tabs__nav-wrap::-webkit-scrollbar {
-  display: none;
-}
-
-.responsive-tabs .el-tabs__nav-scroll {
-  white-space: nowrap;
-}
-
-.responsive-tabs .el-tabs__nav {
+/* Custom Tabs Styling */
+.kiwi-tabs {
   display: flex;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  min-width: max-content;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.responsive-tabs .el-tabs__item {
-  flex-shrink: 0;
-  min-width: auto;
-  padding: 0 16px;
-  font-size: 14px;
+.kiwi-tabs-header {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-container);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color-light);
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.kiwi-tabs-header::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.kiwi-tab-item {
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
+}
+
+.kiwi-tab-item:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.kiwi-tab-item.active {
+  background: var(--bg-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+  border: 1px solid var(--border-color-light);
+}
+
+.tab-pane.fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-body {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .card-body {
+    padding: 16px;
+  }
+  
+  .kiwi-tab-item {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 }
 
 /* Task status classes */
 .task-success {
-  border-left: 4px solid #67c23a;
+  border-left: 4px solid var(--color-success);
 }
 
 .task-fail {
-  border-left: 4px solid #f56c6c;
+  border-left: 4px solid var(--color-danger);
 }
 
 .task-pending {
-  border-left: 4px solid #e6a23c;
+  border-left: 4px solid var(--color-warning);
 }
 
 /* Enhanced Ranking display styles */
@@ -1416,11 +1656,11 @@ export default {
   gap: 12px;
   padding: 12px 16px;
   border-radius: 25px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  background: var(--bg-container);
   border: 2px solid transparent;
   background-clip: padding-box;
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
   overflow: hidden;
 }
@@ -1431,7 +1671,7 @@ export default {
   inset: -2px;
   border-radius: 25px;
   padding: 2px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
   z-index: -1;
@@ -1439,7 +1679,7 @@ export default {
 
 .rank-badge:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
 }
 
 .rank-badge::after {
@@ -1465,8 +1705,8 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
   z-index: 2;
@@ -1488,21 +1728,21 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  background: var(--bg-card);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
 .rank-item:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: var(--bg-container);
   transform: translateY(-1px);
 }
 
 .rank-item.current-rank {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  border-color: #4299e1;
-  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+  background: var(--bg-container);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-hover);
   position: relative;
 }
 
@@ -1510,7 +1750,7 @@ export default {
   content: '✓';
   position: absolute;
   right: 8px;
-  color: #2b6cb0;
+  color: var(--color-primary);
   font-weight: bold;
   font-size: 12px;
 }
@@ -1536,22 +1776,22 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 8px 6px;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  background: var(--bg-card);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
   position: relative;
 }
 
 .rank-preview-item:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: var(--bg-container);
   transform: translateY(-1px);
 }
 
 .rank-preview-item.current-rank {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  border-color: #4299e1;
-  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+  background: var(--bg-container);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-hover);
 }
 
 .rank-preview-item.current-rank::before {
@@ -1559,7 +1799,7 @@ export default {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: #2b6cb0;
+  color: var(--color-primary);
   font-weight: bold;
   font-size: 10px;
   background: white;
@@ -1569,7 +1809,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-card);
 }
 
 .rank-grid-image {
@@ -1582,17 +1822,17 @@ export default {
 .rank-preview-name {
   font-size: 11px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text-primary);
   text-align: center;
   line-height: 1.2;
 }
 
 .rank-preview-threshold {
   font-size: 10px;
-  color: #718096;
+  color: var(--text-secondary);
   font-weight: 500;
   padding: 2px 6px;
-  background-color: #edf2f7;
+  background-color: var(--bg-body);
   border-radius: 8px;
 }
 
@@ -1748,15 +1988,15 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
-  color: #2563eb;
+  background: var(--bg-container);
+  color: var(--color-primary);
 }
 
 .summary-title {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
 }
 
 .summary-stats.enhanced-stats {
@@ -1771,9 +2011,9 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color-light);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--bg-card);
 }
 
 .stat-visual {
@@ -1789,12 +2029,12 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #111827;
-  background: #f3f4f6;
+  color: var(--text-primary);
+  background: var(--bg-container);
 }
-.stat-icon.points-icon { color: #b45309; background: #fff7ed; }
-.stat-icon.completed-icon { color: #166534; background: #ecfdf5; }
-.stat-icon.success-icon { color: #1d4ed8; background: #eff6ff; }
+.stat-icon.points-icon { color: var(--color-warning); background: var(--color-warning-light-9); }
+.stat-icon.completed-icon { color: var(--color-success); background: var(--color-success-light-9); }
+.stat-icon.success-icon { color: var(--color-primary); background: var(--color-primary-light-9); }
 
 .stat-circle,
 .circular-chart {
@@ -1804,7 +2044,7 @@ export default {
 
 .circular-chart .circle-bg {
   fill: none;
-  stroke: #e5e7eb;
+  stroke: var(--border-color-light);
   stroke-width: 3.8;
 }
 
@@ -1814,9 +2054,9 @@ export default {
   stroke-linecap: round;
   animation: chart-progress 1s ease-out forwards;
 }
-.circular-chart.gold .circle { stroke: #f59e0b; }
-.circular-chart.green .circle { stroke: #10b981; }
-.circular-chart.blue .circle { stroke: #3b82f6; }
+.circular-chart.gold .circle { stroke: var(--color-warning); }
+.circular-chart.green .circle { stroke: var(--color-success); }
+.circular-chart.blue .circle { stroke: var(--color-primary); }
 
 @keyframes chart-progress {
   from { stroke-dasharray: 0 100; }
@@ -1828,9 +2068,9 @@ export default {
   flex-direction: column;
   gap: 2px;
 }
-.stat-label { font-size: 12px; color: #6b7280; }
-.stat-value.enhanced-value { font-size: 20px; font-weight: 800; color: #111827; line-height: 1.1; }
-.stat-subtitle { font-size: 11px; color: #9ca3af; }
+.stat-label { font-size: 12px; color: var(--text-secondary); }
+.stat-value.enhanced-value { font-size: 20px; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+.stat-subtitle { font-size: 11px; color: var(--text-placeholder); }
 
 /* Small screen tweaks */
 @media (max-width: 480px) {
@@ -1839,32 +2079,488 @@ export default {
   .stat-value.enhanced-value { font-size: 18px; }
 }
 
-/* Fullscreen rank image preview: minimal, centered, and not oversized */
-:deep(.rank-image-preview-dialog.is-fullscreen) {
+/* Fullscreen Rank Image Overlay */
+.rank-image-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   background: rgba(0, 0, 0, 0.9);
-  box-shadow: none;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-}
-
-:deep(.rank-image-preview-dialog .el-dialog__header) { display: none; }
-:deep(.rank-image-preview-dialog .el-dialog__body) { padding: 0 !important; height: 100vh; }
-
-.rank-image-preview-container {
-  width: 100vw;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+.rank-image-preview-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
 }
 
 .rank-image-fullscreen {
-  max-width: min(85vw, 560px);
-  max-height: 80vh;
+  max-width: min(80vw, 500px);
+  max-height: 70vh;
   object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.rank-image-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.rank-image-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.rank-image-level {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rank-image-threshold {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.rank-image-close {
+  position: absolute;
+  top: -50px;
+  right: -10px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.rank-image-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments for fullscreen image */
+@media (max-width: 768px) {
+  .rank-image-fullscreen {
+    max-width: 85vw;
+    max-height: 60vh;
+  }
+
+  .rank-image-name {
+    font-size: 20px;
+  }
+
+  .rank-image-level {
+    font-size: 14px;
+  }
+
+  .rank-image-close {
+    top: -45px;
+    right: 0;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rank-image-fullscreen {
+    max-width: 90vw;
+    max-height: 55vh;
+    border-radius: 12px;
+  }
+
+  .rank-image-caption {
+    margin-top: 16px;
+  }
+
+  .rank-image-name {
+    font-size: 18px;
+  }
+
+  .rank-image-level {
+    font-size: 13px;
+  }
+}
+
+/* All Ranks Dialog Styles */
+:deep(.all-ranks-dialog) {
+  max-width: 900px;
+  margin-top: 5vh !important;
+  margin-bottom: 5vh !important;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.all-ranks-dialog .el-dialog__header) {
+  flex-shrink: 0;
+}
+
+:deep(.all-ranks-dialog .el-dialog__body) {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.all-ranks-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Current Rank Highlight */
+.current-rank-highlight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: var(--gradient-primary);
+  border-radius: 16px;
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.highlight-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.highlight-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.highlight-info {
+  flex: 1;
+  min-width: 150px;
+}
+
+.highlight-label {
+  font-size: 12px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.highlight-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+
+.highlight-points {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.highlight-progress {
+  flex: 1;
+  min-width: 200px;
+}
+
+.progress-to-next {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.points-needed {
+  font-weight: 600;
+}
+
+.highlight-max {
+  display: flex;
+  align-items: center;
+}
+
+.max-rank-badge {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* All Ranks Grid */
+.all-ranks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.rank-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.rank-card.achieved {
+  border-color: var(--color-success);
+  background: var(--color-success-light-9);
+}
+
+.rank-card.current {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light-9);
+  box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.rank-card.locked {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.rank-card.clickable {
+  cursor: pointer;
+}
+
+.rank-card.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.rank-card-badge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.rank-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.current-indicator,
+.locked-indicator {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.current-indicator {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.5);
+}
+
+.locked-indicator {
+  background: var(--text-muted);
+  color: #fff;
+}
+
+.rank-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.rank-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rank-card-threshold {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  background: var(--bg-container);
+  border-radius: 10px;
+}
+
+/* Responsive for All Ranks Dialog */
+@media (max-width: 768px) {
+  .current-rank-highlight {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .highlight-badge {
+    width: 70px;
+    height: 70px;
+  }
+
+  .highlight-info {
+    min-width: 100%;
+  }
+
+  .highlight-name {
+    font-size: 20px;
+  }
+
+  .highlight-progress {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .all-ranks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .rank-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .rank-card-badge {
+    width: 56px;
+    height: 56px;
+  }
+
+  .rank-card-name {
+    font-size: 13px;
+  }
+
+  .rank-card-threshold {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.all-ranks-dialog) {
+    width: 95% !important;
+    margin-top: 2vh !important;
+    margin-bottom: 2vh !important;
+    max-height: 96vh;
+  }
+
+  :deep(.all-ranks-dialog .el-dialog__body) {
+    padding: 16px;
+  }
+
+  .current-rank-highlight {
+    padding: 14px;
+  }
+
+  .highlight-badge {
+    width: 60px;
+    height: 60px;
+  }
+
+  .highlight-name {
+    font-size: 18px;
+  }
+
+  .all-ranks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  .rank-card {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .rank-card-badge {
+    width: 48px;
+    height: 48px;
+  }
+
+  .current-indicator,
+  .locked-indicator {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .rank-card-name {
+    font-size: 12px;
+  }
+
+  .rank-card-threshold {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .all-ranks-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .rank-card {
+    padding: 8px;
+  }
+
+  .rank-card-badge {
+    width: 40px;
+    height: 40px;
+  }
+
+  .rank-card-name {
+    font-size: 11px;
+  }
+
+  .rank-card-threshold {
+    font-size: 9px;
+  }
 }
 </style>

@@ -119,7 +119,27 @@ export default {
         antonym: 'Antonym',
         vocabularyAssociation: 'Vokabularassoziation',
         phrasesAssociation: 'Phrasenassoziation',
+        vocabularyCharacterExpansion: 'Wortschatz-Zeichenerweiterung',
+        ambiguousAssociationCorrection: 'Korrektur mehrdeutiger Assoziationen',
+        naturalIdiomaticRetouch: 'Natürliche idiomatische Retusche',
         selectMode: 'Modus auswählen'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'Wortschatz eingeben',
+        directTranslation: 'Alles eingeben',
+        explanation: 'Alles eingeben',
+        grammarExplanation: 'Alles eingeben',
+        grammarCorrection: 'Alles eingeben',
+        synonym: 'Wortschatz eingeben',
+        antonym: 'Wortschatz eingeben',
+        vocabularyAssociation: 'Alles eingeben',
+        phrasesAssociation: 'Alles eingeben',
+        // New modes
+        vocabularyCharacterExpansion: 'Alles eingeben',
+        ambiguousAssociationCorrection: 'Alles eingeben',
+        naturalIdiomaticRetouch: 'Text zum Retuschieren eingeben'
     },
 
     user: {
@@ -130,7 +150,9 @@ export default {
         pressKeys: 'Tasten drücken...',
         // Neu: Funktions-Tabs-Einstellungen
         featureTabs: 'Funktions-Tabs',
-        featureTabsTip: 'Tabs in der Werkzeugleiste ein- oder ausblenden'
+        featureTabsTip: 'Tabs in der Werkzeugleiste ein- oder ausblenden',
+        uiLanguage: 'Oberflächensprache',
+        uiLanguageTooltip: 'Sprache der Benutzeroberfläche (unabhängig von der Übersetzungssprache)'
     },
 
     messages: {
@@ -148,46 +170,69 @@ export default {
     // AI features
     ai: {
         useClipboardContent: 'Möchten Sie nach "{text}" suchen? Klicken Sie zum Fortfahren.',
-        aiCallHistory: 'AI Call History',
-        noHistoryFound: 'No AI Call History Found',
-        historyDescription: 'Your AI conversation history will appear here once you start using the AI features.',
-        mode: 'Mode',
-        languages: 'Languages',
-        timestamp: 'Timestamp',
-        prompt: 'Prompt',
-        filterByMode: 'Filter by Mode',
-        filterByLanguage: 'Filter by Language',
-        allModes: 'All Modes',
-        allLanguages: 'All Languages',
-        clearFilters: 'Clear Filters',
-        review: 'Review',
-        copy: 'Copy',
+        aiCallHistory: 'KI-Aufrufverlauf',
+        noHistoryFound: 'Kein KI-Aufrufverlauf gefunden',
+        historyDescription: 'Ihr KI-Gesprächsverlauf wird hier angezeigt, sobald Sie die KI-Funktionen nutzen.',
+        mode: 'Modus',
+        languages: 'Sprachen',
+        timestamp: 'Zeitstempel',
+        prompt: 'Eingabeaufforderung',
+        filterByMode: 'Nach Modus filtern',
+        filterByLanguage: 'Nach Sprache filtern',
+        allModes: 'Alle Modi',
+        allLanguages: 'Alle Sprachen',
+        clearFilters: 'Filter löschen',
+        review: 'Überprüfen',
+        copy: 'Kopieren',
+        copyPrompt: 'Eingabeaufforderung kopieren',
         details: 'Details',
-        searchAgain: 'Search Again',
-        aiCallDetails: 'AI Call Details',
-        promptCopied: 'Prompt copied to clipboard!',
-        failedToCopy: 'Failed to copy prompt',
-        today: 'Today',
-        yesterday: 'Yesterday',
-        daysAgo: '{count} days ago',
-        invalidDate: 'Invalid Date',
-        unknown: 'Unknown',
-        explainSelectedText: 'Explain Selected Text',
-        selectedText: 'Selected Text',
-        explainSelection: 'Explain Selection',
-        searchOnDictionary: 'Search on Dictionary',
-        noTextSelected: 'No text selected',
-        originalText: 'Original Text',
-        selectTextToExplain: 'Select text to explain based on the sentences context',
-        expandExplanation: 'Expand explanation',
-        collapseExplanation: 'Collapse explanation',
-        closeExplanation: 'Close explanation',
-        explanationForSelectedText: 'Explanation for Selected Text',
-        generating: 'Generating explanation...',
-        streaming: 'Streaming response...',
-        copyResponseText: 'Copy response text',
-        textCopiedToClipboard: 'Text copied to clipboard!',
-        failedToCopyText: 'Failed to copy text'
+        searchAgain: 'Erneut suchen',
+        aiCallDetails: 'KI-Aufrufdetails',
+        promptCopied: 'Eingabeaufforderung in Zwischenablage kopiert!',
+        failedToCopy: 'Kopieren der Eingabeaufforderung fehlgeschlagen',
+        today: 'Heute',
+        yesterday: 'Gestern',
+        daysAgo: 'Vor {count} Tagen',
+        invalidDate: 'Ungültiges Datum',
+        unknown: 'Unbekannt',
+        explainSelectedText: 'Ausgewählten Text erklären',
+        selectedText: 'Ausgewählter Text',
+        explainSelection: 'Auswahl erklären',
+        searchOnDictionary: 'Im Wörterbuch suchen',
+        noTextSelected: 'Kein Text ausgewählt',
+        originalText: 'Originaltext',
+        selectTextToExplain: 'Text zur Erklärung basierend auf dem Satzkontext auswählen',
+        expandExplanation: 'Erklärung erweitern',
+        collapseExplanation: 'Erklärung einklappen',
+        closeExplanation: 'Erklärung schließen',
+        explanationForSelectedText: 'Erklärung für ausgewählten Text',
+        generating: 'Erklärung wird generiert...',
+        streaming: 'Antwort wird gestreamt...',
+        copyResponseText: 'Antworttext kopieren',
+        textCopiedToClipboard: 'Text in Zwischenablage kopiert!',
+        failedToCopyText: 'Kopieren des Textes fehlgeschlagen',
+        // Klassifizierungsfilter
+        normalItems: 'Normale Elemente',
+        archivedItems: 'Archivierte Elemente',
+        allItems: 'Alle Elemente',
+        // Ladezustand
+        loadingHistory: 'Verlauf wird geladen...',
+        // Aktionen
+        archive: 'Archivieren',
+        // Archivierungs-/Löschnachrichten
+        itemArchived: 'Element erfolgreich archiviert',
+        archiveFailed: 'Archivierung fehlgeschlagen',
+        itemDeleted: 'Element erfolgreich gelöscht',
+        deleteFailed: 'Löschen fehlgeschlagen',
+        loadHistoryFailed: 'Laden des KI-Aufrufverlaufs fehlgeschlagen',
+        // Löschbestätigungsdialog
+        deleteItemTitle: 'Element löschen',
+        deleteItemConfirm: 'Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+        // Minimieren/Wiederherstellen
+        minimize: 'Minimieren',
+        restore: 'Wiederherstellen',
+        close: 'Schließen',
+        aiSearch: 'KI-Suche'
     },
 
     // Login
@@ -359,5 +404,22 @@ export default {
         downloadForWindows: 'Für Windows herunterladen',
         downloadForLinux: 'Für Linux herunterladen',
         gdriveNote: 'Downloads werden auf Google Drive gehostet. Öffnet sich der Link nicht, kopieren Sie ihn und öffnen Sie ihn in einem neuen Tab.'
+    },
+
+    // Review modes
+    review: {
+        // TTS-Audiogenerierung
+        generatingAudio: 'Audio wird generiert...',
+        audioReady: 'Audio bereit',
+        audioFilesReady: 'Audiodateien bereit',
+        audioFilesFailed: 'Audiodateien fehlgeschlagen',
+        audioGenerationFailed: 'Audiogenerierung fehlgeschlagen, Fallback wird verwendet',
+        audioGenerationInProgress: 'Audiogenerierung läuft bereits',
+        ttsAudioNotEnabled: 'TTS-Audio ist auf dem Server nicht aktiviert',
+        startingAudioGeneration: 'Audiogenerierung wird gestartet...',
+        audioPreparationFailed: 'Audiovorbereitung fehlgeschlagen',
+        prepareAudio: 'Audio vorbereiten',
+        audioGenerationComplete: 'Audiogenerierung abgeschlossen',
+        preparingAudioForReview: 'Audio für Überprüfung wird vorbereitet...'
     }
 }

@@ -1,7 +1,21 @@
 // Method 1: Pure Utility Functions (Recommended)
 // utils/languageUtils.js
 import kiwiConsts from "@/const/kiwiConsts";
-import {getStore} from "@/util/store";
+import {getStore, setStore} from "@/util/store";
+
+/**
+ * Save language setting for a specific mode
+ * @param {string} mode - The search mode
+ * @param {string} language - The language code
+ */
+export function saveLanguageForMode(mode, language) {
+    const modeSpecificKey = mode + '-' + kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE;
+    setStore({
+        name: modeSpecificKey,
+        content: language,
+        type: 'local'
+    });
+}
 
 /**
  * Get language setting for a specific mode

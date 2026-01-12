@@ -220,6 +220,7 @@ export default {
         clearFilters: '필터 지우기',
         review: '복습',
         copy: '복사',
+        copyPrompt: '프롬프트 복사',
         details: '세부 정보',
         searchAgain: '다시 검색',
         aiCallDetails: 'AI 호출 세부 정보',
@@ -245,7 +246,31 @@ export default {
         streaming: '응답을 스트리밍 중...',
         copyResponseText: '응답 텍스트 복사',
         textCopiedToClipboard: '텍스트가 클립보드에 복사되었습니다!',
-        failedToCopyText: '텍스트 복사 실패'
+        failedToCopyText: '텍스트 복사 실패',
+        // 클립보드 대화상자
+        useClipboardContent: '클립보드 내용 사용: "{text}"?',
+        // 분류 필터
+        normalItems: '일반 항목',
+        archivedItems: '보관된 항목',
+        allItems: '전체 항목',
+        // 로딩 상태
+        loadingHistory: '기록 로딩 중...',
+        // 작업
+        archive: '보관',
+        // 보관/삭제 메시지
+        itemArchived: '항목이 성공적으로 보관되었습니다',
+        archiveFailed: '보관에 실패했습니다',
+        itemDeleted: '항목이 성공적으로 삭제되었습니다',
+        deleteFailed: '삭제에 실패했습니다',
+        loadHistoryFailed: 'AI 호출 기록 로딩에 실패했습니다',
+        // 삭제 확인 대화상자
+        deleteItemTitle: '항목 삭제',
+        deleteItemConfirm: '이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+        // 최소화/복원
+        minimize: '최소화',
+        restore: '복원',
+        close: '닫기',
+        aiSearch: 'AI 검색'
     },
 
     // New: audio settings parity
@@ -273,7 +298,27 @@ export default {
         antonym: '반의어',
         vocabularyAssociation: '어휘 연관',
         phrasesAssociation: '구문 연관',
+        vocabularyCharacterExpansion: '어휘 문자 확장',
+        ambiguousAssociationCorrection: '모호한 연관 수정',
+        naturalIdiomaticRetouch: '자연스러운 관용적 수정',
         selectMode: '모드 선택'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '어휘 입력',
+        directTranslation: '무엇이든 입력',
+        explanation: '무엇이든 입력',
+        grammarExplanation: '무엇이든 입력',
+        grammarCorrection: '무엇이든 입력',
+        synonym: '어휘 입력',
+        antonym: '어휘 입력',
+        vocabularyAssociation: '무엇이든 입력',
+        phrasesAssociation: '무엇이든 입력',
+        // New modes
+        vocabularyCharacterExpansion: '무엇이든 입력',
+        ambiguousAssociationCorrection: '무엇이든 입력',
+        naturalIdiomaticRetouch: '수정할 텍스트 입력'
     },
 
     user: {
@@ -284,7 +329,9 @@ export default {
         pressKeys: '키를 누르세요...',
         // 추가: 기능 탭 설정
         featureTabs: '기능 탭',
-        featureTabsTip: '툴바에서 탭을 표시하거나 숨기기'
+        featureTabsTip: '툴바에서 탭을 표시하거나 숨기기',
+        uiLanguage: '인터페이스 언어',
+        uiLanguageTooltip: '인터페이스에 사용되는 언어 (번역 언어와 독립적)'
     },
 
     messages: {
@@ -335,5 +382,22 @@ export default {
         downloadForWindows: 'Windows 버전 다운로드',
         downloadForLinux: 'Linux 버전 다운로드',
         gdriveNote: '다운로드는 Google 드라이브에 호스팅됩니다. 열리지 않으면 링크를 복사해 새 탭에서 열어주세요.'
+    },
+
+    // Review modes
+    review: {
+        // TTS 오디오 생성
+        generatingAudio: '오디오 생성 중...',
+        audioReady: '오디오 준비 완료',
+        audioFilesReady: '개의 오디오 파일 준비 완료',
+        audioFilesFailed: '개의 오디오 파일 실패',
+        audioGenerationFailed: '오디오 생성 실패, 대체 사용',
+        audioGenerationInProgress: '오디오 생성이 이미 진행 중입니다',
+        ttsAudioNotEnabled: '서버에서 TTS 오디오가 활성화되지 않음',
+        startingAudioGeneration: '오디오 생성 시작...',
+        audioPreparationFailed: '오디오 준비 실패',
+        prepareAudio: '오디오 준비',
+        audioGenerationComplete: '오디오 생성 완료',
+        preparingAudioForReview: '복습용 오디오 준비 중...'
     }
 }

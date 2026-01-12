@@ -1,33 +1,29 @@
-import { Message as ElementMessage, Notification as ElementNotification, MessageBox } from 'element-ui'
-import { getStore } from '@/util/store'
+import {MessageBox} from 'element-ui'
+import {getStore} from '@/util/store'
 import kiwiConst from '@/const/kiwiConsts'
+import StatusService from '@/util/status-overlay-service'
 
 const ALWAYS_VISIBLE_TYPES = new Set(['error'])
 const DEFAULT_TOAST_OPTIONS = Object.freeze({
-  center: true,
-  offset: 200,
-  duration: 3000,
-  customClass: 'kiwi-message-toast'
+  duration: 3000
 })
 const DEFAULT_POPUP_OPTIONS = Object.freeze({
   duration: 3000,
-  position: 'top-right',
-  showClose: true,
-  customClass: 'kiwi-message-notify'
+  showClose: true
 })
 
-function isMessageHintsEnabled () {
+function isMessageHintsEnabled() {
   const preference = getStore({ name: kiwiConst.CONFIG_KEY.ENABLE_MSG_HINT })
   return preference !== kiwiConst.ENABLE_MSG_HINT.DISABLE
 }
 
-function shouldDisplay (type, { force } = {}) {
+function shouldDisplay(type, { force } = {}) {
   if (force) return true
   if (ALWAYS_VISIBLE_TYPES.has(type)) return true
   return isMessageHintsEnabled()
 }
 
-function normalizeOptions (payload, overrides = {}) {
+function normalizeOptions(payload, overrides = {}) {
   let base = {}
   if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
     base = { ...payload }
@@ -37,20 +33,20 @@ function normalizeOptions (payload, overrides = {}) {
   return { ...base, ...overrides }
 }
 
-function extractContext (options) {
+function extractContext(options) {
   if (!options) return { options, context: null }
   const { context, ...rest } = options
   return { options: rest, context: context || null }
 }
 
-function resolveTitle (context, fallback) {
+function resolveTitle(context, fallback) {
   if (context && typeof context.$t === 'function') {
     try { return context.$t(fallback) } catch (e) { /* ignore */ }
   }
   return fallback
 }
 
-function showToast (payload, overrides = {}) {
+function showToast(payload, overrides = {}) {
   const normalized = normalizeOptions(payload, overrides)
   const { options } = extractContext(normalized)
   const { force } = options
@@ -59,12 +55,17 @@ function showToast (payload, overrides = {}) {
   if (!shouldDisplay(type, { force })) return null
 
   const finalOptions = { ...DEFAULT_TOAST_OPTIONS, ...options, type }
-  delete finalOptions.force
 
-  return ElementMessage(finalOptions)
+  return StatusService.show({
+    type: finalOptions.type,
+    message: finalOptions.message,
+    duration: finalOptions.duration,
+    backdrop: false,
+    closable: false
+  })
 }
 
-function showPopup (payload, overrides = {}) {
+function showPopup(payload, overrides = {}) {
   const normalized = normalizeOptions(payload, overrides)
   const { options } = extractContext(normalized)
   const { force } = options
@@ -78,12 +79,17 @@ function showPopup (payload, overrides = {}) {
     finalOptions.duration = 0
   }
 
-  delete finalOptions.force
-
-  return ElementNotification(finalOptions)
+  return StatusService.show({
+    type: finalOptions.type,
+    title: finalOptions.title,
+    message: finalOptions.message,
+    duration: finalOptions.duration,
+    backdrop: false,
+    closable: true
+  })
 }
 
-function showConfirm (message, title, options) {
+function showConfirm(message, title, options) {
   let finalMessage = message
   let finalTitle = title
   let finalOptions = options || {}
@@ -105,92 +111,88 @@ function showConfirm (message, title, options) {
 const messageCenter = {
   toast: showToast,
   popup: showPopup,
-  success (payload, overrides = {}) {
+  success(payload, overrides = {}) {
     return showToast(payload, { ...overrides, type: 'success' })
   },
-  warning (payload, overrides = {}) {
+  warning(payload, overrides = {}) {
     return showToast(payload, { ...overrides, type: 'warning' })
   },
-  info (payload, overrides = {}) {
+  info(payload, overrides = {}) {
     return showToast(payload, { ...overrides, type: 'info' })
   },
-  error (payload, overrides = {}) {
+  error(payload, overrides = {}) {
     return showToast(payload, { ...overrides, type: 'error', force: true })
   },
-  popupSuccess (payload, overrides = {}) {
+  popupSuccess(payload, overrides = {}) {
     return showPopup(payload, { ...overrides, type: 'success' })
   },
-  popupWarning (payload, overrides = {}) {
+  popupWarning(payload, overrides = {}) {
     return showPopup(payload, { ...overrides, type: 'warning' })
   },
-  popupInfo (payload, overrides = {}) {
+  popupInfo(payload, overrides = {}) {
     return showPopup(payload, { ...overrides, type: 'info' })
   },
-  popupError (payload, overrides = {}) {
+  popupError(payload, overrides = {}) {
     return showPopup(payload, { ...overrides, type: 'error', force: true })
   },
-  closeMessages () {
-    if (typeof ElementMessage.closeAll === 'function') {
-      ElementMessage.closeAll()
-    }
+  closeMessages() {
+    StatusService.closeAll()
   },
-  closeNotifications () {
-    if (typeof ElementNotification.closeAll === 'function') {
-      ElementNotification.closeAll()
-    }
+  closeNotifications() {
+    StatusService.closeAll()
   },
-  closeAll () {
+  closeAll() {
     this.closeMessages()
     this.closeNotifications()
   },
   confirm: showConfirm,
   isMessageHintsEnabled,
   // Compatibility helpers used across the codebase
-  msgWarning (context, msg, overrides = {}) {
+  msgWarning(context, msg, overrides = {}) {
     return showToast(msg, { ...overrides, type: 'warning', context })
   },
-  msgError (context, msg, overrides = {}) {
+  msgError(context, msg, overrides = {}) {
     const title = resolveTitle(context, 'common.error')
     const localizedTitle = title && title !== 'common.error' ? title : 'Error'
     return showPopup({ title: localizedTitle, message: msg }, { ...overrides, type: 'error', context, force: true })
   },
-  msgSuccess (context, msg, duration) {
+  msgSuccess(context, msg, duration) {
     const extra = {}
     if (typeof duration !== 'undefined') extra.duration = duration
     return showToast(msg, { context, type: 'success', ...extra })
   },
-  notifySuccess (context, title, msg, duration) {
+  notifySuccess(context, title, msg, duration) {
     const fallback = context && context.$t ? context.$t('messages.dataLoadException') : 'Operation completed'
     const extra = {}
     if (typeof duration !== 'undefined') extra.duration = duration
     return showPopup({ title, message: msg || fallback }, { context, type: 'success', ...extra })
   },
-  operateSuccess (context) {
+  operateSuccess(context) {
     const message = context && context.$t ? context.$t('messages.operationSuccess') : 'Operation succeeded'
     return showToast(message, { context, type: 'success', duration: 2000 })
   },
-  showLoginRequired (context) {
+  showLoginRequired(context) {
     const message = context && context.$t ? context.$t('messages.loginRequired') : 'Login required'
     return showToast(message, { context, type: 'warning' })
   },
-  showSystemError (context) {
+  showSystemError(context) {
     const title = context && context.$t ? context.$t('common.error') : 'Error'
     const message = context && context.$t ? context.$t('messages.systemError') : 'System error'
     return showPopup({ title, message }, { context, type: 'error', force: true })
   },
-  showOperationTooFrequent (context) {
+  showOperationTooFrequent(context) {
     const message = context && context.$t ? context.$t('messages.operationTooFrequent') : 'Operation too frequent'
     return showToast(message, { context, type: 'warning' })
   },
-  showNoPermission (context) {
+  showNoPermission(context) {
     const message = context && context.$t ? context.$t('messages.noPermission') : 'No permission'
     return showToast(message, { context, type: 'warning' })
   },
-  showResourceNotFound (context) {
+  showResourceNotFound(context) {
     const message = context && context.$t ? context.$t('messages.resourceNotFound') : 'Resource not found'
     return showToast(message, { context, type: 'warning' })
   },
-  confirmDelete (context, callback) {
+  confirmDelete(context, callback) {
     const message = context && context.$t ? context.$t('messages.confirmDelete') : 'Delete this item?'
     const title = context && context.$t ? context.$t('collections.deleteOperation') : 'Delete'
     return showConfirm(message, title, {
@@ -199,9 +201,9 @@ const messageCenter = {
       type: 'warning'
     }).then(() => {
       if (typeof callback === 'function') callback()
-    }).catch(() => {})
+    }).catch(() => { })
   },
-  confirmClear (context, callback) {
+  confirmClear(context, callback) {
     const message = context && context.$t ? context.$t('messages.confirmClear') : 'Clear all items?'
     const title = context && context.$t ? context.$t('messages.clearOperation') : 'Clear'
     return showConfirm(message, title, {
@@ -210,7 +212,7 @@ const messageCenter = {
       type: 'warning'
     }).then(() => {
       if (typeof callback === 'function') callback()
-    }).catch(() => {})
+    }).catch(() => { })
   }
 }
 

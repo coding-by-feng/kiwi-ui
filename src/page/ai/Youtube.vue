@@ -25,6 +25,7 @@ import YoutubePlayer from '@/page/ai/YoutubePlayer.vue'
 import YoutubeChannel from '@/page/ai/YoutubeChannel.vue'
 import YoutubeFavorites from '@/page/ai/YoutubeFavorites.vue'
 import kiwiConsts from '@/const/kiwiConsts'
+import StatusService from '@/util/status-overlay-service'
 
 const STORAGE_KEY = 'ytb_state'
 
@@ -44,6 +45,9 @@ export default {
     }
   },
   created() {
+    // Clear any stale overlays on mount
+    StatusService.closeAll()
+
     // Attempt restoration from local storage first (before route normalization)
     this.restoreLocalState()
     this.initFromRoute()
@@ -97,6 +101,9 @@ export default {
 
     // Handle UI toggle to switch modes and persist to URL
     handleModeChange(val) {
+      // Clear any global status overlays when switching modes
+      StatusService.closeAll()
+
       const q = { ...(this.$route.query || {}) }
       this.currentMode = val
       this.persistLocalState()
@@ -152,6 +159,24 @@ export default {
 .ytb-mode-switch {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+::v-deep .el-radio-button__inner {
+  background: var(--bg-card);
+  color: var(--text-regular);
+  border-color: var(--border-color);
+  box-shadow: none !important;
+}
+
+::v-deep .el-radio-button:first-child .el-radio-button__inner {
+  border-left: 1px solid var(--border-color);
+}
+
+::v-deep .el-radio-button__orig-radio:checked + .el-radio-button__inner {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  box-shadow: -1px 0 0 0 var(--color-primary);
 }
 </style>

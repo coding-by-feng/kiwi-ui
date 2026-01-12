@@ -1,83 +1,120 @@
 <template>
   <div>
-    <el-row type="flex" justify="center">
+    <el-row type="flex" justify="center" class="search-main-row">
       <el-col>
-        <el-autocomplete
-            id="search-input"
-            ref="auto"
-            :type="getInputType"
-            v-model="originalText"
-            :style="{width: searchInputWidth}"
-            :fetch-suggestions="querySearch"
-            :placeholder="$t('searchPlaceholders.dictionary')"
-            size="mini"
-            :trigger-on-focus="false"
-            @keydown.native="handleKeyDown"
-            :clearable="true"
-            :autosize="true"
-            @select="querySelect">
-          <!-- Use ElementUI input-group slots -->
-          <el-button
-            slot="prepend"
-            v-if="lazy"
-            size="mini"
-            icon="el-icon-switch-button"
-            @click="closeLazy"
-            style="border:none;background:transparent"></el-button>
-          <el-select v-if="!lazy" id="mode-select-prepend" v-model="selectedMode"
-                     slot="prepend"
-                     size="mini"
-                     :style="selectWidthStyle"
-                     :class="{ 'ai-mode-text': isAiModeSelected }"
-                     @change="selectedModeChange">
-            <el-option
-                v-for="item in searchModes"
-                :key="item.value"
-                :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
-                :value="item.value">
-            </el-option>
-          </el-select>
-          <el-button id="search-submit-btn" slot="append" size="mini" icon="el-icon-search" @click="onSubmit()"></el-button>
-        </el-autocomplete>
+        <div class="search-input-wrapper" :class="{ 'mobile-layout': isSmallScreen }" :style="{width: searchInputWidth, margin: '0 auto', position: 'relative'}">
+          
+          <!-- Mobile Row 1: Mode Selection -->
+          <div v-if="isSmallScreen" class="mobile-row mode-row">
+             <KiwiDropdown v-if="!lazy" @command="selectedModeChange" class="mode-dropdown mobile-full-width">
+               <div class="mode-select-trigger mobile-trigger" :class="{ 'ai-mode-text': isAiModeSelected }">
+                 {{ getModeLabel(selectedMode) }} <i class="el-icon-arrow-down"></i>
+               </div>
+               <template slot="dropdown">
+                 <KiwiDropdownItem v-for="item in searchModes" :key="item.value" :command="item.value">
+                   {{ $t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`) }}
+                 </KiwiDropdownItem>
+               </template>
+             </KiwiDropdown>
+             <KiwiButton v-else size="small" icon="el-icon-switch-button" @click="closeLazy" plain class="mobile-full-width">Exit Lazy Mode</KiwiButton>
+          </div>
+
+          <!-- Row 2 (Mobile) / Main (Desktop): Input -->
+          <div class="input-row">
+            <KiwiInput
+                id="search-input"
+                ref="auto"
+                :type="getInputType"
+                v-model="originalText"
+                :placeholder="$t('searchPlaceholders.dictionary')"
+                @keydown.native="handleKeyDown"
+                :clearable="true"
+                @input="handleInput"
+                @focus="handleFocus"
+                @blur="handleBlur"
+                @append-click="onSubmit"
+                @prepend-click="handlePrependClick"
+                class="main-search-input"
+            >
+              <!-- Prepend Slot (Desktop Only) -->
+              <template slot="prepend" v-if="!isSmallScreen">
+                 <KiwiButton v-if="lazy" size="mini" icon="el-icon-switch-button" @click.stop="closeLazy" plain style="border:none; padding: 0 10px;"></KiwiButton>
+                 <KiwiDropdown v-else ref="modeDropdown" @command="selectedModeChange" class="mode-dropdown">
+                   <div class="mode-select-trigger" :style="selectWidthStyle" :class="{ 'ai-mode-text': isAiModeSelected }">
+                     {{ getModeLabel(selectedMode) }} <i class="el-icon-arrow-down"></i>
+                   </div>
+                   <template slot="dropdown">
+                     <KiwiDropdownItem v-for="item in searchModes" :key="item.value" :command="item.value">
+                       {{ $t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`) }}
+                     </KiwiDropdownItem>
+                   </template>
+                 </KiwiDropdown>
+              </template>
+              
+              <!-- Append Slot (Desktop Only) -->
+              <template slot="append" v-if="!isSmallScreen">
+                 <KiwiButton
+                    id="search-submit-btn"
+                    size="mini"
+                    :icon="apiLoading ? 'el-icon-close' : 'el-icon-search'"
+                    plain
+                    style="border:none; padding: 0 10px;"
+                    :style="{ color: apiLoading ? 'var(--color-danger)' : 'inherit' }"
+                    @click.stop="apiLoading ? handleStopRequest() : null"
+                 ></KiwiButton>
+              </template>
+            </KiwiInput>
+          </div>
+
+          <!-- Mobile Row 3: Language Selection -->
+          <div v-if="isSmallScreen && !ifVocabularyMode" class="mobile-row language-row">
+             <KiwiDropdown @command="selectedLanguageChange" class="mobile-full-width">
+               <div class="mobile-trigger">
+                 {{ getLanguageLabel(selectedLanguage) }} <i class="el-icon-arrow-down"></i>
+               </div>
+               <template slot="dropdown">
+                 <KiwiDropdownItem v-for="(code, language) in languageCodes" :key="code" :command="code">
+                   {{ $t(`languages.${language.replaceAll('_', ' ')}`) }}
+                 </KiwiDropdownItem>
+               </template>
+             </KiwiDropdown>
+          </div>
+
+          <!-- Mobile Row 4: Submit Button -->
+          <div v-if="isSmallScreen" class="mobile-row submit-row">
+            <KiwiButton
+              :type="apiLoading ? 'danger' : 'primary'"
+              @click="apiLoading ? handleStopRequest() : onSubmit()"
+              class="mobile-submit-btn"
+              :icon="apiLoading ? 'el-icon-close' : 'el-icon-search'"
+            />
+          </div>
+          
+          <!-- Suggestions Dropdown -->
+          <transition name="el-zoom-in-top">
+            <div v-if="suggestionsVisible && suggestions.length > 0" class="search-suggestions">
+               <div v-for="(item, index) in suggestions" :key="index" class="suggestion-item" @click="querySelect(item)">
+                 {{ item.value }}
+               </div>
+            </div>
+          </transition>
+        </div>
       </el-col>
     </el-row>
 
-    <el-row>
-      <el-select v-if="!ifVocabularyMode" v-model="selectedMode"
-                 size="mini"
-                 id="mode-select"
-                 class="select-base mode-select"
-                 :class="{ 'ai-mode-text': isAiModeSelected }"
-                 @change="selectedModeChange">
-        <el-option
-            v-for="item in searchModes"
-            :key="item.value"
-            :label="getModeLabel(item)"
-            :value="item.value">
-        </el-option>
-      </el-select>
-      <el-select v-if="!ifVocabularyMode" v-model="selectedLanguage" size="mini"
-                 :placeholder="$t('common.language')"
-                 id="language-select"
-                 class="select-base language-select" @change="selectedLanguageChange">
-        <el-option
-            v-for="(code, language) in languageCodes"
-            :key="code"
-            :label="$t(`languages.${language.replaceAll('_', ' ')}`)"
-            :value="code">
-        </el-option>
-      </el-select>
-      <el-button v-if="!ifVocabularyMode" icon="el-icon-back" type="info" plain
-                 size="mini" @click="onBack()" :title="$t('common.back')"></el-button>
-      <el-button v-if="!ifVocabularyMode" icon="el-icon-search" type="info" plain
-                 size="mini" @click="onSubmit()" :title="$t('common.search')"></el-button>
-      <el-button v-if="!ifVocabularyMode" icon="el-icon-question" type="info" plain
-                 size="mini" @click="explainMore()" :title="$t('searchModes.explanation')"></el-button>
-      <!-- AI History Button -->
-      <el-button v-if="!ifVocabularyMode" id="ai-history-btn" icon="el-icon-time" type="warning" plain
-                 size="mini" @click="viewAiHistory()"
-                 :title="$t('ai.aiCallHistory')">
-      </el-button>
+    <el-row class="search-actions-row" v-if="!ifVocabularyMode && !isSmallScreen">
+
+
+      <KiwiDropdown @command="selectedLanguageChange" class="action-item">
+         <KiwiButton size="mini" plain class="language-select-btn">
+           {{ getLanguageLabel(selectedLanguage) }} <i class="el-icon-arrow-down"></i>
+         </KiwiButton>
+         <template slot="dropdown">
+           <KiwiDropdownItem v-for="(code, language) in languageCodes" :key="code" :command="code">
+             {{ $t(`languages.${language.replaceAll('_', ' ')}`) }}
+           </KiwiDropdownItem>
+         </template>
+      </KiwiDropdown>
     </el-row>
     <el-divider></el-divider>
     <el-row justify="center">
@@ -87,40 +124,41 @@
     </el-row>
 
     <!-- Mode Selection Dialog for Clipboard Content -->
-    <el-dialog
+    <KiwiDialog
         :title="$t('login.clipboardAccess')"
         :visible.sync="showModeSelectionDialog"
-        width="30%"
+        width="400px"
         center>
       <span>
         {{ $t('ai.useClipboardContent', { text: copiedTextFromClipboard.substring(0, 100) + (copiedTextFromClipboard.length > 100 ? '...' : '') }) }}
       </span>
-      <el-form label-position="top" style="margin-top: 20px;">
-        <el-form-item :label="$t('searchModes.selectMode')">
-          <el-select v-model="tempSelectedModeForClipboard" :placeholder="$t('searchModes.selectMode')" style="width: 100%;">
-            <el-option
-                v-for="item in searchModes"
-                :key="item.value"
-                :label="$t(`searchModes.${item.labelKey || item.label.toLowerCase().replace(/\s+/g, '')}`)"
-                :value="item.value">
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
+      <div style="margin-top: 20px;">
+        <div style="margin-bottom: 10px; font-size: 14px; color: var(--text-secondary);">{{ $t('searchModes.selectMode') }}</div>
+        <KiwiDropdown @command="(val) => tempSelectedModeForClipboard = val" style="width: 100%;">
+           <KiwiButton style="width: 100%; justify-content: space-between;">
+             {{ getModeLabel(tempSelectedModeForClipboard) }} <i class="el-icon-arrow-down"></i>
+           </KiwiButton>
+           <template slot="dropdown">
+             <KiwiDropdownItem v-for="item in searchModes" :key="item.value" :command="item.value">
+               {{ getModeLabel(item) }}
+             </KiwiDropdownItem>
+           </template>
+        </KiwiDropdown>
+      </div>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="cancelCopiedTextSearch">{{ $t('common.cancel') }}</el-button>
-        <el-button type="info" @click="confirmCopiedTextSearch">{{ $t('common.search') }}</el-button>
+        <KiwiButton @click="cancelCopiedTextSearch">{{ $t('common.cancel') }}</KiwiButton>
+        <KiwiButton type="primary" @click="confirmCopiedTextSearch">{{ $t('common.search') }}</KiwiButton>
       </span>
-    </el-dialog>
+    </KiwiDialog>
 
     <!-- Mobile Clipboard Access Info Dialog -->
-    <el-dialog
+    <KiwiDialog
         :title="$t('login.clipboardAccess')"
         :visible.sync="showClipboardInfoDialog"
         width="90%"
         center>
       <div style="text-align: center;">
-        <i class="el-icon-info" style="font-size: 48px; color: #409EFF; margin-bottom: 16px;"></i>
+        <i class="el-icon-info" style="font-size: 48px; color: var(--color-primary); margin-bottom: 16px;"></i>
         <p style="margin-bottom: 16px;">{{ $t('login.clipboardInstructions.title') }}</p>
         <ol style="text-align: left; display: inline-block;">
           <li>{{ $t('login.clipboardInstructions.step1') }}</li>
@@ -130,9 +168,9 @@
         </ol>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="showClipboardInfoDialog = false">{{ $t('login.gotIt') }}</el-button>
+        <KiwiButton type="primary" @click="showClipboardInfoDialog = false">{{ $t('login.gotIt') }}</KiwiButton>
       </span>
-    </el-dialog>
+    </KiwiDialog>
   </div>
 </template>
 
@@ -142,20 +180,34 @@ import kiwiConsts from "@/const/kiwiConsts";
 import util from '@/util/util'
 import {setStore, getStore} from "@/util/store";
 import messageCenter from '@/util/msg';
-import { getLanguageForMode, getInitialSelectedLanguage } from '@/util/langUtil';
+import { getLanguageForMode, getInitialSelectedLanguage, saveLanguageForMode } from '@/util/langUtil';
+import KiwiInput from '@/components/ui/KiwiInput';
+import KiwiButton from '@/components/ui/KiwiButton';
+import KiwiDropdown from '@/components/ui/KiwiDropdown';
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem';
+import KiwiDialog from '@/components/ui/KiwiDialog';
+import { mapState, mapMutations } from 'vuex';
 
 const AI_MODES = Object.values(kiwiConsts.SEARCH_AI_MODES).map(mode => mode.value)
 
 export default {
+  components: {
+    KiwiInput,
+    KiwiButton,
+    KiwiDropdown,
+    KiwiDropdownItem,
+    KiwiDialog
+  },
   data() {
     return {
       originalText: this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText.trim()) : '',
       searchInputWidth: document.body.clientWidth / 1.3 + 'px',
       lazy: this.$route.path.indexOf('lazy') > -1,
       selectedMode: this.$route.query.selectedMode ? decodeURIComponent(this.$route.query.selectedMode) : kiwiConsts.SEARCH_DEFAULT_MODE,
-      searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map(mode => ({
+      searchModes: Object.values(kiwiConsts.SEARCH_MODES_DATA).map((mode, index) => ({
         ...mode,
-        labelKey: this.getModeTranslationKey(mode.value)
+        labelKey: this.getModeTranslationKey(mode.value),
+        originalIndex: index
       })),
       selectedLanguage: getInitialSelectedLanguage(this.$route),
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
@@ -172,10 +224,18 @@ export default {
 
       // Desktop clipboard notification
       clipboardNotification: null,
+      
+      // Custom Autocomplete
+      suggestions: [],
+      suggestionsVisible: false,
+      debounceTimer: null,
     }
   },
 
   computed: {
+    ...mapState({
+      apiLoading: state => state.common.apiLoading
+    }),
     getWindowWidth() {
       return window.innerWidth
     },
@@ -183,6 +243,9 @@ export default {
       return window.innerWidth < 768
     },
     selectWidthStyle() {
+      if (this.isSmallScreen) {
+        return { width: 'auto', minWidth: '80px', maxWidth: '110px' }
+      }
       const selectedOption = this.searchModes.find(mode => mode.value === this.selectedMode)
       const width = selectedOption ? selectedOption.width : '140px'
       return {width}
@@ -243,9 +306,25 @@ export default {
     this.setupClipboardHandling();
     // Auto-focus the search input once mounted
     this.focusSearchInput();
+    // Always listen for tab visibility changes to re-focus input (independent of clipboard detection)
+    document.addEventListener('visibilitychange', this.handleVisibilityFocus);
+    // Added: window focus & pageshow for browsers where visibility doesn't fire (Safari / dialogs)
+    window.addEventListener('focus', this.handleWindowFocus);
+    window.addEventListener('pageshow', this.handleWindowFocus);
+    // Sort modes based on usage frequency
+    this.sortSearchModes();
   },
   beforeDestroy() {
     this.cleanupClipboardHandling();
+    document.removeEventListener('visibilitychange', this.handleVisibilityFocus);
+    window.removeEventListener('focus', this.handleWindowFocus);
+    window.removeEventListener('pageshow', this.handleWindowFocus);
+  },
+  activated() {
+    // Re-focus when component is reactivated (keep-alive)
+    setTimeout(() => {
+      this.focusSearchInput();
+    }, 200);
   },
   watch: {
     $route: function () {
@@ -258,47 +337,73 @@ export default {
       // Update selected language when mode changes
       if (newMode !== oldMode) {
         this.selectedLanguage = getLanguageForMode(newMode);
+        this.focusSearchInput();
       }
     }
   },
   methods: {
     ...wordSearch,
+    ...mapMutations(['cancelApiRequest']),
+
+    // Handle stop/cancel request
+    handleStopRequest() {
+      this.cancelApiRequest();
+      messageCenter.info({
+        message: this.$t('messages.requestCancelled') || 'Request cancelled',
+        duration: 2000
+      });
+    },
+
     // Added: focus helper to reliably target inner input of el-autocomplete
     focusSearchInput() {
-      // Use nextTick + small delay to ensure input is in DOM and rendered
       this.$nextTick(() => {
-        const tryFocus = () => {
-          try {
-            const auto = this.$refs && this.$refs.auto
-            if (!auto) return
-            // Try component method first (ElementUI exposes focus on Input, sometimes on Autocomplete)
-            if (typeof auto.focus === 'function') {
-              auto.focus()
-              return
-            }
-            // Then try inner el-input ref
-            if (auto.$refs && auto.$refs.input && typeof auto.$refs.input.focus === 'function') {
-              auto.$refs.input.focus()
-              return
-            }
-            // Finally query the native input inside the component root
+        const auto = this.$refs.auto
+        if (auto) {
+          // Try using the component's exposed focus method first
+          if (typeof auto.focus === 'function') {
+            auto.focus()
+          } else {
+            // Fallback: query the native input/textarea inside the component root
             const root = auto.$el || auto
-            const inputEl = root && root.querySelector ? root.querySelector('input') : document.querySelector('#search-input input')
+            const inputEl = root && root.querySelector ? root.querySelector('input, textarea') : document.querySelector('#search-input input, #search-input textarea')
             if (inputEl && typeof inputEl.focus === 'function') {
               inputEl.focus()
             }
-          } catch (e) {
-            console.warn('Failed to focus search input:', e)
           }
         }
-        // Try now and once more shortly after in case of late rendering
-        tryFocus()
-        setTimeout(tryFocus, 150)
       })
+    },
+
+    // New: simple visibility focus handler (separated from clipboard logic)
+    handleVisibilityFocus() {
+      if (document.visibilityState === 'visible' && !this.isMobile) {
+        setTimeout(() => {
+          this.focusSearchInput();
+        }, 50);
+      }
+    },
+    // New: window focus/pageshow handler (covers cases where visibilitychange does not fire)
+    handleWindowFocus() {
+      // Guard: avoid stealing focus if user is currently typing elsewhere (e.g., modal input)
+      const active = document.activeElement;
+      const searchWrapper = this.$refs.auto && (this.$refs.auto.$el || this.$refs.auto);
+      if (active && searchWrapper && searchWrapper.contains(active)) {
+        return; // Already focused inside search component
+      }
+      // Short delay allows any route activation / transitions to finish
+      setTimeout(() => {
+        this.focusSearchInput();
+      }, 100);
     },
 
     // Added getModeLabel method
     getModeLabel(item) {
+      // If item is a string, try to resolve it to an object from searchModes
+      if (typeof item === 'string') {
+        const found = this.searchModes.find(m => m.value === item)
+        if (found) item = found
+      }
+
       // Accept either a mode object or a raw mode value string
       try {
         const isObj = item && typeof item === 'object'
@@ -308,13 +413,27 @@ export default {
           ? item.labelKey
           : (labelRaw ? labelRaw.toLowerCase().replace(/\s+/g, '') : (value || ''))
         let translated = (this.$t && key) ? this.$t(`searchModes.${key}`) : ''
+        
+        // If translation is missing or returns the key, fallback to formatted value
         if (!translated || translated === `searchModes.${key}`) {
-          translated = labelRaw || value || key || ''
+          const text = labelRaw || value || key || ''
+          // Replace hyphens/underscores with spaces and capitalize words
+          return text.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
         }
         return translated
       } catch (e) {
-        return (item && item.label) || (item && item.value) || String(item || '')
+        return String(item || '')
       }
+    },
+
+    getLanguageLabel(code) {
+      const entry = Object.entries(this.languageCodes).find(([key, value]) => value === code);
+      if (entry) {
+        const key = entry[0];
+        // Use the same logic as the dropdown items
+        return this.$t(`languages.${key.replaceAll('_', ' ')}`);
+      }
+      return code;
     },
 
     getModeTranslationKey(value) {
@@ -327,14 +446,38 @@ export default {
       // You can add additional logic here if needed
     },
 
-    // Save language setting for current mode
-    saveLanguageForMode(mode, language) {
-      const modeSpecificKey = mode + '-' + kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE;
-      setStore({
-        name: modeSpecificKey,
-        content: language,
-        type: 'local'
-      });
+
+
+    // Increment usage count for a mode
+    incrementModeUsage(mode) {
+      try {
+        const stats = getStore({ name: kiwiConsts.CONFIG_KEY.AI_MODE_USAGE_STATS }) || {};
+        stats[mode] = (stats[mode] || 0) + 1;
+        setStore({
+          name: kiwiConsts.CONFIG_KEY.AI_MODE_USAGE_STATS,
+          content: stats,
+          type: 'local'
+        });
+      } catch (e) {
+        console.error('Failed to update mode usage stats', e);
+      }
+    },
+
+    // Sort search modes based on usage frequency
+    sortSearchModes() {
+      try {
+        const stats = getStore({ name: kiwiConsts.CONFIG_KEY.AI_MODE_USAGE_STATS }) || {};
+        this.searchModes.sort((a, b) => {
+          const countA = stats[a.value] || 0;
+          const countB = stats[b.value] || 0;
+          if (countA !== countB) {
+            return countB - countA; // Descending order of usage
+          }
+          return a.originalIndex - b.originalIndex; // Stable fallback
+        });
+      } catch (e) {
+        console.error('Failed to sort search modes', e);
+      }
     },
 
     getNativeLanguage() {
@@ -468,12 +611,15 @@ export default {
     },
 
     async handleVisibilityChange() {
-      // Check if clipboard detection is enabled before proceeding
+      // Always attempt focus when tab becomes visible (desktop)
+      if (document.visibilityState === 'visible' && !this.isMobile) {
+        this.focusSearchInput();
+      }
+      // Clipboard detection gating logic preserved
       if (!this.isClipboardDetectionEnabled) {
         console.log('Clipboard detection disabled, skipping visibility change handling');
         return;
       }
-
       if (document.visibilityState === 'visible' && !this.isMobile) {
         console.log('Tab became visible. Checking clipboard...');
 
@@ -562,22 +708,46 @@ export default {
       this.selectedLanguage = this.$route.query.language || getLanguageForMode(this.selectedMode);
     },
 
-    querySearch(queryString, callback) {
-      if (!util.isEmptyStr(this.$route.query.selectedMode) && this.$route.query.selectedMode !== kiwiConsts.SEARCH_DEFAULT_MODE) {
-        console.log('Not default mode')
-        callback([])
-        return
+    handleInput(value) {
+      this.originalText = value;
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
+        this.fetchSuggestions(value);
+      }, 300);
+    },
+
+    handleFocus() {
+      if (this.originalText) {
+        this.fetchSuggestions(this.originalText);
       }
-      let real = queryString.trimLeft();
+    },
+
+    handleBlur() {
+      setTimeout(() => {
+        this.suggestionsVisible = false;
+      }, 200);
+    },
+
+    fetchSuggestions(queryString) {
+      if (!util.isEmptyStr(this.$route.query.selectedMode) && this.$route.query.selectedMode !== kiwiConsts.SEARCH_DEFAULT_MODE) {
+        this.suggestions = [];
+        this.suggestionsVisible = false;
+        return;
+      }
+      let real = queryString ? queryString.trimLeft() : '';
       if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
-        callback([])
-        return
+        this.suggestions = [];
+        this.suggestionsVisible = false;
+        return;
       }
       this.fuzzyQueryWord(real.toLowerCase(), 1, 50).then(response => {
-        callback(response.data.data)
+        this.suggestions = response.data.data;
+        this.suggestionsVisible = this.suggestions.length > 0;
       }).catch(e => {
-        console.error(e)
-      })
+        console.error(e);
+        this.suggestions = [];
+        this.suggestionsVisible = false;
+      });
     },
 
     querySelect(item) {
@@ -585,6 +755,9 @@ export default {
       if (real === '') {
         return
       }
+      this.originalText = real;
+      this.suggestionsVisible = false;
+      
       // Single-step, idempotent navigation to Search with selected text only
       const target = {
         path: this.$route.path,
@@ -617,12 +790,24 @@ export default {
       const target = isAi
         ? { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: baseQuery }
         : { path: kiwiConsts.ROUTES.DETAIL, query: baseQuery }
+      
+      // Increment usage count
+      this.incrementModeUsage(item);
+      
       this.navigateIfChanged(target)
+      
+      // Re-focus after mode change (dropdown click can steal focus)
+      // Try multiple times to catch various render/navigation states
+      this.$nextTick(() => {
+        this.focusSearchInput()
+        setTimeout(() => this.focusSearchInput(), 100)
+        setTimeout(() => this.focusSearchInput(), 300)
+      })
     },
 
     selectedLanguageChange(item) {
       console.log('selectedLanguageChange', item)
-      this.saveLanguageForMode(this.selectedMode, item)
+      saveLanguageForMode(this.selectedMode, item)
       const target = {
         path: this.$route.path,
         query: {
@@ -654,10 +839,26 @@ export default {
       this.navigateIfChanged(target)
     },
 
+    handlePrependClick(event) {
+      if (this.lazy) {
+        this.closeLazy()
+      } else {
+        const dropdown = this.$refs.modeDropdown
+        // If click originated from inside the dropdown component, let it handle the toggle naturally
+        if (dropdown && dropdown.$el && dropdown.$el.contains(event.target)) {
+          return
+        }
+        // Otherwise (clicked on padding/prepend area), manually toggle
+        if (dropdown && typeof dropdown.toggle === 'function') {
+          dropdown.toggle()
+        }
+      }
+    },
+
     explainMore() {
       let real = this.originalText.trim()
       if (util.isEmptyStr(real)) return
-      this.$refs.auto.close()
+      this.suggestionsVisible = false;
       const encodedOriginalText = encodeURIComponent(real)
       const target = {
         path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL,
@@ -748,7 +949,7 @@ export default {
         return;
       }
 
-      this.$refs.auto.close();
+      this.suggestionsVisible = false;
 
       const encodedOriginalText = encodeURIComponent(real)
       console.log('encodedOriginalText', encodedOriginalText)
@@ -769,7 +970,7 @@ export default {
       const target = isAi
         ? { path: kiwiConsts.ROUTES.AI_RESPONSE_DETAIL, query: baseQuery }
         : { path: kiwiConsts.ROUTES.DETAIL, query: baseQuery }
-      this.navigateIfChanged(target, { ignoreKeys: ['now'] })
+      this.navigateIfChanged(target, { ignoreKeys: [] })
     },
 
     closeLazy() {
@@ -793,8 +994,150 @@ export default {
 
 <style scoped>
 /* --- existing styles start --- */
+/* --- existing styles start --- */
 .dialog-footer {
   text-align: center;
+}
+
+.search-input-wrapper {
+  position: relative;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.search-input-wrapper.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 95% !important; /* Override inline style on mobile */
+  max-width: 400px;
+}
+
+.mobile-row {
+  width: 100%;
+}
+
+.mobile-full-width {
+  width: 100%;
+  display: block;
+}
+
+.mobile-trigger {
+  width: 100%;
+  padding: 10px 15px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  display: flex;
+  justify-content: flex-start; /* Left align */
+  gap: 8px; /* Space between text and icon */
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mobile-submit-btn {
+  width: auto;
+  min-width: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 12px;
+  height: 40px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* Force dropdown to be full width on mobile */
+.mobile-layout ::v-deep .kiwi-dropdown {
+  width: 100%;
+  display: block;
+}
+
+.mobile-layout ::v-deep .kiwi-dropdown-trigger {
+  width: 100%;
+  display: block;
+}
+
+.mobile-layout ::v-deep .kiwi-dropdown-menu {
+  width: 100%;
+  min-width: 100%;
+}
+
+/* Adjust input on mobile to look good without slots */
+.mobile-layout ::v-deep .el-input__inner {
+  border-radius: 8px !important;
+  height: 44px;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 2000;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.suggestion-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-color-lighter);
+  transition: background 0.2s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: var(--bg-hover);
+}
+
+.search-actions-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-item {
+  margin: 0 5px;
+  display: inline-block;
+}
+
+.mode-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-regular);
+  cursor: pointer;
+}
+
+.mode-select-trigger:hover {
+  color: var(--color-primary);
+}
+
+.ai-mode-text {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 /* Language switcher positioning */
@@ -830,9 +1173,19 @@ export default {
 }
 
 .el-button[title*="History"]:hover {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
   color: white;
+}
+
+/* Make the append slot clickable */
+.search-input-wrapper ::v-deep .kiwi-input__append {
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.search-input-wrapper ::v-deep .kiwi-input__append:hover {
+  background-color: var(--bg-sidebar-active);
 }
 /* --- existing styles end --- */
 </style>

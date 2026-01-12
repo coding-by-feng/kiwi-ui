@@ -1,4 +1,8 @@
 export default {
+    language: {
+        nativeName: 'Español',
+        englishName: 'Spanish'
+    },
     // Navigation
     nav: {
         search: 'Buscar',
@@ -218,6 +222,7 @@ export default {
         clearFilters: 'Limpiar filtros',
         review: 'Revisión',
         copy: 'Copiar',
+        copyPrompt: 'Copiar indicador',
         details: 'Detalles',
         searchAgain: 'Buscar de nuevo',
         aiCallDetails: 'Detalles de llamada IA',
@@ -243,7 +248,31 @@ export default {
         streaming: 'Transmitiendo respuesta...',
         copyResponseText: 'Copiar texto de respuesta',
         textCopiedToClipboard: '¡Texto copiado al portapapeles!',
-        failedToCopyText: 'Error al copiar el texto'
+        failedToCopyText: 'Error al copiar el texto',
+        // Diálogo del portapapeles
+        useClipboardContent: '¿Usar contenido del portapapeles: "{text}"?',
+        // Filtros de clasificación
+        normalItems: 'Elementos normales',
+        archivedItems: 'Elementos archivados',
+        allItems: 'Todos los elementos',
+        // Estado de carga
+        loadingHistory: 'Cargando historial...',
+        // Acciones
+        archive: 'Archivar',
+        // Mensajes de archivado/eliminación
+        itemArchived: 'Elemento archivado correctamente',
+        archiveFailed: 'Error al archivar',
+        itemDeleted: 'Elemento eliminado correctamente',
+        deleteFailed: 'Error al eliminar',
+        loadHistoryFailed: 'Error al cargar el historial de llamadas IA',
+        // Diálogo de confirmación de eliminación
+        deleteItemTitle: 'Eliminar elemento',
+        deleteItemConfirm: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.',
+        // Minimizar/Restaurar
+        minimize: 'Minimizar',
+        restore: 'Restaurar',
+        close: 'Cerrar',
+        aiSearch: 'Búsqueda IA'
     },
 
     // New: audio settings parity
@@ -271,7 +300,27 @@ export default {
         antonym: 'Antónimo',
         vocabularyAssociation: 'Asociación de vocabulario',
         phrasesAssociation: 'Asociación de frases',
+        vocabularyCharacterExpansion: 'Expansión de caracteres de vocabulario',
+        ambiguousAssociationCorrection: 'Corrección de asociación ambigua',
+        naturalIdiomaticRetouch: 'Retoque idiomático natural',
         selectMode: 'Seleccionar modo'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'Introducir vocabulario',
+        directTranslation: 'Introducir cualquier cosa',
+        explanation: 'Introducir cualquier cosa',
+        grammarExplanation: 'Introducir cualquier cosa',
+        grammarCorrection: 'Introducir cualquier cosa',
+        synonym: 'Introducir vocabulario',
+        antonym: 'Introducir vocabulario',
+        vocabularyAssociation: 'Introducir cualquier cosa',
+        phrasesAssociation: 'Introducir cualquier cosa',
+        // New modes
+        vocabularyCharacterExpansion: 'Introducir cualquier cosa',
+        ambiguousAssociationCorrection: 'Introducir cualquier cosa',
+        naturalIdiomaticRetouch: 'Introducir texto para retocar'
     },
 
     user: {
@@ -279,10 +328,11 @@ export default {
         searchModeHotkeysTip: 'Presiona Ctrl (o Cmd en macOS) + Shift + Número para cambiar de modo',
         resetToDefaults: 'Restablecer a valores predeterminados',
         hotkey: 'Atajo',
-        pressKeys: 'Presiona teclas...',
         // Añadido: configuración de pestañas de funciones
         featureTabs: 'Pestañas de funciones',
-        featureTabsTip: 'Mostrar u ocultar pestañas en la barra de herramientas'
+        featureTabsTip: 'Mostrar u ocultar pestañas en la barra de herramientas',
+        uiLanguage: 'Idioma de la interfaz',
+        uiLanguageTooltip: 'Idioma utilizado para la interfaz (independiente del idioma de traducción)'
     },
 
     messages: {
@@ -334,5 +384,22 @@ export default {
         downloadForWindows: 'Descargar para Windows',
         downloadForLinux: 'Descargar para Linux',
         gdriveNote: 'Las descargas están alojadas en Google Drive. Si el enlace no se abre, cópielo y ábralo en una nueva pestaña.'
+    },
+
+    // Review modes
+    review: {
+        // Generación de audio TTS
+        generatingAudio: 'Generando audio...',
+        audioReady: 'Audio listo',
+        audioFilesReady: 'archivos de audio listos',
+        audioFilesFailed: 'archivos de audio fallidos',
+        audioGenerationFailed: 'Generación de audio fallida, usando respaldo',
+        audioGenerationInProgress: 'La generación de audio ya está en progreso',
+        ttsAudioNotEnabled: 'El audio TTS no está habilitado en el servidor',
+        startingAudioGeneration: 'Iniciando generación de audio...',
+        audioPreparationFailed: 'Preparación de audio fallida',
+        prepareAudio: 'Preparar audio',
+        audioGenerationComplete: 'Generación de audio completa',
+        preparingAudioForReview: 'Preparando audio para revisión...'
     }
 }

@@ -15,7 +15,11 @@ let index = 0
 export default {
   name: 'wel',
   components: {
-    Countdown: $ => import('./Countdown')
+    Countdown: $ => import('./Countdown'),
+    KiwiButton: () => import('@/components/ui/KiwiButton'),
+    KiwiDropdown: () => import('@/components/ui/KiwiDropdown'),
+    KiwiDropdownItem: () => import('@/components/ui/KiwiDropdownItem'),
+    KiwiDialog: () => import('@/components/ui/KiwiDialog')
   },
   data() {
     return {
@@ -168,7 +172,7 @@ export default {
           let listId = this.$route.query.listId
           if (listId) {
             await wordStarList.findAllWordId(listId).then(response => {
-              if (response.data.code) {
+              if (response.data.success) {
                 let wordIdList = response.data.data
                 this.stockReview(wordIdList)
               }
@@ -214,7 +218,7 @@ export default {
       if (this.$route.query.originalText) {
         word = decodeURIComponent(this.$route.query.originalText)
       }
-      if (word === this.wordInfo.wordName || !word) {
+      if (!word) {
         return
       }
       // 倒计时第二次刷新页面时要重新请求数据
@@ -231,7 +235,7 @@ export default {
       }
 
       await this.queryWordDetail(word, this.current, this.size).then(response => {
-        if (response.data.code && response.data.data.records && response.data.data.records.length > 0) {
+        if (response.data.success && response.data.data.records && response.data.data.records.length > 0) {
           if (response.data.data.records.length > 1) {
             this.wordInfoList = response.data.data.records
             this.initTabActivate()
@@ -320,7 +324,7 @@ export default {
       for (let i = 0; i < wordIdList.length; i++) {
         let wordId = wordIdList[i]
         await this.queryWordDetailById(wordId).then(response => {
-          if (response.data.code) {
+          if (response.data.success) {
             this.wordInfo = response.data.data
             this.playDetail2Audio()
           } else {
@@ -398,7 +402,7 @@ export default {
         let source = getStore({name: 'pronunciation_source'})
         if (!audio.src || audio.src === window.location.href) {
           if (source === kiwiConsts.PRONUNCIATION_SOURCE.LOCAL) {
-            audio.src = '/wordBiz/word/pronunciation/downloadVoice/' + id
+            audio.src = '/api/word/pronunciation/downloadVoice/' + id
           } else {
             audio.src = sourceUrl
           }
@@ -469,13 +473,6 @@ export default {
         return false
       }
       return true
-    },
-    selectShowCharacter(characterId) {
-      this.showCharacterId = characterId
-      this.showCharacter = false
-      setTimeout(() => {
-        this.showCharacter = true
-      }, 1)
     },
     async wordCollectClickFun() {
       if (!this.checkIsLogin()) {
@@ -652,58 +649,43 @@ export default {
 </script>
 
 <template>
-  <el-container>
-    <el-header>
+  <div>
+    <div class="detail-header">
       <div class="ai-container">
         <div v-if="isTabActivate">
           <div class="floating-controls floating-controls-top">
-            <el-button v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true" circle>
-              <i class="el-icon-s-unfold"></i>
-            </el-button>
+            <KiwiButton v-if="!showWordSelect && wordInfoList.length>1" size="mini" @click="showWordSelect = true" circle icon="el-icon-s-unfold"></KiwiButton>
           </div>
           <div class="floating-controls floating-controls-bottom">
-            <el-dropdown size="mini" @command="selectShowCharacter" placement="top">
-              <el-button size="mini" class="el-icon-s-operation"></el-button>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item command="0">All</el-dropdown-item>
-                <div v-for="wordCharacterVO in wordInfo.characterVOList">
-                  <el-dropdown-item :command="wordCharacterVO.characterId">
-                    {{ wordCharacterVO.characterCode }}&nbsp;{{ wordCharacterVO.tag }}
-                  </el-dropdown-item>
-                </div>
-              </el-dropdown-menu>
-            </el-dropdown>
-            &nbsp;
-            <el-button size="mini" @click="isShowExample = !isShowExample">
-              <i class="el-icon-sell"></i>
-            </el-button>
-            <el-button size="mini"
+            <KiwiButton size="mini"
                        v-if="wordInfo.wordName.length>0"
-                       @click="wordCollectClickFun()">
-              <i class="el-icon-circle-plus-outline"></i>
-            </el-button>
+                       @click="wordCollectClickFun()" icon="el-icon-circle-plus-outline">
+            </KiwiButton>
           </div>
-          <el-dialog
-              v-loading="loading"
+          
+          <!-- Word Select Dialog -->
+          <KiwiDialog
               :title="decodeURIComponent($route.query.originalText)"
               :visible.sync="showWordSelect"
-              custom-class="word-select-dialog">
-            <el-collapse>
-              <el-collapse-item v-for="word in wordInfoList">
-                <template slot="title">
-                  <el-button type="info" size="mini" @click="agileShowDetail(word)">{{ word.wordName }}</el-button>
-                  &nbsp;
-                </template>
-                <div v-for="characterVO in word.characterVOList" style="margin-bottom: -10px;">
-                  <p v-for="paraphraseVO in characterVO.paraphraseVOList">
-                    <i class="el-icon-caret-right"></i>
-                    {{ paraphraseVO.meaningChinese }}
-                  </p>
-                </div>
-              </el-collapse-item>
-            </el-collapse>
+              width="90%"
+              center>
+            <div class="word-select-list">
+               <div v-for="word in wordInfoList" :key="word.wordId" class="word-select-item">
+                  <div class="word-select-header">
+                    <KiwiButton type="info" size="mini" @click="agileShowDetail(word)">{{ word.wordName }}</KiwiButton>
+                  </div>
+                  <div class="word-select-meanings">
+                    <div v-for="characterVO in word.characterVOList" :key="characterVO.characterId">
+                      <p v-for="paraphraseVO in characterVO.paraphraseVOList" :key="paraphraseVO.paraphraseId">
+                        <i class="el-icon-caret-right"></i>
+                        {{ paraphraseVO.meaningChinese }}
+                      </p>
+                    </div>
+                  </div>
+               </div>
+            </div>
             <el-pagination
-                style="margin-top: 10px"
+                style="margin-top: 10px; text-align: center;"
                 small
                 background
                 :page-size.sync="size"
@@ -716,85 +698,36 @@ export default {
                 @current-change="pageChange"
                 :total="total">
             </el-pagination>
-          </el-dialog>
+          </KiwiDialog>
         </div>
+        
         <div>
           <p v-if="defaultHint && defaultHint.length>0" style="color: #ed3f14">{{ defaultHint }}</p>
-          <el-alert
-              v-if="''!==wordInfo.wordName"
-              type="info"
-              effect="dark"
-              :closable="false"
-              center
-              class="header-title-alert">
-            <div slot="title">
-              <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
-            </div>
-          </el-alert>
+          <div v-if="''!==wordInfo.wordName" class="header-title-alert">
+             <div class="alert-content">
+               <b :style="getWordNameStyle">{{ wordInfo.wordName }}</b>
+             </div>
+          </div>
         </div>
       </div>
-    </el-header>
-    <el-main>
+    </div>
+
+    <div class="detail-main">
       <div class="ai-container word-detail">
-        <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter">
+        <div v-for="wordCharacterVO in wordInfo.characterVOList" v-if="showCharacter" :key="wordCharacterVO.characterId">
           <div v-show="showCharacterId == '0' || showCharacterId == wordCharacterVO.characterId">
-            <el-row type="flex" class="row-bg" justify="right">
-              <el-col>
-                <el-tag type="info" effect="dark"
-                        v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
+            
+            <!-- Pronunciation Row -->
+            <div class="detail-row pronunciation-row">
+                <span class="detail-tag" v-if="wordCharacterVO.characterCode && wordCharacterVO.characterCode !== ''">
                   {{ wordCharacterVO.characterCode }}
-                </el-tag>
-                <el-tag type="info" effect="dark" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">
-                  {{ wordCharacterVO.tag }}
-                </el-tag>
-                &nbsp;
-                <span v-if="isLargeWindow" v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-                  <el-tag type="info" effect="dark"
-                          @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
-                    {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                       v-show="!isUKPronunciationPlaying"
-                       class="el-icon-video-play"></i>
-                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                       v-show="!isUSPronunciationPlaying"
-                       class="el-icon-video-play"></i>
-                    <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                       v-show="isUKPronunciationPlaying"
-                       class="el-icon-loading"></i>
-                    <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                       v-show="isUSPronunciationPlaying"
-                       class="el-icon-loading"></i>
-                  </el-tag>
-                  &nbsp;
                 </span>
-              </el-col>
-            </el-row>
-            <el-row v-if="!isSmallWindow && !isLargeWindow"
-                    type="flex" class="row-bg" justify="right">
-              <el-col v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-                <el-tag type="info" effect="dark"
-                        @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
-                  {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
-                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                     v-show="!isUKPronunciationPlaying"
-                     class="el-icon-video-play"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                     v-show="!isUSPronunciationPlaying"
-                     class="el-icon-video-play"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
-                     v-show="isUKPronunciationPlaying"
-                     class="el-icon-loading"></i>
-                  <i v-if="wordPronunciationVO.soundmarkType === 'US'"
-                     v-show="isUSPronunciationPlaying"
-                     class="el-icon-loading"></i>
-                </el-tag>
-              </el-col>
-            </el-row>
-            <div v-if="isSmallWindow"
-                 v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList">
-              <el-row type="flex" justify="right" class="row-bg">
-                <el-col>
-                  <el-tag type="info" effect="dark"
+                <span class="detail-tag" v-if="wordCharacterVO.tag && wordCharacterVO.tag !== ''">
+                  {{ wordCharacterVO.tag }}
+                </span>
+                
+                <span v-for="wordPronunciationVO in wordCharacterVO.pronunciationVOList" :key="wordPronunciationVO.pronunciationId" class="pronunciation-item">
+                  <span class="detail-tag pronunciation-tag"
                           @click="playPronunciation(wordPronunciationVO.pronunciationId, wordPronunciationVO.sourceUrl, wordPronunciationVO.soundmarkType)">
                     {{ wordPronunciationVO.soundmark }}[{{ wordPronunciationVO.soundmarkType }}]
                     <i v-if="wordPronunciationVO.soundmarkType === 'UK'"
@@ -809,142 +742,117 @@ export default {
                     <i v-if="wordPronunciationVO.soundmarkType === 'US'"
                        v-show="isUSPronunciationPlaying"
                        class="el-icon-loading"></i>
-                  </el-tag>
-                </el-col>
-              </el-row>
+                  </span>
+                </span>
             </div>
-            <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList">
-              <el-card class="box-card">
-                <div slot="header" @click="isShowParaphrase = !isShowParaphrase">
-                  <el-alert
-                      type="info"
-                      :description="isShowParaphrase ? wordParaphraseVO.meaningChinese : '释义已隐藏，点击灰暗区域隐藏/显示'"
-                      :closable="false"
-                      effect="dark"
-                      center>
-                    <div slot="title">
-                      <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
-                           v-for="phraseVO in wordParaphraseVO.phraseList">
-                        <p>[ {{ phraseVO }} ]</p>
-                      </div>
-                      <p style="margin-top: 50px;">
-                        {{ wordParaphraseVO.paraphraseEnglish }}
-                      </p>
-                      <el-button type="text">
-                        <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
-                           style="color: #FFFFFF;"
-                           @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
-                      </el-button>
-                      <div v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
-                           class="outline_fix_top_left">
-                        {{ wordParaphraseVO.codes }}
-                      </div>
-                    </div>
-                  </el-alert>
-                </div>
-                <el-alert
-                    v-if="!isShowExample"
-                    type="info"
-                    title="例句已隐藏"
-                    center
-                    effect="light"
-                    :closable="false">
-                </el-alert>
-                <div v-if="isShowExample">
-                  <div v-if="wordParaphraseVO.exampleVOList == null">
-                    <el-alert
-                        type="info"
-                        title="该释义暂时没有例句"
-                        center
-                        effect="light"
-                        :closable="false">
-                    </el-alert>
-                  </div>
-                  <div v-for="wordParaphraseExampleVO in wordParaphraseVO.exampleVOList">
-                    <el-alert
-                        type="info"
-                        center
-                        effect="light"
-                        :description="wordParaphraseExampleVO.exampleTranslate"
-                        :closable="false">
-                      <div slot="title">
-                        {{ wordParaphraseExampleVO.exampleSentence }}
-                        <el-button type="text"><i
-                            class="el-icon-circle-plus-outline outline_fix"
-                            @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
-                        </el-button>
-                      </div>
-                    </el-alert>
+
+            <!-- Paraphrase List -->
+            <div v-for="wordParaphraseVO in wordCharacterVO.paraphraseVOList" :key="wordParaphraseVO.paraphraseId">
+              <div class="detail-card">
+                <div class="card-header" @click="isShowParaphrase = !isShowParaphrase">
+                  <div class="detail-alert info-alert">
+                     <div class="alert-content">
+                       <div>
+                          <div v-if="wordParaphraseVO.phraseList && wordParaphraseVO.phraseList.length"
+                               v-for="(phraseVO, pIndex) in wordParaphraseVO.phraseList" :key="pIndex">
+                            <p>[ {{ phraseVO }} ]</p>
+                          </div>
+                          <p style="margin-top: 10px;">
+                            {{ wordParaphraseVO.paraphraseEnglish }}
+                          </p>
+                          <p style="margin-top: 8px; color: var(--text-secondary); font-size: 0.9em;">
+                            {{ wordParaphraseVO.meaningChinese }}
+                          </p>
+                          <div class="action-icon">
+                            <i :class="getParaphraseCollectClass(wordParaphraseVO.paraphraseId)"
+                               style="color: var(--text-placeholder); cursor: pointer;"
+                               @click.stop="paraphraseCollectClickFun(wordParaphraseVO.paraphraseId)"></i>
+                          </div>
+                          <div v-if="wordParaphraseVO.codes && wordParaphraseVO.codes.length>0"
+                               class="outline_fix_top_left">
+                            {{ wordParaphraseVO.codes }}
+                          </div>
+                       </div>
+                     </div>
                   </div>
                 </div>
-              </el-card>
-              <el-divider></el-divider>
+                
+                <div class="card-body" v-if="isShowExample">
+                   <div v-if="!wordParaphraseVO.exampleVOList" class="detail-alert light-alert">
+                      <div class="alert-content">该释义暂时没有例句</div>
+                   </div>
+                   <div v-else v-for="wordParaphraseExampleVO in wordParaphraseVO.exampleVOList" :key="wordParaphraseExampleVO.exampleId" class="example-item">
+                      <div class="detail-alert light-alert">
+                        <div class="alert-content">
+                          <div class="example-sentence">
+                            {{ wordParaphraseExampleVO.exampleSentence }}
+                            <i class="el-icon-circle-plus-outline example-collect-icon"
+                               @click="exampleCollectClickFun(wordParaphraseExampleVO.exampleId)"></i>
+                          </div>
+                          <div class="example-translate">
+                            {{ wordParaphraseExampleVO.exampleTranslate }}
+                          </div>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+                
+                <div class="card-body" v-if="!isShowExample">
+                   <div class="detail-alert light-alert">
+                      <div class="alert-content">例句已隐藏</div>
+                   </div>
+                </div>
+              </div>
+              <hr class="detail-divider">
             </div>
           </div>
         </div>
       </div>
-      <el-dialog
+      
+      <!-- Collect List Dialog -->
+      <KiwiDialog
           center
           :title="collect.dialogTitle"
           :visible.sync="collect.listSelectDialogVisible"
-          custom-class="star-list-dialog"
-          :before-close="listSelectDialogHandleClose">
-        <el-table
-            :data="collect.starListData"
-            style="width: 100%">
-          <el-table-column
-              align="center">
-            <template slot-scope="scope">
-              <div slot="reference" class="name-wrapper">
-                <el-button type="info" @click="selectOneList(scope.row.id)">
-                  {{ scope.row.listName }}
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-dialog>
-    </el-main>
-    <el-dialog
+          width="400px">
+        <div class="collect-list">
+           <div v-for="item in collect.starListData" :key="item.id" class="collect-item">
+              <KiwiButton type="info" @click="selectOneList(item.id)" style="width: 100%;">
+                {{ item.listName }}
+              </KiwiButton>
+           </div>
+        </div>
+      </KiwiDialog>
+    </div>
+
+    <!-- Auto Play Dialog -->
+    <KiwiDialog
         title="提示"
         :visible.sync="autoPlayDialogVisible"
-        width="300px"
-        custom-class="confirm-dialog">
+        width="300px">
       <span>自动复习即将开始，请确认。</span>
       <span slot="footer" class="dialog-footer">
-    <el-button @click="autoPlayDialogVisible = false">取消</el-button>
-    <el-button type="info" @click="stockReviewStart">确定</el-button>
-  </span>
-    </el-dialog>
-  </el-container>
+        <KiwiButton @click="autoPlayDialogVisible = false">取消</KiwiButton>
+        <KiwiButton type="info" @click="stockReviewStart">确定</KiwiButton>
+      </span>
+    </KiwiDialog>
+  </div>
 </template>
 
 <style scoped>
-/* ==========================================
-   Detail.vue — Fully refreshed styles (2025-10)
-   Goals: modern, readable, responsive, accessible
-   Notes: keep class hooks, enhance Element UI via deep selectors
-   ========================================== */
+.detail-container {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-body);
+}
 
-/* Layout & rhythm */
 .ai-container {
   max-width: 1024px;
   margin: 0 auto;
   padding: 12px 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle section separators for pronunciation rows */
-.row-bg {
-  width: 100%;
-  padding: 6px 0;
-  margin: 0 auto 8px auto;
-  background: transparent;
-  border-bottom: 1px dashed #e9ecef;
-}
-
-/* Floating controls — compact, glassmorphism chips */
+/* Floating controls */
 .floating-controls {
   position: fixed;
   z-index: 1000;
@@ -952,181 +860,128 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 6px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
   border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-card);
 }
 .floating-controls-top { top: 12px; right: 16px; }
 .floating-controls-bottom { bottom: 12px; right: 16px; }
-.floating-controls .el-button {
-  background: rgba(255,255,255,0.9);
-  border: 1px solid #e9ecef;
-  color: #606266;
-  border-radius: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+
+/* Header Alert */
+.header-title-alert {
+  margin: 12px 0 0 0;
+  background: var(--gradient-primary);
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: 14px 18px;
+  text-align: center;
+}
+
+/* Detail Row */
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.pronunciation-row {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border-color-light);
+}
+
+/* Tags */
+.detail-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-container);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
-.floating-controls .el-button:hover {
+.detail-tag:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-hover);
+  filter: brightness(1.02);
 }
-.floating-controls .el-button i[class^='el-icon-'] { color: #76838f; }
-.floating-controls .el-button:focus { outline: 2px solid rgba(64,158,255,0.35); outline-offset: 1px; }
-
-/* Page lead/title — gradient chip with the word */
-.header-title-alert { margin: 12px 0 0 0; }
-.header-title-alert >>> .el-alert {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(64, 158, 255, 0.22);
+.pronunciation-tag i {
+  margin-left: 4px;
 }
-.header-title-alert >>> .el-alert__content { padding: 14px 18px; }
-.header-title-alert >>> .el-alert__title,
-.header-title-alert >>> .el-alert__description { color: #ffffff; }
+.pronunciation-tag .el-icon-video-play { color: var(--color-primary); }
+.pronunciation-tag .el-icon-loading { color: var(--color-success); }
 
-/* Paraphrase cards */
-.box-card {
+/* Detail Card */
+.detail-card {
   width: 100%;
   margin: 20px 0;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-color);
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
-.box-card:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
-
-/* Use alert as a visual header */
-.box-card >>> .el-card__header { padding: 0; border-bottom: none; cursor: pointer; }
-.box-card >>> .el-card__header .el-alert {
-  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 0;
-  transition: filter 0.2s ease, transform 0.2s ease;
+.detail-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
-.box-card >>> .el-card__header .el-alert:hover { filter: brightness(1.03); transform: translateY(-1px); }
-.box-card >>> .el-card__header .el-alert .el-alert__title,
-.box-card >>> .el-card__header .el-alert .el-alert__description { color: #ffffff; }
 
-/* Pronunciation chips */
-.word-detail >>> .el-tag {
+.card-header {
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 999px;
-  border: 1px solid #e9ecef;
-  background: #f8fafc;
-  color: #34495e;
 }
-.word-detail >>> .el-tag:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08); filter: brightness(1.02); }
-.word-detail >>> .el-tag .el-icon-video-play { color: #409eff; }
-.word-detail >>> .el-tag .el-icon-loading { color: #67c23a; }
-.word-detail >>> .el-tag:focus { outline: 2px solid rgba(64,158,255,0.3); outline-offset: 2px; }
 
-/* Alerts inside paraphrase body and examples */
-.word-detail >>> .el-alert.is-light {
-  border: 1px solid #e9ecef;
+/* Alerts */
+.detail-alert {
+  padding: 12px 16px;
+  border-radius: 0;
+  position: relative;
+}
+.info-alert {
+  background: var(--gradient-info);
+  color: #ffffff;
+  transition: filter 0.2s ease;
+}
+.info-alert:hover {
+  filter: brightness(1.03);
+}
+
+.light-alert {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
+  margin: 10px;
   position: relative;
   overflow: hidden;
-  background: #ffffff;
 }
-.word-detail >>> .el-alert.is-light::before {
+.light-alert::before {
   content: '';
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #409eff 0%, #67c23a 100%);
-}
-.word-detail >>> .el-alert .el-alert__content { line-height: 1.7; color: #2c3e50; }
-.word-detail >>> .el-alert .el-alert__title { text-align: justify; }
-
-/* Divider spacing */
-.word-detail >>> .el-divider { margin: 14px 0; }
-
-/* Dialog polish: word select, star list, confirm */
-.word-select-dialog >>> .el-dialog__header,
-.star-list-dialog >>> .el-dialog__header,
-.confirm-dialog >>> .el-dialog__header {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: #fff;
-  border-bottom: none;
-  padding: 14px 16px;
-}
-.word-select-dialog >>> .el-dialog__title,
-.star-list-dialog >>> .el-dialog__title,
-.confirm-dialog >>> .el-dialog__title { color: #fff; font-weight: 600; }
-.word-select-dialog >>> .el-dialog__headerbtn .el-dialog__close,
-.star-list-dialog >>> .el-dialog__headerbtn .el-dialog__close,
-.confirm-dialog >>> .el-dialog__headerbtn .el-dialog__close { color: #fff; }
-.word-select-dialog >>> .el-dialog__body { padding-top: 10px; }
-
-/* Collapse in word-select dialog */
-.word-select-dialog >>> .el-collapse-item__header {
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  padding: 10px 12px;
-  font-weight: 500;
-}
-.word-select-dialog >>> .el-collapse-item__header:hover { background: #eef2f7; }
-.word-select-dialog >>> .el-collapse-item__wrap { background: #fff; border-bottom: 1px solid #f1f3f5; }
-.word-select-dialog >>> .el-collapse-item__content { padding: 10px 16px 6px 16px; color: #495057; }
-
-/* Pagination chips */
-.word-select-dialog >>> .el-pagination.is-background .btn-prev,
-.word-select-dialog >>> .el-pagination.is-background .btn-next,
-.word-select-dialog >>> .el-pagination.is-background .el-pager li { border-radius: 8px; }
-.word-select-dialog >>> .el-pagination.is-background .el-pager li.active {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: #fff;
-}
-.word-select-dialog >>> .el-pagination.is-background .el-pager li:not(.active):hover { filter: brightness(0.97); }
-
-/* Table buttons inside star list dialog */
-.star-list-dialog >>> .el-button.el-button--info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
-  border: none !important;
-  color: #fff !important;
+  background: var(--gradient-primary);
 }
 
-/* Dialog footers */
-.dialog-footer { text-align: center; padding: 16px 20px; }
-.dialog-footer .el-button {
-  margin: 0 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 10px;
-  min-width: 120px;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.alert-content {
+  line-height: 1.6;
+  color: inherit;
 }
-.dialog-footer .el-button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
-.dialog-footer .el-button--info {
-  background: linear-gradient(135deg, #909399 0%, #606266 100%) !important;
-  border: none !important;
-  color: #fff !important;
-}
-.dialog-footer .el-button--primary {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%) !important;
-  border: none !important;
-  color: #fff !important;
-}
-.dialog-footer .el-button:not(.el-button--primary):not(.el-button--info) {
-  background: #f8f9fa !important;
-  border: 1px solid #e9ecef !important;
-  color: #6c757d !important;
+.light-alert .alert-content {
+  color: var(--text-primary);
+  padding-left: 8px;
 }
 
-/* Utility placements retained */
-.outline_fix { position: absolute; right: 6px; bottom: 6px; }
-.outline_fix_top_right { position: absolute; top: 6px; right: 6px; }
+/* Action Icons */
+.action-icon {
+  margin-top: 10px;
+  text-align: right;
+}
 .outline_fix_top_left {
   position: absolute; top: 8px; left: 8px; width: auto;
   background: rgba(0, 0, 0, 0.25);
@@ -1135,38 +990,58 @@ export default {
   border-radius: 6px;
   font-size: 12px;
 }
-.outline_fix_bottom_left { position: absolute; bottom: 6px; left: 6px; }
-.outline_fix_bottom_left_2 { position: absolute; bottom: 6px; left: 26px; }
 
-/* Selection color */
-.word-detail ::selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
-.word-detail ::-moz-selection { background: rgba(64, 158, 255, 0.2); color: #2c3e50; }
-
-/* Responsive tweaks */
-@media (max-width: 992px) {
-  .ai-container { padding: 10px 14px; }
-  .header-title-alert >>> .el-alert { border-radius: 10px; }
+/* Example Items */
+.example-item {
+  margin-bottom: 8px;
 }
+.example-sentence {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.example-translate {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+.example-collect-icon {
+  cursor: pointer;
+  margin-left: 8px;
+  color: var(--color-primary);
+}
+
+/* Divider */
+.detail-divider {
+  border: 0;
+  height: 1px;
+  background: var(--border-color-light);
+  margin: 14px 0;
+}
+
+/* Word Select List */
+.word-select-item {
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color-light);
+  padding-bottom: 10px;
+}
+.word-select-header {
+  margin-bottom: 5px;
+}
+.word-select-meanings {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Collect List */
+.collect-item {
+  margin-bottom: 10px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .ai-container { padding: 8px 12px; }
-  .box-card { border-radius: 10px; margin: 14px 0; }
-  .row-bg { margin-bottom: 6px; }
+  .detail-card { border-radius: 10px; margin: 14px 0; }
   .floating-controls { gap: 6px; padding: 4px; border-radius: 14px; }
   .floating-controls-top { top: 10px; right: 12px; }
   .floating-controls-bottom { bottom: 10px; right: 12px; }
-}
-@media (max-width: 420px) {
-  .floating-controls { right: 8px; }
-}
-
-/* Optional dark mode refinements */
-@media (prefers-color-scheme: dark) {
-  .row-bg { border-bottom-color: rgba(255,255,255,0.08); }
-  .ai-container { color: #e9eef3; }
-  .box-card { background: #111418; border-color: rgba(255,255,255,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
-  .word-detail >>> .el-alert.is-light { background: #0f1216; border-color: rgba(255,255,255,0.08); }
-  .word-detail >>> .el-alert.is-light::before { background: linear-gradient(180deg, #65b0ff 0%, #7bd48b 100%); }
-  .word-detail >>> .el-tag { background: #12161b; border-color: rgba(255,255,255,0.08); color: #dfe6ee; }
-  .floating-controls { background: rgba(20, 24, 28, 0.6); border-color: rgba(255,255,255,0.08); }
 }
 </style>

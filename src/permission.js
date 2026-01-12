@@ -15,6 +15,20 @@ function redirectToLogin() {
 
 // Single consolidated router guard to prevent conflicts
 router.beforeEach((to, from, next) => {
+  // Check for login redirect stored in sessionStorage (after full page reload on login)
+  const loginRedirect = sessionStorage.getItem('loginRedirect')
+  if (loginRedirect) {
+    sessionStorage.removeItem('loginRedirect')
+    try {
+      const { path, query } = JSON.parse(loginRedirect)
+      console.log('🔄 [REDIRECT] Processing post-login redirect to:', path, query)
+      next({ path, query, replace: true })
+      return
+    } catch (e) {
+      console.error('Failed to parse loginRedirect:', e)
+    }
+  }
+
   // First check if route exists to prevent navigation to non-existent routes
   if (to.matched.length === 0) {
     console.error('Route does not exist:', to.path)

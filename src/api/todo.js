@@ -1,7 +1,7 @@
 // filepath: /src/api/todo.js
 import request from '@/router/axios'
 
-const BASE = '/tools/todo'
+const BASE = '/api/tools/todo'
 
 // Tasks
 export function listTasks(params = {}) {

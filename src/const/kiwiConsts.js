@@ -117,7 +117,7 @@ export default {
         PHRASE_PRONUNCIATION: 10
     },
 
-    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/wordBiz/word/review/downloadReviewAudio/',
+    DOWNLOAD_REVIEW_AUDIO_URL_PREFIX: 'https://www.kiwidict.com/api/word/review/downloadReviewAudio/',
 
     REVIEW_MODEL: {
         STOCK_REVIEW: 'stockReview',
@@ -126,6 +126,23 @@ export default {
         ENHANCE_READ: 'enhanceRead',
         DOWNLOAD_REVIEW_AUDIO: 'downloadReviewAudio'
     },
+
+    // New TTS Audio API configuration
+    REVIEW_AUDIO_API: {
+        BASE: '/api/word/review/audio',
+        ENABLED: true  // Can be overridden by server config
+    },
+
+    // Audio status states for UI
+    AUDIO_STATUS: {
+        AVAILABLE: 'available',
+        GENERATING: 'generating',
+        UNAVAILABLE: 'unavailable',
+        CACHED: 'cached'  // Audio is cached in IndexedDB
+    },
+
+    // IndexedDB store for TTS audio (separate from legacy audio)
+    TTS_AUDIO_DB_STORE_NAME: 'TTS_AUDIO_STORE',
 
     GRAMMAR_EN_TO_CH_HINT: new Map()
         .set('article', '冠词')
@@ -168,8 +185,10 @@ export default {
         UI_LANGUAGE: 'ui_language', // Add UI language key
         CLIPBOARD_DETECTION: 'clipboard_detection',
         SUBTITLES_AUTO_CENTER: 'subtitles_auto_center', // New: persist subtitles auto-center preference
+        ENHANCED_SUBTITLES: 'enhanced_subtitles', // Toggle between enhanced and regular subtitles API
         // New: feature tabs enable/disable map
-        ENABLED_TABS: 'enabled_tabs'
+        ENABLED_TABS: 'enabled_tabs',
+        AI_MODE_USAGE_STATS: 'ai_mode_usage_stats'
         // Removed: ONBOARDING_TOUR_DONE, TOUR_ENABLED, SHOW_TOUR_ICON
     },
 
@@ -180,7 +199,9 @@ export default {
         youtube: true,
         about: true,
         aiHistory: true, // New: AI History tab enabled by default
-        pdfReader: true
+        pdfReader: true,
+        signature: true,
+        aiConversation: true // AI Conversation Generator tab
     }),
 
     DB_NAME: 'KIWI_VOCABULARY',
@@ -196,42 +217,44 @@ export default {
     ROUTER_VIEW_AI_HISTORY_MODE: 'aiCallHistory',
 
     SEARCH_MODES: {
-        DETAIL: {label: 'Dictionary', value: 'detail'}
+        DETAIL: { label: 'Dictionary', value: 'detail' }
     },
 
     SEARCH_AI_MODES: {
-        DIRECTLY_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation'},
-        TRANSLATION_AND_EXPLANATION: {label: 'Explanation', value: 'translation-and-explanation'},
-        GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation'},
-        GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction'},
-        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation'},
-        SYNONYM: {label: 'Synonym', value: 'synonym'},
-        ANTONYM: {label: 'Antonym', value: 'antonym'},
-        VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association'},
-        PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association'},
+        DIRECTLY_TRANSLATION: { label: 'Direct Translation', value: 'directly-translation' },
+        TRANSLATION_AND_EXPLANATION: { label: 'Explanation', value: 'translation-and-explanation' },
+        GRAMMAR_EXPLANATION: { label: 'Grammar Explanation', value: 'grammar-explanation' },
+        GRAMMAR_CORRECTION: { label: 'Grammar Correction', value: 'grammar-correction' },
+        VOCABULARY_EXPLANATION: { label: 'Vocabulary Explanation', value: 'vocabulary-explanation' },
+        SYNONYM: { label: 'Synonym', value: 'synonym' },
+        ANTONYM: { label: 'Antonym', value: 'antonym' },
+        VOCABULARY_ASSOCIATION: { label: 'Vocabulary Association', value: 'vocabulary-association' },
+        PHRASES_ASSOCIATION: { label: 'Phrases Association', value: 'phrases-association' },
         // New modes
         VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion' },
-        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction' }
+        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction' },
+        NATURAL_IDIOMATIC_RETOUCH: { label: 'Natural Idiomatic Retouch', value: 'natural-idiomatic-retouch' }
     },
 
     SEARCH_MODES_DATA: Object.freeze({
-        DICTIONARY: {label: 'Dictionary', value: 'detail', width: '110px'},
-        DIRECT_TRANSLATION: {label: 'Direct Translation', value: 'directly-translation', width: '140px'},
+        DICTIONARY: { label: 'Dictionary', value: 'detail', width: '110px' },
+        DIRECT_TRANSLATION: { label: 'Direct Translation', value: 'directly-translation', width: '140px' },
         TRANSLATION_AND_EXPLANATION: {
             label: 'Explanation',
             value: 'translation-and-explanation',
             width: '190px'
         },
-        GRAMMAR_EXPLANATION: {label: 'Grammar Explanation', value: 'grammar-explanation', width: '170px'},
-        GRAMMAR_CORRECTION: {label: 'Grammar Correction', value: 'grammar-correction', width: '160px'},
-        VOCABULARY_EXPLANATION: {label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px'},
-        SYNONYM: {label: 'Synonym', value: 'synonym', width: '100px'},
-        ANTONYM: {label: 'Antonym', value: 'antonym', width: '100px'},
-        VOCABULARY_ASSOCIATION: {label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px'},
-        PHRASES_ASSOCIATION: {label: 'Phrases Association', value: 'phrases-association', width: '145px'},
+        GRAMMAR_EXPLANATION: { label: 'Grammar Explanation', value: 'grammar-explanation', width: '170px' },
+        GRAMMAR_CORRECTION: { label: 'Grammar Correction', value: 'grammar-correction', width: '160px' },
+        VOCABULARY_EXPLANATION: { label: 'Vocabulary Explanation', value: 'vocabulary-explanation', width: '180px' },
+        SYNONYM: { label: 'Synonym', value: 'synonym', width: '100px' },
+        ANTONYM: { label: 'Antonym', value: 'antonym', width: '100px' },
+        VOCABULARY_ASSOCIATION: { label: 'Vocabulary Association', value: 'vocabulary-association', width: '155px' },
+        PHRASES_ASSOCIATION: { label: 'Phrases Association', value: 'phrases-association', width: '145px' },
         // New modes with approximate widths
         VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion', width: '230px' },
-        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction', width: '240px' }
+        AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction', width: '240px' },
+        NATURAL_IDIOMATIC_RETOUCH: { label: 'Natural Idiomatic Retouch', value: 'natural-idiomatic-retouch', width: '220px' }
     }),
 
 
@@ -295,7 +318,8 @@ export default {
         PHRASES_ASSOCIATION: 'input anything',
         // New modes
         VOCABULARY_CHARACTER_EXPANSION: 'input anything',
-        AMBIGUOUS_ASSOCIATION_CORRECTION: 'input anything'
+        AMBIGUOUS_ASSOCIATION_CORRECTION: 'input anything',
+        NATURAL_IDIOMATIC_RETOUCH: 'input text to retouch'
     },
 
     // New: mode value to i18n translation key mapping (centralized)
@@ -311,7 +335,8 @@ export default {
         'vocabulary-association': 'vocabularyAssociation',
         'phrases-association': 'phrasesAssociation',
         'vocabulary-character-expansion': 'vocabularyCharacterExpansion',
-        'ambiguous-association-correction': 'ambiguousAssociationCorrection'
+        'ambiguous-association-correction': 'ambiguousAssociationCorrection',
+        'natural-idiomatic-retouch': 'naturalIdiomaticRetouch'
     }),
 
     SUBTITLES_TYPE: {
@@ -332,6 +357,17 @@ export default {
         SELECTION_EXPLANATION: '#[SM]'
     },
 
+    // AI modes that don't need the original text container (vocabulary-focused modes)
+    AI_MODES_WITHOUT_ORIGINAL_TEXT: Object.freeze([
+        'vocabulary-explanation',
+        'vocabulary-association',
+        'synonym',
+        'antonym',
+        'phrases-association',
+        'vocabulary-character-expansion',
+        'ambiguous-association-correction'
+    ]),
+
     // Add these constants to your kiwiConsts.js file
 
     CLIPBOARD_DETECTION: {
@@ -350,13 +386,14 @@ export default {
         AI_RESPONSE_DETAIL: '/index/tools/aiResponseDetail',
         AI_CALL_HISTORY: '/index/tools/aiCallHistory',
         YOUTUBE: '/index/tools/youtube',
-        PDF_READER: '/index/tools/pdfReader'
+        PDF_READER: '/index/tools/pdfReader',
+        SIGNATURE: '/index/tools/signature'
     }),
 
-    // Centralized API base prefixes
+    // Centralized API base prefixes (migrated to monolith)
     API_BASE: Object.freeze({
-        WORD_BIZ: '/wordBiz/word',
-        AI_BIZ: '/ai-biz/ai',
+        WORD_BIZ: '/api/word',
+        AI_BIZ: '/api/ai',
         AUTH: '/auth/oauth',
         LOG_ERROR: '/api/log-error'
     }),

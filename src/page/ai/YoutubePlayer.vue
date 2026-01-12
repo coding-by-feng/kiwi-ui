@@ -1,33 +1,39 @@
 <template>
   <div class="youtube-player">
-    <!-- Enhanced header with gradient styling -->
-    <div class="header-container" v-show="!isPlaying && !forceHideInput">
-      <h1 id="playHeader" class="main-title">
-        <i class="el-icon-video-play"></i>
-        YouTube Player
-      </h1>
+
+    <!-- Collapse/expand toggle button for controls -->
+    <div class="controls-collapse-toggle">
+      <div class="collapse-toggle-wrapper" @click="toggleControlsCollapsed">
+        <i :class="controlsCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'" class="collapse-toggle-icon"></i>
+        <span class="collapse-toggle-text">{{ controlsCollapsed ? 'Show Controls' : 'Hide Controls' }}</span>
+      </div>
     </div>
 
     <!-- Enhanced Input Container with gradient styling -->
-    <div class="input-container" v-show="!forceHideInput">
+    <div class="input-container" v-show="!controlsCollapsed">
       <div class="url-input-group">
         <!-- Language dropdown that shows only when translation is enabled -->
-        <el-select v-show="ifTranslation" v-model="selectedLanguage" placeholder="Select Language"
-                   @change="selectedLanguageChange" class="language-select">
-          <el-option
-              v-for="(code, language) in languageCodes"
-              :key="code"
-              :label="language.replaceAll('_', ' ')"
-              :value="code">
-          </el-option>
-        </el-select>
+        <KiwiDropdown v-show="ifTranslation" @command="selectedLanguageChange" class="language-select">
+          <KiwiButton size="small">
+            {{ getSelectedLanguageLabel() || 'Select Language' }}
+            <i class="el-icon-arrow-down"></i>
+          </KiwiButton>
+          <template slot="dropdown">
+            <KiwiDropdownItem
+                v-for="(code, language) in languageCodes"
+                :key="code"
+                :command="code">
+              {{ language.replaceAll('_', ' ') }}
+            </KiwiDropdownItem>
+          </template>
+        </KiwiDropdown>
 
         <div class="input-with-buttons">
-          <el-input
+          <KiwiInput
               v-model="videoUrl"
               type="text"
               placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
-              @keyup.enter="loadContent"
+              @keyup.enter.native="loadContent"
               class="url-input"
               :disabled="isLoading"
           />
@@ -37,16 +43,16 @@
               <i v-else class="el-icon-video-play"></i>
               {{ isLoading ? 'Loading...' : 'Load' }}
             </button>
-            <el-button type="info" icon="el-icon-delete" size="small" circle @click="cleanSubtitles" class="action-btn"></el-button>
+            <KiwiButton type="info" icon="el-icon-delete" size="small" circle @click="cleanSubtitles" class="action-btn"></KiwiButton>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Enhanced Controls Container -->
-    <div id="responsiveContainer" class="responsive-container">
+    <div id="responsiveContainer" class="responsive-container" v-show="!controlsCollapsed">
       <div class="controls-wrapper">
-        <div class="switch-group" v-if="!forceHideInput">
+        <div class="switch-group">
           <el-switch
               v-model="ifTranslation"
               :active-text="isSmallScreen ? '' : 'Include translation'"
@@ -61,24 +67,6 @@
           </el-switch>
           <span v-if="isSmallScreen" class="mobile-switch-label">
             <i class="el-icon-chat-dot-round"></i>
-          </span>
-        </div>
-        <div class="divider" v-if="!isSmallScreen && !forceHideInput"></div>
-        <div class="switch-group">
-          <el-switch
-              v-model="forceHideInput"
-              :active-text="isSmallScreen ? '' : 'Force to hide searching while playing'"
-              @change="ifTranslationOnChange"
-              class="enhanced-switch">
-            <template v-if="isSmallScreen" #inactive-icon>
-              <i class="el-icon-s-operation"></i>
-            </template>
-            <template v-if="isSmallScreen" #active-icon>
-              <i class="el-icon-view"></i>
-            </template>
-          </el-switch>
-          <span v-if="isSmallScreen" class="mobile-switch-label">
-            <i class="el-icon-view"></i>
           </span>
         </div>
         <div class="divider" v-if="!isSmallScreen"></div>
@@ -116,18 +104,54 @@
             <i class="el-icon-location-information"></i>
           </span>
         </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="enhancedSubtitlesEnabled"
+              :active-text="isSmallScreen ? '' : 'Enhanced Subtitles'"
+              @change="onEnhancedSubtitlesChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-document"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-magic-stick"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-magic-stick"></i>
+          </span>
+        </div>
+        <div class="divider" v-if="!isSmallScreen"></div>
+        <div class="switch-group">
+          <el-switch
+              v-model="loopEnabled"
+              :active-text="isSmallScreen ? '' : 'Loop Video'"
+              @change="onLoopChange"
+              class="enhanced-switch">
+            <template v-if="isSmallScreen" #inactive-icon>
+              <i class="el-icon-refresh-right"></i>
+            </template>
+            <template v-if="isSmallScreen" #active-icon>
+              <i class="el-icon-refresh"></i>
+            </template>
+          </el-switch>
+          <span v-if="isSmallScreen" class="mobile-switch-label">
+            <i class="el-icon-refresh"></i>
+          </span>
+        </div>
         <!-- Favorite button moved to top controls bar -->
         <div class="switch-group favorite-top-group">
           <el-tooltip :content="canFavorite ? (isFavorited ? 'Unfavorite this video' : 'Favorite this video') : 'Load a video to favorite'" placement="top">
-            <el-button
-              :icon="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"
-              :class="['favorite-btn', isFavorited ? 'favorited' : '']"
-              circle
-              size="small"
-              :loading="pendingFavorite"
-              :disabled="pendingFavorite || !canFavorite"
-              @click.stop="toggleFavoriteOnPlayer"
-              aria-label="Favorite toggle"
+            <KiwiButton
+                :icon="isFavorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+                :class="['favorite-btn', isFavorited ? 'favorited' : '']"
+                circle
+                size="small"
+                :loading="pendingFavorite"
+                :disabled="pendingFavorite || !canFavorite"
+                @click.stop="toggleFavoriteOnPlayer"
+                aria-label="Favorite toggle"
             />
           </el-tooltip>
         </div>
@@ -135,7 +159,7 @@
     </div>
 
     <!-- Enhanced Status Message with Loading Animation -->
-    <div class="status-container" v-show="!isPlaying && !forceHideInput && statusMessage !== ''">
+    <div class="status-container" v-show="!isPlaying && statusMessage !== ''">
       <!-- Compact inline loading chip instead of large panel -->
       <div v-if="isLoading" class="compact-status">
         <i class="el-icon-loading spinning"></i>
@@ -147,58 +171,14 @@
       <p v-else class="status-message compact">{{ statusMessage }}</p>
     </div>
 
-    <!-- Enhanced Subtitles Loading Indicator -->
-    <div v-if="showSubtitlesLoading" class="subtitles-loading-overlay">
-      <div class="subtitles-loading-container">
-        <div class="subtitles-loading-icon">
-          <i v-if="isSubtitlesLoading || isTranslationLoading" class="el-icon-loading spinning"></i>
-          <i v-else-if="subtitlesLoadingComplete && hasSubtitles" class="el-icon-check success-icon"></i>
-          <i v-else-if="subtitlesLoadingComplete" class="el-icon-warning warning-icon"></i>
-        </div>
-        <div class="subtitles-loading-text">
-          <span v-if="isSubtitlesLoading">Loading subtitles...</span>
-          <span v-else-if="isTranslationLoading">Streaming translation...</span>
-          <span v-else-if="subtitlesLoadingComplete && hasSubtitles">Ready!</span>
-          <span v-else-if="subtitlesLoadingComplete">Failed to load</span>
-
-          <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-progress">
-            <div class="subtitles-progress-bar">
-              <div class="subtitles-progress-fill" :style="{ width: currentProgress + '%' }"></div>
-            </div>
-            <span class="subtitles-progress-text">{{ Math.round(currentProgress) }}%</span>
-          </div>
-
-          <div v-else-if="subtitlesLoadingComplete" class="subtitles-status">
-            <div class="status-indicators">
-              <span :class="['status-item', subtitles.length > 0 ? 'success' : 'failed']">
-                <i :class="subtitles.length > 0 ? 'el-icon-check' : 'el-icon-close'"></i>
-                Subtitles
-              </span>
-              <span v-if="ifTranslation" :class="['status-item', translatedSubtitles ? 'success' : 'failed']">
-                <i :class="translatedSubtitles ? 'el-icon-check' : 'el-icon-close'"></i>
-                Translation
-              </span>
-              <span v-else class="status-item disabled">
-                <i class="el-icon-minus"></i>
-                Translation off
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="subtitles-loading-actions">
-          <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-loading-close" @click="cancelSubtitlesLoading">
-            <i class="el-icon-close"></i>
-          </div>
-          <div v-else-if="subtitlesLoadingComplete" class="subtitles-loading-minimize" @click="minimizeSubtitlesStatus">
-            <i class="el-icon-minus"></i>
-          </div>
-        </div>
-      </div>
+    <!-- Subtitles Loading Indicator - only shows during active loading (hidden when enhanced subtitles enabled) -->
+    <div v-if="!enhancedSubtitlesEnabled && (isSubtitlesLoading || isTranslationLoading)" class="subtitles-loading-indicator">
+      <i class="el-icon-loading"></i>
+      <span>{{ isTranslationLoading ? 'Translating...' : 'Loading subtitles...' }}</span>
     </div>
 
     <!-- Enhanced Content Container -->
-    <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '') || (playerVideoId && playerVideoId !== '')">
+    <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '')">
       <!-- Left Panel (video and controls) -->
       <div class="left-panel" :style="!isSmallScreen ? { width: leftPanelPercent + '%' } : null">
         <!-- Video Player Section -->
@@ -237,16 +217,16 @@
 
       <!-- Draggable splitter: desktop only -->
       <div
-        v-if="!isSmallScreen"
-        class="splitter"
-        role="separator"
-        aria-orientation="vertical"
-        :aria-valuenow="leftPanelPercent"
-        aria-valuemin="20"
-        aria-valuemax="80"
-        tabindex="0"
-        @mousedown.prevent="startResize"
-        @dblclick="resetPanelSizes"
+          v-if="!isSmallScreen"
+          class="splitter"
+          role="separator"
+          aria-orientation="vertical"
+          :aria-valuenow="leftPanelPercent"
+          aria-valuemin="20"
+          aria-valuemax="80"
+          tabindex="0"
+          @mousedown.prevent="startResize"
+          @dblclick="resetPanelSizes"
       ></div>
 
       <!-- Right Panel (subtitles) -->
@@ -287,16 +267,16 @@
             </span>
           <div class="header-toggle-hint">
             <!-- Modified: Download subtitles as TXT in header - only show after translation completes -->
-            <el-button
-              v-if="!isTranslationLoading && translatedSubtitles && !translatedSubtitlesCollapsed"
-              type="success"
-              :loading="isDownloading"
-              icon="el-icon-download"
-              size="mini"
-              circle
-              @click.stop="downloadTranslatedSubtitlesFromUI"
-              class="header-action-btn"
-              title="Download translated subtitles"
+            <KiwiButton
+                v-if="!isTranslationLoading && translatedSubtitles && !translatedSubtitlesCollapsed"
+                type="success"
+                :loading="isDownloading"
+                icon="el-icon-download"
+                size="mini"
+                circle
+                @click.stop="downloadTranslatedSubtitlesFromUI"
+                class="header-action-btn"
+                title="Download translated subtitles"
             />
             <i :class="translatedSubtitlesCollapsed ? 'el-icon-arrow-right' : 'el-icon-arrow-down'" class="toggle-arrow"></i>
           </div>
@@ -327,10 +307,11 @@
 
       <!-- Inline AI Search Dialog for selected text -->
       <ai-selection-popup
-        :visible.sync="showSelectionPopup"
-        :selected-text.sync="selectedText"
-        title="AI Search"
-        @open-ai-tab="onOpenAiTabFromPopup"
+          :visible.sync="showSelectionPopup"
+          :selected-text.sync="selectedText"
+          title="AI Search"
+          :auto-request="true"
+          @open-ai-tab="onOpenAiTabFromPopup"
       />
 
     </div>
@@ -340,7 +321,7 @@
 <script>
 // Removed defineComponent import for Vue 2 options API
 // import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, downloadVideoScrollingSubtitlesEnhanced, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from '@/const/kiwiConsts'
 import {getStore, setStore} from "@/util/store";
@@ -349,6 +330,10 @@ import NoSleep from 'nosleep.js';
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import { buildAiTabQuery } from '@/util/aiNavigation'
 import { navigateIfChanged } from '@/util/routerUtil'
+import KiwiButton from '@/components/ui/KiwiButton.vue'
+import KiwiInput from '@/components/ui/KiwiInput.vue'
+import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
+import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 
 const md = new MarkdownIt({
   html: true,
@@ -359,7 +344,7 @@ const md = new MarkdownIt({
 
 export default {
   name: 'YoutubeSubtitleDownloader',
-  components: { AiSelectionPopup },
+  components: { AiSelectionPopup, KiwiButton, KiwiInput, KiwiDropdown, KiwiDropdownItem },
   data() {
     const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
     // Normalize stored translation toggle to an actual boolean; default OFF.
@@ -373,14 +358,27 @@ export default {
       }
       return false; // default OFF
     })();
+    // Normalize stored enhanced subtitles toggle; default OFF
+    const storedEnhancedSubtitlesRaw = getStore({ name: kiwiConsts.CONFIG_KEY.ENHANCED_SUBTITLES });
+    const normalizedEnhancedSubtitles = (() => {
+      if (typeof storedEnhancedSubtitlesRaw === 'boolean') return storedEnhancedSubtitlesRaw;
+      if (typeof storedEnhancedSubtitlesRaw === 'string') {
+        const v = storedEnhancedSubtitlesRaw.toLowerCase();
+        if (v === 'true') return true;
+        if (v === 'false') return false;
+      }
+      return false; // default OFF
+    })();
     return {
+      enhancedSubtitlesEnabled: normalizedEnhancedSubtitles,
+      loopEnabled: false,
       videoUrl: null,
       ifTranslation: normalizedIfTranslation,
+      autoCenterEnabled: persistedAutoCenter !== false, // Default to true if not set
       selectedLanguage: getStore({name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE}) || null,
       languageCodes: kiwiConsts.TRANSLATION_LANGUAGE_CODE,
       // Split IDs: backend internal DB id vs YouTube 11-char id
       backendVideoId: null,
-      playerVideoId: null,
       // New: single favorite state for player view
       isFavorited: false,
       pendingFavorite: false,
@@ -397,10 +395,10 @@ export default {
       scrollingSubtitlesCollapsed: false,
       translatedSubtitlesCollapsed: false,
       player: null,
-      currentSubtitleIndex: -1,
+      currentSubtitleIndex: 0,
       subtitleInterval: null,
       middleControlEnabled: true,
-      forceHideInput: false,
+      controlsCollapsed: false,
       isSmallScreen: false,
       selectedText: '',
       // Use dialog instead of small bubble for selection actions and AI streaming
@@ -412,7 +410,7 @@ export default {
 
       // WebSocket streaming (subtitles translation)
       websocket: null,
-      wsUrl: '/ai-biz/ai/ws/ytb/subtitle',
+      wsUrl: '/api/ai/ws/ytb/subtitle',
       isTranslationLoading: false,
       translationProgress: 0,
       translationChunks: [],
@@ -428,45 +426,16 @@ export default {
       wsShouldReconnect: false,
       wsSessionId: '',
       lastTranslationRequest: null,
+      connectingPromise: null, // Track pending connection
       pageHidden: false,
+      // New: strong dedupe key for in-flight translation
+      currentTranslationKey: null,
 
-      // NoSleep helper to reduce iOS background suspension via wake-lock-like behavior
-      noSleep: null,
-
-      // Optimized debouncing
-      scrollTimeout: null,
-      progressUpdateInterval: null,
-      // New: downloading state
-      isDownloading: false,
-      // New: auto-center toggle (default true if unset)
-      autoCenterEnabled: (persistedAutoCenter === undefined || persistedAutoCenter === null) ? true : !!persistedAutoCenter,
-
-      // Mini loader state
-      isBuffering: false,
-      miniLoaderPercent: 0,
-      miniLoaderInterval: null,
-      // Splitter state (desktop only)
-      leftPanelPercent: (() => {
-        const v = getStore({ name: 'ytb_left_panel_percent' });
-        const n = typeof v === 'number' ? v : parseFloat(v);
-        const clamped = isNaN(n) ? 50 : Math.max(20, Math.min(80, n));
-        return clamped;
-      })(),
+      // Panel resize state
       isResizing: false,
-      splitterMin: 20,
-      splitterMax: 80,
-
-      // Inline AI search (generic) streaming state
-      aiWebsocket: null,
-      aiSearchLoading: false,
-      aiIsStreaming: false,
-      aiRequestId: '',
-      aiResponseText: '',
-      aiLastError: '',
-      // Init guards & timeouts
-      isInitializing: false,
-      _suppressVideoIdWatcher: false,
-      playerInitTimeout: null
+      leftPanelPercent: 50,
+      splitterMin: 25,
+      splitterMax: 75,
     };
   },
   computed: {
@@ -484,25 +453,18 @@ export default {
           || kiwiConsts.SUBTITLES_TYPE.SMALL_PROFESSIONAL_SRT_RETURN_STRING === this.subtitlesType;
     },
     showContextDisplay() {
-      return (this.isSafariOrIOS() || this.currentSubtitleIndex !== -1) &&
-          this.subtitles.length &&
+      return this.subtitles.length &&
           (this.ifTranslation || (!this.ifTranslation && !this.ifProfessionalSubtitles));
     },
     hasSubtitles() {
       return this.subtitles.length > 0 || (this.ifTranslation && this.translatedSubtitles);
-    },
-    showSubtitlesLoading() {
-      return (this.isSubtitlesLoading || this.subtitlesLoadingComplete || this.isTranslationLoading) &&
-          this.videoUrl && this.videoUrl !== '';
     },
     currentProgress() {
       return this.isTranslationLoading ? this.translationProgress : this.subtitlesLoadingProgress;
     },
     // Whether a video can be favorited: requires a valid URL or a player video id we can convert to URL
     canFavorite() {
-      const hasValidUrl = !!(this.videoUrl && this.extractVideoId(this.videoUrl));
-      const hasPlayerId = !!(this.playerVideoId && this.isLikelyYoutubeId(this.playerVideoId));
-      return hasValidUrl || hasPlayerId;
+      return !!(this.videoUrl && this.extractVideoId(this.videoUrl));
     },
     showMiniLoader() {
       return this.isLoading || !this.videoReady || this.isBuffering;
@@ -517,33 +479,10 @@ export default {
     aiParsedResponseText() {
       const text = this.unescapeContent(this.aiResponseText || '');
       return md.render(text);
-    }
+    },
   },
   watch: {
-    // When player video id changes, re-init the iframe (guarded)
-    playerVideoId(newVideoId, oldVideoId) {
-      if (this._suppressVideoIdWatcher) return;
-      if (newVideoId && oldVideoId && newVideoId !== oldVideoId) {
-        if (this.player && this.youtubeApiReady) {
-          console.log('[YoutubePlayer] watcher loadVideoById', newVideoId);
-          this.isLoading = true;
-          this.videoReady = false;
-          this.statusMessage = 'Initializing player...';
-          this.stopMiniLoaderPoll();
-          this.startMiniLoaderPoll();
-          try {
-            this.player.loadVideoById(newVideoId);
-            this.setPlayerInitTimeout();
-          } catch (e) {
-            console.warn('[YoutubePlayer] loadVideoById failed in watcher, reinitializing', e);
-            this.reinitializePlayer().then(() => { this.isLoading = false; });
-          }
-        } else {
-          console.log('[YoutubePlayer] watcher reinitializePlayer', newVideoId);
-          this.reinitializePlayer().then(() => { this.isLoading = false; });
-        }
-      }
-    },
+
     '$route.query.videoUrl': {
       handler(newVideoUrl) {
         if (!newVideoUrl) return;
@@ -561,7 +500,8 @@ export default {
         const s = String(val);
         if (this.isLikelyYoutubeId(s)) {
           // In case deep-link sends a raw YouTube id
-          this.playerVideoId = s;
+          this.videoUrl = `https://www.youtube.com/watch?v=${s}`;
+          this.loadContent();
         } else {
           this.backendVideoId = s;
         }
@@ -590,8 +530,11 @@ export default {
       }
     },
     currentSubtitleIndex(newVal, oldVal) {
-      if (this.autoCenterEnabled && newVal !== oldVal) {
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+      if (newVal !== oldVal) {
+        this.$nextTick(() => {
+          this.ensureActiveSubtitleVisibility();
+          this.restartCurrentSubtitleAutoScroll();
+        });
       }
     },
     leftPanelPercent: {
@@ -620,8 +563,8 @@ export default {
       this.loadContent();
     } else if (q.videoId && this.isLikelyYoutubeId(String(q.videoId))) {
       // Fallback only if a raw YouTube id is provided
-      this.playerVideoId = String(q.videoId);
-      this.videoUrl = `https://www.youtube.com/watch?v=${this.playerVideoId}`;
+      const vid = String(q.videoId);
+      this.videoUrl = `https://www.youtube.com/watch?v=${vid}`;
       this.loadContent();
     }
 
@@ -634,6 +577,12 @@ export default {
       const v = String(q.favorited).toLowerCase();
       this.isFavorited = v === 'true' || v === '1';
     }
+  },
+  // Reset overlay states when component is deactivated (keep-alive)
+  deactivated() {
+    this.subtitlesLoadingComplete = false;
+    this.isSubtitlesLoading = false;
+    this.isTranslationLoading = false;
   },
   beforeDestroy() {
     this.cleanup();
@@ -650,7 +599,7 @@ export default {
       this.isFavorited = !prev; // optimistic update
 
       // Always construct URL from current state
-      const fallbackUrl = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
+      const fallbackUrl = this.videoUrl;
 
       try {
         if (!fallbackUrl || !this.extractVideoId(fallbackUrl)) {
@@ -697,7 +646,7 @@ export default {
             favorited = res.data.code === 1 ? !!res.data.data : false;
           }
         } else {
-          const url = this.videoUrl || (this.playerVideoId ? `https://www.youtube.com/watch?v=${this.playerVideoId}` : null);
+          const url = this.videoUrl;
           if (url && this.extractVideoId(url)) {
             const res = await checkVideoFavoriteByUrl(url);
             if (res && res.data) {
@@ -755,7 +704,6 @@ export default {
       window.removeEventListener('pageshow', this.onPageShow);
       window.removeEventListener('online', this.onOnline);
       window.removeEventListener('offline', this.onOffline);
-      this.clearWsTimers();
       this.disableNoSleep();
       this.closeAiStream();
     },
@@ -862,16 +810,21 @@ export default {
         return Promise.resolve();
       }
 
-      this.disconnectWebSocket();
-      this.clearWsTimers();
+      // Reuse existing connection attempt if in progress
+      if (this.connectingPromise) {
+        return this.connectingPromise;
+      }
 
-      return new Promise((resolve, reject) => {
+      this.disconnectWebSocket();
+
+      this.connectingPromise = new Promise((resolve, reject) => {
         this.wsConnectionStatus = 'connecting';
         const token = getStore({name: 'access_token'});
 
         if (!token) {
           const error = new Error('Authentication token not found');
           this.handleWebSocketError(error, 'Authentication token not found. Please login again.');
+          this.connectingPromise = null;
           reject(error);
           return;
         }
@@ -884,6 +837,7 @@ export default {
         const connectionTimeout = setTimeout(() => {
           if (this.wsConnectionStatus !== 'connected') {
             try { this.websocket?.close(); } catch (_) {}
+            this.connectingPromise = null;
             reject(new Error('WebSocket connection timeout'));
           }
         }, 10000);
@@ -891,6 +845,7 @@ export default {
         this.websocket.onopen = () => {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'connected';
+          this.connectingPromise = null; // Clear promise on success
           // Start heartbeat keepalive (best-effort; may be throttled in background)
           this.wsHeartbeatInterval = setInterval(() => {
             try {
@@ -908,7 +863,7 @@ export default {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'disconnected';
           this.websocket = null;
-          this.clearWsTimers();
+          if (this.connectingPromise) this.connectingPromise = null; // Ensure cleared
 
           if (event.code === 1008 || event.code === 1011) {
             this.handleWebSocketError(new Error('Authentication failed'), 'Authentication failed. Please login again.');
@@ -923,6 +878,7 @@ export default {
         this.websocket.onerror = (error) => {
           clearTimeout(connectionTimeout);
           this.wsConnectionStatus = 'error';
+          if (this.connectingPromise) this.connectingPromise = null; // Ensure cleared
           // If initial connect, reject; otherwise we'll attempt reconnect
           if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
             this.handleWebSocketError(error, 'Failed to connect to translation service.');
@@ -930,15 +886,24 @@ export default {
           }
         };
       });
+
+      return this.connectingPromise;
     },
 
     disconnectWebSocket() {
       if (this.websocket) {
+        // Prevent onclose from triggering reconnect logic
+        this.websocket.onclose = null;
+        this.websocket.onerror = null;
+        this.websocket.onmessage = null;
         this.websocket.close();
         this.websocket = null;
         this.wsConnectionStatus = 'disconnected';
       }
-      this.clearWsTimers();
+      if (this.wsHeartbeatInterval) {
+        clearInterval(this.wsHeartbeatInterval);
+        this.wsHeartbeatInterval = null;
+      }
     },
 
     handleWebSocketMessage(event) {
@@ -1021,7 +986,7 @@ export default {
       this.translationProgress = 100;
       this.subtitlesLoadingComplete = true;
       this.wsShouldReconnect = false;
-      this.clearWsTimers();
+      this.currentTranslationKey = null;
 
       if (response.fullResponse) {
         this.translatedSubtitles = response.fullResponse;
@@ -1049,7 +1014,7 @@ export default {
       this.subtitlesLoadingComplete = true;
       this.shouldShowTranslationContainer = false; // Hide container on error
       this.wsShouldReconnect = false;
-      this.clearWsTimers();
+      this.currentTranslationKey = null;
 
       this.stopProgressAnimation();
 
@@ -1080,17 +1045,41 @@ export default {
     },
 
     async requestTranslation(videoUrl, language) {
-      try {
-        // Show translation container immediately when starting WS streaming
-        this.shouldShowTranslationContainer = true;
-        this.translatedSubtitlesCollapsed = false; // Ensure it's expanded
+      if (!videoUrl || !language) return;
 
+      // Build a stable key for this translation request
+      const buildKey = (url, lang) => {
+        const id = this.extractVideoId(url) || url;
+        return `${id}::${lang}`;
+      };
+      const key = buildKey(videoUrl, language);
+
+      // Strong dedupe: if same request is already in-flight, skip
+      if (this.isTranslationLoading && this.currentTranslationKey === key) {
+        console.log('[YoutubePlayer] Skipping duplicate translation request for key', key);
+        return;
+      }
+
+      this.currentTranslationKey = key;
+
+      // Set loading state immediately to block concurrent requests
+      this.isTranslationLoading = true;
+      this.shouldShowTranslationContainer = true;
+      this.translatedSubtitlesCollapsed = false;
+
+      // Generate session ID early
+      this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+      this.wsShouldReconnect = true;
+
+      // Update last request immediately to prevent race conditions
+      this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.wsSessionId };
+
+      try {
         await this.connectWebSocket();
 
-        // New session id and remember payload for reconnects
-        this.wsSessionId = 'ws_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
-        this.wsShouldReconnect = true;
-        this.lastTranslationRequest = { videoUrl, language, requestType: 'translated', sessionId: this.wsSessionId };
+        if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+          throw new Error('WebSocket is not open');
+        }
 
         const request = {
           videoUrl: videoUrl,
@@ -1102,12 +1091,12 @@ export default {
 
         this.websocket.send(JSON.stringify(request));
       } catch (error) {
-        this.handleWebSocketError(error, 'Failed to start translation: ' + error.message);
+        this.handleWebSocketError(error, 'Failed to start translation: ' + (error && error.message ? error.message : 'unknown error'));
         this.isTranslationLoading = false;
         this.subtitlesLoadingComplete = true;
         this.shouldShowTranslationContainer = false;
         this.wsShouldReconnect = false;
-        this.clearWsTimers();
+        this.currentTranslationKey = null;
         this.disableNoSleep();
       }
     },
@@ -1127,7 +1116,9 @@ export default {
               ...this.lastTranslationRequest,
               timestamp: Date.now()
             };
-            this.websocket.send(JSON.stringify(resumeRequest));
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+              this.websocket.send(JSON.stringify(resumeRequest));
+            }
           }
         } catch (e) {
           // Keep trying while allowed
@@ -1211,13 +1202,13 @@ export default {
       });
     },
 
-    async initializePlayer() {
+    async initializePlayer(videoId) {
       return new Promise((resolve) => {
-        console.log('[YoutubePlayer] initializePlayer videoId=', this.playerVideoId);
+        console.log('[YoutubePlayer] initializePlayer videoId=', videoId);
         this.player = new YT.Player('youtube-player-container', {
           height: '100%',
           width: '100%',
-          videoId: this.playerVideoId,
+          videoId: videoId,
           playerVars: { playsinline: 1, rel: 0, autoplay: 0 },
           events: {
             onReady: (event) => { this.onPlayerReady(event); resolve(); },
@@ -1237,6 +1228,12 @@ export default {
       this.statusMessage = '';
       this.isLoading = false;
       msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
+      // Start continuous subtitle sync so index updates during play, pause, and seeks.
+      this.startSubtitleSync();
+      // Load subtitles now that player is ready
+      if (this.videoUrl) {
+        this.loadSubtitlesInBackground();
+      }
     },
 
     onPlayerStateChange(event) {
@@ -1248,15 +1245,29 @@ export default {
         this.startMiniLoaderPoll();
       } else if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
         this.isBuffering = false;
-        // keep poll running only if not fully loaded
         if (this.getLoadedFraction() >= 1) this.stopMiniLoaderPoll();
       }
 
+      // Handle video loop when video ends
+      if (event.data === YT.PlayerState.ENDED && this.loopEnabled) {
+        this.$nextTick(() => {
+          if (this.player && typeof this.player.seekTo === 'function') {
+            this.player.seekTo(0, true);
+            this.player.playVideo();
+          }
+        });
+      }
+
       if (isPlaying) {
-        this.startSubtitleSync();
-        this.forceHideInput = true;
+        // Re-run auto scroll logic for active subtitle on resume.
+        // Auto-collapse controls on small screens when playback starts
+        if (this.isSmallScreen) {
+          this.controlsCollapsed = true;
+        }
+        this.$nextTick(() => this.restartCurrentSubtitleAutoScroll());
       } else {
-        this.stopSubtitleSync();
+        // Keep sync interval running so seeking while paused updates currentSubtitleIndex.
+        this.stopCurrentSubtitleAutoScroll();
       }
     },
 
@@ -1273,14 +1284,15 @@ export default {
         console.log('[YoutubePlayer] loadContent start videoUrl=', this.videoUrl);
         const normalizedUrl = this.normalizeVideoUrl(this.videoUrl) || null;
         if (normalizedUrl) this.videoUrl = normalizedUrl;
-        const extractedId = this.videoUrl ? this.extractVideoId(this.videoUrl) : (this.isLikelyYoutubeId(this.videoUrl) ? this.videoUrl : null);
-        const prevId = this.playerVideoId;
-        this.playerVideoId = extractedId || this.playerVideoId;
-        if (!this.playerVideoId) {
+        
+        const videoId = this.videoUrl ? this.extractVideoId(this.videoUrl) : (this.isLikelyYoutubeId(this.videoUrl) ? this.videoUrl : null);
+        
+        if (!videoId) {
           this.statusMessage = 'Invalid YouTube URL';
           this.isLoading = false;
           return;
         }
+
         try {
           const isYoutubeActive = (this.$route && this.$route.query && this.$route.query.active === 'youtube');
           if (isYoutubeActive) {
@@ -1295,13 +1307,20 @@ export default {
         this.statusMessage = 'Initializing player...';
         this.startMiniLoaderPoll && this.startMiniLoaderPoll();
         await this.ensureYouTubeAPIReady();
-        if (this.player && prevId && prevId !== this.playerVideoId) {
-          console.log('[YoutubePlayer] Reuse existing player loadVideoById', this.playerVideoId);
-          try { this.player.loadVideoById(this.playerVideoId); this.setPlayerInitTimeout(); }
-          catch(e) { console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e); await this.initializePlayer(); }
-        } else if (!this.player) {
-          await this.initializePlayer();
+        
+        if (this.player) {
+          console.log('[YoutubePlayer] Reuse existing player loadVideoById', videoId);
+          try { 
+            this.player.loadVideoById(videoId); 
+            this.setPlayerInitTimeout(); 
+          } catch(e) { 
+            console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e); 
+            await this.initializePlayer(videoId); 
+          }
+        } else {
+          await this.initializePlayer(videoId);
         }
+        
         this.isLoading = false; // may already be false after onReady
         if (!this.videoReady) {
           // onReady not fired yet; keep status if still initializing
@@ -1309,7 +1328,7 @@ export default {
         } else {
           this.statusMessage = ''; // ensure cleared
         }
-        if (this.videoUrl) this.loadSubtitlesInBackground();
+        // Subtitles are now loaded from onPlayerReady() after videoReady is set
         console.log('[YoutubePlayer] loadContent success');
       } catch (error) {
         console.error('Error loading content:', error);
@@ -1323,6 +1342,8 @@ export default {
 
     resetStates() {
       this.cleanupPlayer && this.cleanupPlayer();
+      this.wsShouldReconnect = false; // Prevent reconnects during reset
+      this.disconnectWebSocket(); // Ensure previous connection is closed
       this.isLoading = true;
       this.videoReady = false;
       this.subtitles = [];
@@ -1339,11 +1360,13 @@ export default {
       this.statusMessage = 'Loading video...';
       this.miniLoaderPercent = 0;
       this.isBuffering = false;
+      this.currentTranslationKey = null;
 
       // Reset inline AI search state
       this.closeAiStream(true);
       this.aiResponseText = '';
       this.aiLastError = '';
+      this.stopCurrentSubtitleAutoScroll();
     },
 
     async loadSubtitlesInBackground() {
@@ -1361,9 +1384,11 @@ export default {
       }, 200);
 
       try {
-        const response = await this.retryApiCall(() =>
-            downloadVideoScrollingSubtitles(this.videoUrl)
-        );
+        // Use enhanced or regular API based on toggle
+        const apiCall = this.enhancedSubtitlesEnabled
+            ? () => downloadVideoScrollingSubtitlesEnhanced(this.videoUrl)
+            : () => downloadVideoScrollingSubtitles(this.videoUrl);
+        const response = await this.retryApiCall(apiCall);
 
         if (response.status === 'fulfilled' && response.value?.status === 200) {
           // Support both legacy string and new object payloads.
@@ -1383,7 +1408,7 @@ export default {
             // Extract raw YouTube video id if provided
             const maybeYtId = payload.youtubeVideoId || payload.ytId || payload.ytbId;
             if (maybeYtId && this.isLikelyYoutubeId(String(maybeYtId))) {
-              this.playerVideoId = String(maybeYtId);
+              // We already have videoUrl, so we don't need to set playerVideoId
             }
 
             // Initialize favorited status if returned from server
@@ -1458,36 +1483,110 @@ export default {
     // Optimized subtitle management
     parseSubtitles(scrollingSubtitles) {
       const lines = scrollingSubtitles.split('\n').filter(line => line.trim());
-      const subtitles = [];
+      const rawSubtitles = [];
       let currentSubtitle = null;
       let parsingCue = false;
 
-      for (const line of lines) {
-        if (line.match(/\d{2}:\d{2}:\d{2}\.\d{3}\s+-->\s+\d{2}:\d{2}:\d{2}\.\d{3}/)) {
-          if (currentSubtitle) subtitles.push(currentSubtitle);
+      // Relaxed regex to match both VTT (dot) and SRT (comma) formats, and varying digits
+      const timeRegex = /(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})\s+-->\s+(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})/;
 
-          const [start, end] = line.split(' --> ');
+      for (const line of lines) {
+        const match = line.match(timeRegex);
+        if (match) {
+          if (currentSubtitle && currentSubtitle.text) rawSubtitles.push(currentSubtitle);
+
           currentSubtitle = {
-            start: this.parseTime(start),
-            end: this.parseTime(end),
+            start: this.parseTime(match[1]),
+            end: this.parseTime(match[2]),
             text: ''
           };
           parsingCue = true;
         } else if (parsingCue && line.trim()) {
-          currentSubtitle.text += (currentSubtitle.text ? '\n' : '') + line.trim();
+          // Skip index numbers often found in SRT files (lines that are just digits)
+          if (/^\d+$/.test(line.trim())) continue;
+
+          const cleaned = this.cleanSubtitleText(line.trim());
+          if (cleaned) {
+            currentSubtitle.text += (currentSubtitle.text ? '\n' : '') + cleaned;
+          }
         } else if (line.trim() === '' && parsingCue) {
           parsingCue = false;
         }
       }
 
-      if (currentSubtitle) subtitles.push(currentSubtitle);
-      this.subtitles = subtitles;
+      if (currentSubtitle && currentSubtitle.text) rawSubtitles.push(currentSubtitle);
+
+      // Post-process to fix short durations and gaps
+      const processedSubtitles = [];
+      for (let i = 0; i < rawSubtitles.length; i++) {
+        const sub = rawSubtitles[i];
+        const next = rawSubtitles[i + 1];
+        const duration = sub.end - sub.start;
+
+        // If subtitle is extremely short (likely a marker), try to merge or extend
+        if (duration < 0.2) {
+          if (next && (next.start - sub.start) < 0.5) {
+            // Merge with next if it starts very soon
+            next.text = sub.text + (next.text ? '\n' + next.text : '');
+            next.start = sub.start; // Adopt start time
+            // Skip adding this subtitle, effectively merging it into next
+            continue;
+          } else if (next) {
+            // Otherwise extend to next subtitle's start
+            sub.end = next.start;
+          } else {
+            // Last subtitle, give it a default duration
+            sub.end = sub.start + 3.0;
+          }
+        }
+
+        // Ensure strict non-overlapping with the next subtitle
+        // This fixes the issue where the index gets stuck on the previous subtitle
+        if (next && sub.end > next.start) {
+          sub.end = next.start;
+        }
+
+        // Only add valid subtitles with positive duration
+        if (sub.end > sub.start) {
+          processedSubtitles.push(sub);
+        }
+      }
+
+      this.subtitles = processedSubtitles;
+    },
+
+    cleanSubtitleText(text) {
+      if (!text) return '';
+      // Decode HTML entities and remove common artifacts
+      let cleaned = text
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+
+      // Remove leading speaker indicators like ">> "
+      cleaned = cleaned.replace(/^>>\s*/, '');
+
+      return cleaned.trim();
     },
 
     parseTime(timeStr) {
-      const [hours, minutes, seconds] = timeStr.split(':');
-      const [secs, ms] = seconds.split('.');
-      return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(secs) + parseInt(ms) / 1000;
+      if (!timeStr) return 0;
+      // Normalize comma to dot for standard parsing
+      const normalized = timeStr.replace(',', '.');
+      const parts = normalized.split(':');
+      
+      if (parts.length === 3) {
+        const [hours, minutes, seconds] = parts;
+        return parseFloat(hours) * 3600 + parseFloat(minutes) * 60 + parseFloat(seconds);
+      } else if (parts.length === 2) {
+        // Handle MM:SS.mmm format if present
+        const [minutes, seconds] = parts;
+        return parseFloat(minutes) * 60 + parseFloat(seconds);
+      }
+      return 0;
     },
 
     // Optimized subtitle sync
@@ -1496,6 +1595,10 @@ export default {
       this.subtitleInterval = setInterval(() => {
         this.updateCurrentSubtitle();
       }, 100);
+      this.$nextTick(() => {
+        this.ensureActiveSubtitleVisibility();
+        this.restartCurrentSubtitleAutoScroll();
+      });
     },
 
     stopSubtitleSync() {
@@ -1503,6 +1606,7 @@ export default {
         clearInterval(this.subtitleInterval);
         this.subtitleInterval = null;
       }
+      this.stopCurrentSubtitleAutoScroll();
     },
 
     updateCurrentSubtitle() {
@@ -1535,15 +1639,15 @@ export default {
     // UI event handlers
     jumpToSubtitle(index) {
       if (!this.player || !this.subtitles[index]) return;
-
       this.player.seekTo(this.subtitles[index].start, true);
       if (this.player.getPlayerState() !== YT.PlayerState.PLAYING) {
         this.player.playVideo();
       }
-      if (this.autoCenterEnabled) {
-        this.currentSubtitleIndex = index;
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
-      }
+      this.currentSubtitleIndex = index; // triggers watcher
+      this.$nextTick(() => {
+        this.ensureActiveSubtitleVisibility();
+        this.restartCurrentSubtitleAutoScroll();
+      });
     },
 
     // Handle Open in AI Tab from shared popup
@@ -1556,8 +1660,8 @@ export default {
         active: 'search',
         selectedMode: kiwiConsts.SEARCH_AI_MODES.TRANSLATION_AND_EXPLANATION.value,
         ytbMode: (this.$route && this.$route.query && this.$route.query.ytbMode)
-          ? this.$route.query.ytbMode
-          : kiwiConsts.YTB_MODE.CHANNEL
+            ? this.$route.query.ytbMode
+            : kiwiConsts.YTB_MODE.CHANNEL
       };
       if (this.selectedLanguage) {
         overrides.language = this.selectedLanguage;
@@ -1568,7 +1672,7 @@ export default {
     },
 
     pauseVideo() {
-      if (this.player && this.player.getPlayerState() === YT.PlayerState.PLAYING) {
+      if (this.player && typeof this.player.pauseVideo === 'function') {
         this.player.pauseVideo();
       }
     },
@@ -1584,6 +1688,7 @@ export default {
       this.isTranslationLoading = false;
       this.translationProgress = 0;
       this.translationChunks = [];
+      this.currentTranslationKey = null;
       msgUtil.msgSuccess(this, 'Cleared subtitles', 1200);
     },
 
@@ -1605,6 +1710,8 @@ export default {
 
       if (selectedText) {
         this.selectedText = selectedText;
+        // Ensure video is paused before showing popup
+        this.pauseVideo();
         // Open inline AI dialog directly instead of navigating
         this.showSelectionPopup = true;
       } else {
@@ -1704,12 +1811,12 @@ export default {
             this.aiSearchLoading = false;
             try {
               const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
-                ? response.fullResponse
-                : this.aiResponseText;
+                  ? response.fullResponse
+                  : this.aiResponseText;
               const extracted = this.extractResponseTextFromPayload(finalPayload);
               this.aiResponseText = (typeof extracted === 'string' && extracted.length > 0)
-                ? extracted
-                : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
+                  ? extracted
+                  : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
             } catch (_) {
               if (response.fullResponse) {
                 this.aiResponseText = response.fullResponse;
@@ -1802,29 +1909,74 @@ export default {
     scrollActiveSubtitleIntoView() {
       if (this.currentSubtitleIndex == null || this.currentSubtitleIndex < 0) return;
       if (this.scrollingSubtitlesCollapsed) return;
-
       const activeEl = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-      if (!activeEl) return;
-
-      const containerEl = this.getScrollableSubtitlesContainer(activeEl);
-      if (!containerEl) return;
-
-      try {
-        const relativeTop = this.getOffsetTopRelativeTo(activeEl, containerEl);
-        const target = Math.max(0, relativeTop - (containerEl.clientHeight / 2) + (activeEl.offsetHeight / 2));
-        containerEl.scrollTo({ top: target, behavior: 'smooth' });
-      } catch (e) {
-        activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (activeEl) {
+        const container = this.$refs.subtitlesContainer || activeEl.closest('.subtitles-container') || activeEl.parentElement;
+        try {
+          activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch (_) {
+          if (container) {
+            const targetTop = Math.max(activeEl.offsetTop - (container.clientHeight / 2 - activeEl.offsetHeight / 2), 0);
+            container.scrollTo({ top: targetTop, behavior: 'smooth' });
+          }
+        }
       }
+    },
+
+    ensureActiveSubtitleVisibility() {
+      // Always center active subtitle as per requirement.
+      this.scrollActiveSubtitleIntoView();
+    },
+
+    // Auto-scroll the current subtitle text inside context display if it overflows
+    restartCurrentSubtitleAutoScroll() {
+      this.stopCurrentSubtitleAutoScroll();
+      if (!this.isPlaying) return;
+      if (this.currentSubtitleIndex == null || this.currentSubtitleIndex < 0) return;
+      const displayEl = this.$el.querySelector('.current-subtitle-display');
+      if (!displayEl) return;
+      // Reset scroll position
+      displayEl.scrollTop = 0;
+      const overflow = displayEl.scrollHeight - displayEl.clientHeight;
+      if (overflow <= 4) return; // no meaningful overflow
+      const cue = this.subtitles[this.currentSubtitleIndex];
+      if (!cue) return;
+      const now = this.player ? this.player.getCurrentTime() : cue.start;
+      const remainingSec = Math.max(cue.end - now, 0.25); // avoid zero duration
+      const totalMs = remainingSec * 1000;
+      const startTime = performance.now();
+      const distance = overflow;
+      const step = () => {
+        if (!this.isPlaying) return; // stop when paused
+        // Abort if subtitle changed
+        if (this.subtitles[this.currentSubtitleIndex] !== cue) return;
+        const t = performance.now() - startTime;
+        const progress = Math.min(t / totalMs, 1);
+        displayEl.scrollTop = distance * progress;
+        if (progress < 1) {
+          this.currentSubtitleScrollInterval = requestAnimationFrame(step);
+        } else {
+          this.currentSubtitleScrollInterval = null;
+        }
+      };
+      this.currentSubtitleScrollInterval = requestAnimationFrame(step);
+    },
+
+    stopCurrentSubtitleAutoScroll() {
+      if (this.currentSubtitleScrollInterval) {
+        cancelAnimationFrame(this.currentSubtitleScrollInterval);
+        this.currentSubtitleScrollInterval = null;
+      }
+    },
+
+    toggleControlsCollapsed() {
+      this.controlsCollapsed = !this.controlsCollapsed;
     },
 
     toggleScrollingSubtitles() {
       this.scrollingSubtitlesCollapsed = !this.scrollingSubtitlesCollapsed;
-      // Suppress popup on expand/collapse of subtitles timeline
-      // const action = this.scrollingSubtitlesCollapsed ? 'collapsed' : 'expanded';
-      // msgUtil.msgSuccess(this, `Subtitles timeline ${action}`, 1000);
       if (!this.scrollingSubtitlesCollapsed) {
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+        this.$nextTick(() => this.ensureActiveSubtitleVisibility());
       }
     },
 
@@ -1843,15 +1995,20 @@ export default {
       if (this.isTranslationLoading) {
         this.isTranslationLoading = false;
         this.translationProgress = 0;
+        this.currentTranslationKey = null;
         this.disconnectWebSocket();
       }
 
       msgUtil.msgSuccess(this, 'Loading cancelled', 2000);
     },
 
-    minimizeSubtitlesStatus() {
-      this.subtitlesLoadingComplete = false;
-      msgUtil.msgSuccess(this, 'Status minimized', 1500);
+    handleOverlayClose() {
+      if (this.isSubtitlesLoading || this.isTranslationLoading) {
+        this.cancelSubtitlesLoading();
+      } else {
+        // Reset the completion state so overlay hides
+        this.subtitlesLoadingComplete = false;
+      }
     },
 
     // Configuration handlers
@@ -1864,14 +2021,20 @@ export default {
 
       if (enabled && this.selectedLanguage && this.videoUrl && !this.translatedSubtitles) {
         this.shouldShowTranslationContainer = true;
-        this.loadContent();
+        // Only start translation if subtitles are already loaded; otherwise rely on background loader
+        if (!this.isSubtitlesLoading && this.subtitles.length > 0) {
+          this.requestTranslation(this.videoUrl, this.selectedLanguage);
+        }
       } else if (!enabled) {
         this.shouldShowTranslationContainer = false;
+        this.wsShouldReconnect = false;
+        this.currentTranslationKey = null;
         this.disconnectWebSocket();
       }
     },
 
     selectedLanguageChange(language) {
+      this.selectedLanguage = language;
       setStore({
         name: kiwiConsts.CONFIG_KEY.SUBTITLES_TRANSLATION_SELECTED_LANGUAGE,
         content: language,
@@ -1885,10 +2048,35 @@ export default {
       });
     },
 
+    getSelectedLanguageLabel() {
+      if (!this.selectedLanguage) return null;
+      for (const [language, code] of Object.entries(this.languageCodes)) {
+        if (code === this.selectedLanguage) {
+          return language.replaceAll('_', ' ');
+        }
+      }
+      return this.selectedLanguage;
+    },
+
     onAutoCenterChange(enabled) {
       setStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER, content: enabled, type: 'local' });
       if (enabled) {
-        this.$nextTick(() => this.scrollActiveSubtitleIntoView());
+        this.$nextTick(() => this.ensureActiveSubtitleVisibility());
+      }
+    },
+
+    onEnhancedSubtitlesChange(enabled) {
+      setStore({ name: kiwiConsts.CONFIG_KEY.ENHANCED_SUBTITLES, content: enabled, type: 'local' });
+      // Reload subtitles if video is loaded
+      if (this.videoReady && this.videoUrl) {
+        this.loadSubtitlesInBackground();
+      }
+    },
+
+    onLoopChange(enabled) {
+      // Update the player's loop setting if player is ready
+      if (this.player && typeof this.player.setLoop === 'function') {
+        this.player.setLoop(enabled);
       }
     },
 
@@ -1912,9 +2100,9 @@ export default {
 
         // Clean up the content: replace multiple spaces/newlines with proper formatting
         textContent = textContent
-          .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
-          .replace(/\n\s*\n/g, '\n\n')  // Normalize paragraph breaks
-          .trim();
+            .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+            .replace(/\n\s*\n/g, '\n\n')  // Normalize paragraph breaks
+            .trim();
 
         // Create blob with the text content
         const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
@@ -2159,8 +2347,14 @@ export default {
 </script>
 
 <style scoped>
+:root {
+  --text-placeholder: #c0c4cc;
+  --color-primary-light-5: rgba(64, 158, 255, 0.25);
+}
+
 /* Base styles */
 .youtube-player {
+  position: relative;
   padding: 0;
   margin: 0;
   width: 100%;
@@ -2168,38 +2362,81 @@ export default {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: var(--bg-body);
 }
 
-/* Header */
-.header-container {
-  margin: 8px 0;
-  padding: 0 20px;
+/* Controls collapse toggle button */
+.controls-collapse-toggle {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color-light);
 }
 
-.main-title {
-  margin: 0;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
-  color: white;
+.collapse-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-light);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.collapse-toggle-wrapper:hover,
+.collapse-toggle-wrapper:active {
+  background: var(--color-primary-light-5);
+  border-color: var(--color-primary);
+}
+
+.collapse-toggle-icon {
+  font-size: 14px;
+  color: var(--color-primary);
+  transition: transform 0.2s ease;
+}
+
+.collapse-toggle-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Subtitles loading indicator */
+.subtitles-loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.subtitles-loading-indicator i {
   font-size: 18px;
-  font-weight: 600;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  transition: all 0.3s ease;
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
 }
 
-.main-title:hover {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.main-title i {
-  margin-right: 6px;
-  font-size: 16px;
-}
+
+
+
 
 /* Input Container */
 .input-container {
@@ -2236,23 +2473,31 @@ export default {
   min-width: 0;
 }
 
-.url-input .el-input__inner {
+.url-input >>> .el-input__inner,
+.language-select >>> .el-input__inner {
   border-radius: 8px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--border-color-light);
   padding: 12px 16px;
   font-size: 14px;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
-.url-input .el-input__inner:focus {
-  border-color: #409eff;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+.url-input >>> .el-input__inner:focus,
+.language-select >>> .el-input__inner:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light-5);
 }
 
-.url-input .el-input__inner:disabled {
-  background: #f5f7fa;
+.url-input >>> .el-input__inner:disabled,
+.language-select >>> .el-input__inner:disabled {
+  background: var(--bg-container);
   cursor: not-allowed;
+}
+
+.language-select >>> .el-input__icon {
+  color: var(--text-secondary);
 }
 
 .action-buttons {
@@ -2263,7 +2508,7 @@ export default {
 }
 
 .load-button {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -2275,22 +2520,22 @@ export default {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  box-shadow: var(--shadow-card);
   min-width: 100px;
   justify-content: center;
 }
 
 .load-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3a8ee6 0%, #5daf34 100%);
+  background: var(--gradient-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+  box-shadow: var(--shadow-hover);
 }
 
 .load-button:disabled {
-  background: linear-gradient(135deg, #c0c4cc 0%, #c0c4cc 100%);
+  background: var(--text-placeholder);
   cursor: not-allowed;
   transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .load-button .spinning {
@@ -2310,12 +2555,15 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
+  background: var(--bg-card);
+  color: var(--text-secondary);
 }
 
 .action-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
+  color: var(--color-primary);
 }
 
 /* Controls Container */
@@ -2330,11 +2578,11 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: white;
+  background: var(--bg-card);
   padding: 12px 16px;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
 }
 
 .switch-group {
@@ -2350,7 +2598,7 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   font-size: 16px;
-  color: #409eff;
+  color: var(--color-primary);
   pointer-events: none;
   opacity: 0.7;
 }
@@ -2361,7 +2609,7 @@ export default {
 
 .enhanced-switch .el-switch__label {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-regular);
   font-weight: 500;
 }
 
@@ -2371,13 +2619,14 @@ export default {
 }
 
 .enhanced-switch.is-checked .el-switch__core {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
+  border-color: transparent;
 }
 
 .divider {
   width: 1px;
   height: 20px;
-  background: #e4e7ed;
+  background: var(--border-color-light);
   margin: 0 8px;
 }
 
@@ -2396,10 +2645,10 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  color: #606266;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
+  color: var(--text-regular);
   border-radius: 999px;
   padding: 6px 10px;
 }
@@ -2408,218 +2657,32 @@ export default {
 .compact-progress {
   width: 90px;
   height: 4px;
-  background: #f2f3f5;
+  background: var(--bg-container);
   border-radius: 999px;
   overflow: hidden;
 }
 .compact-progress-fill {
   height: 100%;
   width: 0;
-  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   transition: width 0.25s ease;
 }
 
 .status-message {
   padding: 10px 12px;
   margin: 0;
-  color: #f56c6c;
-  background: white;
+  color: var(--color-danger);
+  background: var(--bg-card);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #fde2e2;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-light);
   font-size: 13px;
   font-weight: 500;
   text-align: center;
 }
 .status-message.compact { border-radius: 999px; }
 
-/* Subtitles Loading Overlay */
-.subtitles-loading-overlay {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 2000;
-  animation: slideInFromRight 0.3s ease-out;
-}
 
-@keyframes slideInFromRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.subtitles-loading-container {
-  background: white;
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e4e7ed;
-  min-width: 280px;
-  max-width: 320px;
-  position: relative;
-  backdrop-filter: blur(10px);
-}
-
-.subtitles-loading-icon {
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.subtitles-loading-icon i {
-  font-size: 24px;
-  color: #409eff;
-}
-
-.success-icon {
-  color: #67c23a !important;
-}
-
-.warning-icon {
-  color: #e6a23c !important;
-}
-
-.subtitles-loading-text {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-}
-
-.subtitles-loading-text > span {
-  font-size: 14px;
-  color: #2c3e50;
-  font-weight: 500;
-  text-align: center;
-}
-
-.subtitles-progress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.subtitles-progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #f0f2f5;
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-}
-
-.subtitles-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #409eff 0%, #67c23a 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-  position: relative;
-}
-
-.subtitles-progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.subtitles-progress-text {
-  font-size: 12px;
-  color: #909399;
-  font-weight: 500;
-  min-width: 35px;
-  text-align: right;
-}
-
-.subtitles-status {
-  width: 100%;
-}
-
-.status-indicators {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-}
-
-.status-item.success {
-  color: #67c23a;
-  background: rgba(103, 194, 58, 0.1);
-  border-color: rgba(103, 194, 58, 0.2);
-}
-
-.status-item.failed {
-  color: #f56c6c;
-  background: rgba(245, 108, 108, 0.1);
-  border-color: rgba(245, 108, 108, 0.2);
-}
-
-.status-item.disabled {
-  color: #909399;
-  background: rgba(144, 147, 153, 0.1);
-  border-color: rgba(144, 147, 153, 0.2);
-}
-
-.status-item i {
-  font-size: 14px;
-}
-
-.subtitles-loading-actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-
-.subtitles-loading-close,
-.subtitles-loading-minimize {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #909399;
-}
-
-.subtitles-loading-close:hover,
-.subtitles-loading-minimize:hover {
-  background: rgba(0, 0, 0, 0.2);
-  color: #606266;
-  transform: scale(1.1);
-}
-
-.subtitles-loading-close i,
-.subtitles-loading-minimize i {
-  font-size: 12px;
-}
 
 /* Content Container */
 .content-container {
@@ -2638,7 +2701,49 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* Draggable splitter */
+.splitter {
+  width: 8px;
+  cursor: col-resize;
+  background: var(--bg-container);
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splitter::before {
+  content: '';
+  width: 4px;
+  height: 40px;
+  background: var(--border-color-light);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.splitter:hover {
+  background: var(--color-primary-light-5);
+}
+
+.splitter:hover::before {
+  background: var(--color-primary);
+  height: 60px;
+}
+
+.splitter:active {
+  background: var(--color-primary-light-5);
+}
+
+.splitter:active::before {
+  background: var(--color-primary);
 }
 
 .right-panel {
@@ -2646,13 +2751,16 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+  flex: 1;
 }
 
 .video-section {
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   position: relative;
+  min-height: 200px;
 }
 
 .video-container {
@@ -2660,8 +2768,18 @@ export default {
   overflow: hidden;
   position: relative;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   background: #000;
+  aspect-ratio: 16 / 9;
+  max-height: 60vh;
+}
+
+.video-container iframe,
+.video-container #youtube-player-container {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px;
 }
 
 /* Mini loader overlay inside video */
@@ -2684,73 +2802,111 @@ export default {
 .mini-loader-text { white-space: nowrap; opacity: 0.9; }
 
 /* Subtitle Context Display */
+.youtube-player {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: transparent; /* Transparent for cyberpunk theme */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .youtube-player {
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+/* Subtitle Context Display - Current subtitle viewer */
 .subtitles-context-display {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
+  margin-top: 8px;
+  flex-shrink: 0;
 }
 
 .previous-subtitle {
-  padding: 6px 10px;
-  font-size: 11px;
-  color: #909399;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-body);
+  border-bottom: 1px solid var(--border-color-light);
   white-space: pre-wrap;
-  line-height: 1.2;
+  line-height: 1.4;
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
+  opacity: 0.7;
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .current-subtitle-display {
-  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  background: var(--gradient-primary);
   color: white;
-  padding: 8px 10px;
+  padding: 12px 16px;
   text-align: center;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
   white-space: pre-wrap;
-  max-height: 80px;
+  max-height: 100px;
   overflow-y: auto;
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
   position: relative;
   -webkit-touch-callout: none;
-  line-height: 1.2;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.current-subtitle-display:hover {
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .next-subtitle {
-  padding: 6px 10px;
-  font-size: 11px;
-  color: #606266;
-  background: #f0f2f5;
-  border-top: 1px solid #e9ecef;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-regular);
+  background: var(--bg-container);
+  border-top: 1px solid var(--border-color-light);
   white-space: pre-wrap;
-  line-height: 1.2;
+  line-height: 1.4;
   -webkit-touch-callout: none;
   -webkit-user-select: text;
   user-select: text;
+  opacity: 0.8;
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Subtitles Container */
 .subtitles-container {
   flex: 1;
   overflow-y: auto;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
   min-height: 200px;
   position: relative;
   scrollbar-width: thin;
@@ -2762,7 +2918,7 @@ export default {
 }
 
 .subtitles-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
+  background: var(--bg-body);
   border-radius: 4px;
 }
 
@@ -2775,56 +2931,78 @@ export default {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
 }
 
-/* Updated Subtitles Header - matching translated-subtitles-header style */
-.subtitles-header {
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-  border-bottom: 1px solid #e4e7ed;
+/* Section Headers - Unified style */
+.subtitles-header,
+.translated-subtitles-header {
+  padding: 12px 16px;
+  background: var(--gradient-primary);
+  border-bottom: none;
   font-size: 13px;
   font-weight: 600;
   color: white;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   position: sticky;
   top: 0;
   z-index: 10;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
+  border-radius: 12px 12px 0 0;
 }
 
-.subtitles-header:hover {
-  opacity: 0.8;
-  transform: translateY(-1px);
+.subtitles-header {
+  background: var(--gradient-success);
 }
 
-.subtitles-header i {
-  font-size: 15px;
+.subtitles-header:hover,
+.translated-subtitles-header:hover {
+  filter: brightness(1.1);
+}
+
+.subtitles-header:active,
+.translated-subtitles-header:active {
+  filter: brightness(0.95);
+}
+
+.subtitles-header i,
+.translated-subtitles-header i {
+  font-size: 16px;
   color: white;
 }
 
 .subtitle-count {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
   margin-left: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 
 .header-toggle-hint {
   margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
-/* New: add a bit of spacing between the download button and the arrow icon */
 .header-action-btn {
-  margin-right: 10px;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.header-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .toggle-arrow {
   font-size: 14px;
   transition: transform 0.3s ease;
   color: white;
+  opacity: 0.9;
 }
 
 .subtitles-wrapper {
@@ -2834,28 +3012,33 @@ export default {
   overflow-y: auto;
   scroll-padding-top: 20px;
   scroll-padding-bottom: 20px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .subtitles-container p {
   margin: 4px 0;
-  padding: 8px 12px;
-  transition: all 0.3s ease;
+  padding: 10px 14px;
+  transition: all 0.25s ease;
   border-radius: 8px;
   cursor: pointer;
-  line-height: 1.4;
+  line-height: 1.5;
   font-size: 14px;
   border: 1px solid transparent;
   position: relative;
   overflow: hidden;
   scroll-margin-top: 20px;
   scroll-margin-bottom: 20px;
+  color: var(--text-primary);
+  background: transparent;
 }
 
 .subtitles-container p:hover {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-color: #bae7ff;
+  background: var(--bg-container);
+  border-color: var(--color-primary-light-5);
   transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+  box-shadow: var(--shadow-hover);
 }
 
 .subtitles-container p::before {
@@ -2866,32 +3049,53 @@ export default {
   bottom: 0;
   width: 3px;
   background: transparent;
+  transition: all 0.25s ease;
 }
 
 /* Subtitle state styles */
 .subtitles-container p.active-subtitle {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-color: #a0d8ff;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.18);
+  background: var(--color-primary-light-5);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card);
+  transform: translateX(4px);
 }
+
 .subtitles-container p.active-subtitle::before {
-  background: #409eff;
+  background: var(--color-primary);
+  width: 4px;
 }
+
 .subtitles-container p.past-subtitle {
-  opacity: 0.7;
+  opacity: 0.6;
+  color: var(--text-secondary);
 }
+
+.subtitles-container p.past-subtitle:hover {
+  opacity: 0.9;
+}
+
 .subtitles-container p.future-subtitle {
-  opacity: 0.95;
+  opacity: 0.85;
+}
+
+.subtitles-container p.future-subtitle:hover {
+  opacity: 1;
+}
+
+/* Scroll filler to allow scrolling past last item */
+.scroll-filler {
+  height: 150px;
+  flex-shrink: 0;
 }
 
 /* Translated Subtitles Container */
 .translated-subtitles-container {
   flex: 1;
   overflow-y: auto;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
   min-height: 200px;
   position: relative;
   scrollbar-width: thin;
@@ -2902,7 +3106,7 @@ export default {
 }
 
 .translated-subtitles-container::-webkit-scrollbar-track {
-  background: #f1f3f4;
+  background: var(--bg-body);
   border-radius: 4px;
 }
 
@@ -2913,26 +3117,6 @@ export default {
 
 .translated-subtitles-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #909399 0%, #606266 100%);
-}
-
-.translated-subtitles-header {
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-  border-bottom: 1px solid #e4e7ed;
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.translated-subtitles-header i {
-  font-size: 15px;
-  color: white;
 }
 
 .translation-status {
@@ -2950,6 +3134,9 @@ export default {
 .translated-subtitles-wrapper {
   padding: 10px;
   min-height: calc(100% + 50px);
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .translation-streaming-indicator {
@@ -2965,7 +3152,7 @@ export default {
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  color: #409eff;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -2989,7 +3176,7 @@ export default {
 
 .streaming-fill {
   height: 100%;
-  background: linear-gradient(90deg, #409eff, #67c23a);
+  background: var(--gradient-primary);
   border-radius: 2px;
   transition: width 0.3s ease;
   position: relative;
@@ -3008,7 +3195,7 @@ export default {
 
 .streaming-percentage {
   font-size: 12px;
-  color: #409eff;
+  color: var(--color-primary);
   font-weight: 500;
   min-width: 35px;
   text-align: right;
@@ -3018,15 +3205,15 @@ export default {
   padding: 20px;
   line-height: 1.8;
   font-size: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
   text-align: justify;
 }
 
 /* AI Search Dialog */
 .ai-dialog-content { padding: 10px 0; }
-.selected-text-preview { margin-bottom: 10px; color: #606266; }
-.ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: #fff; border: 1px solid #ebeef5; border-radius: 8px; }
-.inline-error { color: #f56c6c; background: #fdecea; border: 1px solid #f5c2c0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
+.selected-text-preview { margin-bottom: 10px; color: var(--text-regular); }
+.ai-response { max-height: 45vh; overflow-y: auto; padding: 10px; background: var(--bg-card); border: 1px solid var(--border-color-light); border-radius: 8px; }
+.inline-error { color: var(--color-danger); background: rgba(245, 108, 108, 0.1); border: 1px solid rgba(245, 108, 108, 0.2); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
 
 /* Vocabulary Popup (deprecated, replaced by dialog) */
 /* .vocabulary-popup { display: none; } */
@@ -3049,16 +3236,11 @@ export default {
   align-items: center;
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile */
 @media (max-width: 767px) {
-  .header-container {
-    margin: 3px 0;
-    padding: 0 10px;
-  }
-
-  .main-title {
-    font-size: 13px;
-    padding: 5px 8px;
+  .youtube-player {
+    height: 100%;
+    min-height: 100vh;
   }
 
   .input-container {
@@ -3077,30 +3259,31 @@ export default {
   }
 
   .input-with-buttons {
-    flex-direction: column;
-    gap: 6px;
-    align-items: stretch;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .url-input {
+    flex: 1;
   }
 
   .action-buttons {
-    width: 100%;
-    justify-content: center;
+    flex-shrink: 0;
     gap: 6px;
     flex-wrap: nowrap;
   }
 
   .load-button {
-    flex: 1;
-    max-width: none;
-    min-width: 80px;
+    min-width: 70px;
     padding: 8px 12px;
     font-size: 12px;
-    height: 32px;
+    height: 36px;
   }
 
   .action-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
     font-size: 12px;
   }
@@ -3130,7 +3313,7 @@ export default {
     position: static;
     transform: none;
     font-size: 10px;
-    color: #606266;
+    color: var(--text-regular);
     margin-top: 1px;
     order: 2;
   }
@@ -3144,10 +3327,85 @@ export default {
     display: none;
   }
 
+  .splitter {
+    display: none;
+  }
+
   .content-container {
     padding: 0 10px;
-    height: calc(100vh - 120px);
-    gap: 8px;
+    flex-direction: column;
+    height: auto;
+    flex: 1;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+  }
+
+  .left-panel {
+    flex-shrink: 0;
+  }
+
+  .video-container {
+    aspect-ratio: 16 / 9;
+    max-height: 35vh;
+    min-height: 180px;
+  }
+
+  .subtitles-context-display {
+    margin-top: 8px;
+  }
+
+  .current-subtitle-display {
+    font-size: 14px;
+    padding: 10px 12px;
+    max-height: 80px;
+  }
+
+  .previous-subtitle,
+  .next-subtitle {
+    font-size: 11px;
+    padding: 6px 10px;
+    max-height: 40px;
+  }
+
+  .right-panel {
+    flex: 1;
+    min-height: 300px;
+  }
+
+  .subtitles-container {
+    min-height: 150px;
+    max-height: 250px;
+  }
+
+  .translated-subtitles-container {
+    min-height: 150px;
+    flex: 1;
+  }
+
+  .subtitles-header,
+  .translated-subtitles-header {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .subtitles-wrapper {
+    padding: 10px;
+  }
+
+  .subtitles-container p {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .translation-content {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .subtitles-loading-overlay {
@@ -3164,39 +3422,72 @@ export default {
   }
 }
 
-/* iPad and larger screens */
+/* Tablet screens */
+@media (min-width: 768px) and (max-width: 991px) {
+  .content-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+  }
+
+  .video-container {
+    max-height: 40vh;
+  }
+
+  .splitter {
+    display: none;
+  }
+}
+
+/* Desktop and larger screens */
 @media (min-width: 992px) {
   .content-container {
     flex-direction: row;
-    gap: 25px;
+    gap: 0;
+    align-items: stretch;
   }
 
   .left-panel {
-    width: 50%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .right-panel {
-    width: 50%;
     height: 100%;
-    border-left: 1px solid #e4e7ed;
-    padding-left: 15px;
+    padding-left: 0;
+    border-left: none;
   }
 
   .video-section {
-    flex: 1 0 auto;
-    min-height: 45vh;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .video-container {
+    max-height: none;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .subtitles-context-display {
+    flex: 0 0 auto;
+    margin-top: 12px;
   }
 
   .subtitles-container {
     flex: 1;
-    height: calc(50% - 25px);
-    margin-bottom: 10px;
+    min-height: 150px;
+    margin-bottom: 12px;
   }
 
   .translated-subtitles-container {
     flex: 1;
-    height: calc(50% - 25px);
+    min-height: 150px;
   }
 
   .url-input-group {
@@ -3239,13 +3530,13 @@ export default {
 .load-button:focus,
 .action-btn:focus,
 .enhanced-switch:focus {
-  outline: 2px solid #409eff;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* High contrast support */
 @media (prefers-contrast: more) {
-  .main-title,
+
   .current-subtitle-display,
   .active-subtitle,
   .load-button,
@@ -3271,12 +3562,12 @@ export default {
 
   .progress-fill {
     animation: none;
-    background: #409eff;
+    background: var(--color-primary);
   }
 
   .loading-spinner .spinner-ring {
     animation: none;
-    border: 3px solid #409eff;
+    border: 3px solid var(--color-primary);
   }
 
   .subtitles-wrapper {
@@ -3287,11 +3578,20 @@ export default {
 /* Favorite overlay styles */
 /* .favorite-overlay { display: none; } */
 .favorite-top-group .favorite-btn {
-  background: rgba(255,255,255,0.95);
-  color: #909399;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color-light);
+  box-shadow: var(--shadow-card);
+}
+.favorite-top-group .favorite-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-light-5);
+  box-shadow: var(--shadow-hover);
 }
 .favorite-top-group .favorite-btn.favorited {
-  color: #f7ba2a;
+  color: var(--color-warning);
 }
+
+
 </style>
 

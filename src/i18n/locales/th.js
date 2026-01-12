@@ -115,7 +115,27 @@ export default {
         antonym: 'คำตรงข้าม',
         vocabularyAssociation: 'เชื่อมโยงคำศัพท์',
         phrasesAssociation: 'เชื่อมโยงวลี',
+        vocabularyCharacterExpansion: 'การขยายตัวอักษรคำศัพท์',
+        ambiguousAssociationCorrection: 'การแก้ไขการเชื่อมโยงที่กำกวม',
+        naturalIdiomaticRetouch: 'การปรับแต่งสำนวนธรรมชาติ',
         selectMode: 'เลือกโหมด'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: 'ป้อนคำศัพท์',
+        directTranslation: 'ป้อนอะไรก็ได้',
+        explanation: 'ป้อนอะไรก็ได้',
+        grammarExplanation: 'ป้อนอะไรก็ได้',
+        grammarCorrection: 'ป้อนอะไรก็ได้',
+        synonym: 'ป้อนคำศัพท์',
+        antonym: 'ป้อนคำศัพท์',
+        vocabularyAssociation: 'ป้อนอะไรก็ได้',
+        phrasesAssociation: 'ป้อนอะไรก็ได้',
+        // New modes
+        vocabularyCharacterExpansion: 'ป้อนอะไรก็ได้',
+        ambiguousAssociationCorrection: 'ป้อนอะไรก็ได้',
+        naturalIdiomaticRetouch: 'ป้อนข้อความเพื่อปรับแต่ง'
     },
 
     // Word details
@@ -200,7 +220,20 @@ export default {
         refreshingResources: 'กำลังรีเฟรชแหล่งข้อมูลทบทวน',
         reviewNext: 'ทบทวนคำถัดไป',
         downloadNext: 'ดาวน์โหลดคำถัดไป',
-        autoReviewWarning: 'กำลังเริ่มทบทวนอัตโนมัติ กรุณารอสักครู่!'
+        autoReviewWarning: 'กำลังเริ่มทบทวนอัตโนมัติ กรุณารอสักครู่!',
+        // TTS Audio generation
+        generatingAudio: 'กำลังสร้างเสียง...',
+        audioReady: 'เสียงพร้อมแล้ว',
+        audioFilesReady: 'ไฟล์เสียงพร้อมแล้ว',
+        audioFilesFailed: 'ไฟล์เสียงล้มเหลว',
+        audioGenerationFailed: 'การสร้างเสียงล้มเหลว ใช้ทางเลือกสำรอง',
+        audioGenerationInProgress: 'การสร้างเสียงกำลังดำเนินการอยู่แล้ว',
+        ttsAudioNotEnabled: 'เสียง TTS ไม่ได้เปิดใช้งานบนเซิร์ฟเวอร์',
+        startingAudioGeneration: 'เริ่มสร้างเสียง...',
+        audioPreparationFailed: 'การเตรียมเสียงล้มเหลว',
+        prepareAudio: 'เตรียมเสียง',
+        audioGenerationComplete: 'สร้างเสียงเสร็จสมบูรณ์',
+        preparingAudioForReview: 'กำลังเตรียมเสียงสำหรับทบทวน...'
     },
 
     // YouTube features
@@ -251,6 +284,8 @@ export default {
         learningSettings: 'การตั้งค่าการเรียนรู้',
         pronunciationSource: 'แหล่งเสียง',
         nativeLanguage: 'ภาษาแม่',
+        uiLanguage: 'ภาษาส่วนติดต่อผู้ใช้',
+        uiLanguageTooltip: 'ภาษาที่ใช้แสดงข้อความในหน้าจอ (ตั้งค่าแยกจากภาษาแปล)',
         backgroundMusic: 'เพลงพื้นหลัง',
         letterSpelling: 'การสะกดตัวอักษร',
         englishDefinition: 'คำนิยามภาษาอังกฤษ',
@@ -317,6 +352,7 @@ export default {
         clearFilters: 'ล้างตัวกรอง',
         review: 'ทบทวน',
         copy: 'คัดลอก',
+        copyPrompt: 'คัดลอกข้อความ',
         details: 'รายละเอียด',
         searchAgain: 'ค้นหาอีกครั้ง',
         aiCallDetails: 'รายละเอียดการใช้ AI',
@@ -342,7 +378,31 @@ export default {
         streaming: 'กำลังสตรีมคำตอบ...',
         copyResponseText: 'คัดลอกข้อความตอบกลับ',
         textCopiedToClipboard: 'คัดลอกข้อความไปยังคลิปบอร์ดแล้ว!',
-        failedToCopyText: 'คัดลอกข้อความล้มเหลว'
+        failedToCopyText: 'คัดลอกข้อความล้มเหลว',
+        // กล่องโต้ตอบคลิปบอร์ด
+        useClipboardContent: 'ใช้เนื้อหาคลิปบอร์ด: "{text}"?',
+        // ตัวกรองการจัดประเภท
+        normalItems: 'รายการปกติ',
+        archivedItems: 'รายการที่เก็บถาวร',
+        allItems: 'รายการทั้งหมด',
+        // สถานะการโหลด
+        loadingHistory: 'กำลังโหลดประวัติ...',
+        // การดำเนินการ
+        archive: 'เก็บถาวร',
+        // ข้อความเก็บถาวร/ลบ
+        itemArchived: 'เก็บถาวรรายการสำเร็จ',
+        archiveFailed: 'เก็บถาวรล้มเหลว',
+        itemDeleted: 'ลบรายการสำเร็จ',
+        deleteFailed: 'ลบล้มเหลว',
+        loadHistoryFailed: 'โหลดประวัติการใช้ AI ล้มเหลว',
+        // กล่องโต้ตอบยืนยันการลบ
+        deleteItemTitle: 'ลบรายการ',
+        deleteItemConfirm: 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้',
+        // ย่อ/คืนค่า
+        minimize: 'ย่อ',
+        restore: 'คืนค่า',
+        close: 'ปิด',
+        aiSearch: 'ค้นหา AI'
     },
 
     // Moved out of ai: audio settings

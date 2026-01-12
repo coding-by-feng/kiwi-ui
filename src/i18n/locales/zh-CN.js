@@ -111,7 +111,7 @@ export default {
         google: '使用谷歌账户登录',
         connecting: '正在连接谷歌...',
         processing: '处理中...',
-        loginFailed: '谷歌登录失败，请重试',
+        loginFailed: '登录失败，请重试',
         accountNotFound: '账户未找到，请联系管理员',
         loginSuccess: '登录成功',
         logout: '退出登录',
@@ -132,9 +132,48 @@ export default {
         },
         copyright: '©2025 Kason英语学习平台 v2.0',
         username: '用户名',
+        usernameOrEmail: '用户名 / 邮箱',
         password: '密码',
         signIn: '登录',
-        or: '或'
+        or: '或',
+        // 注册相关
+        createAccount: '创建账户',
+        register: '注册',
+        registerSubtitle: '加入我们，开始学习',
+        registering: '注册中...',
+        registerSuccess: '注册成功！请登录。',
+        registerFailed: '注册失败，请重试',
+        email: '邮箱',
+        confirmPassword: '确认密码',
+        realName: '姓名（可选）',
+        // 占位符
+        usernamePlaceholder: '请输入用户名',
+        usernameOrEmailPlaceholder: '请输入用户名或邮箱',
+        passwordPlaceholder: '请输入密码',
+        emailPlaceholder: '请输入邮箱地址',
+        confirmPasswordPlaceholder: '请再次输入密码',
+        realNamePlaceholder: '请输入姓名',
+        // 验证消息
+        usernameRequired: '用户名不能为空',
+        usernameLength: '用户名长度需为3-20个字符',
+        usernamePattern: '用户名只能包含字母、数字和下划线',
+        usernameNotAvailable: '用户名已被使用',
+        emailRequired: '邮箱不能为空',
+        emailInvalid: '请输入有效的邮箱地址',
+        emailNotAvailable: '邮箱已被注册',
+        passwordRequired: '密码不能为空',
+        passwordTooShort: '密码长度至少为6个字符',
+        confirmPasswordRequired: '请确认密码',
+        passwordMismatch: '两次密码输入不一致',
+        realNameTooLong: '姓名不能超过50个字符',
+        // 密码强度
+        passwordWeak: '弱',
+        passwordFair: '一般',
+        passwordGood: '良好',
+        passwordStrong: '强',
+        // 导航链接
+        noAccount: '还没有账户？',
+        alreadyHaveAccount: '已有账户？'
     },
 
     // New: complete login block
@@ -178,7 +217,25 @@ export default {
         // 新增模式
         vocabularyCharacterExpansion: '词形扩展',
         ambiguousAssociationCorrection: '歧义关联纠正',
+        naturalIdiomaticRetouch: '自然地道润色',
         selectMode: '选择模式'
+    },
+
+    // Search placeholders
+    searchPlaceholders: {
+        dictionary: '输入词汇',
+        directTranslation: '输入任何内容',
+        explanation: '输入任何内容',
+        grammarExplanation: '输入任何内容',
+        grammarCorrection: '输入任何内容',
+        synonym: '输入词汇',
+        antonym: '输入词汇',
+        vocabularyAssociation: '输入任何内容',
+        phrasesAssociation: '输入任何内容',
+        // New modes
+        vocabularyCharacterExpansion: '输入任何内容',
+        ambiguousAssociationCorrection: '输入任何内容',
+        naturalIdiomaticRetouch: '输入需要润色的文本'
     },
 
     // User and settings (新增完整用户中心配置)
@@ -193,8 +250,11 @@ export default {
         todayReviewed: '今日复习',
         todayMastered: '今日掌握',
         learningSettings: '学习设置',
+        theme: '主题',
         pronunciationSource: '发音来源',
         nativeLanguage: '母语',
+        uiLanguage: '界面语言',
+        uiLanguageTooltip: '界面显示的语言（与翻译语言独立设置）',
         backgroundMusic: '背景音乐',
         letterSpelling: '字母拼写',
         englishDefinition: '英文释义',
@@ -220,7 +280,22 @@ export default {
         pressKeys: '请按下按键...',
         // 功能标签配置
         featureTabs: '功能标签',
-        featureTabsTip: '在工具栏中显示或隐藏标签'
+        featureTabsTip: '在工具栏中显示或隐藏标签',
+        // 密码修改
+        changePassword: '修改密码',
+        currentPassword: '当前密码',
+        newPassword: '新密码',
+        confirmNewPassword: '确认新密码',
+        currentPasswordPlaceholder: '请输入当前密码',
+        newPasswordPlaceholder: '请输入新密码',
+        confirmNewPasswordPlaceholder: '请再次输入新密码',
+        passwordMismatch: '两次输入的密码不一致',
+        passwordTooShort: '密码长度至少为6个字符',
+        passwordChangeSuccess: '密码修改成功',
+        passwordChangeFailed: '密码修改失败',
+        currentPasswordRequired: '请输入当前密码',
+        newPasswordRequired: '请输入新密码',
+        confirmPasswordRequired: '请确认新密码'
     },
 
     // Todo Gamification
@@ -250,6 +325,16 @@ export default {
         // Added formatter string
         freqEveryNDays: '每 {days} 天',
         addTask: '添加任务',
+
+        // Task form labels and hints
+        taskTitleLabel: '任务标题',
+        taskTitleHint: '给任务起一个清晰、可操作的名称。例如："完成晨练" 或 "复习单词表"。',
+        taskDescLabel: '任务描述',
+        taskDescHint: '添加关于任务的可选详细信息。需要做什么？有什么具体要求？',
+        pointsLabel: '积分设置',
+        pointsHint: '设置成功的奖励积分（+）和失败的惩罚积分（-）。任务越难，积分越高！',
+        frequencyLabel: '重复频率',
+        frequencyHint: '这个任务多久重复一次？一次性任务完成后会被移除。',
         completed: '✅ 已完成',
         failed: '❌ 已失败',
         success: '成功',
@@ -270,9 +355,17 @@ export default {
         // 历史/日期
         selectDate: '选择日期',
         noTasksForDate: '所选日期没有找到任务',
+        noHistoryHint: '完成一些任务后会在这里显示',
         deleteHistoryRecord: '删除历史记录',
         confirmDeleteHistoryRecord: '确定要删除该历史记录吗？',
         historyRecordDeleted: '历史记录已删除',
+        previousDay: '前一天',
+        nextDay: '后一天',
+        today: '今天',
+        goToToday: '跳转到今天',
+        tasks: '个任务',
+        restore: '恢复',
+        restoreTask: '恢复任务为待办',
 
         // 图表与统计
         barChart: '📊 柱状图',
@@ -339,6 +432,7 @@ export default {
         maxRank: '最高段位',
         nextRank: '下一段位：{rank}',
         maxRankReached: '已达最高段位',
+        toGo: '还需',
         placeholderImage: '占位图',
         ranks: {
             legendary: '传奇',
@@ -415,6 +509,7 @@ export default {
         clearFilters: '清除筛选',
         review: '复习',
         copy: '复制',
+        copyPrompt: '复制提示词',
         details: '详情',
         searchAgain: '再次搜索',
         aiCallDetails: 'AI 调用详情',
@@ -441,8 +536,30 @@ export default {
         copyResponseText: '复制响应文本',
         textCopiedToClipboard: '文本已复制到剪贴板！',
         failedToCopyText: '复制文本失败',
-        // 新增：剪贴板提示
-        useClipboardContent: '使用剪贴板内容：“{text}”？'
+        // 剪贴板提示
+        useClipboardContent: '使用剪贴板内容："{text}"？',
+        // 分类筛选
+        normalItems: '正常项目',
+        archivedItems: '已归档项目',
+        allItems: '全部项目',
+        // 加载状态
+        loadingHistory: '加载历史中...',
+        // 操作
+        archive: '归档',
+        // 归档/删除消息
+        itemArchived: '项目已成功归档',
+        archiveFailed: '归档失败',
+        itemDeleted: '项目已成功删除',
+        deleteFailed: '删除失败',
+        loadHistoryFailed: '加载 AI 调用历史失败',
+        // 删除确认对话框
+        deleteItemTitle: '删除项目',
+        deleteItemConfirm: '确定要删除此项目吗？此操作无法撤销。',
+        // 最小化/恢复
+        minimize: '最小化',
+        restore: '恢复',
+        close: '关闭',
+        aiSearch: 'AI 搜索'
     },
 
     // New: audio settings parity
@@ -492,7 +609,20 @@ export default {
     review: {
         stockReviewChToEn: '存量复习（汉英）',
         totalReviewChToEn: '全量复习（汉英）',
-        downloadResources: '下载资源'
+        downloadResources: '下载资源',
+        // TTS 音频生成
+        generatingAudio: '正在生成音频...',
+        audioReady: '音频就绪',
+        audioFilesReady: '个音频文件就绪',
+        audioFilesFailed: '个音频文件失败',
+        audioGenerationFailed: '音频生成失败，使用备用方案',
+        audioGenerationInProgress: '音频生成已在进行中',
+        ttsAudioNotEnabled: '服务器未启用TTS音频',
+        startingAudioGeneration: '开始生成音频...',
+        audioPreparationFailed: '音频准备失败',
+        prepareAudio: '准备音频',
+        audioGenerationComplete: '音频生成完成',
+        preparingAudioForReview: '正在准备复习音频...'
     },
 
 
