@@ -417,7 +417,7 @@ export default {
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
-        theme: getStore({ name: 'theme' }) || 'CyberPunk'
+        theme: getStore({ name: 'theme' }) || 'classic-book'
       },
 
       // Ensure this object exists before the first render to avoid runtime errors in v-model bindings
@@ -498,7 +498,7 @@ export default {
         'forest-nature': 'Forest Nature',
         'minimal-gray': 'Minimal Gray'
       }
-      return names[this.user.theme] || 'White Blue'
+      return names[this.user.theme] || 'Classic Book'
     },
     availableUiLanguages() {
       return getAvailableLanguages()
@@ -592,10 +592,10 @@ export default {
       }
 
       if (util.isEmptyStr(this.user.theme)) {
-        setStore({ name: 'theme', content: 'white-blue', type: 'local' })
-        this.user.theme = 'white-blue'
+        setStore({ name: 'theme', content: 'classic-book', type: 'local' })
+        this.user.theme = 'classic-book'
       } else {
-        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'white-blue'
+        this.user.theme = typeof this.user.theme === 'string' ? this.user.theme.toLowerCase() : 'classic-book'
       }
 
       // Initialize feature tabs visibility
