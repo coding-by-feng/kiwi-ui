@@ -196,6 +196,7 @@ export default {
     DEFAULT_ENABLED_TABS: Object.freeze({
         starList: true,
         todo: true,
+        focus: true, // Focus Timer with Forest feature
         youtube: true,
         about: true,
         aiHistory: true, // New: AI History tab enabled by default

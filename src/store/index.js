@@ -5,6 +5,7 @@ import common from "./modules/common";
 import tags from "./modules/tags";
 import getters from "./getters";
 import todo from './modules/todo'
+import focus from './modules/focus'
 
 Vue.use(Vuex);
 
@@ -13,7 +14,8 @@ const store = new Vuex.Store({
         user,
         common,
         tags,
-        todo
+        todo,
+        focus
     },
     getters
 })
