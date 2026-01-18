@@ -1,17 +1,5 @@
 <template>
   <div class="focus-view" :class="{ 'focus-active': isRunning || isPaused }">
-    <!-- Leave Warning Overlay -->
-    <div v-if="showLeaveWarning" class="leave-warning-overlay">
-      <div class="leave-warning-content">
-        <i class="el-icon-warning-outline"></i>
-        <h3>{{ $t('todo.focus.leaveWarning') }}</h3>
-        <p>{{ $t('todo.focus.leaveWarningDesc') }}</p>
-        <div class="warning-points">
-          <span class="penalty">-100 {{ $t('todo.points') }}</span>
-        </div>
-      </div>
-    </div>
-
     <div class="focus-layout">
       <!-- Left Panel: Timer & Controls -->
       <div class="timer-panel">
@@ -57,8 +45,8 @@
               :class="{ active: selectedTreeType === tree.id }"
               @click="selectTreeType(tree.id)"
             >
-              <div class="tree-preview" :style="{ color: tree.color }">
-                <component :is="tree.icon" />
+              <div class="tree-preview-wrapper">
+                <Tree3D stage="tree" :type="tree.id" :color="tree.color" :size="48" />
               </div>
               <span class="tree-name">{{ tree.name }}</span>
             </button>
@@ -381,13 +369,12 @@ export default {
       // UI state
       showCompletionDialog: false,
       showGiveUpDialog: false,
-      showLeaveWarning: false,
       completedDuration: 0,
       earnedPoints: 0,
 
       // Browser leave detection
-      visibilityHandler: null,
-      beforeUnloadHandler: null
+      beforeUnloadHandler: null,
+      pageHideHandler: null
     }
   },
 
@@ -477,6 +464,7 @@ export default {
   created() {
     this.loadFocusStats()
     this.loadLocalData()
+    this.checkForFailedSession()
   },
 
   mounted() {
@@ -738,27 +726,10 @@ export default {
     },
 
     // Browser leave detection
+    // Note: Screen lock (phone screen off) is allowed and won't fail the session.
+    // Only closing/navigating away from the website will trigger a warning.
     setupBrowserLeaveDetection() {
-      // Visibility change detection
-      this.visibilityHandler = () => {
-        if (document.visibilityState === 'hidden' && this.isRunning) {
-          this.showLeaveWarning = true
-          // Give a grace period before failing
-          this.leaveWarningTimeout = setTimeout(() => {
-            if (document.visibilityState === 'hidden' && this.isRunning) {
-              this.handleFocusFail('left_page')
-            }
-          }, 5000) // 5 second grace period
-        } else if (document.visibilityState === 'visible') {
-          this.showLeaveWarning = false
-          if (this.leaveWarningTimeout) {
-            clearTimeout(this.leaveWarningTimeout)
-          }
-        }
-      }
-      document.addEventListener('visibilitychange', this.visibilityHandler)
-
-      // Before unload detection
+      // Before unload detection - warns when closing tab or navigating away
       this.beforeUnloadHandler = (e) => {
         if (this.isRunning || this.isPaused) {
           e.preventDefault()
@@ -767,17 +738,60 @@ export default {
         }
       }
       window.addEventListener('beforeunload', this.beforeUnloadHandler)
+
+      // Page hide detection - triggers when page is being unloaded (closing/navigating)
+      // This is more reliable than beforeunload for actually failing the session
+      this.pageHideHandler = (e) => {
+        // Only fail if the page is actually being closed/navigated away from
+        // e.persisted is true when page might be restored from bfcache (back-forward cache)
+        if ((this.isRunning || this.isPaused) && !e.persisted) {
+          // Store failed session state in localStorage for recovery
+          this.markSessionAsFailed('browser_closed')
+        }
+      }
+      window.addEventListener('pagehide', this.pageHideHandler)
+    },
+
+    markSessionAsFailed(reason) {
+      // Save failed session to localStorage so we can process it on next load
+      try {
+        const failedSession = {
+          reason,
+          timestamp: new Date().toISOString(),
+          penalty: 100
+        }
+        localStorage.setItem('kiwi_focus_failed_session', JSON.stringify(failedSession))
+      } catch (e) {
+        console.warn('Failed to save session failure:', e)
+      }
+    },
+
+    checkForFailedSession() {
+      // Check if there was a failed session from previous page close
+      try {
+        const failedSession = localStorage.getItem('kiwi_focus_failed_session')
+        if (failedSession) {
+          const session = JSON.parse(failedSession)
+          localStorage.removeItem('kiwi_focus_failed_session')
+
+          // Deduct penalty points
+          this.totalPoints = Math.max(0, this.totalPoints - session.penalty)
+          this.saveLocalData()
+
+          // Show notification
+          this.$message.warning(this.$t('todo.focus.focusFailed', { points: session.penalty }))
+        }
+      } catch (e) {
+        console.warn('Failed to check for failed session:', e)
+      }
     },
 
     cleanupBrowserLeaveDetection() {
-      if (this.visibilityHandler) {
-        document.removeEventListener('visibilitychange', this.visibilityHandler)
-      }
       if (this.beforeUnloadHandler) {
         window.removeEventListener('beforeunload', this.beforeUnloadHandler)
       }
-      if (this.leaveWarningTimeout) {
-        clearTimeout(this.leaveWarningTimeout)
+      if (this.pageHideHandler) {
+        window.removeEventListener('pagehide', this.pageHideHandler)
       }
     }
   }
@@ -794,47 +808,6 @@ export default {
 
 .focus-view.focus-active {
   user-select: none;
-}
-
-/* Leave Warning Overlay */
-.leave-warning-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.3s ease;
-}
-
-.leave-warning-content {
-  text-align: center;
-  color: #fff;
-  padding: 40px;
-}
-
-.leave-warning-content i {
-  font-size: 64px;
-  color: var(--color-warning);
-  margin-bottom: 20px;
-}
-
-.leave-warning-content h3 {
-  font-size: 24px;
-  margin: 0 0 12px 0;
-}
-
-.leave-warning-content p {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 20px 0;
-}
-
-.warning-points .penalty {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--color-danger);
 }
 
 /* Layout */
@@ -977,12 +950,21 @@ export default {
   box-shadow: var(--shadow-hover);
 }
 
-.tree-preview {
+.tree-preview-wrapper {
   width: 48px;
   height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.tree-option:hover .tree-preview-wrapper {
+  transform: scale(1.1);
+}
+
+.tree-option.active .tree-preview-wrapper {
+  transform: scale(1.15);
 }
 
 .tree-name {
