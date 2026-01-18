@@ -342,6 +342,13 @@ export default {
         </keep-alive>
       </el-tab-pane>
 
+      <el-tab-pane name="focus" lazy v-if="enabledTabs.focus">
+        <span slot="label"><i class="el-icon-aim"></i></span>
+        <keep-alive>
+          <router-view name="focus" v-if="visitedTabs.focus" v-show="activeName==='focus'"></router-view>
+        </keep-alive>
+      </el-tab-pane>
+
       <el-tab-pane name="youtube" lazy v-if="enabledTabs.youtube">
         <span slot="label"><i class="el-icon-video-camera"></i></span>
         <keep-alive>

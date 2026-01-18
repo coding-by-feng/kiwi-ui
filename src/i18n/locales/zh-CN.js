@@ -458,7 +458,46 @@ export default {
         },
 
         // 删除任务确认
-        confirmDeleteTask: '确定要删除这个任务吗？'
+        confirmDeleteTask: '确定要删除这个任务吗？',
+
+        // 专注计时器（森林风格功能）
+        focus: {
+            title: '专注',
+            startFocus: '开始专注',
+            pause: '暂停',
+            resume: '继续',
+            giveUp: '放弃',
+            focusing: '专注中',
+            paused: '已暂停',
+            ready: '准备专注',
+            completed: '已完成',
+            minutes: '分钟',
+            customMinutes: '自定义',
+            todayTrees: '今日树木',
+            todayMinutes: '今日专注',
+            streak: '连续天数',
+            congratulations: '恭喜！',
+            treeGrown: '你种下了一棵树！',
+            sessionCompleted: '专注完成',
+            sessionCancelled: '专注已取消',
+            // 增强功能
+            selectTree: '选择要种植的树',
+            myForest: '我的森林',
+            treesPlanted: '棵树已种植',
+            totalPoints: '总积分',
+            pointsEarned: '获得积分',
+            focusTime: '专注时长',
+            plantTree: '种植树木',
+            giveUpTitle: '放弃专注？',
+            giveUpMessage: '如果现在放弃，你将失去积分，树木将会枯萎。',
+            confirmGiveUp: '是的，放弃',
+            leaveWarning: '不要离开！',
+            leaveWarningDesc: '如果你离开此页面，专注将失败，你将失去积分。',
+            focusFailed: '专注失败！-{points} 积分'
+        },
+
+        // 积分标签
+        points: '积分'
     },
 
     about: {

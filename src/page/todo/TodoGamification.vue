@@ -58,6 +58,10 @@
               />
             </div>
 
+            <div v-if="activeTab === 'focus'" class="tab-pane fade-in">
+              <FocusPanel />
+            </div>
+
             <div v-if="activeTab === 'history'" class="tab-pane fade-in">
               <HistoryPanel
                 :selected-date="selectedDate"
@@ -199,6 +203,7 @@ import TaskList from '@/page/todo/TaskList.vue'
 import HistoryPanel from '@/page/todo/HistoryPanel.vue'
 import TrashList from '@/page/todo/TrashList.vue'
 import AnalyticsPanel from '@/page/todo/AnalyticsPanel.vue'
+import FocusPanel from '@/page/todo/FocusPanel.vue'
 
 // Local mapping for rank assets (images/colors) keyed by rank key
 const RANK_ASSETS = {
@@ -229,12 +234,13 @@ import KiwiButton from '@/components/ui/KiwiButton.vue'
 
 export default {
   name: 'TodoGamification',
-  components: { TodoHeader, TaskInput, TaskFilters, TaskList, HistoryPanel, TrashList, AnalyticsPanel, KiwiDialog, KiwiButton },
+  components: { TodoHeader, TaskInput, TaskFilters, TaskList, HistoryPanel, TrashList, AnalyticsPanel, FocusPanel, KiwiDialog, KiwiButton },
   data() {
     return {
       activeTab: 'tasks',
       tabs: [
         { name: 'tasks', label: 'todo.taskList' },
+        { name: 'focus', label: 'todo.focus.title' },
         { name: 'history', label: 'todo.history' },
         { name: 'trash', label: 'todo.trash' },
         { name: 'analytics', label: 'todo.analytics' }
