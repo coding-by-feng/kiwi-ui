@@ -424,7 +424,27 @@ export default {
         passwordChangeFailed: 'Failed to change password',
         currentPasswordRequired: 'Current password is required',
         newPasswordRequired: 'New password is required',
-        confirmPasswordRequired: 'Please confirm your new password'
+        confirmPasswordRequired: 'Please confirm your new password',
+        // AI Provider settings
+        aiProviderSettings: 'AI Provider Settings',
+        aiProvider: 'AI Provider',
+        aiProviderTooltip: 'Choose between backend API (default) or direct Gemini API for faster AI responses',
+        aiProviderBackend: 'Backend API (Default)',
+        aiProviderGemini: 'Direct Gemini API',
+        geminiApiKey: 'Gemini API Key',
+        geminiApiKeyTooltip: 'Your Google Gemini API key. Get one from Google AI Studio (aistudio.google.com)',
+        geminiApiKeyPlaceholder: 'Enter your Gemini API key',
+        geminiApiKeyRequired: 'Please enter your Gemini API key to use Direct Gemini mode',
+        testConnection: 'Test Connection',
+        geminiConnectionSuccess: 'Gemini API connection successful!',
+        geminiConnectionSuccessAndSaved: 'Gemini API connection successful! API key saved to browser.',
+        geminiApiKeySaved: 'API key saved to browser cache',
+        geminiConnectionFailed: 'Failed to connect to Gemini API. Please check your API key.',
+        geminiInfoMessage: 'Your API key is stored locally in your browser. Direct Gemini mode calls the Gemini API directly from your browser for faster responses.',
+        geminiApiKeyRequired: 'Gemini API Key Required',
+        geminiApiKeyRequiredMessage: 'Please configure your Gemini API key in Settings, or switch to Backend API mode.',
+        configureApiKey: 'Configure API Key',
+        switchToBackend: 'Use Backend API'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS

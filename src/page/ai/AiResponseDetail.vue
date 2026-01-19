@@ -26,6 +26,12 @@
       :auto-request="false"
     />
 
+    <!-- Gemini API Key Configuration Hint -->
+    <GeminiApiKeyHint
+      :visible.sync="showGeminiApiKeyHint"
+      @switched-to-backend="onSwitchedToBackend"
+    />
+
     <!-- Multiple Selection Response Displays -->
     <div v-for="item in selectionExplanations" :key="item.id" class="selection-response-container">
       <h3 class="selection-response-title">
@@ -117,6 +123,7 @@
 
 <script>
 import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import GeminiApiKeyHint from '@/components/common/GeminiApiKeyHint.vue'
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import util from '@/util/util'
@@ -139,7 +146,7 @@ let that;
 
 export default {
   name: 'AiResponseDetail',
-  components: { StatusOverlay, AiSelectionPopup, KiwiButton },
+  components: { StatusOverlay, GeminiApiKeyHint, AiSelectionPopup, KiwiButton },
   data() {
     return {
       aiResponseVO: {
@@ -184,7 +191,10 @@ export default {
       _mainStreamMaxAttempts: 2,
       _mainStreamHadData: false,
       _mainFallbackInFlight: false,
-      _lastMainRequest: null
+      _lastMainRequest: null,
+
+      // Gemini API key configuration hint
+      showGeminiApiKeyHint: false
     }
   },
   beforeCreate() {
@@ -833,6 +843,12 @@ export default {
           onError: (error) => {
             console.error('AI streaming error:', error);
 
+            // Don't retry for API key configuration errors
+            if (error.errorCode === 'NO_API_KEY') {
+              that.handleError(error.message, error.errorCode);
+              return;
+            }
+
             // Check if we should retry
             if (!that._mainStreamHadData && that._mainStreamAttempts < that._mainStreamMaxAttempts && !that._mainFallbackInFlight) {
               const backoff = 200 * Math.pow(2, that._mainStreamAttempts - 1);
@@ -850,7 +866,7 @@ export default {
             } else {
               that._mainFallbackInFlight = true;
               const errorMessage = (error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : '');
-              that.handleError(errorMessage);
+              that.handleError(errorMessage, error.errorCode);
             }
           }
         }
@@ -864,7 +880,7 @@ export default {
       this.connectMainSSEStream(selectedMode, targetLanguage, nativeLanguage, originalText);
     },
 
-    handleError(errorMessage) {
+    handleError(errorMessage, errorCode) {
       // Stop all loading states immediately
       that.apiLoading = false;
       that.isStreaming = false;
@@ -878,6 +894,12 @@ export default {
       // Clear any partial response
       that.aiResponseVO.responseText = '';
 
+      // Check if this is a Gemini API key configuration error
+      if (errorCode === 'NO_API_KEY') {
+        that.showGeminiApiKeyHint = true;
+        return;
+      }
+
       // Show error message prominently in the UI
       that.lastErrorMessage = errorMessage;
       that.msgError(that, errorMessage)
@@ -890,6 +912,12 @@ export default {
       that.selectionResponseText = '';
       that.lastErrorMessage = errorMessage;
       that.msgError(that, errorMessage);
+    },
+
+    // Called when user switches to backend API from the GeminiApiKeyHint dialog
+    onSwitchedToBackend() {
+      // Retry the AI request with the new provider (backend)
+      this.init();
     },
 
     generateRequestId() {

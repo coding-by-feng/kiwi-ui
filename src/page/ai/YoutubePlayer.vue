@@ -314,6 +314,12 @@
           @open-ai-tab="onOpenAiTabFromPopup"
       />
 
+      <!-- Gemini API Key Configuration Hint -->
+      <GeminiApiKeyHint
+        :visible.sync="showGeminiApiKeyHint"
+        @switched-to-backend="onSwitchedToBackend"
+      />
+
     </div>
   </div>
 </template>
@@ -335,6 +341,7 @@ import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import GeminiApiKeyHint from '@/components/common/GeminiApiKeyHint.vue'
 
 const md = new MarkdownIt({
   html: true,
@@ -345,7 +352,7 @@ const md = new MarkdownIt({
 
 export default {
   name: 'YoutubeSubtitleDownloader',
-  components: { AiSelectionPopup, KiwiButton, KiwiInput, KiwiDropdown, KiwiDropdownItem },
+  components: { AiSelectionPopup, KiwiButton, KiwiInput, KiwiDropdown, KiwiDropdownItem, GeminiApiKeyHint },
   data() {
     const persistedAutoCenter = getStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER });
     // Normalize stored translation toggle to an actual boolean; default OFF.
@@ -411,6 +418,8 @@ export default {
       aiIsStreaming: false,
       aiRequestId: '',
       aiLastError: '',
+      // Gemini API key configuration hint
+      showGeminiApiKeyHint: false,
       isPlaying: false,
       videoReady: false,
       // New: flag for YouTube IFrame API readiness
@@ -1688,7 +1697,7 @@ export default {
             this.aiStreamAbort = null;
           },
           onError: (error) => {
-            this.handleAiStreamError((error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''));
+            this.handleAiStreamError((error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''), error.errorCode);
           }
         }
       });
@@ -1696,13 +1705,30 @@ export default {
       this.aiStreamAbort = abort;
     },
 
-    handleAiStreamError(message) {
+    handleAiStreamError(message, errorCode) {
       this.aiSearchLoading = false;
       this.aiIsStreaming = false;
-      this.aiLastError = message || 'AI streaming error';
       try { if (this.aiStreamAbort) { this.aiStreamAbort(); } } catch (_) {}
       this.aiStreamAbort = null;
+
+      // Check if this is a Gemini API key configuration error
+      if (errorCode === 'NO_API_KEY') {
+        this.showGeminiApiKeyHint = true;
+        return;
+      }
+
+      this.aiLastError = message || 'AI streaming error';
       msgUtil.msgError(this, this.aiLastError);
+    },
+
+    // Called when user switches to backend API from the GeminiApiKeyHint dialog
+    onSwitchedToBackend() {
+      // Retry the AI request with the current selected text
+      if (this.selectedText && this.selectedText.trim()) {
+        this.$nextTick(() => {
+          this.aiSearchSelectedText();
+        });
+      }
     },
 
     closeAiStream(silent) {

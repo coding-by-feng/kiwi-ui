@@ -4,12 +4,14 @@
  * Provides reusable functions for SSE streaming:
  * - POST-based SSE streaming using fetch with ReadableStream
  * - GET-based SSE streaming using EventSource
+ * - Provider routing: Backend SSE or Direct Gemini API
  *
  * Replaces WebSocket connections for AI streaming endpoints.
  */
 
 import { getStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
+import { isGeminiEnabled, createGeminiStream } from '@/util/geminiClient'
 
 /**
  * Parse SSE event data from a text chunk
@@ -57,6 +59,10 @@ function parseSSEEvents(text) {
 /**
  * Create a POST-based SSE stream for AI requests
  *
+ * This function automatically routes to either:
+ * - Backend SSE endpoint (default)
+ * - Direct Gemini API (when enabled in settings)
+ *
  * @param {Object} options - Configuration options
  * @param {string} options.url - SSE endpoint URL (default: /api/ai/sse/stream)
  * @param {Object} options.body - Request body (prompt, promptMode, targetLanguage, nativeLanguage)
@@ -68,8 +74,19 @@ function parseSSEEvents(text) {
  * @returns {Object} { abort: Function } - Abort controller
  */
 export function createAIStream(options = {}) {
+  // Check if direct Gemini mode is enabled
+  // Only route to Gemini for the main AI stream endpoint, not for YouTube subtitles etc.
+  const defaultUrl = `${kiwiConsts.API_BASE.AI_BIZ}/sse/stream`
+  const isMainAIEndpoint = !options.url || options.url === defaultUrl
+
+  if (isMainAIEndpoint && isGeminiEnabled()) {
+    console.log('Routing to direct Gemini API')
+    return createGeminiStream(options)
+  }
+
+  // Continue with backend SSE implementation
   const {
-    url = `${kiwiConsts.API_BASE.AI_BIZ}/sse/stream`,
+    url = defaultUrl,
     body = {},
     callbacks = {}
   } = options
