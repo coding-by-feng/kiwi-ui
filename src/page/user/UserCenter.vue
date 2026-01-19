@@ -205,17 +205,6 @@
 
         <div class="setting-item">
           <div class="setting-label">
-            <span>{{ $t('user.backgroundMusic') }}</span>
-          </div>
-          <el-switch
-              v-model="bgmEnabled"
-              @change="bgmChange"
-              class="custom-switch">
-          </el-switch>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-label">
             <span>{{ $t('user.letterSpelling') }}</span>
           </div>
           <el-switch
@@ -307,8 +296,99 @@
       </div>
     </div>
 
-    <!-- Audio (BGM) Section - no wrapper, Bgm has its own styling -->
-    <Bgm />
+    <el-divider class="custom-divider"></el-divider>
+
+    <!-- AI Provider Settings Section -->
+    <div class="settings-section ai-provider-section">
+      <h4 class="section-title">
+        <i class="el-icon-cpu"></i> {{ $t('user.aiProviderSettings') }}
+      </h4>
+      <div class="settings-grid">
+        <!-- AI Provider Toggle -->
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>{{ $t('user.aiProvider') }}</span>
+            <el-tooltip
+              :content="$t('user.aiProviderTooltip')"
+              placement="top"
+              effect="dark">
+              <i class="el-icon-question help-icon"></i>
+            </el-tooltip>
+          </div>
+          <KiwiDropdown @command="aiProviderChange" class="custom-dropdown">
+            <span class="dropdown-trigger">
+              {{ currentAiProviderName }} <i class="el-icon-arrow-down"></i>
+            </span>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="backend">
+                {{ $t('user.aiProviderBackend') }}
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="gemini">
+                {{ $t('user.aiProviderGemini') }}
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
+        </div>
+
+        <!-- Gemini API Key Input (shown only when Gemini is selected) -->
+        <div v-if="user.aiProvider === 'gemini'" class="setting-item setting-item--full-width">
+          <div class="setting-label">
+            <span>{{ $t('user.geminiApiKey') }}</span>
+            <el-tooltip
+              :content="$t('user.geminiApiKeyTooltip')"
+              placement="top"
+              effect="dark">
+              <i class="el-icon-question help-icon"></i>
+            </el-tooltip>
+          </div>
+          <div class="api-key-input-wrapper">
+            <KiwiInput
+              v-model="geminiApiKeyInput"
+              :type="showApiKey ? 'text' : 'password'"
+              :placeholder="$t('user.geminiApiKeyPlaceholder')"
+              @blur="saveGeminiApiKey"
+              class="api-key-input"
+            >
+              <template slot="suffix">
+                <i
+                  :class="showApiKey ? 'el-icon-view' : 'el-icon-hide'"
+                  @click="showApiKey = !showApiKey"
+                  style="cursor: pointer;"
+                ></i>
+              </template>
+            </KiwiInput>
+            <KiwiButton
+              type="primary"
+              size="small"
+              @click="testGeminiConnection"
+              :loading="testingGemini"
+              class="test-connection-btn">
+              {{ $t('user.testConnection') }}
+            </KiwiButton>
+          </div>
+        </div>
+
+        <!-- Gemini Info Message -->
+        <div v-if="user.aiProvider === 'gemini'" class="setting-item setting-item--full-width">
+          <div class="gemini-info">
+            <i class="el-icon-info"></i>
+            <span>{{ $t('user.geminiInfoMessage') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gemini Connection Status Overlay -->
+    <StatusOverlay
+      :visible.sync="geminiStatusOverlay.visible"
+      :status="geminiStatusOverlay.status"
+      :title="geminiStatusOverlay.title"
+      :message="geminiStatusOverlay.message"
+      position="fixed"
+      :backdrop="true"
+      :duration="3000"
+      @close="geminiStatusOverlay.visible = false"
+    />
 
     <!-- Password Change Dialog -->
     <el-dialog
@@ -382,18 +462,19 @@ import kiwiConst from '@/const/kiwiConsts'
 import util from '@/util/util'
 import msgUtil from '@/util/msg'
 import { clearWebsiteData as clearWebsiteDataUtil } from '@/util/clearWebsiteData'
-import Bgm from '@/page/bgm/Index'
 import { setLanguage as setUiLanguage, getAvailableLanguages } from '@/i18n'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
+import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import { getGeminiApiKey, setGeminiApiKey, getAiProvider, setAiProvider, testGeminiApiKey } from '@/util/geminiClient'
 
 const USER_NAME = 'user_name'
 
 export default {
   name: 'UserCenter',
-  components: { Bgm, KiwiDropdown, KiwiDropdownItem, KiwiButton, KiwiInput },
+  components: { KiwiDropdown, KiwiDropdownItem, KiwiButton, KiwiInput, StatusOverlay },
   data() {
     return {
       userInfo: {
@@ -410,14 +491,14 @@ export default {
         enableMsgHint: getStore({ name: kiwiConst.CONFIG_KEY.ENABLE_MSG_HINT }),
         isPlayExample: getStore({ name: kiwiConst.CONFIG_KEY.IS_PLAY_EXAMPLE }),
         isEnToEn: getStore({ name: kiwiConst.CONFIG_KEY.IS_EN_TO_EN }),
-        bgm: getStore({ name: kiwiConst.CONFIG_KEY.BGM }),
         nativeLang: getStore({ name: kiwiConst.CONFIG_KEY.NATIVE_LANG }),
         uiLanguage: getStore({ name: kiwiConst.CONFIG_KEY.UI_LANGUAGE }) || 'en',
         clipboardDetection: getStore({ name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION }),
         keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
-        theme: getStore({ name: 'theme' }) || 'classic-book'
+        theme: getStore({ name: 'theme' }) || 'classic-book',
+        aiProvider: getAiProvider()
       },
 
       // Ensure this object exists before the first render to avoid runtime errors in v-model bindings
@@ -434,6 +515,17 @@ export default {
         oldPassword: '',
         newPassword: '',
         confirmPassword: ''
+      },
+
+      // AI Provider settings
+      geminiApiKeyInput: '',
+      showApiKey: false,
+      testingGemini: false,
+      geminiStatusOverlay: {
+        visible: false,
+        status: 'success',
+        title: '',
+        message: ''
       }
     }
   },
@@ -456,10 +548,6 @@ export default {
   },
 
   computed: {
-    bgmEnabled: {
-      get() { return this.user.bgm === kiwiConst.ENABLE_BGM.ENABLE },
-      set(val) { this.user.bgm = val ? kiwiConst.ENABLE_BGM.ENABLE : kiwiConst.ENABLE_BGM.DISABLE }
-    },
     spellEnabled: {
       get() { return this.user.spellType === kiwiConst.SPELL_TYPE.ENABLE },
       set(val) { this.user.spellType = val ? kiwiConst.SPELL_TYPE.ENABLE : kiwiConst.SPELL_TYPE.DISABLE }
@@ -506,6 +594,11 @@ export default {
     currentUiLanguageName() {
       const lang = this.availableUiLanguages.find(l => l.code === this.user.uiLanguage)
       return lang ? lang.name : 'English'
+    },
+    currentAiProviderName() {
+      return this.user.aiProvider === 'gemini'
+        ? this.$t('user.aiProviderGemini')
+        : this.$t('user.aiProviderBackend')
     }
   },
 
@@ -536,14 +629,6 @@ export default {
           type: 'local'
         })
         this.user.pronunciationSource = 'Cambridge'
-      }
-      if (util.isEmptyStr(this.user.bgm)) {
-        setStore({
-          name: kiwiConst.CONFIG_KEY.BGM,
-          content: kiwiConst.ENABLE_BGM.ENABLE,
-          type: 'local'
-        })
-        this.user.bgm = kiwiConst.ENABLE_BGM.ENABLE
       }
       if (util.isEmptyStr(this.user.reviewType)) {
         setStore({
@@ -613,6 +698,13 @@ export default {
 
       // Apply theme
       this.applyTheme(this.user.theme)
+
+      // Initialize Gemini API key (load existing key if any)
+      const existingKey = getGeminiApiKey()
+      if (existingKey) {
+        // Show masked version for security
+        this.geminiApiKeyInput = existingKey
+      }
     },
 
     // Utility methods
@@ -703,18 +795,6 @@ export default {
       } else {
         this.$message.info(this.$t('messages.clipboardDetectionDisabled'))
       }
-    },
-
-    bgmChange(enabled) {
-      const value = enabled ? kiwiConst.ENABLE_BGM.ENABLE : kiwiConst.ENABLE_BGM.DISABLE
-      setStore({
-        name: kiwiConst.CONFIG_KEY.BGM,
-        content: value,
-        type: 'local'
-      })
-      this.user.bgm = value
-      this.$message.success(this.$t('messages.operationSuccess'))
-      window.location.reload()
     },
 
     spellTypeChange(enabled) {
@@ -892,6 +972,66 @@ export default {
       }
       if (this.$refs.passwordForm) {
         this.$refs.passwordForm.resetFields()
+      }
+    },
+
+    // AI Provider methods
+    aiProviderChange(provider) {
+      setAiProvider(provider)
+      this.user.aiProvider = provider
+      this.$message.success(this.$t('messages.operationSuccess'))
+
+      // If switching to Gemini and no API key is set, show a hint
+      if (provider === 'gemini' && !this.geminiApiKeyInput) {
+        this.$message.info(this.$t('user.geminiApiKeyRequired'))
+      }
+    },
+
+    saveGeminiApiKey() {
+      if (this.geminiApiKeyInput && this.geminiApiKeyInput.trim()) {
+        setGeminiApiKey(this.geminiApiKeyInput.trim())
+        this.$message.success(this.$t('messages.operationSuccess'))
+      }
+    },
+
+    async testGeminiConnection() {
+      if (!this.geminiApiKeyInput || !this.geminiApiKeyInput.trim()) {
+        this.$message.warning(this.$t('user.geminiApiKeyRequired'))
+        return
+      }
+
+      this.testingGemini = true
+      try {
+        const result = await testGeminiApiKey(this.geminiApiKeyInput.trim())
+        if (result.success) {
+          // Save the key if test is successful
+          setGeminiApiKey(this.geminiApiKeyInput.trim())
+          // Show success popup overlay
+          this.geminiStatusOverlay = {
+            visible: true,
+            status: 'success',
+            title: this.$t('user.geminiConnectionSuccess'),
+            message: this.$t('user.geminiApiKeySaved')
+          }
+        } else {
+          // Show error popup overlay
+          this.geminiStatusOverlay = {
+            visible: true,
+            status: 'error',
+            title: this.$t('user.geminiConnectionFailed'),
+            message: result.error || ''
+          }
+        }
+      } catch (e) {
+        console.error('Gemini connection test error:', e)
+        this.geminiStatusOverlay = {
+          visible: true,
+          status: 'error',
+          title: this.$t('user.geminiConnectionFailed'),
+          message: e.message || ''
+        }
+      } finally {
+        this.testingGemini = false
       }
     }
   }
@@ -1601,6 +1741,64 @@ export default {
   50% {
     transform: scale(1.2);
     opacity: 0.8;
+  }
+}
+
+/* AI Provider Settings Styles */
+.ai-provider-section {
+  animation: fadeInUp 0.6s ease 0.3s both;
+}
+
+.setting-item--full-width {
+  grid-column: 1 / -1;
+}
+
+.api-key-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+
+  .api-key-input {
+    flex: 1;
+    max-width: 400px;
+  }
+
+  .test-connection-btn {
+    white-space: nowrap;
+  }
+}
+
+.gemini-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--color-primary-light-9);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+
+  i {
+    color: var(--color-primary);
+    font-size: 16px;
+    margin-top: 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  .api-key-input-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+
+    .api-key-input {
+      max-width: 100%;
+    }
+
+    .test-connection-btn {
+      width: 100%;
+    }
   }
 }
 </style>

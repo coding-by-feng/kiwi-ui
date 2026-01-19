@@ -160,6 +160,12 @@
         </KiwiButton>
       </div>
     </KiwiDialog>
+
+    <!-- Gemini API Key Configuration Hint -->
+    <GeminiApiKeyHint
+      :visible.sync="showGeminiApiKeyHint"
+      @switched-to-backend="onSwitchedToBackend"
+    />
   </div>
 </template>
 
@@ -174,12 +180,13 @@ import KiwiDialog from '@/components/ui/KiwiDialog.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import GeminiApiKeyHint from '@/components/common/GeminiApiKeyHint.vue'
 
 const md = new MarkdownIt({ html: true, breaks: false, linkify: true, typographer: true })
 
 export default {
   name: 'AiSelectionPopup',
-  components: { KiwiDialog, KiwiButton, KiwiDropdown, KiwiDropdownItem },
+  components: { KiwiDialog, KiwiButton, KiwiDropdown, KiwiDropdownItem, GeminiApiKeyHint },
   props: {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
@@ -211,7 +218,9 @@ export default {
       isSmallScreen: false,
       selectedAiMode: '',
       // Minimize state
-      isMinimized: false
+      isMinimized: false,
+      // Gemini API key configuration hint
+      showGeminiApiKeyHint: false
     }
   },
   watch: {
@@ -546,7 +555,7 @@ export default {
             })
           },
           onError: (error) => {
-            this.handleItemError(item, (error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''))
+            this.handleItemError(item, (error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''), error.errorCode)
           }
         }
       })
@@ -554,15 +563,32 @@ export default {
       item.abortFn = abort
     },
 
-    handleItemError(item, message) {
+    handleItemError(item, message, errorCode) {
       item.loading = false
       item.isStreaming = false
-      item.error = message || 'AI streaming error'
       try {
         if (item.abortFn) item.abortFn()
       } catch (_) {}
       item.abortFn = null
+
+      // Check if this is a Gemini API key configuration error
+      if (errorCode === 'NO_API_KEY') {
+        this.showGeminiApiKeyHint = true
+        return
+      }
+
+      item.error = message || 'AI streaming error'
       msgUtil.msgError(this, item.error)
+    },
+
+    // Called when user switches to backend API from the GeminiApiKeyHint dialog
+    onSwitchedToBackend() {
+      // Re-trigger the pending item if there is one
+      const pendingItem = (this.nestedItems || []).find(i => !i.loading && !i.responseText && !i.error)
+      if (pendingItem) {
+        pendingItem.loading = true
+        this.startNestedForItem(pendingItem)
+      }
     },
 
     stopItem(item, silent) {

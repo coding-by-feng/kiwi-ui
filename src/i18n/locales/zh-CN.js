@@ -295,7 +295,27 @@ export default {
         passwordChangeFailed: '密码修改失败',
         currentPasswordRequired: '请输入当前密码',
         newPasswordRequired: '请输入新密码',
-        confirmPasswordRequired: '请确认新密码'
+        confirmPasswordRequired: '请确认新密码',
+        // AI 服务商设置
+        aiProviderSettings: 'AI 服务商设置',
+        aiProvider: 'AI 服务商',
+        aiProviderTooltip: '选择使用后端API（默认）或直连Gemini API以获得更快的响应',
+        aiProviderBackend: '后端 API（默认）',
+        aiProviderGemini: '直连 Gemini API',
+        geminiApiKey: 'Gemini API 密钥',
+        geminiApiKeyTooltip: '您的 Google Gemini API 密钥，可从 Google AI Studio (aistudio.google.com) 获取',
+        geminiApiKeyPlaceholder: '请输入您的 Gemini API 密钥',
+        geminiApiKeyRequired: '请输入 Gemini API 密钥以使用直连模式',
+        testConnection: '测试连接',
+        geminiConnectionSuccess: 'Gemini API 连接成功！',
+        geminiConnectionSuccessAndSaved: 'Gemini API 连接成功！API 密钥已保存到浏览器。',
+        geminiApiKeySaved: 'API 密钥已保存到浏览器缓存',
+        geminiConnectionFailed: '连接 Gemini API 失败，请检查您的 API 密钥',
+        geminiInfoMessage: '您的 API 密钥仅存储在本地浏览器中。直连模式从浏览器直接调用 Gemini API，响应更快。',
+        geminiApiKeyRequired: '需要配置 Gemini API 密钥',
+        geminiApiKeyRequiredMessage: '请在设置中配置您的 Gemini API 密钥，或切换到后端 API 模式。',
+        configureApiKey: '配置 API 密钥',
+        switchToBackend: '使用后端 API'
     },
 
     // Todo Gamification
