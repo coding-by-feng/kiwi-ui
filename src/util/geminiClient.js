@@ -258,6 +258,56 @@ function extractTextFromCandidate(data, result) {
 }
 
 /**
+ * Parse Gemini streaming response incrementally
+ * This function extracts all text from complete JSON objects found in the buffer,
+ * even if the overall JSON array is not complete yet.
+ * @param {string} buffer - Raw accumulated buffer from stream
+ * @returns {Object} Parsed result with accumulated text
+ */
+function parseGeminiChunkIncremental(buffer) {
+  const result = { text: '', done: false }
+
+  if (!buffer) return result
+
+  try {
+    // Extract all complete JSON objects from the buffer
+    // Gemini returns: [{...},{...},...] format
+    // We use regex to find complete JSON objects with candidates
+
+    // Find all text values from "text": "..." patterns
+    // This is a more direct approach that works even with partial JSON
+    const textPattern = /"text"\s*:\s*"((?:[^"\\]|\\.)*)"/g
+    let match
+
+    while ((match = textPattern.exec(buffer)) !== null) {
+      try {
+        // Unescape the JSON string value
+        const rawText = match[1]
+        const unescaped = JSON.parse(`"${rawText}"`)
+        result.text += unescaped
+      } catch (e) {
+        // If unescape fails, use raw text with basic unescape
+        result.text += match[1]
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\r/g, '\r')
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\')
+      }
+    }
+
+    // Check for finish reason
+    if (buffer.includes('"finishReason"')) {
+      result.done = true
+    }
+  } catch (e) {
+    console.warn('Failed to parse Gemini chunk incrementally:', e)
+  }
+
+  return result
+}
+
+/**
  * Test if a Gemini API key is valid
  * @param {string} apiKey - The API key to test
  * @returns {Promise<{success: boolean, error?: string}>}
@@ -395,6 +445,7 @@ export function createGeminiStream(options = {}) {
       const decoder = new TextDecoder()
       let fullResponse = ''
       let buffer = ''
+      let lastExtractedLength = 0
 
       while (true) {
         const { done, value } = await reader.read()
@@ -402,25 +453,29 @@ export function createGeminiStream(options = {}) {
 
         buffer += decoder.decode(value, { stream: true })
 
-        // Process the buffer - Gemini returns JSON array format
-        const parsed = parseGeminiChunk(buffer)
-        if (parsed.text) {
-          fullResponse += parsed.text
+        // Try to extract text incrementally from the buffer
+        // Gemini streams JSON array format: [{...},{...},...]
+        // We try to parse what we have and extract any new text
+        const parsed = parseGeminiChunkIncremental(buffer)
+        if (parsed.text && parsed.text.length > lastExtractedLength) {
+          // Only send the new text that we haven't sent yet
+          const newText = parsed.text.substring(lastExtractedLength)
+          lastExtractedLength = parsed.text.length
+          fullResponse += newText
           if (callbacks.onChunk) {
-            callbacks.onChunk(parsed.text)
+            callbacks.onChunk(newText)
           }
-          // Clear buffer after successful parse
-          buffer = ''
         }
       }
 
-      // Process any remaining buffer
+      // Process any remaining buffer for final text
       if (buffer.trim()) {
-        const parsed = parseGeminiChunk(buffer)
-        if (parsed.text) {
-          fullResponse += parsed.text
+        const parsed = parseGeminiChunkIncremental(buffer)
+        if (parsed.text && parsed.text.length > lastExtractedLength) {
+          const newText = parsed.text.substring(lastExtractedLength)
+          fullResponse += newText
           if (callbacks.onChunk) {
-            callbacks.onChunk(parsed.text)
+            callbacks.onChunk(newText)
           }
         }
       }
