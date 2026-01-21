@@ -45,6 +45,24 @@ export function deleteAiCallHistory(id) {
     })
 }
 
+// Create new AI call history item (used for Gemini local API mode)
+export function saveAiCallHistory(data) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/history`,
+        method: 'post',
+        data: {
+            aiUrl: data.aiUrl,
+            prompt: data.prompt,
+            promptMode: data.promptMode,
+            targetLanguage: data.targetLanguage,
+            nativeLanguage: data.nativeLanguage
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
+
 // YouTube Channel API calls
 export function getChannelList(current, size) {
     return request({
