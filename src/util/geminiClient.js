@@ -8,6 +8,7 @@
 import { getStore, setStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
 import { GEMINI_PROMPTS, buildPromptFromTemplate } from '@/const/geminiPromptTemplates'
+import { saveAiCallHistory } from '@/api/ai'
 
 // Simple encryption/decryption for API key storage
 // Note: This is basic obfuscation, not secure encryption
@@ -484,6 +485,17 @@ export function createGeminiStream(options = {}) {
       if (callbacks.onCompleted) {
         callbacks.onCompleted({ fullResponse })
       }
+
+      // Save AI call history for Gemini local API mode
+      saveAiCallHistory({
+        aiUrl: url.split('?')[0], // Remove API key from URL
+        prompt: body.prompt,
+        promptMode: body.promptMode,
+        targetLanguage: body.targetLanguage,
+        nativeLanguage: body.nativeLanguage
+      }).catch(err => {
+        console.warn('Failed to save AI call history:', err)
+      })
     })
     .catch(error => {
       if (error.name === 'AbortError') {
