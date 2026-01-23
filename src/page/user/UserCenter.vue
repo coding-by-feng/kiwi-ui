@@ -1800,5 +1800,36 @@ export default {
       width: 100%;
     }
   }
+
+  /* Fix AI Provider dropdown on mobile - prevent cut off by screen edge */
+  .ai-provider-section {
+    .setting-item {
+      .custom-dropdown {
+        width: 100%;
+
+        .dropdown-trigger {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+
+/* Global fix for dropdown menus on mobile to prevent edge cutoff */
+@media (max-width: 768px) {
+  ::v-deep .el-dropdown-menu {
+    max-width: calc(100vw - 32px);
+    left: 16px !important;
+    right: 16px !important;
+    transform: none !important;
+  }
+
+  /* Ensure dropdown items are fully visible */
+  ::v-deep .el-dropdown-menu__item {
+    white-space: normal;
+    word-break: break-word;
+    padding: 12px 16px;
+  }
 }
 </style>

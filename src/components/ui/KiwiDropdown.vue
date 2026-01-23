@@ -141,6 +141,8 @@ export default {
       const viewportHeight = window.innerHeight
       const scrollY = window.scrollY || window.pageYOffset
       const scrollX = window.scrollX || window.pageXOffset
+      const isMobile = viewportWidth <= 768
+      const padding = isMobile ? 12 : 8 // More padding on mobile
 
       // Calculate available space
       const spaceBelow = viewportHeight - triggerRect.bottom
@@ -181,16 +183,46 @@ export default {
       // Calculate menu style for proper positioning
       const style = {}
 
-      // Ensure menu doesn't overflow viewport horizontally
-      if (placement.endsWith('start')) {
-        const rightOverflow = triggerRect.left + menuRect.width - viewportWidth
-        if (rightOverflow > 0) {
-          style.left = `${-rightOverflow - 8}px`
+      // On mobile, ensure dropdown stays within viewport with proper margins
+      if (isMobile) {
+        // Calculate where the menu would be positioned
+        const menuLeft = placement.endsWith('start') ? triggerRect.left : triggerRect.right - menuRect.width
+        const menuRight = menuLeft + menuRect.width
+
+        // Check if menu overflows right edge
+        if (menuRight > viewportWidth - padding) {
+          const overflow = menuRight - (viewportWidth - padding)
+          style.left = `${-overflow}px`
+        }
+
+        // Check if menu overflows left edge
+        if (menuLeft < padding) {
+          const overflow = padding - menuLeft
+          if (placement.endsWith('start')) {
+            style.left = `${overflow}px`
+          } else {
+            style.right = `${-overflow}px`
+          }
+        }
+
+        // Limit menu width on mobile to prevent overflow
+        const maxMenuWidth = viewportWidth - (padding * 2)
+        if (menuRect.width > maxMenuWidth) {
+          style.maxWidth = `${maxMenuWidth}px`
+          style.minWidth = 'auto'
         }
       } else {
-        const leftOverflow = triggerRect.right - menuRect.width
-        if (leftOverflow < 0) {
-          style.right = `${leftOverflow - 8}px`
+        // Desktop: existing logic
+        if (placement.endsWith('start')) {
+          const rightOverflow = triggerRect.left + menuRect.width - viewportWidth
+          if (rightOverflow > 0) {
+            style.left = `${-rightOverflow - padding}px`
+          }
+        } else {
+          const leftOverflow = triggerRect.right - menuRect.width
+          if (leftOverflow < 0) {
+            style.right = `${leftOverflow - padding}px`
+          }
         }
       }
 
