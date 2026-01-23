@@ -160,6 +160,12 @@
         </KiwiButton>
       </div>
     </KiwiDialog>
+
+    <!-- Gemini API Key Configuration Hint -->
+    <GeminiApiKeyHint
+      :visible.sync="showGeminiApiKeyHint"
+      @switched-to-backend="onSwitchedToBackend"
+    />
   </div>
 </template>
 
@@ -169,16 +175,18 @@ import kiwiConsts from '@/const/kiwiConsts'
 import { getStore } from '@/util/store'
 import msgUtil from '@/util/msg'
 import { buildAiTabQuery } from '@/util/aiNavigation'
+import { createAIStream } from '@/util/sseClient'
 import KiwiDialog from '@/components/ui/KiwiDialog.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
+import GeminiApiKeyHint from '@/components/common/GeminiApiKeyHint.vue'
 
 const md = new MarkdownIt({ html: true, breaks: false, linkify: true, typographer: true })
 
 export default {
   name: 'AiSelectionPopup',
-  components: { KiwiDialog, KiwiButton, KiwiDropdown, KiwiDropdownItem },
+  components: { KiwiDialog, KiwiButton, KiwiDropdown, KiwiDropdownItem, GeminiApiKeyHint },
   props: {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
@@ -188,7 +196,7 @@ export default {
   },
   data() {
     return {
-      aiWebsocket: null,
+      aiStreamAbort: null, // SSE abort function
       aiSearchLoading: false,
       aiIsStreaming: false,
       aiRequestId: '',
@@ -210,7 +218,9 @@ export default {
       isSmallScreen: false,
       selectedAiMode: '',
       // Minimize state
-      isMinimized: false
+      isMinimized: false,
+      // Gemini API key configuration hint
+      showGeminiApiKeyHint: false
     }
   },
   watch: {
@@ -462,7 +472,7 @@ export default {
         loading: autoStart, // Only show loading if we are about to start
         error: '',
         collapsed: false,
-        ws: null,
+        abortFn: null, // SSE abort function
         requestId: id
       }
       this.nestedItems.push(item)
@@ -479,7 +489,7 @@ export default {
       this.nestedItems = this.nestedItems.filter(i => i.id !== item.id)
     },
 
-    // Core: start per-item WS using that item's context/mode
+    // Core: start per-item SSE stream using that item's context/mode
     startNestedForItem(item) {
       const promptSelection = item.selectedText
       const context = (item.contextSelectedText || '').trim()
@@ -493,9 +503,6 @@ export default {
         msgUtil.msgError(this, item.error)
         return
       }
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const host = window.location.host
-      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`
 
       // Build prompt by mode
       let prompt = ''
@@ -508,28 +515,27 @@ export default {
       const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
       const nativeLanguage = getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) || kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
 
-      // Ensure any prior ws is closed
+      // Ensure any prior stream is aborted
       this.stopItem(item, true)
-      try { item.ws = new WebSocket(wsUrl) } catch (e) {
-        item.loading = false
-        item.isStreaming = false
-        item.error = 'Failed to open WebSocket'
-        msgUtil.msgError(this, item.error)
-        return
-      }
 
-      item.ws.onopen = () => {
-        const request = { prompt, promptMode, targetLanguage, nativeLanguage, aiUrl: wsUrl, timestamp: Date.now(), requestId: item.requestId }
-        try { item.ws.send(JSON.stringify(request)) } catch (e) { this.handleItemError(item, 'Failed to send request') }
-      }
-      item.ws.onmessage = (event) => {
-        let response
-        try { response = JSON.parse(event.data) } catch (error) { this.handleItemError(item, 'Failed to parse response'); return }
-        switch (response.type) {
-          case 'connected': break
-          case 'started': item.isStreaming = true; break
-          case 'chunk': if (response.chunk) item.responseText += response.chunk; break
-          case 'completed': {
+      // Create SSE stream
+      const { abort } = createAIStream({
+        body: {
+          prompt,
+          promptMode,
+          targetLanguage,
+          nativeLanguage,
+          timestamp: Date.now(),
+          requestId: item.requestId
+        },
+        callbacks: {
+          onStarted: () => {
+            item.isStreaming = true
+          },
+          onChunk: (chunk) => {
+            if (chunk) item.responseText += chunk
+          },
+          onCompleted: (response) => {
             item.isStreaming = false
             item.loading = false
             try {
@@ -537,8 +543,7 @@ export default {
               const extracted = this.extractResponseTextFromPayload(finalPayload)
               item.responseText = (typeof extracted === 'string' && extracted.length > 0) ? extracted : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload))
             } catch (_) { if (response.fullResponse) item.responseText = response.fullResponse }
-            try { item.ws && item.ws.close() } catch (_) {}
-            item.ws = null
+            item.abortFn = null
             // Persist history for this file
             this.saveHistoryItem({
               id: item.id,
@@ -548,35 +553,52 @@ export default {
               responseText: item.responseText,
               timestamp: Date.now()
             })
-            break
+          },
+          onError: (error) => {
+            this.handleItemError(item, (error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''), error.errorCode)
           }
-          case 'error': this.handleItemError(item, (response.message || 'AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : '')); break
-          default: break
         }
-      }
-      item.ws.onerror = () => this.handleItemError(item, 'WebSocket connection error')
-      item.ws.onclose = () => { item.loading = false; item.isStreaming = false }
+      })
+
+      item.abortFn = abort
     },
 
-    handleItemError(item, message) {
+    handleItemError(item, message, errorCode) {
       item.loading = false
       item.isStreaming = false
-      item.error = message || 'AI streaming error'
       try {
-        if (item.ws) item.ws.close()
+        if (item.abortFn) item.abortFn()
       } catch (_) {}
-      item.ws = null
+      item.abortFn = null
+
+      // Check if this is a Gemini API key configuration error
+      if (errorCode === 'NO_API_KEY') {
+        this.showGeminiApiKeyHint = true
+        return
+      }
+
+      item.error = message || 'AI streaming error'
       msgUtil.msgError(this, item.error)
+    },
+
+    // Called when user switches to backend API from the GeminiApiKeyHint dialog
+    onSwitchedToBackend() {
+      // Re-trigger the pending item if there is one
+      const pendingItem = (this.nestedItems || []).find(i => !i.loading && !i.responseText && !i.error)
+      if (pendingItem) {
+        pendingItem.loading = true
+        this.startNestedForItem(pendingItem)
+      }
     },
 
     stopItem(item, silent) {
       try {
-        if (item && item.ws) {
-          item.ws.close()
+        if (item && item.abortFn) {
+          item.abortFn()
         }
       } catch (_) {}
       if (item) {
-        item.ws = null
+        item.abortFn = null
         item.loading = false
         item.isStreaming = false
         if (!silent) item.error = ''
@@ -635,16 +657,16 @@ export default {
 
     clearAllCurrent() {
       if (this.aiRetryTimer) { clearTimeout(this.aiRetryTimer); this.aiRetryTimer = null }
-      try { this.aiWebsocket && this.aiWebsocket.close() } catch (_) {}
-      this.aiWebsocket = null
+      try { this.aiStreamAbort && this.aiStreamAbort() } catch (_) {}
+      this.aiStreamAbort = null
       this.aiSearchLoading = false
       this.aiIsStreaming = false
       this.aiStarted = false
       this.aiLastError = ''
       const items = Array.isArray(this.nestedItems) ? this.nestedItems : []
       for (const it of items) {
-        try { if (it.ws) it.ws.close() } catch (_) {}
-        it.ws = null
+        try { if (it.abortFn) it.abortFn() } catch (_) {}
+        it.abortFn = null
         it.isStreaming = false
         it.loading = false
       }

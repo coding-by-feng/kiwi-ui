@@ -26,6 +26,12 @@
       :auto-request="false"
     />
 
+    <!-- Gemini API Key Configuration Hint -->
+    <GeminiApiKeyHint
+      :visible.sync="showGeminiApiKeyHint"
+      @switched-to-backend="onSwitchedToBackend"
+    />
+
     <!-- Multiple Selection Response Displays -->
     <div v-for="item in selectionExplanations" :key="item.id" class="selection-response-container">
       <h3 class="selection-response-title">
@@ -117,6 +123,7 @@
 
 <script>
 import StatusOverlay from '@/components/common/StatusOverlay.vue'
+import GeminiApiKeyHint from '@/components/common/GeminiApiKeyHint.vue'
 import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import util from '@/util/util'
@@ -127,6 +134,7 @@ import {getStore} from '@/util/store'
 import { getInitialSelectedLanguage } from '@/util/langUtil';
 import msgUtil from '@/util/msg';
 import { mapMutations } from 'vuex';
+import { createAIStream } from '@/util/sseClient';
 
 const md = new MarkdownIt({
   html: true,
@@ -138,7 +146,7 @@ let that;
 
 export default {
   name: 'AiResponseDetail',
-  components: { StatusOverlay, AiSelectionPopup, KiwiButton },
+  components: { StatusOverlay, GeminiApiKeyHint, AiSelectionPopup, KiwiButton },
   data() {
     return {
       aiResponseVO: {
@@ -150,7 +158,7 @@ export default {
       apiLoading: false,
       isStreaming: false,
       copySuccess: false,
-      websocket: null,
+      streamAbortFn: null, // SSE abort function
       currentRequestId: null,
 
       // New data properties for text selection
@@ -158,7 +166,7 @@ export default {
       selectedText: '',
       selectionApiLoading: false,
       isSelectionStreaming: false,
-      selectionWebSocket: null,
+      selectionAbortFn: null, // SSE abort function
       selectionCurrentRequestId: null,
       selectionResponseText: '',
       selectionResponseVisible: false,
@@ -166,7 +174,7 @@ export default {
       selectionContentCollapsed: false,
 
       // New: support multiple stacked explanations
-      selectionExplanations: [], // array of {id, selectedText, contextText, responseText, apiLoading, isStreaming, collapsed, websocket, requestId}
+      selectionExplanations: [], // array of {id, selectedText, contextText, responseText, apiLoading, isStreaming, collapsed, abortFn, requestId}
       lastSelectionContextText: '', // context text captured from the container where selection happened
       selectionSourceType: '', // 'original' | 'explanation'
       selectionSourceExplanationId: '',
@@ -177,13 +185,16 @@ export default {
       // New: inline error message
       lastErrorMessage: '',
 
-      // Mount/WS guards and bookkeeping
+      // Mount/SSE guards and bookkeeping
       _initializedOnce: false,
-      _mainWsAttempts: 0,
-      _mainWsMaxAttempts: 2,
-      _mainWsHadData: false,
+      _mainStreamAttempts: 0,
+      _mainStreamMaxAttempts: 2,
+      _mainStreamHadData: false,
       _mainFallbackInFlight: false,
-      _lastMainRequest: null
+      _lastMainRequest: null,
+
+      // Gemini API key configuration hint
+      showGeminiApiKeyHint: false
     }
   },
   beforeCreate() {
@@ -256,7 +267,7 @@ export default {
       return getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) ? getStore({name: kiwiConsts.CONFIG_KEY.NATIVE_LANG}) : kiwiConsts.TRANSLATION_LANGUAGE_CODE.Simplified_Chinese
     },
     isWsOnly() {
-      // Always use WebSocket only, no HTTP fallback
+      // Always use SSE streaming only, no HTTP fallback
       return true
     },
     coreQueryKey() {
@@ -311,32 +322,32 @@ export default {
   },
   beforeDestroy() {
     // Only clean up when component is actually destroyed (not just deactivated by keep-alive)
-    // This ensures WebSocket connections continue when switching tabs
-    // Clean up active websocket connections when leaving the page permanently
-    this.closeWebSocket('main');
-    // Close all selection websockets
+    // This ensures SSE streams continue when switching tabs
+    // Clean up active SSE streams when leaving the page permanently
+    this.abortAllStreams('all');
+    // Close all selection streams
     this.closeSelectionResponse();
     // Clear Vuex store loading state
     this.setApiLoading({ loading: false, cancelCallback: null });
   },
-  // Note: We intentionally do NOT close WebSocket in deactivated() hook
+  // Note: We intentionally do NOT abort SSE streams in deactivated() hook
   // to allow API calls to continue when user switches tabs
   methods: {
     ...msgUtil,
     ...mapMutations(['setApiLoading']),
 
-    // Cancel all active WebSocket connections (called from Vuex store when user clicks stop button)
+    // Cancel all active SSE streams (called from Vuex store when user clicks stop button)
     cancelAllRequests() {
-      this.closeWebSocket('all');
+      this.abortAllStreams();
       this.apiLoading = false;
       this.isStreaming = false;
       this.selectionApiLoading = false;
       this.isSelectionStreaming = false;
-      // Close all selection explanation websockets
+      // Abort all selection explanation streams
       if (Array.isArray(this.selectionExplanations)) {
         this.selectionExplanations.forEach(it => {
-          try { if (it.websocket) { it.websocket.close(); } } catch (e) { /* ignore */ }
-          it.websocket = null;
+          try { if (it.abortFn) { it.abortFn(); } } catch (e) { /* ignore */ }
+          it.abortFn = null;
           it.apiLoading = false;
           it.isStreaming = false;
         });
@@ -345,35 +356,35 @@ export default {
       this.setApiLoading({ loading: false, cancelCallback: null });
     },
 
-    // Safely close websocket(s) by type
-    closeWebSocket(type) {
+    // Safely abort SSE stream(s) by type
+    abortAllStreams(type) {
       try {
-        const closeSafely = (wsRefName) => {
+        const abortSafely = (abortRefName) => {
           try {
-            const ws = this[wsRefName];
-            if (ws) {
-              try { ws.close && ws.close(); } catch (_) {}
+            const abortFn = this[abortRefName];
+            if (abortFn) {
+              try { abortFn(); } catch (_) {}
             }
-            this[wsRefName] = null;
+            this[abortRefName] = null;
           } catch (_) {}
         };
 
         if (!type || type === 'all') {
-          closeSafely('websocket');
-          closeSafely('selectionWebSocket');
+          abortSafely('streamAbortFn');
+          abortSafely('selectionAbortFn');
           return;
         }
         if (type === 'main') {
-          closeSafely('websocket');
+          abortSafely('streamAbortFn');
           return;
         }
         if (type === 'selection') {
-          closeSafely('selectionWebSocket');
+          abortSafely('selectionAbortFn');
           return;
         }
-        // Fallback: try to close both if unknown type
-        closeSafely('websocket');
-        closeSafely('selectionWebSocket');
+        // Fallback: try to abort both if unknown type
+        abortSafely('streamAbortFn');
+        abortSafely('selectionAbortFn');
       } catch (_) { /* ignore */ }
     },
 
@@ -385,8 +396,8 @@ export default {
         this.preservedQueryParams = {};
       }
 
-      // Ensure any active streams are closed and stacked explanations cleared
-      this.closeWebSocket('all');
+      // Ensure any active streams are aborted and stacked explanations cleared
+      this.abortAllStreams('all');
       this.closeSelectionResponse();
 
       // Clear Vuex store loading state since we're starting fresh
@@ -408,8 +419,8 @@ export default {
       this.selectionSourceExplanationId = '';
       this.lastErrorMessage = '';
       this.aiResponseVO.responseText = '';
-      this._mainWsAttempts = 0;
-      this._mainWsHadData = false;
+      this._mainStreamAttempts = 0;
+      this._mainStreamHadData = false;
       this._mainFallbackInFlight = false;
       this._lastMainRequest = null;
 
@@ -422,8 +433,8 @@ export default {
     async init() {
       // Clear previous inline errors before a new session
       this.lastErrorMessage = ''
-      this._mainWsAttempts = 0
-      this._mainWsHadData = false
+      this._mainStreamAttempts = 0
+      this._mainStreamHadData = false
       this._mainFallbackInFlight = false
 
       let originalText = this.$route.query.originalText;
@@ -511,7 +522,7 @@ export default {
       this.selectionSourceType = '';
       this.selectionSourceExplanationId = '';
 
-      // Do not close existing explanation websockets here; only dialog state reset
+      // Do not abort existing explanation SSE streams here; only dialog state reset
 
       // Clear text selection
       if (window.getSelection) {
@@ -546,11 +557,11 @@ export default {
       }
     },
     closeSelectionResponse() {
-      // Close any active WebSocket connections for items
+      // Abort any active SSE streams for items
       if (Array.isArray(this.selectionExplanations)) {
         this.selectionExplanations.forEach(it => {
-          try { if (it.websocket) { it.websocket.close(); } } catch (e) { /* ignore */ }
-          it.websocket = null;
+          try { if (it.abortFn) { it.abortFn(); } } catch (e) { /* ignore */ }
+          it.abortFn = null;
         });
       }
       this.selectionExplanations = [];
@@ -573,8 +584,8 @@ export default {
     // Remove a single explanation item
     closeSingleExplanation(item) {
       if (!item) return;
-      try { if (item.websocket) { item.websocket.close(); } } catch (e) { /* ignore */ }
-      item.websocket = null;
+      try { if (item.abortFn) { item.abortFn(); } } catch (e) { /* ignore */ }
+      item.abortFn = null;
       this.selectionExplanations = this.selectionExplanations.filter(it => it.id !== item.id);
 
       this.persistNow()
@@ -624,7 +635,7 @@ export default {
         apiLoading: false,
         isStreaming: false,
         collapsed: false,
-        websocket: null,
+        abortFn: null, // SSE abort function
         requestId: ''
       };
       this.selectionExplanations.push(newItem);
@@ -633,8 +644,8 @@ export default {
       this.selectionDialogVisible = false;
       this.lastSelectedText = this.selectedText;
 
-      // Start WebSocket for this item
-      this.connectSelectionWebSocketForItem(newItem);
+      // Start SSE stream for this item
+      this.connectSelectionSSEForItem(newItem);
 
       // Smoothly scroll the newly added explanation into view
       this.$nextTick(() => {
@@ -650,9 +661,9 @@ export default {
     },
 
     /**
-     * Start a WebSocket streaming session for a single explanation item
+     * Start a SSE streaming session for a single explanation item
      */
-    connectSelectionWebSocketForItem(item) {
+    connectSelectionSSEForItem(item) {
       if (!item || !item.selectedText) return;
 
       // Prepare the prompt for selection explanation using the context of where the selection happened
@@ -668,64 +679,32 @@ export default {
         return;
       }
 
-      // Determine WebSocket URL
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`;
-
       // Init states
       item.apiLoading = true;
       item.isStreaming = true;
       item.responseText = '';
       item.requestId = this.generateRequestId();
 
-      // Open socket
-      try {
-        item.websocket = new WebSocket(wsUrl);
-      } catch (e) {
-        this.handleSelectionItemError(item, 'Failed to open WebSocket');
-        return;
-      }
-
-      item.websocket.onopen = () => {
-        const request = {
+      // Create SSE stream
+      const { abort } = createAIStream({
+        body: {
           prompt: prompt,
           promptMode: 'selection-explanation',
           targetLanguage: this.defaultTargetLanguage,
           nativeLanguage: this.defaultNativeLanguage,
-          aiUrl: wsUrl,
           timestamp: Date.now(),
           requestId: item.requestId
-        };
-        try {
-          item.websocket.send(JSON.stringify(request));
-        } catch (e) {
-          this.handleSelectionItemError(item, 'Failed to send request');
-        }
-      };
-
-      item.websocket.onmessage = (event) => {
-        let response;
-        try {
-          response = JSON.parse(event.data);
-        } catch (error) {
-          this.handleSelectionItemError(item, 'Failed to parse response');
-          return;
-        }
-
-        switch (response.type) {
-          case 'connected':
-            // no-op
-            break;
-          case 'started':
+        },
+        callbacks: {
+          onStarted: () => {
             item.isStreaming = true;
-            break;
-          case 'chunk':
-            if (response.chunk) {
-              item.responseText += response.chunk;
+          },
+          onChunk: (chunk) => {
+            if (chunk) {
+              item.responseText += chunk;
             }
-            break;
-          case 'completed':
+          },
+          onCompleted: (response) => {
             item.isStreaming = false;
             item.apiLoading = false;
             // Prefer fullResponse if available; then post-validate to extract only responseText
@@ -740,190 +719,35 @@ export default {
             } catch (_) {
               // best-effort fallback keeps whatever accumulated
             }
-            try { item.websocket && item.websocket.close(); } catch (e) { /* ignore */ }
-            item.websocket = null;
-            break;
-          case 'error':
-            this.handleSelectionItemError(item, (response.message || 'Selection AI streaming failed') + (response.errorCode ? ` (Code: ${response.errorCode})` : ''));
-            break;
-          default:
-            // ignore
-            break;
+            item.abortFn = null;
+          },
+          onError: (error) => {
+            this.handleSelectionItemError(item, (error.message || 'Selection AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : ''));
+          }
         }
-      };
+      });
 
-      item.websocket.onerror = () => {
-        this.handleSelectionItemError(item, 'WebSocket connection error');
-      };
-
-      item.websocket.onclose = () => {
-        item.apiLoading = false;
-        item.isStreaming = false;
-      };
+      item.abortFn = abort;
     },
 
     handleSelectionItemError(item, errorMessage) {
       if (item) {
         item.apiLoading = false;
         item.isStreaming = false;
-        try { if (item.websocket) { item.websocket.close(); } } catch (e) { /* ignore */ }
-        item.websocket = null;
+        try { if (item.abortFn) { item.abortFn(); } } catch (e) { /* ignore */ }
+        item.abortFn = null;
       }
       this.msgError(this, errorMessage);
     },
 
     /**
-     * Generic WebSocket connection method
-     * @param {Object} config - Configuration object
-     * @param {string} config.type - 'main' or 'selection'
-     * @param {string} config.prompt - The prompt to send
-     * @param {string} config.promptMode - AI prompt mode
-     * @param {string} config.targetLanguage - Target language
-     * @param {string} config.nativeLanguage - Native language
-     * @param {string} config.requestId - Unique request ID
+     * Main AI SSE stream connection method
+     * @param {string} selectedMode - AI prompt mode
+     * @param {string} targetLanguage - Target language
+     * @param {string} nativeLanguage - Native language
+     * @param {string} originalText - The original text/prompt
      */
-    connectWebSocket(config) {
-      const { type, prompt, promptMode, targetLanguage, nativeLanguage, requestId } = config;
-      const isSelection = type === 'selection';
-      const websocketKey = isSelection ? 'selectionWebSocket' : 'websocket';
-      const loadingKey = isSelection ? 'selectionApiLoading' : 'apiLoading';
-      const streamingKey = isSelection ? 'isSelectionStreaming' : 'isStreaming';
-
-      if (!isSelection) {
-        that.closeSelectionResponse();
-        // Track the last main request payload for retry/fallback
-        that._lastMainRequest = {
-          selectedMode: promptMode,
-          targetLanguage,
-          nativeLanguage,
-          decodedText: prompt
-        }
-        that._mainWsAttempts += 1
-        that._mainWsHadData = false
-        that._mainFallbackInFlight = false
-
-        // Register loading state with Vuex store for Search.vue to display stop button
-        that.setApiLoading({
-          loading: true,
-          cancelCallback: () => that.cancelAllRequests()
-        });
-      }
-
-      that[loadingKey] = true;
-      that[streamingKey] = true;
-
-      if (isSelection) {
-        that.selectionResponseText = '';
-        that.selectionResponseVisible = true;
-      } else {
-        that.aiResponseVO.responseText = '';
-      }
-
-      const requestIdKey = isSelection ? 'selectionCurrentRequestId' : 'currentRequestId';
-      that[requestIdKey] = requestId;
-
-      const token = getStore({name: 'access_token'});
-
-      if (!token) {
-        const errorHandler = isSelection ? that.handleSelectionError : that.handleError;
-        errorHandler('Authentication token not found. Please login again.');
-        return;
-      }
-
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const wsUrl = `${protocol}//${host}${kiwiConsts.API_BASE.AI_BIZ}/ws/stream?access_token=${encodeURIComponent(token)}`;
-
-      console.log(`Connecting to ${type} WebSocket with token`);
-      that[websocketKey] = new WebSocket(wsUrl);
-
-      that[websocketKey].onopen = () => {
-        console.log(`${type} WebSocket connection established`);
-        const request = {
-          prompt: prompt,
-          promptMode: promptMode,
-          targetLanguage: targetLanguage,
-          nativeLanguage: nativeLanguage,
-          aiUrl: wsUrl,
-          timestamp: Date.now(),
-          requestId: requestId
-        };
-        console.log(`Sending ${type} request:`, request);
-        try { that[websocketKey].send(JSON.stringify(request)); } catch (e) {
-          console.error('Failed to send WS request:', e)
-        }
-      };
-
-      that[websocketKey].onmessage = (event) => {
-        try {
-          const response = JSON.parse(event.data);
-          if (!isSelection) {
-            if (response.type === 'started' || response.type === 'chunk' || response.type === 'completed') {
-              that._mainWsHadData = true
-            }
-          }
-          if (isSelection) {
-            that.handleSelectionWebSocketMessage(response);
-          } else {
-            that.handleWebSocketMessage(response);
-          }
-        } catch (error) {
-          console.error(`Error parsing ${type} WebSocket message:`, error);
-          const errorHandler = isSelection ? that.handleSelectionError : that.handleError;
-          errorHandler('Failed to parse response');
-        }
-      };
-
-      let retryScheduled = false
-      const maybeRetryOrFallback = () => {
-        // Only for main, only if no data yet
-        if (isSelection) return
-        if (that._mainWsHadData) return
-        if (retryScheduled) return // Prevent duplicate retry from onerror + onclose
-        // Retry up to max attempts
-        if (that._mainWsAttempts < that._mainWsMaxAttempts) {
-          retryScheduled = true
-          const backoff = 200 * Math.pow(2, that._mainWsAttempts - 1) // 200ms, 400ms
-          console.log(`WS retry ${that._mainWsAttempts} scheduled in ${backoff}ms`)
-          setTimeout(() => {
-            if (that._lastMainRequest) {
-              const reqId = that.generateRequestId()
-              that.connectWebSocket({
-                type: 'main',
-                prompt: that._lastMainRequest.decodedText,
-                promptMode: that._lastMainRequest.selectedMode,
-                targetLanguage: that._lastMainRequest.targetLanguage,
-                nativeLanguage: that._lastMainRequest.nativeLanguage,
-                requestId: reqId
-              })
-            }
-          }, backoff)
-        } else if (!that._mainFallbackInFlight) {
-          that._mainFallbackInFlight = true
-          console.log('WS retries exhausted, surfacing error')
-          that.handleError('Realtime connection failed. Please try again or check your network.');
-        }
-      }
-
-      that[websocketKey].onerror = (error) => {
-        console.error(`${type} WebSocket error:`, error);
-        if (!isSelection) maybeRetryOrFallback()
-        else {
-          const errorHandler = isSelection ? that.handleSelectionError : that.handleError;
-          errorHandler('WebSocket connection error');
-        }
-      };
-
-      that[websocketKey].onclose = (event) => {
-        console.log(`${type} WebSocket connection closed:`, event.code, event.reason);
-        that[loadingKey] = false;
-        that[streamingKey] = false;
-        if (!isSelection) maybeRetryOrFallback()
-      };
-    },
-
-    // Simplified main AI request method
-    connectMainWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText) {
+    connectMainSSEStream(selectedMode, targetLanguage, nativeLanguage, originalText) {
       const requestId = that.generateRequestId();
       let decodedText = originalText;
       try {
@@ -934,151 +758,129 @@ export default {
         console.warn('Error decoding originalText:', error);
         decodedText = originalText;
       }
-      console.log('Sending decoded text:', decodedText);
-      this.connectWebSocket({
-        type: 'main',
-        prompt: decodedText,
-        promptMode: selectedMode,
-        targetLanguage: targetLanguage,
-        nativeLanguage: nativeLanguage,
-        requestId: requestId
-      });
-    },
 
-    handleWebSocketMessage(response) {
-      console.log('Received WebSocket message:', response);
+      // Close any existing streams
+      that.closeSelectionResponse();
+      that.abortAllStreams('main');
 
-      switch (response.type) {
-        case 'connected':
-          console.log('AI Streaming connection established');
-          this.lastErrorMessage = ''
-          break;
-
-        case 'started':
-          console.log('AI streaming started');
-          that.isStreaming = true;
-          this.lastErrorMessage = ''
-          break;
-
-        case 'chunk':
-          if (response.chunk) {
-            // Just accumulate the raw chunks - unescaping will happen in computed property
-            that.aiResponseVO.responseText += response.chunk;
-            console.log('Added chunk, total length:', that.aiResponseVO.responseText.length);
-            that.persistNow()
-          } else {
-            console.warn('Received empty chunk:', response);
-          }
-          break;
-
-        case 'completed':
-          console.log('AI streaming completed');
-          that.isStreaming = false;
-          that.apiLoading = false;
-
-          // Clear Vuex store loading state
-          that.setApiLoading({ loading: false, cancelCallback: null });
-
-          // Use fullResponse if available (it should be properly formatted)
-          // Then post-validate to extract only responseText as the final result
-          try {
-            const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
-              ? response.fullResponse
-              : that.aiResponseVO.responseText;
-            const extracted = this.extractResponseTextFromPayload(finalPayload);
-            that.aiResponseVO.responseText = (typeof extracted === 'string' && extracted.length > 0)
-              ? extracted
-              : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
-          } catch (_) {
-            // keep previous content if parsing fails unexpectedly
-            if (response.fullResponse) {
-              that.aiResponseVO.responseText = response.fullResponse;
-            }
-          }
-
-          that.closeWebSocket('main');
-          that.persistNow()
-          break;
-
-        case 'error':
-          console.error('AI streaming error:', response.message);
-          let errorMessage = response.message || 'AI streaming failed';
-          if (response.errorCode) {
-            errorMessage += ` (Code: ${response.errorCode})`;
-          }
-          that.handleError(errorMessage);
-          that.persistNow()
-          break;
-
-        default:
-          console.warn('Unknown WebSocket message type:', response.type);
-          break;
+      // Track the last main request payload for retry/fallback
+      that._lastMainRequest = {
+        selectedMode,
+        targetLanguage,
+        nativeLanguage,
+        decodedText
       }
-    },
+      that._mainStreamAttempts += 1
+      that._mainStreamHadData = false
+      that._mainFallbackInFlight = false
 
-    handleSelectionWebSocketMessage(response) {
-      console.log('Received Selection WebSocket message:', response);
+      // Register loading state with Vuex store for Search.vue to display stop button
+      that.setApiLoading({
+        loading: true,
+        cancelCallback: () => that.cancelAllRequests()
+      });
 
-      switch (response.type) {
-        case 'connected':
-          console.log('Selection AI Streaming connection established');
-          this.lastErrorMessage = ''
-          break;
-        case 'started':
-          console.log('Selection AI streaming started');
-          that.isSelectionStreaming = true;
-          this.lastErrorMessage = ''
-          break;
-        case 'chunk':
-          if (response.chunk) {
-            that.selectionResponseText += response.chunk;
-            console.log('Added selection chunk, total length:', that.selectionResponseText.length);
-          } else {
-            console.warn('Received empty selection chunk:', response);
-          }
-          break;
+      that.apiLoading = true;
+      that.isStreaming = true;
+      that.aiResponseVO.responseText = '';
+      that.currentRequestId = requestId;
+      that.lastErrorMessage = '';
 
-        case 'completed':
-          console.log('Selection AI streaming completed');
-          that.isSelectionStreaming = false;
-          that.selectionApiLoading = false;
+      console.log('Starting SSE stream for:', decodedText);
 
-          // Prefer fullResponse if available; then post-validate to extract only responseText
-          try {
-            const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
-              ? response.fullResponse
-              : that.selectionResponseText;
-            const extracted = this.extractResponseTextFromPayload(finalPayload);
-            that.selectionResponseText = (typeof extracted === 'string' && extracted.length > 0)
+      // Create SSE stream
+      const { abort } = createAIStream({
+        body: {
+          prompt: decodedText,
+          promptMode: selectedMode,
+          targetLanguage: targetLanguage,
+          nativeLanguage: nativeLanguage,
+          timestamp: Date.now(),
+          requestId: requestId
+        },
+        callbacks: {
+          onStarted: () => {
+            console.log('AI streaming started');
+            that.isStreaming = true;
+            that._mainStreamHadData = true;
+            that.lastErrorMessage = '';
+          },
+          onChunk: (chunk) => {
+            if (chunk) {
+              that._mainStreamHadData = true;
+              that.aiResponseVO.responseText += chunk;
+              console.log('Added chunk, total length:', that.aiResponseVO.responseText.length);
+              that.persistNow();
+            }
+          },
+          onCompleted: (response) => {
+            console.log('AI streaming completed');
+            that.isStreaming = false;
+            that.apiLoading = false;
+            that._mainStreamHadData = true;
+
+            // Clear Vuex store loading state
+            that.setApiLoading({ loading: false, cancelCallback: null });
+
+            // Use fullResponse if available
+            try {
+              const finalPayload = (response.fullResponse && response.fullResponse.length > 0)
+                ? response.fullResponse
+                : that.aiResponseVO.responseText;
+              const extracted = that.extractResponseTextFromPayload(finalPayload);
+              that.aiResponseVO.responseText = (typeof extracted === 'string' && extracted.length > 0)
                 ? extracted
                 : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload));
-          } catch (_) {
-            if (response.fullResponse) {
-              that.selectionResponseText = response.fullResponse;
+            } catch (_) {
+              if (response.fullResponse) {
+                that.aiResponseVO.responseText = response.fullResponse;
+              }
+            }
+
+            that.streamAbortFn = null;
+            that.persistNow();
+          },
+          onError: (error) => {
+            console.error('AI streaming error:', error);
+
+            // Don't retry for API key configuration errors
+            if (error.errorCode === 'NO_API_KEY') {
+              that.handleError(error.message, error.errorCode);
+              return;
+            }
+
+            // Check if we should retry
+            if (!that._mainStreamHadData && that._mainStreamAttempts < that._mainStreamMaxAttempts && !that._mainFallbackInFlight) {
+              const backoff = 200 * Math.pow(2, that._mainStreamAttempts - 1);
+              console.log(`SSE retry ${that._mainStreamAttempts} scheduled in ${backoff}ms`);
+              setTimeout(() => {
+                if (that._lastMainRequest) {
+                  that.connectMainSSEStream(
+                    that._lastMainRequest.selectedMode,
+                    that._lastMainRequest.targetLanguage,
+                    that._lastMainRequest.nativeLanguage,
+                    that._lastMainRequest.decodedText
+                  );
+                }
+              }, backoff);
+            } else {
+              that._mainFallbackInFlight = true;
+              const errorMessage = (error.message || 'AI streaming failed') + (error.errorCode ? ` (Code: ${error.errorCode})` : '');
+              that.handleError(errorMessage, error.errorCode);
             }
           }
+        }
+      });
 
-          that.closeWebSocket('selection');
-          that.persistNow()
-          break;
-
-        case 'error':
-          console.error('Selection AI streaming error:', response.message);
-          let errorMessage = response.message || 'Selection AI streaming failed';
-          if (response.errorCode) {
-            errorMessage += ` (Code: ${response.errorCode})`;
-          }
-          that.handleSelectionError(errorMessage);
-          that.persistNow()
-          break;
-
-        default:
-          console.warn('Unknown Selection WebSocket message type:', response.type);
-          break;
-      }
+      that.streamAbortFn = abort;
     },
 
-    handleError(errorMessage) {
+    // Alias for backward compatibility
+    connectMainWebSocket(selectedMode, targetLanguage, nativeLanguage, originalText) {
+      this.connectMainSSEStream(selectedMode, targetLanguage, nativeLanguage, originalText);
+    },
+
+    handleError(errorMessage, errorCode) {
       // Stop all loading states immediately
       that.apiLoading = false;
       that.isStreaming = false;
@@ -1086,11 +888,17 @@ export default {
       // Clear Vuex store loading state
       that.setApiLoading({ loading: false, cancelCallback: null });
 
-      // Close WebSocket connection
-      that.closeWebSocket('main');
+      // Abort SSE stream
+      that.abortAllStreams('main');
 
       // Clear any partial response
       that.aiResponseVO.responseText = '';
+
+      // Check if this is a Gemini API key configuration error
+      if (errorCode === 'NO_API_KEY') {
+        that.showGeminiApiKeyHint = true;
+        return;
+      }
 
       // Show error message prominently in the UI
       that.lastErrorMessage = errorMessage;
@@ -1100,10 +908,16 @@ export default {
     handleSelectionError(errorMessage) {
       that.selectionApiLoading = false;
       that.isSelectionStreaming = false;
-      that.closeWebSocket('selection');
+      that.abortAllStreams('selection');
       that.selectionResponseText = '';
       that.lastErrorMessage = errorMessage;
       that.msgError(that, errorMessage);
+    },
+
+    // Called when user switches to backend API from the GeminiApiKeyHint dialog
+    onSwitchedToBackend() {
+      // Retry the AI request with the new provider (backend)
+      this.init();
     },
 
     generateRequestId() {
@@ -1209,7 +1023,7 @@ export default {
       // Reset main response state and errors
       this.lastErrorMessage = '';
       this.aiResponseVO.responseText = '';
-      this.closeWebSocket('main');
+      this.abortAllStreams('main');
 
       // Re-initiate the AI call with current inputs
       this.init();

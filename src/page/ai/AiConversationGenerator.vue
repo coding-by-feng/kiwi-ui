@@ -36,9 +36,37 @@
             type="textarea"
             :rows="3"
             placeholder="Describe the conversation topic... e.g., Two friends discussing their favorite travel destinations"
-            :disabled="isGenerating"
+            :disabled="isGenerating || isGeneratingTopic"
             clearable
           />
+          <div class="topic-generator-row">
+            <div class="category-selector">
+              <KiwiDropdown @command="handleCategoryChange" :disabled="isGenerating || isGeneratingTopic">
+                <KiwiButton size="small" :disabled="isGenerating || isGeneratingTopic">
+                  <i class="el-icon-folder"></i>
+                  {{ getCategoryLabel(form.topicCategory) }}
+                  <i class="el-icon-arrow-down"></i>
+                </KiwiButton>
+                <template slot="dropdown">
+                  <KiwiDropdownItem
+                    v-for="category in topicCategoryOptions"
+                    :key="category.value"
+                    :command="category.value">
+                    {{ category.label }}
+                  </KiwiDropdownItem>
+                </template>
+              </KiwiDropdown>
+            </div>
+            <KiwiButton
+              size="small"
+              type="success"
+              :loading="isGeneratingTopic"
+              :disabled="isGenerating || isGeneratingTopic"
+              @click="generateRandomTopicHandler">
+              <i v-if="!isGeneratingTopic" class="el-icon-magic-stick"></i>
+              {{ isGeneratingTopic ? 'Generating...' : 'Random Topic' }}
+            </KiwiButton>
+          </div>
         </div>
 
         <div class="options-row">
@@ -281,8 +309,10 @@ import {
   getConversationList,
   getConversationById,
   deleteConversation,
-  getConversationConfig
+  getConversationConfig,
+  generateRandomTopic
 } from '@/api/conversation'
+import { isGeminiEnabled, getGeminiApiKey } from '@/util/geminiClient'
 
 export default {
   name: 'AiConversationGenerator',
@@ -301,7 +331,8 @@ export default {
         prompt: '',
         accent: 'UK',
         duration: 'FIVE_MINUTES',
-        speakerCount: 2
+        speakerCount: 2,
+        topicCategory: 'lifestyle'
       },
       accentOptions: [
         { value: 'US', label: 'American English' },
@@ -314,6 +345,17 @@ export default {
         { value: 'FIVE_MINUTES', label: '~5 minutes' },
         { value: 'TEN_MINUTES', label: '~10 minutes' }
       ],
+      topicCategoryOptions: [
+        { value: 'lifestyle', label: 'Daily Life' },
+        { value: 'travel', label: 'Travel' },
+        { value: 'food', label: 'Food & Cooking' },
+        { value: 'work', label: 'Work & Career' },
+        { value: 'hobbies', label: 'Hobbies' },
+        { value: 'health', label: 'Health & Fitness' },
+        { value: 'shopping', label: 'Shopping' },
+        { value: 'entertainment', label: 'Entertainment' }
+      ],
+      isGeneratingTopic: false,
       isGenerating: false,
       progress: 0,
       progressText: '',
@@ -373,6 +415,163 @@ export default {
 
     handleSpeakerCountChange(count) {
       this.form.speakerCount = count
+    },
+
+    handleCategoryChange(category) {
+      this.form.topicCategory = category
+    },
+
+    getCategoryLabel(value) {
+      const option = this.topicCategoryOptions.find(o => o.value === value)
+      return option ? option.label : value
+    },
+
+    getNativeLanguageName(langCode) {
+      const langMap = {
+        'zh-CN': 'Chinese',
+        'zh-TW': 'Traditional Chinese',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'it': 'Italian',
+        'pt': 'Portuguese',
+        'ru': 'Russian',
+        'ar': 'Arabic',
+        'hi': 'Hindi',
+        'th': 'Thai',
+        'vi': 'Vietnamese',
+        'id': 'Indonesian',
+        'ms': 'Malay',
+        'en': 'English'
+      }
+      return langMap[langCode] || 'Chinese'
+    },
+
+    async generateRandomTopicHandler() {
+      if (this.isGeneratingTopic || this.isGenerating) return
+
+      this.isGeneratingTopic = true
+
+      try {
+        // Check if using Gemini FE direct mode
+        if (isGeminiEnabled()) {
+          await this.generateTopicWithGemini()
+        } else {
+          await this.generateTopicWithBackend()
+        }
+      } catch (error) {
+        console.error('Failed to generate random topic:', error)
+        this.$message.error('Failed to generate topic: ' + (error.message || 'Unknown error'))
+      } finally {
+        this.isGeneratingTopic = false
+      }
+    },
+
+    async generateTopicWithGemini() {
+      const apiKey = getGeminiApiKey()
+      if (!apiKey) {
+        this.$message.warning('Please configure your Gemini API key in Settings first')
+        return
+      }
+
+      const categoryLabel = this.getCategoryLabel(this.form.topicCategory)
+      const nativeLang = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || 'zh-CN'
+      const nativeLangName = this.getNativeLanguageName(nativeLang)
+
+      const prompt = `Generate a detailed conversation topic for English language practice.
+
+Category: ${categoryLabel}
+Number of speakers: ${this.form.speakerCount}
+Level: intermediate
+
+Write a detailed topic description in ${nativeLangName} language that includes:
+- Who the speakers are (their relationship/roles)
+- The setting/location
+- What they are discussing
+- A specific situation or context
+
+No JSON, no quotes, no extra formatting. Just the topic description in 2-3 sentences.
+
+Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末考试。他们互相分享复习策略，讨论哪些科目最难，以及如何平衡学习和休息时间。`
+
+      const config = kiwiConsts.GEMINI_CONFIG
+      const url = `${config.ENDPOINT}/${config.MODEL}:generateContent?key=${apiKey}`
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 1.0,
+            maxOutputTokens: 1024
+          }
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        let errorMessage = `API Error: ${response.status}`
+        try {
+          const errorData = JSON.parse(errorText)
+          if (errorData.error && errorData.error.message) {
+            errorMessage = errorData.error.message
+          }
+        } catch (e) {
+          // Use default error message
+        }
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        let text = data.candidates[0].content.parts[0].text || ''
+        // Clean up the response - remove any JSON artifacts, quotes, or markdown
+        text = text
+          .replace(/^```.*\n?/gm, '')  // Remove markdown code blocks
+          .replace(/```$/gm, '')
+          .replace(/^\{.*"topic":\s*"/i, '')  // Remove JSON prefix if present
+          .replace(/"\s*\}$/i, '')  // Remove JSON suffix if present
+          .replace(/^["']|["']$/g, '')  // Remove surrounding quotes
+          .trim()
+
+        if (text) {
+          this.form.prompt = text
+          this.$message.success('Topic generated!')
+          return
+        }
+      }
+
+      throw new Error('Unexpected response format from Gemini')
+    },
+
+    async generateTopicWithBackend() {
+      const nativeLang = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || 'zh-CN'
+      const response = await generateRandomTopic({
+        category: this.form.topicCategory,
+        difficulty: 'intermediate',
+        language: 'en',
+        nativeLanguage: nativeLang
+      })
+
+      if (response.data.code === 0 && response.data.data) {
+        const topicData = response.data.data
+        this.form.prompt = topicData.topic
+
+        // Optionally apply suggested settings
+        if (topicData.suggestedSpeakerCount) {
+          this.form.speakerCount = topicData.suggestedSpeakerCount
+        }
+        if (topicData.suggestedDuration) {
+          this.form.duration = topicData.suggestedDuration
+        }
+
+        this.$message.success('Topic generated!')
+      } else {
+        throw new Error(response.data.msg || 'Failed to generate topic')
+      }
     },
 
     getAccentLabel(value) {
@@ -689,6 +888,8 @@ export default {
           }
           this.messages = data.messages || []
           this.totalMessageCount = this.messages.length
+          // Populate the form prompt with the topic from history
+          this.form.prompt = data.topic || ''
           this.currentMode = 'generator'
         }
       } catch (error) {
@@ -787,6 +988,17 @@ export default {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 8px;
+}
+
+.topic-generator-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.category-selector {
+  flex-shrink: 0;
 }
 
 .options-row {
@@ -1105,6 +1317,7 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
+  padding-right: 40px; /* Reserve space for delete button */
 }
 
 .history-topic {
@@ -1174,6 +1387,11 @@ export default {
     padding: 16px;
     border-radius: 12px;
     margin-bottom: 16px;
+  }
+
+  .topic-generator-row {
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .options-row {
@@ -1260,6 +1478,7 @@ export default {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
+    padding-right: 0; /* Reset padding since delete button is static on mobile */
   }
 
   .history-topic {

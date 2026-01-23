@@ -49,3 +49,20 @@ export function deleteConversation(id) {
 export function getMessageAudioUrl(conversationId, messageId) {
     return `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${conversationId}/audio/${messageId}`
 }
+
+// Generate random conversation topic via backend
+export function generateRandomTopic(params = {}) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/topic/random`,
+        method: 'post',
+        data: {
+            category: params.category || 'lifestyle',
+            difficulty: params.difficulty || 'intermediate',
+            language: params.language || 'en',
+            nativeLanguage: params.nativeLanguage || 'zh-CN'
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
