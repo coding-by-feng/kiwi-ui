@@ -426,6 +426,29 @@ export default {
       return option ? option.label : value
     },
 
+    getNativeLanguageName(langCode) {
+      const langMap = {
+        'zh-CN': 'Chinese',
+        'zh-TW': 'Traditional Chinese',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German',
+        'it': 'Italian',
+        'pt': 'Portuguese',
+        'ru': 'Russian',
+        'ar': 'Arabic',
+        'hi': 'Hindi',
+        'th': 'Thai',
+        'vi': 'Vietnamese',
+        'id': 'Indonesian',
+        'ms': 'Malay',
+        'en': 'English'
+      }
+      return langMap[langCode] || 'Chinese'
+    },
+
     async generateRandomTopicHandler() {
       if (this.isGeneratingTopic || this.isGenerating) return
 
@@ -454,18 +477,24 @@ export default {
       }
 
       const categoryLabel = this.getCategoryLabel(this.form.topicCategory)
-      const prompt = `Generate a natural English conversation topic for language practice.
+      const nativeLang = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || 'zh-CN'
+      const nativeLangName = this.getNativeLanguageName(nativeLang)
+
+      const prompt = `Generate a detailed conversation topic for English language practice.
 
 Category: ${categoryLabel}
-Difficulty: intermediate (suitable for English learners)
+Number of speakers: ${this.form.speakerCount}
+Level: intermediate
 
-Requirements:
-- Create a realistic daily life scenario for ${this.form.speakerCount} speakers
-- The topic should be engaging and suitable for practicing conversational English
-- Focus on ${categoryLabel.toLowerCase()} related situations
+Write a detailed topic description in ${nativeLangName} language that includes:
+- Who the speakers are (their relationship/roles)
+- The setting/location
+- What they are discussing
+- A specific situation or context
 
-Return ONLY a JSON object in this exact format (no markdown, no code blocks):
-{"topic": "A brief description of the conversation scenario"}`
+No JSON, no quotes, no extra formatting. Just the topic description in 2-3 sentences.
+
+Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末考试。他们互相分享复习策略，讨论哪些科目最难，以及如何平衡学习和休息时间。`
 
       const config = kiwiConsts.GEMINI_CONFIG
       const url = `${config.ENDPOINT}/${config.MODEL}:generateContent?key=${apiKey}`
@@ -477,7 +506,7 @@ Return ONLY a JSON object in this exact format (no markdown, no code blocks):
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 1.0,
-            maxOutputTokens: 256
+            maxOutputTokens: 300
           }
         })
       })
@@ -498,20 +527,18 @@ Return ONLY a JSON object in this exact format (no markdown, no code blocks):
 
       const data = await response.json()
       if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        const text = data.candidates[0].content.parts[0].text
-        // Try to parse as JSON
-        try {
-          // Remove markdown code blocks if present
-          const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-          const parsed = JSON.parse(cleanText)
-          if (parsed.topic) {
-            this.form.prompt = parsed.topic
-            this.$message.success('Topic generated!')
-            return
-          }
-        } catch (e) {
-          // If JSON parsing fails, use the text directly
-          this.form.prompt = text.trim()
+        let text = data.candidates[0].content.parts[0].text || ''
+        // Clean up the response - remove any JSON artifacts, quotes, or markdown
+        text = text
+          .replace(/^```.*\n?/gm, '')  // Remove markdown code blocks
+          .replace(/```$/gm, '')
+          .replace(/^\{.*"topic":\s*"/i, '')  // Remove JSON prefix if present
+          .replace(/"\s*\}$/i, '')  // Remove JSON suffix if present
+          .replace(/^["']|["']$/g, '')  // Remove surrounding quotes
+          .trim()
+
+        if (text) {
+          this.form.prompt = text
           this.$message.success('Topic generated!')
           return
         }
@@ -521,10 +548,12 @@ Return ONLY a JSON object in this exact format (no markdown, no code blocks):
     },
 
     async generateTopicWithBackend() {
+      const nativeLang = getStore({ name: kiwiConsts.CONFIG_KEY.NATIVE_LANG }) || 'zh-CN'
       const response = await generateRandomTopic({
         category: this.form.topicCategory,
         difficulty: 'intermediate',
-        language: 'en'
+        language: 'en',
+        nativeLanguage: nativeLang
       })
 
       if (response.data.code === 0 && response.data.data) {
