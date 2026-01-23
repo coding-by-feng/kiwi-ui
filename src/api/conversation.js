@@ -58,7 +58,8 @@ export function generateRandomTopic(params = {}) {
         data: {
             category: params.category || 'lifestyle',
             difficulty: params.difficulty || 'intermediate',
-            language: params.language || 'en'
+            language: params.language || 'en',
+            nativeLanguage: params.nativeLanguage || 'zh-CN'
         },
         headers: {
             isToken: true
