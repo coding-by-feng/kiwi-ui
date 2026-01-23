@@ -14,6 +14,7 @@ import Youtube from '@/page/ai/Youtube.vue'
 import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new component
 import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
 import PdfReader from '@/page/pdf/PdfReader.vue'
+import FocusView from '@/page/focus/FocusView.vue' // Import Focus Timer view
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default [{
@@ -40,6 +41,7 @@ export default [{
             youtube: Youtube,// Use the new component here
             youtubePlayer: YoutubePlayer, // Use the new component here
             todo: TodoView, // Add the todo component
+            focus: FocusView, // Focus Timer with Forest feature
             aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
             aiConversation: AiConversationGenerator, // AI Conversation Generator tab
             pdfReader: PdfReader

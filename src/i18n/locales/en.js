@@ -424,7 +424,27 @@ export default {
         passwordChangeFailed: 'Failed to change password',
         currentPasswordRequired: 'Current password is required',
         newPasswordRequired: 'New password is required',
-        confirmPasswordRequired: 'Please confirm your new password'
+        confirmPasswordRequired: 'Please confirm your new password',
+        // AI Provider settings
+        aiProviderSettings: 'AI Provider Settings',
+        aiProvider: 'AI Provider',
+        aiProviderTooltip: 'Choose between backend API (default) or direct Gemini API for faster AI responses',
+        aiProviderBackend: 'Backend API (Default)',
+        aiProviderGemini: 'Direct Gemini API',
+        geminiApiKey: 'Gemini API Key',
+        geminiApiKeyTooltip: 'Your Google Gemini API key. Get one from Google AI Studio (aistudio.google.com)',
+        geminiApiKeyPlaceholder: 'Enter your Gemini API key',
+        geminiApiKeyRequired: 'Please enter your Gemini API key to use Direct Gemini mode',
+        testConnection: 'Test Connection',
+        geminiConnectionSuccess: 'Gemini API connection successful!',
+        geminiConnectionSuccessAndSaved: 'Gemini API connection successful! API key saved to browser.',
+        geminiApiKeySaved: 'API key saved to browser cache',
+        geminiConnectionFailed: 'Failed to connect to Gemini API. Please check your API key.',
+        geminiInfoMessage: 'Your API key is stored locally in your browser. Direct Gemini mode calls the Gemini API directly from your browser for faster responses.',
+        geminiApiKeyRequired: 'Gemini API Key Required',
+        geminiApiKeyRequiredMessage: 'Please configure your Gemini API key in Settings, or switch to Backend API mode.',
+        configureApiKey: 'Configure API Key',
+        switchToBackend: 'Use Backend API'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
@@ -874,6 +894,45 @@ export default {
         },
 
         // Deletion confirms
-        confirmDeleteTask: 'Are you sure you want to delete this task?'
+        confirmDeleteTask: 'Are you sure you want to delete this task?',
+
+        // Focus Timer (Forest-like feature)
+        focus: {
+            title: 'Focus',
+            startFocus: 'Start Focus',
+            pause: 'Pause',
+            resume: 'Resume',
+            giveUp: 'Give Up',
+            focusing: 'Focusing',
+            paused: 'Paused',
+            ready: 'Ready to Focus',
+            completed: 'Completed',
+            minutes: 'min',
+            customMinutes: 'Custom',
+            todayTrees: 'Today\'s Trees',
+            todayMinutes: 'Today\'s Minutes',
+            streak: 'Day Streak',
+            congratulations: 'Congratulations!',
+            treeGrown: 'You\'ve grown a tree!',
+            sessionCompleted: 'Focus session completed',
+            sessionCancelled: 'Focus session cancelled',
+            // Enhanced features
+            selectTree: 'Select a tree to plant',
+            myForest: 'My Forest',
+            treesPlanted: 'trees planted',
+            totalPoints: 'Total Points',
+            pointsEarned: 'Points Earned',
+            focusTime: 'Focus Time',
+            plantTree: 'Plant Tree',
+            giveUpTitle: 'Give Up Session?',
+            giveUpMessage: 'If you give up now, you will lose points and the tree will wither.',
+            confirmGiveUp: 'Yes, Give Up',
+            leaveWarning: 'Don\'t leave!',
+            leaveWarningDesc: 'If you leave this page, your focus session will fail and you will lose points.',
+            focusFailed: 'Focus failed! -{points} points'
+        },
+
+        // Points label
+        points: 'points'
     }
 }

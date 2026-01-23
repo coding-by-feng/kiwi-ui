@@ -199,7 +199,6 @@ import TaskList from '@/page/todo/TaskList.vue'
 import HistoryPanel from '@/page/todo/HistoryPanel.vue'
 import TrashList from '@/page/todo/TrashList.vue'
 import AnalyticsPanel from '@/page/todo/AnalyticsPanel.vue'
-
 // Local mapping for rank assets (images/colors) keyed by rank key
 const RANK_ASSETS = {
   legendary: { color: '#FFD700', image: '/assets/rankings/legendary.png' },

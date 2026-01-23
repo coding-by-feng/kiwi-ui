@@ -188,14 +188,31 @@ export default {
         ENHANCED_SUBTITLES: 'enhanced_subtitles', // Toggle between enhanced and regular subtitles API
         // New: feature tabs enable/disable map
         ENABLED_TABS: 'enabled_tabs',
-        AI_MODE_USAGE_STATS: 'ai_mode_usage_stats'
-        // Removed: ONBOARDING_TOUR_DONE, TOUR_ENABLED, SHOW_TOUR_ICON
+        AI_MODE_USAGE_STATS: 'ai_mode_usage_stats',
+        // AI Provider settings
+        AI_PROVIDER: 'ai_provider',           // 'backend' | 'gemini'
+        GEMINI_API_KEY: 'gemini_api_key'      // Encrypted API key
+    },
+
+    // Gemini API configuration
+    GEMINI_CONFIG: Object.freeze({
+        ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models',
+        MODEL: 'gemini-2.5-flash',
+        TEMPERATURE: 1.0,
+        MAX_OUTPUT_TOKENS: 32768
+    }),
+
+    // AI Provider options
+    AI_PROVIDER: {
+        BACKEND_SSE: 'backend',
+        DIRECT_GEMINI: 'gemini'
     },
 
     // Default visibility for feature tabs. Users can override in settings.
     DEFAULT_ENABLED_TABS: Object.freeze({
         starList: true,
         todo: true,
+        focus: true, // Focus Timer with Forest feature
         youtube: true,
         about: true,
         aiHistory: true, // New: AI History tab enabled by default

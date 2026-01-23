@@ -295,7 +295,27 @@ export default {
         passwordChangeFailed: '密码修改失败',
         currentPasswordRequired: '请输入当前密码',
         newPasswordRequired: '请输入新密码',
-        confirmPasswordRequired: '请确认新密码'
+        confirmPasswordRequired: '请确认新密码',
+        // AI 服务商设置
+        aiProviderSettings: 'AI 服务商设置',
+        aiProvider: 'AI 服务商',
+        aiProviderTooltip: '选择使用后端API（默认）或直连Gemini API以获得更快的响应',
+        aiProviderBackend: '后端 API（默认）',
+        aiProviderGemini: '直连 Gemini API',
+        geminiApiKey: 'Gemini API 密钥',
+        geminiApiKeyTooltip: '您的 Google Gemini API 密钥，可从 Google AI Studio (aistudio.google.com) 获取',
+        geminiApiKeyPlaceholder: '请输入您的 Gemini API 密钥',
+        geminiApiKeyRequired: '请输入 Gemini API 密钥以使用直连模式',
+        testConnection: '测试连接',
+        geminiConnectionSuccess: 'Gemini API 连接成功！',
+        geminiConnectionSuccessAndSaved: 'Gemini API 连接成功！API 密钥已保存到浏览器。',
+        geminiApiKeySaved: 'API 密钥已保存到浏览器缓存',
+        geminiConnectionFailed: '连接 Gemini API 失败，请检查您的 API 密钥',
+        geminiInfoMessage: '您的 API 密钥仅存储在本地浏览器中。直连模式从浏览器直接调用 Gemini API，响应更快。',
+        geminiApiKeyRequired: '需要配置 Gemini API 密钥',
+        geminiApiKeyRequiredMessage: '请在设置中配置您的 Gemini API 密钥，或切换到后端 API 模式。',
+        configureApiKey: '配置 API 密钥',
+        switchToBackend: '使用后端 API'
     },
 
     // Todo Gamification
@@ -458,7 +478,46 @@ export default {
         },
 
         // 删除任务确认
-        confirmDeleteTask: '确定要删除这个任务吗？'
+        confirmDeleteTask: '确定要删除这个任务吗？',
+
+        // 专注计时器（森林风格功能）
+        focus: {
+            title: '专注',
+            startFocus: '开始专注',
+            pause: '暂停',
+            resume: '继续',
+            giveUp: '放弃',
+            focusing: '专注中',
+            paused: '已暂停',
+            ready: '准备专注',
+            completed: '已完成',
+            minutes: '分钟',
+            customMinutes: '自定义',
+            todayTrees: '今日树木',
+            todayMinutes: '今日专注',
+            streak: '连续天数',
+            congratulations: '恭喜！',
+            treeGrown: '你种下了一棵树！',
+            sessionCompleted: '专注完成',
+            sessionCancelled: '专注已取消',
+            // 增强功能
+            selectTree: '选择要种植的树',
+            myForest: '我的森林',
+            treesPlanted: '棵树已种植',
+            totalPoints: '总积分',
+            pointsEarned: '获得积分',
+            focusTime: '专注时长',
+            plantTree: '种植树木',
+            giveUpTitle: '放弃专注？',
+            giveUpMessage: '如果现在放弃，你将失去积分，树木将会枯萎。',
+            confirmGiveUp: '是的，放弃',
+            leaveWarning: '不要离开！',
+            leaveWarningDesc: '如果你离开此页面，专注将失败，你将失去积分。',
+            focusFailed: '专注失败！-{points} 积分'
+        },
+
+        // 积分标签
+        points: '积分'
     },
 
     about: {
