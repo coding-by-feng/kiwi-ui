@@ -13,10 +13,24 @@ export function getConversationConfig() {
 }
 
 // Get list of user's conversations
-export function getConversationList() {
+export function getConversationList(params = {}) {
     return request({
         url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/list`,
         method: 'get',
+        params: {
+            favoritedOnly: params.favoritedOnly || false
+        },
+        headers: {
+            isToken: true
+        }
+    })
+}
+
+// Toggle favorite status of a conversation
+export function toggleConversationFavorite(id) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/conversation/${id}/favorite`,
+        method: 'post',
         headers: {
             isToken: true
         }

@@ -28,9 +28,16 @@
     <!-- Generator Mode -->
     <div v-show="currentMode === 'generator'" class="generator-content">
       <!-- Input Form -->
-      <div class="form-section">
+      <div class="form-section" :class="{ 'is-collapsed': isFormCollapsed }">
+        <div class="form-section-header" @click="toggleFormCollapse">
+          <span class="form-section-title">
+            <i class="el-icon-edit"></i>
+            Conversation Topic
+          </span>
+          <i :class="isFormCollapsed ? 'el-icon-arrow-down' : 'el-icon-arrow-up'" class="collapse-icon"></i>
+        </div>
+        <div class="form-section-body" v-show="!isFormCollapsed">
         <div class="form-group">
-          <label class="form-label">Conversation Topic</label>
           <KiwiInput
             v-model="form.prompt"
             type="textarea"
@@ -140,6 +147,7 @@
             Cancel
           </KiwiButton>
         </div>
+        </div>
       </div>
 
       <!-- Loading Indicator -->
@@ -174,6 +182,34 @@
             :icon="isPlayingAll ? 'el-icon-video-pause' : 'el-icon-video-play'"
             @click="togglePlayAll">
             {{ isPlayingAll ? 'Stop' : 'Play All' }}
+          </KiwiButton>
+          <KiwiDropdown @command="handleLoopModeChange">
+            <KiwiButton size="small" :type="loopMode !== 'off' ? 'warning' : 'default'">
+              <i class="el-icon-refresh"></i>
+              {{ getLoopModeLabel(loopMode) }}
+              <i class="el-icon-arrow-down"></i>
+            </KiwiButton>
+            <template slot="dropdown">
+              <KiwiDropdownItem command="off">
+                <i class="el-icon-close"></i> Loop Off
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="current">
+                <i class="el-icon-refresh-right"></i> Loop Current
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="all">
+                <i class="el-icon-refresh"></i> Loop All History
+              </KiwiDropdownItem>
+              <KiwiDropdownItem command="favorites">
+                <i class="el-icon-star-on"></i> Loop Favorites
+              </KiwiDropdownItem>
+            </template>
+          </KiwiDropdown>
+          <KiwiButton
+            size="small"
+            :type="currentConversation.favorited ? 'warning' : 'default'"
+            @click="toggleCurrentFavorite">
+            <i :class="currentConversation.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
+            {{ currentConversation.favorited ? 'Favorited' : 'Favorite' }}
           </KiwiButton>
           <span class="total-duration" v-if="totalDuration > 0">
             Total: {{ formatDuration(totalDuration) }}
@@ -237,25 +273,52 @@
 
     <!-- History Mode -->
     <div v-show="currentMode === 'history'" class="history-content">
+      <!-- History Filter -->
+      <div class="history-filter">
+        <KiwiButton
+          :type="historyFilter === 'all' ? 'primary' : 'default'"
+          size="small"
+          @click="setHistoryFilter('all')">
+          <i class="el-icon-files"></i> All
+        </KiwiButton>
+        <KiwiButton
+          :type="historyFilter === 'favorites' ? 'primary' : 'default'"
+          size="small"
+          @click="setHistoryFilter('favorites')">
+          <i class="el-icon-star-on"></i> Favorites
+        </KiwiButton>
+        <KiwiButton
+          v-if="filteredConversationList.length > 0"
+          size="small"
+          type="success"
+          @click="startLoopPlayHistory">
+          <i class="el-icon-video-play"></i> Play {{ historyFilter === 'favorites' ? 'Favorites' : 'All' }}
+        </KiwiButton>
+      </div>
+
       <div v-if="loadingHistory" class="loading-state">
         <i class="el-icon-loading"></i>
         <p>Loading conversations...</p>
       </div>
 
-      <div v-else-if="conversationList.length === 0" class="empty-state">
+      <div v-else-if="filteredConversationList.length === 0" class="empty-state">
         <i class="el-icon-folder-opened"></i>
-        <h3>No Conversations Yet</h3>
-        <p>Generate your first conversation to see it here.</p>
+        <h3>{{ historyFilter === 'favorites' ? 'No Favorites Yet' : 'No Conversations Yet' }}</h3>
+        <p>{{ historyFilter === 'favorites' ? 'Mark conversations as favorites to see them here.' : 'Generate your first conversation to see it here.' }}</p>
       </div>
 
       <div v-else class="history-list">
         <div
-          v-for="conv in conversationList"
+          v-for="conv in filteredConversationList"
           :key="conv.id"
           class="history-item"
+          :class="{ 'is-favorited': conv.favorited }"
           @click="loadConversation(conv.id)">
           <div class="history-item-header">
-            <h4 class="history-topic">{{ conv.topic }}</h4>
+            <h4 class="history-topic">
+              <i v-if="conv.favorited" class="el-icon-star-on favorite-star"></i>
+              {{ conv.topic }}
+            </h4>
             <KiwiTag :type="getStatusTagType(conv.status)" size="small">
               {{ conv.status }}
             </KiwiTag>
@@ -266,6 +329,13 @@
             <span><i class="el-icon-timer"></i> ~{{ conv.durationMinutes }} min</span>
           </div>
           <div class="history-item-actions">
+            <KiwiButton
+              size="mini"
+              :type="conv.favorited ? 'warning' : 'default'"
+              :icon="conv.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
+              circle
+              @click.stop="toggleHistoryFavorite(conv)">
+            </KiwiButton>
             <KiwiButton
               size="mini"
               type="danger"
@@ -310,7 +380,8 @@ import {
   getConversationById,
   deleteConversation,
   getConversationConfig,
-  generateRandomTopic
+  generateRandomTopic,
+  toggleConversationFavorite
 } from '@/api/conversation'
 import { isGeminiEnabled, getGeminiApiKey } from '@/util/geminiClient'
 
@@ -362,7 +433,8 @@ export default {
       currentConversation: {
         id: null,
         topic: '',
-        speakers: []
+        speakers: [],
+        favorited: false
       },
       messages: [],
       totalMessageCount: 0,
@@ -375,7 +447,15 @@ export default {
       speakerColors: ['#4A90D9', '#E74C3C', '#27AE60', '#9B59B6'],
       // Selection popup state
       selectionPopupVisible: false,
-      selectionPopupText: ''
+      selectionPopupText: '',
+      // Form collapse state
+      isFormCollapsed: false,
+      // Loop mode state
+      loopMode: 'off', // 'off', 'current', 'all', 'favorites'
+      loopPlaylist: [],
+      loopPlaylistIndex: 0,
+      // History filter
+      historyFilter: 'all', // 'all', 'favorites'
     }
   },
   computed: {
@@ -384,6 +464,12 @@ export default {
     },
     totalDuration() {
       return this.messages.reduce((sum, msg) => sum + (msg.audioDurationMs || 0), 0)
+    },
+    filteredConversationList() {
+      if (this.historyFilter === 'favorites') {
+        return this.conversationList.filter(conv => conv.favorited)
+      }
+      return this.conversationList
     }
   },
   mounted() {
@@ -419,6 +505,143 @@ export default {
 
     handleCategoryChange(category) {
       this.form.topicCategory = category
+    },
+
+    toggleFormCollapse() {
+      this.isFormCollapsed = !this.isFormCollapsed
+    },
+
+    // Loop mode methods
+    handleLoopModeChange(mode) {
+      this.loopMode = mode
+      if (mode !== 'off' && this.isPlayingAll) {
+        // Restart playback with new loop mode
+        this.stopAudio()
+        this.$nextTick(() => {
+          this.startLoopPlay()
+        })
+      }
+    },
+
+    getLoopModeLabel(mode) {
+      const labels = {
+        'off': 'Loop Off',
+        'current': 'Loop Current',
+        'all': 'Loop All',
+        'favorites': 'Loop Favorites'
+      }
+      return labels[mode] || 'Loop Off'
+    },
+
+    async startLoopPlay() {
+      if (this.loopMode === 'current') {
+        // Loop current conversation
+        this.togglePlayAll()
+      } else if (this.loopMode === 'all' || this.loopMode === 'favorites') {
+        // Load playlist from history
+        await this.loadLoopPlaylist()
+        if (this.loopPlaylist.length > 0) {
+          this.loopPlaylistIndex = 0
+          await this.loadAndPlayConversation(this.loopPlaylist[0].id)
+        }
+      }
+    },
+
+    async loadLoopPlaylist() {
+      try {
+        const response = await getConversationList({ favoritedOnly: this.loopMode === 'favorites' })
+        if (response.data.code === 0) {
+          this.loopPlaylist = (response.data.data || []).filter(c => c.status === 'COMPLETED')
+        }
+      } catch (error) {
+        console.error('Failed to load loop playlist:', error)
+        this.loopPlaylist = []
+      }
+    },
+
+    async loadAndPlayConversation(id) {
+      try {
+        const response = await getConversationById(id)
+        if (response.data.code === 0) {
+          const data = response.data.data
+          this.currentConversation = {
+            id: data.id,
+            topic: data.topic,
+            speakers: data.speakers,
+            favorited: data.favorited || false
+          }
+          this.messages = data.messages || []
+          this.totalMessageCount = this.messages.length
+          this.form.prompt = data.topic || ''
+          this.currentMode = 'generator'
+
+          // Start playing
+          this.$nextTick(() => {
+            this.isPlayingAll = true
+            this.playAllQueue = [...this.messages]
+            this.playNextInQueue()
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load conversation for loop:', error)
+      }
+    },
+
+    async startLoopPlayHistory() {
+      // Start loop play from history view
+      this.loopMode = this.historyFilter === 'favorites' ? 'favorites' : 'all'
+      await this.loadLoopPlaylist()
+      if (this.loopPlaylist.length > 0) {
+        this.loopPlaylistIndex = 0
+        await this.loadAndPlayConversation(this.loopPlaylist[0].id)
+      } else {
+        this.$message.warning('No conversations available to play')
+      }
+    },
+
+    // History filter methods
+    setHistoryFilter(filter) {
+      this.historyFilter = filter
+    },
+
+    // Favorite toggle methods
+    async toggleCurrentFavorite() {
+      if (!this.currentConversation.id) return
+
+      try {
+        const response = await toggleConversationFavorite(this.currentConversation.id)
+        if (response.data.code === 0) {
+          this.currentConversation.favorited = response.data.data.favorited
+          this.$message.success(this.currentConversation.favorited ? 'Added to favorites' : 'Removed from favorites')
+
+          // Update in conversation list if exists
+          const conv = this.conversationList.find(c => c.id === this.currentConversation.id)
+          if (conv) {
+            conv.favorited = this.currentConversation.favorited
+          }
+        }
+      } catch (error) {
+        console.error('Failed to toggle favorite:', error)
+        this.$message.error('Failed to update favorite status')
+      }
+    },
+
+    async toggleHistoryFavorite(conv) {
+      try {
+        const response = await toggleConversationFavorite(conv.id)
+        if (response.data.code === 0) {
+          conv.favorited = response.data.data.favorited
+          this.$message.success(conv.favorited ? 'Added to favorites' : 'Removed from favorites')
+
+          // Update current conversation if it's the same
+          if (this.currentConversation.id === conv.id) {
+            this.currentConversation.favorited = conv.favorited
+          }
+        }
+      } catch (error) {
+        console.error('Failed to toggle favorite:', error)
+        this.$message.error('Failed to update favorite status')
+      }
     },
 
     getCategoryLabel(value) {
@@ -652,7 +875,7 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
       this.progress = 0
       this.progressText = 'Initializing...'
       this.messages = []
-      this.currentConversation = { id: null, topic: '', speakers: [] }
+      this.currentConversation = { id: null, topic: '', speakers: [], favorited: false }
       this.totalMessageCount = 0
 
       const token = getStore({ name: 'access_token' })
@@ -850,7 +1073,36 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
     onAudioEnded() {
       this.currentPlayingId = null
       if (this.isPlayingAll) {
+        if (this.playAllQueue.length > 0) {
+          this.playNextInQueue()
+        } else {
+          // Current conversation finished, check loop mode
+          this.handleConversationEnded()
+        }
+      }
+    },
+
+    async handleConversationEnded() {
+      if (this.loopMode === 'current') {
+        // Restart current conversation
+        this.playAllQueue = [...this.messages]
         this.playNextInQueue()
+      } else if (this.loopMode === 'all' || this.loopMode === 'favorites') {
+        // Move to next conversation in playlist
+        this.loopPlaylistIndex++
+        if (this.loopPlaylistIndex >= this.loopPlaylist.length) {
+          // Loop back to start
+          this.loopPlaylistIndex = 0
+        }
+
+        if (this.loopPlaylist.length > 0) {
+          await this.loadAndPlayConversation(this.loopPlaylist[this.loopPlaylistIndex].id)
+        } else {
+          this.isPlayingAll = false
+        }
+      } else {
+        // Loop off - stop playback
+        this.isPlayingAll = false
       }
     },
 
@@ -884,7 +1136,8 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
           this.currentConversation = {
             id: data.id,
             topic: data.topic,
-            speakers: data.speakers
+            speakers: data.speakers,
+            favorited: data.favorited || false
           }
           this.messages = data.messages || []
           this.totalMessageCount = this.messages.length
@@ -974,8 +1227,50 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
   background: var(--bg-card);
   border: 1px solid var(--border-color-light);
   border-radius: 16px;
-  padding: 20px;
+  padding: 0;
   margin-bottom: 24px;
+  overflow: hidden;
+
+  &.is-collapsed {
+    .form-section-header {
+      border-bottom: none;
+    }
+  }
+}
+
+.form-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  background: var(--bg-highlight);
+  border-bottom: 1px solid var(--border-color-light);
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--bg-container);
+  }
+}
+
+.form-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+
+  i {
+    margin-right: 8px;
+    color: var(--color-primary);
+  }
+}
+
+.collapse-icon {
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.form-section-body {
+  padding: 20px;
 }
 
 .form-group {
@@ -1290,6 +1585,14 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
   }
 }
 
+/* History Filter */
+.history-filter {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
 /* History List */
 .history-list {
   display: flex;
@@ -1310,6 +1613,15 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
     border-color: var(--color-primary);
     box-shadow: var(--shadow-card);
   }
+
+  &.is-favorited {
+    border-left: 3px solid var(--color-warning, #E6A23C);
+  }
+}
+
+.favorite-star {
+  color: var(--color-warning, #E6A23C);
+  margin-right: 6px;
 }
 
 .history-item-header {
@@ -1317,7 +1629,6 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
-  padding-right: 40px; /* Reserve space for delete button */
 }
 
 .history-topic {
@@ -1340,8 +1651,10 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
 
 .history-item-actions {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
+  display: flex;
+  gap: 8px;
   opacity: 0;
   transition: opacity 0.2s;
 
@@ -1384,9 +1697,16 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
   }
 
   .form-section {
-    padding: 16px;
     border-radius: 12px;
     margin-bottom: 16px;
+  }
+
+  .form-section-header {
+    padding: 14px 16px;
+  }
+
+  .form-section-body {
+    padding: 16px;
   }
 
   .topic-generator-row {
@@ -1478,7 +1798,6 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
-    padding-right: 0; /* Reset padding since delete button is static on mobile */
   }
 
   .history-topic {
@@ -1495,6 +1814,17 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
     position: static;
     opacity: 1;
     margin-top: 10px;
+    justify-content: flex-start;
+  }
+
+  .history-filter {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .playback-controls {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .empty-state {
@@ -1544,7 +1874,11 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
     width: 100%;
   }
 
-  .form-section {
+  .form-section-header {
+    padding: 12px;
+  }
+
+  .form-section-body {
     padding: 12px;
   }
 
