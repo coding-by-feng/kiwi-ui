@@ -315,7 +315,7 @@
               <i class="el-icon-question help-icon"></i>
             </el-tooltip>
           </div>
-          <KiwiDropdown @command="aiProviderChange" class="custom-dropdown">
+          <KiwiDropdown @command="aiProviderChange" class="custom-dropdown" placement="top-start">
             <span class="dropdown-trigger">
               {{ currentAiProviderName }} <i class="el-icon-arrow-down"></i>
             </span>
