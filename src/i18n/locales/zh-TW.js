@@ -88,19 +88,19 @@ export default {
         autoLoginSuccess: '自動登入成功！',
         guestLogin: '訪客用戶請登入！',
         features: {
-            intelligentMemory: '智能詞彙記憶',
-            pronunciation: '純正發音練習',
-            personalizedPlan: '個性化學習計劃',
-            aiAssistantModes: 'AI 助手多種強大模式',
-            bilingualEnEn: '英英釋義並配中文講解',
-            youtubePlayer: 'YouTube 播放器學習',
-            todoGamified: '待辦與遊戲化學習'
+            intelligentMemory: '間隔重複，強化長期記憶',
+            pronunciation: '純正母語者發音練習',
+            personalizedPlan: 'AI 驅動的個人化學習路徑',
+            aiAssistantModes: '多模式 AI 助教（文法、翻譯等）',
+            bilingualEnEn: '英英釋義，母語輔助理解',
+            youtubePlayer: 'YouTube 互動字幕學習',
+            todoGamified: '遊戲化待辦與排行榜系統'
         },
         brand: {
-            title: 'Kason英語學習平台',
-            subtitle: '智能英語學習平台'
+            title: 'Kason Tools',
+            subtitle: '一站式英語學習工作台'
         },
-        copyright: '©2025 Kason英語學習平台 v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         username: '使用者名稱',
         usernameOrEmail: '使用者名稱 / 電子郵件',
         password: '密碼',
@@ -149,13 +149,17 @@ export default {
     // New: complete login block
     login: {
         welcomeBack: '歡迎回來',
-        smartEnglishLearning: '智慧英語學習平台',
+        smartEnglishLearning: '一站式英語學習工作台',
         features: {
-            smartMemory: '智能詞彙記憶',
-            pronunciation: '純正發音練習',
-            personalizedPlan: '個性化學習計劃'
+            smartMemory: '間隔重複，強化長期記憶',
+            pronunciation: '純正母語者發音練習',
+            personalizedPlan: 'AI 驅動的個人化學習路徑',
+            aiAssistantModes: '多模式 AI 助教（文法、翻譯等）',
+            bilingualEnEn: '英英釋義，母語輔助理解',
+            youtubePlayer: 'YouTube 互動字幕學習',
+            todoGamified: '遊戲化待辦與排行榜系統'
         },
-        copyright: '©2025 Kason英語學習平台 v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: '使用 Google 帳戶登入',
         loginProcessing: '處理中...',
         connectingGoogle: '正在連接 Google...',
@@ -426,7 +430,14 @@ export default {
         minimize: '最小化',
         restore: '恢復',
         close: '關閉',
-        aiSearch: 'AI 搜尋'
+        aiSearch: 'AI 搜尋',
+        // 詳情對話框
+        loadingDetail: '載入詳情中...',
+        aiResponse: 'AI 回覆',
+        noResponseAvailable: '回覆不可用 - 點擊重新搜尋以生成',
+        copyResponse: '複製回覆',
+        responseCopied: '回覆已複製！',
+        loadDetailFailed: '載入詳情失敗'
     },
 
     // Messages and notifications (added keys)
@@ -514,7 +525,7 @@ export default {
     about: {
         title: '關於 Kason Tools',
         kasonTools: 'Kason Tools',
-        description: 'Kason Tools 是一款由 AI 輔助的英語學習工作台，融合了間隔重複複習、道地發音練習、基於 YouTube 字幕的即時翻譯與講解、智慧收藏、個人化學習流程、進度統計以及帶有排行榜的待辦打卡系統。',
+        description: 'Kason Tools 是你的一站式英語學習工作台。藉由 AI 技術，它整合了多模式詞典查詢與解釋、間隔重複詞彙複習、YouTube 互動字幕學習、PDF 閱讀即時解釋、遊戲化待辦排行系統以及專注計時器——所有功能融於一體，助你高效提升英語水平。',
         version: '版本 2.0',
         contact: '聯絡我們',
         instagram: 'Instagram',
@@ -529,7 +540,7 @@ export default {
         voiceRSSAttribution: 'Voice RSS - 線上文字轉語音服務',
         voiceRSSDescription: '為我們的發音功能提供高品質的文字轉語音服務。',
         visitWebsite: '造訪官網',
-        copyright: '©2025 Kason 英語學習平台。保留所有權利。',
+        copyright: '©2025 Kason Tools。保留所有權利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上關注',
         // 新增：客戶端下載

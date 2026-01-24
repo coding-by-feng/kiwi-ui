@@ -190,6 +190,7 @@ export default {
   props: {
     visible: { type: Boolean, default: false },
     selectedText: { type: String, default: '' },
+    contextText: { type: String, default: '' },
     title: { type: String, default: 'AI Search' },
     fileName: { type: String, default: '' },
     autoRequest: { type: Boolean, default: true }
@@ -255,9 +256,9 @@ export default {
             if (!this.reviewMode && t && (!this.nestedItems || this.nestedItems.length === 0)) {
               try {
                 // Always add item, but only auto-start if autoRequest is true
-                // Use the user-selected AI mode
+                // Use the user-selected AI mode and pass the context from parent
                 const mode = this.selectedAiMode || kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-                this.addNestedItemWithContext(t, null, mode, this.autoRequest)
+                this.addNestedItemWithContext(t, this.contextText || null, mode, this.autoRequest)
               } catch (_) {}
             }
           })

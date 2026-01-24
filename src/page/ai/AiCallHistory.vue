@@ -127,10 +127,10 @@
               class="action-btn"
               size="mini"
               circle
-              icon="el-icon-search"
+              icon="el-icon-view"
               :aria-label="$t('ai.review')"
               :title="$t('ai.review')"
-              @click="searchAgain(record)"
+              @click="viewDetails(record)"
             />
 
             <KiwiButton
@@ -141,16 +141,6 @@
               :aria-label="$t('ai.copyPrompt')"
               :title="$t('ai.copyPrompt')"
               @click="copyPrompt(record.prompt)"
-            />
-
-            <KiwiButton
-              class="action-btn"
-              size="mini"
-              circle
-              icon="el-icon-view"
-              :aria-label="$t('ai.details')"
-              :title="$t('ai.details')"
-              @click="viewDetails(record)"
             />
 
             <KiwiButton
@@ -196,42 +186,71 @@
     <KiwiDialog
         :title="$t('ai.aiCallDetails')"
         :visible.sync="detailDialogVisible"
-        width="70%"
+        width="80%"
         class="detail-dialog">
       <div v-if="selectedRecord" class="detail-content">
-        <div class="detail-form">
-          <div class="detail-row">
-            <label>{{ $t('ai.mode') }}:</label>
-            <KiwiTag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
-              {{ getModeLabel(selectedRecord.promptMode) }}
-            </KiwiTag>
-          </div>
+        <!-- Loading state -->
+        <div v-if="detailLoading" class="detail-loading">
+          <i class="el-icon-loading"></i>
+          <span>{{ $t('ai.loadingDetail') || 'Loading...' }}</span>
+        </div>
 
-          <div class="detail-row">
-            <label>{{ $t('ai.languages') }}:</label>
-            <span class="language-display">
-              {{ getLanguageLabel(selectedRecord.targetLanguage) }}
-              <span v-if="selectedRecord.nativeLanguage">
-                → {{ getLanguageLabel(selectedRecord.nativeLanguage) }}
+        <div v-else class="detail-form">
+          <!-- Metadata row -->
+          <div class="detail-meta-row">
+            <div class="detail-meta-item">
+              <label>{{ $t('ai.mode') }}:</label>
+              <KiwiTag :type="getModeTagType(selectedRecord.promptMode)" :class="getModeClass()">
+                {{ getModeLabel(selectedRecord.promptMode) }}
+              </KiwiTag>
+            </div>
+
+            <div class="detail-meta-item">
+              <label>{{ $t('ai.languages') }}:</label>
+              <span class="language-display">
+                {{ getLanguageLabel(selectedRecord.targetLanguage) }}
+                <span v-if="selectedRecord.nativeLanguage">
+                  → {{ getLanguageLabel(selectedRecord.nativeLanguage) }}
+                </span>
               </span>
-            </span>
+            </div>
+
+            <div class="detail-meta-item">
+              <label>{{ $t('ai.timestamp') }}:</label>
+              <span>{{ formatFullTimestamp(selectedRecord.timestamp) }}</span>
+            </div>
           </div>
 
-          <div class="detail-row">
-            <label>{{ $t('ai.timestamp') }}:</label>
-            <span>{{ formatFullTimestamp(selectedRecord.timestamp) }}</span>
-          </div>
-
-          <div class="detail-row full-width">
-            <label>{{ $t('ai.prompt') }}:</label>
+          <!-- Prompt section -->
+          <div class="detail-section">
+            <label class="section-label">{{ $t('ai.prompt') }}:</label>
             <div class="detail-prompt">{{ selectedRecord.prompt }}</div>
+          </div>
+
+          <!-- AI Response section -->
+          <div class="detail-section">
+            <label class="section-label">{{ $t('ai.aiResponse') || 'AI Response' }}:</label>
+            <div v-if="selectedRecord.aiResponse" class="detail-response">
+              {{ selectedRecord.aiResponse }}
+            </div>
+            <div v-else class="detail-response detail-response--empty">
+              <i class="el-icon-warning-outline"></i>
+              <span>{{ $t('ai.noResponseAvailable') || 'Response not available - click Search Again to regenerate' }}</span>
+            </div>
           </div>
         </div>
       </div>
 
       <span slot="footer" class="dialog-footer">
         <KiwiButton @click="detailDialogVisible = false">{{ $t('common.close') }}</KiwiButton>
-        <KiwiButton type="primary" @click="searchAgain(selectedRecord)">
+        <KiwiButton
+            v-if="selectedRecord && selectedRecord.aiResponse"
+            type="info"
+            icon="el-icon-document-copy"
+            @click="copyResponse(selectedRecord.aiResponse)">
+          {{ $t('ai.copyResponse') || 'Copy Response' }}
+        </KiwiButton>
+        <KiwiButton type="primary" icon="el-icon-search" @click="searchAgain(selectedRecord)">
           {{ $t('ai.searchAgain') }}
         </KiwiButton>
       </span>
@@ -242,7 +261,7 @@
 <script>
 import kiwiConsts from "@/const/kiwiConsts";
 import messageCenter from '@/util/msg';
-import { getAiCallHistory, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai';
+import { getAiCallHistory, getAiCallHistoryDetail, archiveAiCallHistory, deleteAiCallHistory } from '@/api/ai';
 import KiwiButton from '@/components/ui/KiwiButton.vue';
 import KiwiTag from '@/components/ui/KiwiTag.vue';
 import KiwiPagination from '@/components/ui/KiwiPagination.vue';
@@ -281,6 +300,7 @@ export default {
 
       // Detail dialog
       detailDialogVisible: false,
+      detailLoading: false,
       selectedRecord: null,
 
       // Language and mode mappings
@@ -543,11 +563,44 @@ export default {
           });
     },
 
+    copyResponse(response) {
+      navigator.clipboard.writeText(response)
+          .then(() => {
+            messageCenter.success(this.$t('ai.responseCopied') || 'Response copied!');
+          })
+          .catch(() => {
+            messageCenter.error(this.$t('ai.failedToCopy'));
+          });
+    },
 
-    viewDetails(record) {
+
+    async viewDetails(record) {
       console.log('Viewing details for record:', record);
-      this.selectedRecord = record;
+      this.selectedRecord = { ...record, aiResponse: null };
       this.detailDialogVisible = true;
+      this.detailLoading = true;
+
+      try {
+        const response = await getAiCallHistoryDetail(record.id);
+        if (response.data.success && response.data.data) {
+          const detail = response.data.data;
+          this.selectedRecord = {
+            ...this.selectedRecord,
+            prompt: detail.prompt,
+            promptMode: detail.promptMode,
+            targetLanguage: detail.targetLanguage,
+            nativeLanguage: detail.nativeLanguage,
+            timestamp: detail.createTime,
+            aiResponse: detail.aiResponse
+          };
+          console.log('Loaded detail with aiResponse:', this.selectedRecord);
+        }
+      } catch (error) {
+        console.error('Error loading history detail:', error);
+        messageCenter.error(this.$t('ai.loadDetailFailed') || 'Failed to load details');
+      } finally {
+        this.detailLoading = false;
+      }
     },
 
     async archiveItem(id) {
@@ -1014,23 +1067,102 @@ export default {
 
 /* Detail Dialog */
 .detail-dialog .detail-content {
-  max-height: 60vh;
+  max-height: 70vh;
   overflow-y: auto;
+}
+
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  gap: 12px;
+
+  i {
+    font-size: 32px;
+    color: var(--color-primary);
+  }
+}
+
+.detail-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 13px;
+  }
+}
+
+.detail-section {
+  margin-bottom: 20px;
+
+  .section-label {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
 }
 
 .detail-prompt {
   background: var(--bg-container);
-  padding: 22px;
+  padding: 18px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color-light);
   border-left: 4px solid var(--color-primary);
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 300px;
+  max-height: 150px;
   overflow-y: auto;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
   color: var(--text-primary);
+  font-size: 14px;
+}
+
+.detail-response {
+  background: var(--bg-container);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color-light);
+  border-left: 4px solid var(--color-success, #67c23a);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.detail-response--empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-body);
+  border-left-color: var(--color-warning, #e6a23c);
+
+  i {
+    font-size: 18px;
+    color: var(--color-warning, #e6a23c);
+  }
 }
 
 .language-display {
@@ -1191,25 +1323,38 @@ export default {
   }
 
   .detail-content {
-    max-height: 50vh;
+    max-height: 60vh;
   }
 
-  .detail-form {
-    .detail-row {
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
+  .detail-meta-row {
+    flex-direction: column;
+    gap: 12px;
+  }
 
-      label {
-        font-size: 13px;
-      }
+  .detail-meta-item {
+    label {
+      font-size: 12px;
+    }
+  }
+
+  .detail-section {
+    margin-bottom: 16px;
+
+    .section-label {
+      font-size: 13px;
     }
   }
 
   .detail-prompt {
     padding: 14px;
-    font-size: 14px;
-    max-height: 200px;
+    font-size: 13px;
+    max-height: 120px;
+  }
+
+  .detail-response {
+    padding: 14px;
+    font-size: 13px;
+    max-height: 250px;
   }
 
   .dialog-footer {
@@ -1374,8 +1519,14 @@ export default {
 
   .detail-prompt {
     padding: 10px;
-    font-size: 13px;
-    max-height: 150px;
+    font-size: 12px;
+    max-height: 100px;
+  }
+
+  .detail-response {
+    padding: 10px;
+    font-size: 12px;
+    max-height: 200px;
   }
 
   .empty-state {

@@ -279,8 +279,127 @@ export function buildPromptFromTemplate(template, params) {
   return result
 }
 
+/**
+ * Storage key for custom prompts
+ */
+const CUSTOM_PROMPTS_KEY = 'gemini-custom-prompts'
+
+/**
+ * AI modes that should be shown in the template editor
+ * (excludes subtitle-related modes which are internal)
+ */
+export const EDITABLE_AI_MODES = [
+  { value: 'directly-translation', label: 'Direct Translation' },
+  { value: 'translation-and-explanation', label: 'Explanation' },
+  { value: 'grammar-explanation', label: 'Grammar Explanation' },
+  { value: 'grammar-correction', label: 'Grammar Correction' },
+  { value: 'vocabulary-explanation', label: 'Vocabulary Explanation' },
+  { value: 'synonym', label: 'Synonym' },
+  { value: 'antonym', label: 'Antonym' },
+  { value: 'vocabulary-association', label: 'Vocabulary Association' },
+  { value: 'phrases-association', label: 'Phrases Association' },
+  { value: 'vocabulary-character-expansion', label: 'Vocabulary Character Expansion' },
+  { value: 'ambiguous-association-correction', label: 'Ambiguous Association Correction' },
+  { value: 'natural-idiomatic-retouch', label: 'Natural Idiomatic Retouch' },
+  { value: 'selection-explanation', label: 'Selection Explanation' }
+]
+
+/**
+ * Get all custom templates from localStorage
+ * @returns {Object} Custom templates object
+ */
+export function getCustomTemplates() {
+  try {
+    const stored = localStorage.getItem(CUSTOM_PROMPTS_KEY)
+    return stored ? JSON.parse(stored) : {}
+  } catch (e) {
+    console.error('Failed to load custom templates:', e)
+    return {}
+  }
+}
+
+/**
+ * Get template for a specific mode (custom if exists, otherwise default)
+ * @param {string} mode - The AI mode
+ * @returns {string} The template string
+ */
+export function getTemplate(mode) {
+  const customTemplates = getCustomTemplates()
+  if (customTemplates[mode]) {
+    return customTemplates[mode]
+  }
+  return GEMINI_PROMPTS[mode] || ''
+}
+
+/**
+ * Get the default template for a mode
+ * @param {string} mode - The AI mode
+ * @returns {string} The default template string
+ */
+export function getDefaultTemplate(mode) {
+  return GEMINI_PROMPTS[mode] || ''
+}
+
+/**
+ * Check if a mode has a custom template
+ * @param {string} mode - The AI mode
+ * @returns {boolean} True if custom template exists
+ */
+export function hasCustomTemplate(mode) {
+  const customTemplates = getCustomTemplates()
+  return !!customTemplates[mode]
+}
+
+/**
+ * Save a custom template for a mode
+ * @param {string} mode - The AI mode
+ * @param {string} template - The custom template string
+ */
+export function setCustomTemplate(mode, template) {
+  try {
+    const customTemplates = getCustomTemplates()
+    customTemplates[mode] = template
+    localStorage.setItem(CUSTOM_PROMPTS_KEY, JSON.stringify(customTemplates))
+  } catch (e) {
+    console.error('Failed to save custom template:', e)
+  }
+}
+
+/**
+ * Reset a specific mode to default template
+ * @param {string} mode - The AI mode
+ */
+export function resetCustomTemplate(mode) {
+  try {
+    const customTemplates = getCustomTemplates()
+    delete customTemplates[mode]
+    localStorage.setItem(CUSTOM_PROMPTS_KEY, JSON.stringify(customTemplates))
+  } catch (e) {
+    console.error('Failed to reset custom template:', e)
+  }
+}
+
+/**
+ * Reset all custom templates to defaults
+ */
+export function resetAllCustomTemplates() {
+  try {
+    localStorage.removeItem(CUSTOM_PROMPTS_KEY)
+  } catch (e) {
+    console.error('Failed to reset all custom templates:', e)
+  }
+}
+
 export default {
   GEMINI_PROMPTS,
   LANGUAGE_NAMES,
-  buildPromptFromTemplate
+  EDITABLE_AI_MODES,
+  buildPromptFromTemplate,
+  getTemplate,
+  getDefaultTemplate,
+  getCustomTemplates,
+  hasCustomTemplate,
+  setCustomTemplate,
+  resetCustomTemplate,
+  resetAllCustomTemplates
 }

@@ -88,31 +88,35 @@ export default {
         autoLoginSuccess: '自動ログインに成功しました！',
         guestLogin: 'ゲストユーザーはログインしてください！',
         features: {
-            intelligentMemory: 'スマート語彙記憶',
-            pronunciation: '本格的発音練習',
-            personalizedPlan: '個人化学習プラン',
-            aiAssistantModes: '複数の強力なモードを備えたAIアシスタント',
-            bilingualEnEn: '中国語の解説付き英英解釈',
-            youtubePlayer: 'YouTubeプレーヤー学習',
-            todoGamified: 'ToDoとゲーミフィケーション学習'
+            intelligentMemory: '間隔反復で長期記憶を強化',
+            pronunciation: 'ネイティブスピーカーの発音練習',
+            personalizedPlan: 'AI駆動の個人化学習パス',
+            aiAssistantModes: 'マルチモードAIチューター（文法、翻訳など）',
+            bilingualEnEn: '英英解釈と母語サポート',
+            youtubePlayer: 'YouTube字幕でインタラクティブ学習',
+            todoGamified: 'ランキング付きゲーミフィケーションタスク'
         },
         brand: {
-            title: 'Kason英語学習プラットフォーム',
-            subtitle: 'スマート英語学習プラットフォーム'
+            title: 'Kason Tools',
+            subtitle: 'オールインワン英語学習ワークスペース'
         },
-        copyright: '©2025 Kason英語学習プラットフォーム v2.0'
+        copyright: '©2025 Kason Tools v2.0'
     },
 
     // New: complete login block
     login: {
         welcomeBack: 'おかえりなさい',
-        smartEnglishLearning: 'スマート英語学習プラットフォーム',
+        smartEnglishLearning: 'オールインワン英語学習ワークスペース',
         features: {
-            smartMemory: 'スマート語彙記憶',
-            pronunciation: '本格的発音練習',
-            personalizedPlan: '個人化学習プラン'
+            smartMemory: '間隔反復で長期記憶を強化',
+            pronunciation: 'ネイティブスピーカーの発音練習',
+            personalizedPlan: 'AI駆動の個人化学習パス',
+            aiAssistantModes: 'マルチモードAIチューター（文法、翻訳など）',
+            bilingualEnEn: '英英解釈と母語サポート',
+            youtubePlayer: 'YouTube字幕でインタラクティブ学習',
+            todoGamified: 'ランキング付きゲーミフィケーションタスク'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: 'Googleアカウントでログイン',
         loginProcessing: '処理中...',
         connectingGoogle: 'Googleに接続中...',
@@ -326,7 +330,14 @@ export default {
         minimize: '最小化',
         restore: '復元',
         close: '閉じる',
-        aiSearch: 'AI検索'
+        aiSearch: 'AI検索',
+        // 詳細ダイアログ
+        loadingDetail: '詳細を読み込み中...',
+        aiResponse: 'AI応答',
+        noResponseAvailable: '応答が利用できません - 再検索をクリックして生成してください',
+        copyResponse: '応答をコピー',
+        responseCopied: '応答がコピーされました！',
+        loadDetailFailed: '詳細の読み込みに失敗しました'
     },
 
     // New: audio settings parity
@@ -396,6 +407,11 @@ export default {
     },
 
     about: {
+        title: 'Kason Toolsについて',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Toolsは、オールインワンの英語学習ワークスペースです。AIを活用し、マルチモード辞書検索と解説、間隔反復による語彙復習、YouTube字幕でのインタラクティブ学習、PDF読解の即時解説、ランキング付きゲーミフィケーションタスク、集中タイマーを一つのシームレスなインターフェースに統合し、英語習得を加速します。',
+        version: 'バージョン 2.0',
+        copyright: '©2025 Kason Tools。全著作権所有。',
         downloads: 'クライアントのダウンロード',
         mac: 'macOS',
         windows: 'Windows',

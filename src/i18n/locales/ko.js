@@ -59,14 +59,17 @@ export default {
         autoLoginSuccess: '자동 로그인 성공!',
         guestLogin: '게스트 유저는 로그인해 주세요!',
         brand: {
-            title: 'Kason 영어 학습 도구',
-            subtitle: '스마트 영어 학습 플랫폼'
+            title: 'Kason Tools',
+            subtitle: '올인원 영어 학습 워크스페이스'
         },
         features: {
-            aiAssistantModes: '강력한 모드를 갖춘 AI 비서',
-            bilingualEnEn: '중국어 설명이 포함된 영영 해석',
-            youtubePlayer: 'YouTube 플레이어 학습',
-            todoGamified: '할 일과 게이미피케이션 학습'
+            intelligentMemory: '간격 반복으로 장기 기억 강화',
+            pronunciation: '원어민 발음 연습',
+            personalizedPlan: 'AI 기반 맞춤형 학습 경로',
+            aiAssistantModes: '멀티모드 AI 튜터 (문법, 번역 등)',
+            bilingualEnEn: '영영 해석과 모국어 지원',
+            youtubePlayer: 'YouTube 자막으로 인터랙티브 학습',
+            todoGamified: '랭킹 시스템과 게이미피케이션 할 일'
         },
         username: '사용자명',
         password: '비밀번호',
@@ -181,13 +184,17 @@ export default {
     // New: complete login block
     login: {
         welcomeBack: '다시 오신 것을 환영합니다',
-        smartEnglishLearning: '스마트 영어 학습 플랫폼',
+        smartEnglishLearning: '올인원 영어 학습 워크스페이스',
         features: {
-            smartMemory: '스마트 어휘 기억',
-            pronunciation: '정통 발음 연습',
-            personalizedPlan: '개인화 학습 계획'
+            smartMemory: '간격 반복으로 장기 기억 강화',
+            pronunciation: '원어민 발음 연습',
+            personalizedPlan: 'AI 기반 맞춤형 학습 경로',
+            aiAssistantModes: '멀티모드 AI 튜터 (문법, 번역 등)',
+            bilingualEnEn: '영영 해석과 모국어 지원',
+            youtubePlayer: 'YouTube 자막으로 인터랙티브 학습',
+            todoGamified: '랭킹 시스템과 게이미피케이션 할 일'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: 'Google 계정으로 로그인',
         loginProcessing: '처리 중...',
         connectingGoogle: 'Google에 연결 중...',
@@ -270,7 +277,14 @@ export default {
         minimize: '최소화',
         restore: '복원',
         close: '닫기',
-        aiSearch: 'AI 검색'
+        aiSearch: 'AI 검색',
+        // 상세 대화상자
+        loadingDetail: '상세 정보 로딩 중...',
+        aiResponse: 'AI 응답',
+        noResponseAvailable: '응답을 사용할 수 없습니다 - 다시 검색을 클릭하여 생성하세요',
+        copyResponse: '응답 복사',
+        responseCopied: '응답이 복사되었습니다!',
+        loadDetailFailed: '상세 정보 로딩에 실패했습니다'
     },
 
     // New: audio settings parity
@@ -374,6 +388,11 @@ export default {
     },
 
     about: {
+        title: 'Kason Tools 소개',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Tools는 올인원 영어 학습 워크스페이스입니다. AI를 활용하여 멀티모드 사전 검색 및 설명, 간격 반복 어휘 복습, YouTube 인터랙티브 자막 학습, PDF 읽기 즉시 설명, 랭킹 시스템이 있는 게이미피케이션 할 일, 집중 타이머를 하나의 매끄러운 인터페이스에 통합하여 영어 습득을 가속화합니다.',
+        version: '버전 2.0',
+        copyright: '©2025 Kason Tools. 모든 권리 보유.',
         downloads: '클라이언트 다운로드',
         mac: 'macOS',
         windows: 'Windows',

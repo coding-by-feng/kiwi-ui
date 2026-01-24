@@ -22,6 +22,7 @@
     <AiSelectionPopup
       :visible.sync="selectionDialogVisible"
       :selectedText="selectedText"
+      :contextText="lastSelectionContextText"
       title="Explain Selected Text"
       :auto-request="false"
     />

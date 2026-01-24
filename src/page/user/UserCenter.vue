@@ -378,6 +378,102 @@
       </div>
     </div>
 
+    <!-- Prompt Template Configuration (shown only when Gemini is selected) -->
+    <div v-if="user.aiProvider === 'gemini'" class="settings-section prompt-template-section">
+      <h4 class="section-title section-title--collapsible" @click="templateConfigExpanded = !templateConfigExpanded">
+        <i class="el-icon-document-copy"></i>
+        {{ $t('user.promptTemplateConfig') }}
+        <i :class="templateConfigExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" class="collapse-icon"></i>
+      </h4>
+
+      <transition name="collapse">
+        <div v-show="templateConfigExpanded" class="template-config-content">
+          <!-- Info tip -->
+          <div class="template-info-tip">
+            <i class="el-icon-info"></i>
+            <span>{{ $t('user.promptTemplateConfigTip') }}</span>
+          </div>
+
+          <!-- Placeholder Reference -->
+          <div class="placeholder-reference">
+            <h5>{{ $t('user.placeholderReference') }}</h5>
+            <div class="placeholder-grid">
+              <div class="placeholder-item">
+                <code>#[TL]</code>
+                <span>{{ $t('user.placeholderTL') }}</span>
+              </div>
+              <div class="placeholder-item">
+                <code>#[NL]</code>
+                <span>{{ $t('user.placeholderNL') }}</span>
+              </div>
+              <div class="placeholder-item">
+                <code>#[S0]</code>
+                <span>{{ $t('user.placeholderS0') }}</span>
+              </div>
+              <div class="placeholder-item">
+                <code>#[S1]</code>
+                <span>{{ $t('user.placeholderS1') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template List -->
+          <div class="template-list">
+            <div
+              v-for="mode in editableAiModes"
+              :key="mode.value"
+              class="template-item"
+              :class="{ 'is-expanded': expandedTemplateMode === mode.value, 'is-customized': isTemplateCustomized(mode.value) }"
+            >
+              <div class="template-header" @click="toggleTemplateMode(mode.value)">
+                <div class="template-title">
+                  <i :class="expandedTemplateMode === mode.value ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"></i>
+                  <span>{{ getTemplateModeLabel(mode.value) }}</span>
+                  <el-tag v-if="isTemplateCustomized(mode.value)" type="warning" size="mini" class="customized-tag">
+                    {{ $t('user.customized') }}
+                  </el-tag>
+                </div>
+                <div class="template-actions" @click.stop>
+                  <KiwiButton
+                    v-if="isTemplateCustomized(mode.value)"
+                    type="text"
+                    size="mini"
+                    @click="handleResetTemplate(mode.value)"
+                    class="reset-btn"
+                  >
+                    {{ $t('user.resetTemplate') }}
+                  </KiwiButton>
+                </div>
+              </div>
+
+              <transition name="expand">
+                <div v-show="expandedTemplateMode === mode.value" class="template-body">
+                  <textarea
+                    v-model="templateContents[mode.value]"
+                    class="template-textarea"
+                    rows="8"
+                    @blur="handleSaveTemplate(mode.value)"
+                  ></textarea>
+                </div>
+              </transition>
+            </div>
+          </div>
+
+          <!-- Reset All Button -->
+          <div class="reset-all-wrapper">
+            <KiwiButton
+              type="warning"
+              size="small"
+              @click="handleResetAllTemplates"
+              icon="el-icon-refresh-left"
+            >
+              {{ $t('user.resetAllTemplates') }}
+            </KiwiButton>
+          </div>
+        </div>
+      </transition>
+    </div>
+
     <!-- Gemini Connection Status Overlay -->
     <StatusOverlay
       :visible.sync="geminiStatusOverlay.visible"
@@ -469,6 +565,15 @@ import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
 import StatusOverlay from '@/components/common/StatusOverlay.vue'
 import { getGeminiApiKey, setGeminiApiKey, getAiProvider, setAiProvider, testGeminiApiKey } from '@/util/geminiClient'
+import {
+  EDITABLE_AI_MODES,
+  getTemplate,
+  getDefaultTemplate,
+  hasCustomTemplate,
+  setCustomTemplate,
+  resetCustomTemplate,
+  resetAllCustomTemplates
+} from '@/const/geminiPromptTemplates'
 
 const USER_NAME = 'user_name'
 
@@ -526,7 +631,13 @@ export default {
         status: 'success',
         title: '',
         message: ''
-      }
+      },
+
+      // Prompt Template Configuration
+      templateConfigExpanded: false,
+      expandedTemplateMode: null,
+      editableAiModes: EDITABLE_AI_MODES,
+      templateContents: {}
     }
   },
 
@@ -1033,6 +1144,70 @@ export default {
       } finally {
         this.testingGemini = false
       }
+    },
+
+    // Prompt Template Methods
+    toggleTemplateMode(mode) {
+      if (this.expandedTemplateMode === mode) {
+        this.expandedTemplateMode = null
+      } else {
+        this.expandedTemplateMode = mode
+        // Load template content when expanding
+        if (!this.templateContents[mode]) {
+          this.$set(this.templateContents, mode, getTemplate(mode))
+        }
+      }
+    },
+
+    getTemplateModeLabel(mode) {
+      // Try i18n first, fallback to EDITABLE_AI_MODES label
+      const i18nKey = `user.templateModes.${mode}`
+      if (this.$te(i18nKey)) {
+        return this.$t(i18nKey)
+      }
+      const modeConfig = this.editableAiModes.find(m => m.value === mode)
+      return modeConfig ? modeConfig.label : mode
+    },
+
+    isTemplateCustomized(mode) {
+      return hasCustomTemplate(mode)
+    },
+
+    handleSaveTemplate(mode) {
+      const content = this.templateContents[mode]
+      if (content && content.trim()) {
+        const defaultTemplate = getDefaultTemplate(mode)
+        // Only save if different from default
+        if (content.trim() !== defaultTemplate.trim()) {
+          setCustomTemplate(mode, content.trim())
+          this.$message.success(this.$t('user.templateSaved'))
+        } else {
+          // If same as default, reset to remove custom entry
+          resetCustomTemplate(mode)
+        }
+      }
+    },
+
+    handleResetTemplate(mode) {
+      resetCustomTemplate(mode)
+      // Update local content to default
+      this.$set(this.templateContents, mode, getDefaultTemplate(mode))
+      this.$message.success(this.$t('user.templateResetSuccess'))
+    },
+
+    handleResetAllTemplates() {
+      this.$confirm(this.$t('user.resetAllTemplatesConfirm'), this.$t('common.warning'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
+        type: 'warning'
+      }).then(() => {
+        resetAllCustomTemplates()
+        // Clear all local template contents to reload defaults
+        this.templateContents = {}
+        this.$message.success(this.$t('user.allTemplatesResetSuccess'))
+      }).catch(() => {
+        // User cancelled
+      })
     }
   }
 }
@@ -1830,6 +2005,286 @@ export default {
     white-space: normal;
     word-break: break-word;
     padding: 12px 16px;
+  }
+}
+
+/* Prompt Template Configuration Styles */
+.prompt-template-section {
+  animation: fadeInUp 0.6s ease 0.4s both;
+}
+
+.section-title--collapsible {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .collapse-icon {
+    margin-left: auto;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.template-config-content {
+  margin-top: 16px;
+}
+
+.template-info-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--color-primary-light-9);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+
+  i {
+    color: var(--color-primary);
+    font-size: 16px;
+  }
+}
+
+.placeholder-reference {
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+
+  h5 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .placeholder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .placeholder-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-body);
+    border-radius: var(--radius-sm);
+
+    code {
+      background: var(--color-primary-light-8);
+      color: var(--color-primary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    span {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  }
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-item {
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-container);
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  &:hover {
+    border-color: var(--color-primary-light-5);
+  }
+
+  &.is-expanded {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  &.is-customized {
+    border-left: 3px solid var(--color-warning);
+  }
+}
+
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--bg-body);
+  }
+}
+
+.template-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  color: var(--text-primary);
+
+  i {
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+  }
+}
+
+.customized-tag {
+  margin-left: 4px;
+}
+
+.template-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .reset-btn {
+    color: var(--color-warning);
+    padding: 4px 8px;
+
+    &:hover {
+      color: var(--color-danger);
+    }
+  }
+}
+
+.template-body {
+  padding: 0 16px 16px;
+}
+
+.template-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-light-9);
+  }
+
+  &::placeholder {
+    color: var(--text-placeholder);
+  }
+}
+
+.reset-all-wrapper {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color-light);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Collapse transition */
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.collapse-enter,
+.collapse-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.collapse-enter-to,
+.collapse-leave {
+  opacity: 1;
+  max-height: 2000px;
+}
+
+/* Expand transition for template body */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.expand-enter,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.expand-enter-to,
+.expand-leave {
+  opacity: 1;
+  max-height: 500px;
+}
+
+/* Mobile responsive for prompt template section */
+@media (max-width: 768px) {
+  .placeholder-reference {
+    padding: 12px;
+
+    .placeholder-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .placeholder-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+  }
+
+  .template-header {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .template-title {
+    font-size: 13px;
+  }
+
+  .template-body {
+    padding: 0 12px 12px;
+  }
+
+  .template-textarea {
+    font-size: 12px;
+    min-height: 120px;
+  }
+
+  .reset-all-wrapper {
+    justify-content: center;
   }
 }
 </style>
