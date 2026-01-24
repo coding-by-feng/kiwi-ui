@@ -187,8 +187,8 @@ export default {
         const targetRoute = this.lastSearchRoute || { path: fallbackPath, query: { ...this.$route.query, active: 'search' } }
         const preservedQuery = {
           ...(targetRoute.query || {}),
-          active: 'search',
-          now: new Date().getTime()
+          active: 'search'
+          // Don't add new 'now' timestamp when just switching tabs - preserve the original to avoid reloading AI content
         }
         this.$router.replace({
           path: targetRoute.path || fallbackPath,
@@ -199,8 +199,8 @@ export default {
 
       const preservedParams = {
         ...this.$route.query,
-        active: tab.name,
-        now: new Date().getTime()
+        active: tab.name
+        // Don't add new 'now' timestamp when just switching tabs - preserve content
       }
       if (!preservedParams.selectedMode && this.$route.query.selectedMode) preservedParams.selectedMode = this.$route.query.selectedMode
       if (!preservedParams.language && this.$route.query.language) preservedParams.language = this.$route.query.language

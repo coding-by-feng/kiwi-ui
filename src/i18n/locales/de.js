@@ -88,19 +88,19 @@ export default {
         autoLoginSuccess: 'Automatische Anmeldung erfolgreich!',
         guestLogin: 'Gastbenutzer bitte anmelden!',
         features: {
-            intelligentMemory: 'Intelligentes Vokabelgedächtnis',
-            pronunciation: 'Authentische Aussprachepraxis',
-            personalizedPlan: 'Personalisierter Lernplan',
-            aiAssistantModes: 'KI-Assistent mit mehreren leistungsstarken Modi',
-            bilingualEnEn: 'Englisch-zu-Englisch mit chinesischen Erklärungen',
-            youtubePlayer: 'Lernen mit YouTube-Player',
-            todoGamified: 'To-Do und spielerisches Lernen'
+            intelligentMemory: 'Spaced Repetition für dauerhaftes Lernen',
+            pronunciation: 'Muttersprachler-Ausspracheübungen',
+            personalizedPlan: 'KI-gesteuerte Lernpfade',
+            aiAssistantModes: 'Multi-Modus KI-Tutor (Grammatik, Übersetzung & mehr)',
+            bilingualEnEn: 'Englisch-zu-Englisch mit Muttersprachenunterstützung',
+            youtubePlayer: 'Lernen auf YouTube mit interaktiven Untertiteln',
+            todoGamified: 'Gamifizierte Aufgaben mit Rangliste'
         },
         brand: {
-            title: 'Kason English Learning Platform',
-            subtitle: 'Intelligente Englisch-Lernplattform'
+            title: 'Kason Tools',
+            subtitle: 'Ihr All-in-One Englisch-Lernarbeitsbereich'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         username: 'Benutzername',
         password: 'Passwort',
         signIn: 'Anmelden',
@@ -232,33 +232,44 @@ export default {
         minimize: 'Minimieren',
         restore: 'Wiederherstellen',
         close: 'Schließen',
-        aiSearch: 'KI-Suche'
+        aiSearch: 'KI-Suche',
+        // Details-Dialog
+        loadingDetail: 'Details werden geladen...',
+        aiResponse: 'KI-Antwort',
+        noResponseAvailable: 'Antwort nicht verfügbar - klicken Sie auf Erneut suchen, um zu generieren',
+        copyResponse: 'Antwort kopieren',
+        responseCopied: 'Antwort kopiert!',
+        loadDetailFailed: 'Details konnten nicht geladen werden'
     },
 
     // Login
     login: {
-        welcomeBack: 'Welcome Back',
-        smartEnglishLearning: 'Smart English Learning Platform',
+        welcomeBack: 'Willkommen zurück',
+        smartEnglishLearning: 'Ihr All-in-One Englisch-Lernarbeitsbereich',
         features: {
-            smartMemory: 'Smart Vocabulary Memory',
-            pronunciation: 'Authentic Pronunciation Practice',
-            personalizedPlan: 'Personalized Learning Plan'
+            smartMemory: 'Spaced Repetition für dauerhaftes Lernen',
+            pronunciation: 'Muttersprachler-Ausspracheübungen',
+            personalizedPlan: 'KI-gesteuerte Lernpfade',
+            aiAssistantModes: 'Multi-Modus KI-Tutor (Grammatik, Übersetzung & mehr)',
+            bilingualEnEn: 'Englisch-zu-Englisch mit Muttersprachenunterstützung',
+            youtubePlayer: 'Lernen auf YouTube mit interaktiven Untertiteln',
+            todoGamified: 'Gamifizierte Aufgaben mit Rangliste'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0',
-        useGoogleLogin: 'Use Google Account to Login',
-        loginProcessing: 'Processing...',
-        connectingGoogle: 'Connecting to Google...',
-        loginFailed: 'Login failed, please try again',
-        accountNotFound: 'Account not found, please contact administrator',
-        clipboardAccess: 'Clipboard Access',
+        copyright: '©2025 Kason Tools v2.0',
+        useGoogleLogin: 'Mit Google-Konto anmelden',
+        loginProcessing: 'Verarbeitung...',
+        connectingGoogle: 'Verbindung zu Google...',
+        loginFailed: 'Anmeldung fehlgeschlagen, bitte erneut versuchen',
+        accountNotFound: 'Konto nicht gefunden, bitte Administrator kontaktieren',
+        clipboardAccess: 'Zwischenablage-Zugriff',
         clipboardInstructions: {
-            title: 'To use clipboard content on mobile devices:',
-            step1: 'Copy the text you want to search',
-            step2: 'Return to this app',
-            step3: 'Tap the "Paste from Clipboard" button',
-            step4: 'Or manually paste into the search box'
+            title: 'So verwenden Sie Zwischenablage-Inhalte auf Mobilgeräten:',
+            step1: 'Kopieren Sie den gewünschten Text',
+            step2: 'Kehren Sie zu dieser App zurück',
+            step3: 'Tippen Sie auf „Aus Zwischenablage einfügen"',
+            step4: 'Oder fügen Sie manuell in das Suchfeld ein'
         },
-        gotIt: 'Got it'
+        gotIt: 'Verstanden'
     },
 
     // Audio settings
@@ -396,6 +407,11 @@ export default {
     },
 
     about: {
+        title: 'Über Kason Tools',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Tools ist Ihr All-in-One Englisch-Lernarbeitsbereich. Mit KI-Unterstützung kombiniert es Multi-Modus-Wörterbuchsuche mit Erklärungen, Spaced-Repetition-Vokabelwiederholung, YouTube-Lernen mit interaktiven Untertiteln, PDF-Lesen mit Soforterklärungen, ein gamifiziertes Aufgabensystem mit Rangliste und Fokus-Timer—alles in einer nahtlosen Oberfläche, die Ihre Englischbeherrschung beschleunigt.',
+        version: 'Version 2.0',
+        copyright: '©2025 Kason Tools. Alle Rechte vorbehalten.',
         downloads: 'Clients herunterladen',
         mac: 'macOS',
         windows: 'Windows',

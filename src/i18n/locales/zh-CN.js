@@ -118,19 +118,19 @@ export default {
         autoLoginSuccess: '自动登录成功！',
         guestLogin: '游客用户请登录！',
         features: {
-            intelligentMemory: '智能词汇记忆',
-            pronunciation: '纯正发音练习',
-            personalizedPlan: '个性化学习计划',
-            aiAssistantModes: 'AI 助手多种强大模式',
-            bilingualEnEn: '英英释义并配中文讲解',
-            youtubePlayer: 'YouTube 播放器学习',
-            todoGamified: '待办和游戏化学习'
+            intelligentMemory: '间隔重复，强化长期记忆',
+            pronunciation: '纯正母语者发音练习',
+            personalizedPlan: 'AI 驱动的个性化学习路径',
+            aiAssistantModes: '多模式 AI 助教（语法、翻译等）',
+            bilingualEnEn: '英英释义，母语辅助理解',
+            youtubePlayer: 'YouTube 互动字幕学习',
+            todoGamified: '游戏化待办与排行榜系统'
         },
         brand: {
-            title: 'Kason英语学习平台',
-            subtitle: '智能英语学习平台'
+            title: 'Kason Tools',
+            subtitle: '一站式英语学习工作台'
         },
-        copyright: '©2025 Kason英语学习平台 v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         username: '用户名',
         usernameOrEmail: '用户名 / 邮箱',
         password: '密码',
@@ -179,13 +179,17 @@ export default {
     // New: complete login block
     login: {
         welcomeBack: '欢迎回来',
-        smartEnglishLearning: '智能英语学习平台',
+        smartEnglishLearning: '一站式英语学习工作台',
         features: {
-            smartMemory: '智能词汇记忆',
-            pronunciation: '纯正发音练习',
-            personalizedPlan: '个性化学习计划'
+            smartMemory: '间隔重复，强化长期记忆',
+            pronunciation: '纯正母语者发音练习',
+            personalizedPlan: 'AI 驱动的个性化学习路径',
+            aiAssistantModes: '多模式 AI 助教（语法、翻译等）',
+            bilingualEnEn: '英英释义，母语辅助理解',
+            youtubePlayer: 'YouTube 互动字幕学习',
+            todoGamified: '游戏化待办与排行榜系统'
         },
-        copyright: '©2025 Kason英语学习平台 v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: '使用谷歌账户登录',
         loginProcessing: '处理中...',
         connectingGoogle: '正在连接谷歌...',
@@ -315,7 +319,39 @@ export default {
         geminiApiKeyRequired: '需要配置 Gemini API 密钥',
         geminiApiKeyRequiredMessage: '请在设置中配置您的 Gemini API 密钥，或切换到后端 API 模式。',
         configureApiKey: '配置 API 密钥',
-        switchToBackend: '使用后端 API'
+        switchToBackend: '使用后端 API',
+        // 提示词模板配置
+        promptTemplateConfig: '提示词模板配置',
+        promptTemplateConfigTip: '自定义 Gemini 直连模式的 AI 提示词模板',
+        placeholderReference: '占位符说明',
+        placeholderTL: '目标语言（如 English）',
+        placeholderNL: '母语（如 Simplified Chinese）',
+        placeholderS0: '选中文本（仅用于选择解释模式）',
+        placeholderS1: '上下文句子（仅用于选择解释模式）',
+        templateModes: {
+            'directly-translation': '直接翻译',
+            'translation-and-explanation': '翻译和解释',
+            'grammar-explanation': '语法解释',
+            'grammar-correction': '语法纠正',
+            'vocabulary-explanation': '词汇解释',
+            'synonym': '同义词',
+            'antonym': '反义词',
+            'vocabulary-association': '词汇关联',
+            'phrases-association': '短语关联',
+            'vocabulary-character-expansion': '词形扩展',
+            'ambiguous-association-correction': '歧义关联纠正',
+            'natural-idiomatic-retouch': '自然地道润色',
+            'selection-explanation': '选择解释'
+        },
+        resetTemplate: '重置',
+        resetAllTemplates: '全部重置为默认',
+        resetAllTemplatesConfirm: '这将把所有自定义模板重置为默认值。是否继续？',
+        templateResetSuccess: '模板已重置为默认值',
+        allTemplatesResetSuccess: '所有模板已重置为默认值',
+        templateSaved: '模板已保存',
+        customized: '已自定义',
+        viewTemplate: '查看模板',
+        editTemplate: '编辑模板'
     },
 
     // Todo Gamification
@@ -523,7 +559,7 @@ export default {
     about: {
         title: '关于 Kason Tools',
         kasonTools: 'Kason Tools',
-        description: 'Kason Tools 是一款由 AI 辅助的英语学习工作台，融合了间隔重复复习、地道发音练习、基于 YouTube 字幕的即时翻译与讲解、智能收藏夹、个性化学习流程、进度统计以及带有排行榜的待办打卡系统。',
+        description: 'Kason Tools 是你的一站式英语学习工作台。借助 AI 技术，它集成了多模式词典查询与解释、间隔重复词汇复习、YouTube 互动字幕学习、PDF 阅读即时解释、游戏化待办排行系统以及专注计时器——所有功能融于一体，助你高效提升英语水平。',
         version: '版本 2.0',
         contact: '联系我们',
         instagram: 'Instagram',
@@ -538,7 +574,7 @@ export default {
         voiceRSSAttribution: 'Voice RSS - 在线文本转语音服务',
         voiceRSSDescription: '为我们的发音功能提供高质量的文本转语音服务。',
         visitWebsite: '访问官网',
-        copyright: '©2025 Kason 英语学习平台。保留所有权利。',
+        copyright: '©2025 Kason Tools。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
         // 新增：客户端下载
@@ -618,7 +654,14 @@ export default {
         minimize: '最小化',
         restore: '恢复',
         close: '关闭',
-        aiSearch: 'AI 搜索'
+        aiSearch: 'AI 搜索',
+        // 详情对话框
+        loadingDetail: '加载详情中...',
+        aiResponse: 'AI 回复',
+        noResponseAvailable: '回复不可用 - 点击重新搜索以生成',
+        copyResponse: '复制回复',
+        responseCopied: '回复已复制！',
+        loadDetailFailed: '加载详情失败'
     },
 
     // New: audio settings parity

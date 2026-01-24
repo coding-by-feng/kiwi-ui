@@ -7,7 +7,7 @@
 
 import { getStore, setStore } from '@/util/store'
 import kiwiConsts from '@/const/kiwiConsts'
-import { GEMINI_PROMPTS, buildPromptFromTemplate } from '@/const/geminiPromptTemplates'
+import { buildPromptFromTemplate, getTemplate } from '@/const/geminiPromptTemplates'
 import { saveAiCallHistory } from '@/api/ai'
 
 // Simple encryption/decryption for API key storage
@@ -125,7 +125,7 @@ function buildFullPrompt(promptMode, userPrompt, targetLanguage, nativeLanguage)
       contextText = parts[1] || ''
     }
 
-    const template = GEMINI_PROMPTS['selection-explanation']
+    const template = getTemplate('selection-explanation')
     const systemPrompt = buildPromptFromTemplate(template, {
       targetLanguage,
       nativeLanguage,
@@ -136,12 +136,12 @@ function buildFullPrompt(promptMode, userPrompt, targetLanguage, nativeLanguage)
     return systemPrompt
   }
 
-  // Get the template for the mode
-  const template = GEMINI_PROMPTS[promptMode]
+  // Get the template for the mode (custom template if set, otherwise default)
+  const template = getTemplate(promptMode)
   if (!template) {
     // Fallback to direct translation if mode not found
     console.warn(`Prompt template not found for mode: ${promptMode}, using directly-translation`)
-    const fallbackTemplate = GEMINI_PROMPTS['directly-translation']
+    const fallbackTemplate = getTemplate('directly-translation')
     const systemPrompt = buildPromptFromTemplate(fallbackTemplate, { targetLanguage, nativeLanguage })
     return `${systemPrompt}\n\nUser prompt: ${userPrompt}`
   }

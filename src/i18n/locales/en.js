@@ -118,19 +118,19 @@ export default {
         autoLoginSuccess: 'Automatic login successful!',
         guestLogin: 'Guest user please login!',
         features: {
-            intelligentMemory: 'Smart Vocabulary Retention',
-            pronunciation: 'Real‑voice Pronunciation Practice',
-            personalizedPlan: 'Personalized Study Plans',
-            aiAssistantModes: 'AI assistant with multiple powerful modes',
-            bilingualEnEn: 'English‑to‑English with Chinese explanations',
-            youtubePlayer: 'YouTube player learning',
-            todoGamified: 'To‑do and gamified study'
+            intelligentMemory: 'Spaced Repetition for Lasting Memory',
+            pronunciation: 'Native Speaker Pronunciation Practice',
+            personalizedPlan: 'AI-Powered Learning Paths',
+            aiAssistantModes: 'Multi-Mode AI Tutor (Grammar, Translation & More)',
+            bilingualEnEn: 'English-to-English with Native Language Support',
+            youtubePlayer: 'Learn from YouTube with Interactive Subtitles',
+            todoGamified: 'Gamified Tasks with Ranking System'
         },
         brand: {
-            title: 'Kason English Tools',
-            subtitle: 'Smart English Learning Platform'
+            title: 'Kason Tools',
+            subtitle: 'Your All-in-One English Learning Workspace'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         username: 'Username',
         usernameOrEmail: 'Username / Email',
         password: 'Password',
@@ -444,23 +444,55 @@ export default {
         geminiApiKeyRequired: 'Gemini API Key Required',
         geminiApiKeyRequiredMessage: 'Please configure your Gemini API key in Settings, or switch to Backend API mode.',
         configureApiKey: 'Configure API Key',
-        switchToBackend: 'Use Backend API'
+        switchToBackend: 'Use Backend API',
+        // Prompt Template Configuration
+        promptTemplateConfig: 'Prompt Template Configuration',
+        promptTemplateConfigTip: 'Customize AI prompt templates for Gemini direct mode',
+        placeholderReference: 'Placeholder Reference',
+        placeholderTL: 'Target Language (e.g., English)',
+        placeholderNL: 'Native Language (e.g., Simplified Chinese)',
+        placeholderS0: 'Selected text (selection-explanation only)',
+        placeholderS1: 'Context sentence (selection-explanation only)',
+        templateModes: {
+            'directly-translation': 'Direct Translation',
+            'translation-and-explanation': 'Explanation',
+            'grammar-explanation': 'Grammar Explanation',
+            'grammar-correction': 'Grammar Correction',
+            'vocabulary-explanation': 'Vocabulary Explanation',
+            'synonym': 'Synonym',
+            'antonym': 'Antonym',
+            'vocabulary-association': 'Vocabulary Association',
+            'phrases-association': 'Phrases Association',
+            'vocabulary-character-expansion': 'Vocabulary Character Expansion',
+            'ambiguous-association-correction': 'Ambiguous Association Correction',
+            'natural-idiomatic-retouch': 'Natural Idiomatic Retouch',
+            'selection-explanation': 'Selection Explanation'
+        },
+        resetTemplate: 'Reset',
+        resetAllTemplates: 'Reset All to Defaults',
+        resetAllTemplatesConfirm: 'This will reset all custom templates to their defaults. Continue?',
+        templateResetSuccess: 'Template reset to default',
+        allTemplatesResetSuccess: 'All templates reset to defaults',
+        templateSaved: 'Template saved',
+        customized: 'Customized',
+        viewTemplate: 'View Template',
+        editTemplate: 'Edit Template'
     },
 
     // Login - UPDATED WITH COMPLETE KEYS
     login: {
         welcomeBack: 'Welcome Back',
-        smartEnglishLearning: 'Smart English Learning Platform',
+        smartEnglishLearning: 'Your All-in-One English Learning Workspace',
         features: {
-            smartMemory: 'Smart Vocabulary Retention',
-            pronunciation: 'Real‑voice Pronunciation Practice',
-            personalizedPlan: 'Personalized Study Plans',
-            aiAssistantModes: 'AI assistant with multiple powerful modes',
-            bilingualEnEn: 'English‑to‑English with Chinese explanations',
-            youtubePlayer: 'YouTube player learning',
-            todoGamified: 'To‑do and gamified study'
+            smartMemory: 'Spaced Repetition for Lasting Memory',
+            pronunciation: 'Native Speaker Pronunciation Practice',
+            personalizedPlan: 'AI-Powered Learning Paths',
+            aiAssistantModes: 'Multi-Mode AI Tutor (Grammar, Translation & More)',
+            bilingualEnEn: 'English-to-English with Native Language Support',
+            youtubePlayer: 'Learn from YouTube with Interactive Subtitles',
+            todoGamified: 'Gamified Tasks with Ranking System'
         },
-        copyright: '©2025 Kason English Learning Platform v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: 'Use Google Account to Login',
         loginProcessing: 'Processing...',
         connectingGoogle: 'Connecting to Google...',
@@ -543,7 +575,14 @@ export default {
         minimize: 'Minimize',
         restore: 'Restore',
         close: 'Close',
-        aiSearch: 'AI Search'
+        aiSearch: 'AI Search',
+        // Detail dialog
+        loadingDetail: 'Loading details...',
+        aiResponse: 'AI Response',
+        noResponseAvailable: 'Response not available - click Search Again to regenerate',
+        copyResponse: 'Copy Response',
+        responseCopied: 'Response copied!',
+        loadDetailFailed: 'Failed to load details'
     },
 
     // Audio and BGM
@@ -564,7 +603,7 @@ export default {
     about: {
         title: 'About Kason Tools',
         kasonTools: 'Kason Tools',
-        description: 'Kason Tools is an AI‑assisted English learning workspace that blends spaced‑repetition review, authentic pronunciation practice, YouTube subtitle learning with instant translation and explanations, smart collections, a personalized study flow, progress tracking, and a gamified to‑do ranking system.',
+        description: 'Kason Tools is your all-in-one English learning workspace. Powered by AI, it combines dictionary lookup with multi-mode explanations, spaced-repetition vocabulary review, YouTube learning with interactive subtitles, PDF reading with instant explanations, a gamified to-do system with rankings, and focus timers—all in one seamless interface designed to accelerate your English mastery.',
         version: 'Version 2.0',
         contact: 'Contact Us',
         instagram: 'Instagram',
@@ -579,7 +618,7 @@ export default {
         voiceRSSAttribution: 'Voice RSS - Online text-to-speech service',
         voiceRSSDescription: 'Providing high-quality text-to-speech services for our pronunciation features.',
         visitWebsite: 'Visit Official Website',
-        copyright: '©2025 Kason English Learning Platform. All rights reserved.',
+        copyright: '©2025 Kason Tools. All rights reserved.',
         github: 'GitHub',
         followOnGitHub: 'Follow on GitHub',
         // Tour keys removed

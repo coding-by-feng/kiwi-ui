@@ -88,19 +88,19 @@ export default {
         autoLoginSuccess: 'Connexion automatique réussie!',
         guestLogin: 'Utilisateur invité, veuillez vous connecter!',
         features: {
-            intelligentMemory: 'Mémorisation intelligente du vocabulaire',
-            pronunciation: 'Pratique de prononciation authentique',
-            personalizedPlan: 'Plan d\'apprentissage personnalisé',
-            aiAssistantModes: 'Assistant IA avec plusieurs modes puissants',
-            bilingualEnEn: 'Anglais-à-anglais avec explications en chinois',
-            youtubePlayer: 'Apprentissage avec lecteur YouTube',
-            todoGamified: 'Tâches et apprentissage ludifié'
+            intelligentMemory: 'Répétition espacée pour mémorisation durable',
+            pronunciation: 'Pratique de prononciation native',
+            personalizedPlan: 'Parcours d\'apprentissage propulsés par l\'IA',
+            aiAssistantModes: 'Tuteur IA multi-modes (grammaire, traduction, etc.)',
+            bilingualEnEn: 'Anglais-à-anglais avec support de langue maternelle',
+            youtubePlayer: 'Apprendre sur YouTube avec sous-titres interactifs',
+            todoGamified: 'Tâches ludifiées avec système de classement'
         },
         brand: {
-            title: 'Plateforme d\'apprentissage anglais Kason',
-            subtitle: 'Plateforme d\'apprentissage anglais intelligente'
+            title: 'Kason Tools',
+            subtitle: 'Votre espace de travail tout-en-un pour apprendre l\'anglais'
         },
-        copyright: '©2025 Plateforme d\'apprentissage anglais Kason v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         username: 'Nom d\'utilisateur',
         password: 'Mot de passe',
         signIn: 'Se connecter',
@@ -207,19 +207,30 @@ export default {
         minimize: 'Minimiser',
         restore: 'Restaurer',
         close: 'Fermer',
-        aiSearch: 'Recherche IA'
+        aiSearch: 'Recherche IA',
+        // Dialogue de détails
+        loadingDetail: 'Chargement des détails...',
+        aiResponse: 'Réponse IA',
+        noResponseAvailable: 'Réponse non disponible - cliquez sur Rechercher à nouveau pour générer',
+        copyResponse: 'Copier la réponse',
+        responseCopied: 'Réponse copiée !',
+        loadDetailFailed: 'Échec du chargement des détails'
     },
 
     // Login section
     login: {
         welcomeBack: 'Bon retour',
-        smartEnglishLearning: 'Plateforme d\'apprentissage anglais intelligente',
+        smartEnglishLearning: 'Votre espace de travail tout-en-un pour apprendre l\'anglais',
         features: {
-            smartMemory: 'Mémorisation intelligente du vocabulaire',
-            pronunciation: 'Pratique de prononciation authentique',
-            personalizedPlan: 'Plan d\'apprentissage personnalisé'
+            smartMemory: 'Répétition espacée pour mémorisation durable',
+            pronunciation: 'Pratique de prononciation native',
+            personalizedPlan: 'Parcours d\'apprentissage propulsés par l\'IA',
+            aiAssistantModes: 'Tuteur IA multi-modes (grammaire, traduction, etc.)',
+            bilingualEnEn: 'Anglais-à-anglais avec support de langue maternelle',
+            youtubePlayer: 'Apprendre sur YouTube avec sous-titres interactifs',
+            todoGamified: 'Tâches ludifiées avec système de classement'
         },
-        copyright: '©2025 Plateforme d\'apprentissage anglais Kason v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: 'Se connecter avec un compte Google',
         loginProcessing: 'Traitement...',
         connectingGoogle: 'Connexion à Google...',
@@ -395,6 +406,11 @@ export default {
     },
 
     about: {
+        title: 'À propos de Kason Tools',
+        kasonTools: 'Kason Tools',
+        description: 'Kason Tools est votre espace de travail tout-en-un pour apprendre l\'anglais. Propulsé par l\'IA, il combine recherche de dictionnaire multi-modes, révision de vocabulaire par répétition espacée, apprentissage YouTube avec sous-titres interactifs, lecture PDF avec explications instantanées, système de tâches ludifiées avec classement, et minuteries de concentration—le tout dans une interface fluide conçue pour accélérer votre maîtrise de l\'anglais.',
+        version: 'Version 2.0',
+        copyright: '©2025 Kason Tools. Tous droits réservés.',
         downloads: 'Télécharger les clients',
         mac: 'macOS',
         windows: 'Windows',

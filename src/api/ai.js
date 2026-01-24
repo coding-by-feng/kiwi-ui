@@ -45,6 +45,17 @@ export function deleteAiCallHistory(id) {
     })
 }
 
+// Get single AI call history item detail (includes aiResponse)
+export function getAiCallHistoryDetail(id) {
+    return request({
+        url: `${kiwiConsts.API_BASE.AI_BIZ}/history/${id}`,
+        method: 'get',
+        headers: {
+            isToken: true
+        }
+    })
+}
+
 // Create new AI call history item (used for Gemini local API mode)
 export function saveAiCallHistory(data) {
     return request({

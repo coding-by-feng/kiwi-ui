@@ -88,15 +88,19 @@ export default {
         autoLoginSuccess: 'เข้าสู่ระบบอัตโนมัติสำเร็จ!',
         guestLogin: 'ผู้ใช้ Guest กรุณาเข้าสู่ระบบ!',
         features: {
-            intelligentMemory: 'จดจำคำศัพท์อัจฉริยะ',
-            pronunciation: 'ฝึกออกเสียงที่ถูกต้อง',
-            personalizedPlan: 'แผนการเรียนรู้เฉพาะบุคคล'
+            intelligentMemory: 'ทบทวนแบบเว้นระยะเพื่อความจำระยะยาว',
+            pronunciation: 'ฝึกออกเสียงแบบเจ้าของภาษา',
+            personalizedPlan: 'เส้นทางการเรียนรู้ขับเคลื่อนด้วย AI',
+            aiAssistantModes: 'ผู้สอน AI หลายโหมด (ไวยากรณ์, แปลภาษา ฯลฯ)',
+            bilingualEnEn: 'อังกฤษ-อังกฤษพร้อมการสนับสนุนภาษาแม่',
+            youtubePlayer: 'เรียนจาก YouTube พร้อมคำบรรยายแบบโต้ตอบ',
+            todoGamified: 'งานแบบเกมพร้อมระบบจัดอันดับ'
         },
         brand: {
-            title: 'แพลตฟอร์มเรียนภาษาอังกฤษ Kason',
-            subtitle: 'แพลตฟอร์มเรียนภาษาอังกฤษอัจฉริยะ'
+            title: 'Kason Tools',
+            subtitle: 'พื้นที่ทำงานเรียนภาษาอังกฤษครบวงจร'
         },
-        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         username: 'ชื่อผู้ใช้',
         password: 'รหัสผ่าน',
         signIn: 'เข้าสู่ระบบ',
@@ -313,13 +317,17 @@ export default {
     // Login
     login: {
         welcomeBack: 'ยินดีต้อนรับกลับ',
-        smartEnglishLearning: 'แพลตฟอร์มเรียนภาษาอังกฤษอัจฉริยะ',
+        smartEnglishLearning: 'พื้นที่ทำงานเรียนภาษาอังกฤษครบวงจร',
         features: {
-            smartMemory: 'จดจำคำศัพท์อัจฉริยะ',
-            pronunciation: 'ฝึกออกเสียงที่ถูกต้อง',
-            personalizedPlan: 'แผนการเรียนรู้เฉพาะบุคคล'
+            smartMemory: 'ทบทวนแบบเว้นระยะเพื่อความจำระยะยาว',
+            pronunciation: 'ฝึกออกเสียงแบบเจ้าของภาษา',
+            personalizedPlan: 'เส้นทางการเรียนรู้ขับเคลื่อนด้วย AI',
+            aiAssistantModes: 'ผู้สอน AI หลายโหมด (ไวยากรณ์, แปลภาษา ฯลฯ)',
+            bilingualEnEn: 'อังกฤษ-อังกฤษพร้อมการสนับสนุนภาษาแม่',
+            youtubePlayer: 'เรียนจาก YouTube พร้อมคำบรรยายแบบโต้ตอบ',
+            todoGamified: 'งานแบบเกมพร้อมระบบจัดอันดับ'
         },
-        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason v2.0',
+        copyright: '©2025 Kason Tools v2.0',
         useGoogleLogin: 'ใช้บัญชี Google เพื่อเข้าสู่ระบบ',
         loginProcessing: 'กำลังดำเนินการ...',
         connectingGoogle: 'กำลังเชื่อมต่อกับ Google...',
@@ -402,7 +410,14 @@ export default {
         minimize: 'ย่อ',
         restore: 'คืนค่า',
         close: 'ปิด',
-        aiSearch: 'ค้นหา AI'
+        aiSearch: 'ค้นหา AI',
+        // กล่องโต้ตอบรายละเอียด
+        loadingDetail: 'กำลังโหลดรายละเอียด...',
+        aiResponse: 'การตอบกลับ AI',
+        noResponseAvailable: 'ไม่พบการตอบกลับ - คลิกค้นหาอีกครั้งเพื่อสร้าง',
+        copyResponse: 'คัดลอกการตอบกลับ',
+        responseCopied: 'คัดลอกการตอบกลับแล้ว!',
+        loadDetailFailed: 'โหลดรายละเอียดล้มเหลว'
     },
 
     // Moved out of ai: audio settings
@@ -423,7 +438,7 @@ export default {
     about: {
         title: 'เกี่ยวกับ Kason Tools',
         kasonTools: 'Kason Tools',
-        description: 'Kason Tools เป็นแพลตฟอร์มเรียนภาษาอังกฤษอัจฉริยะที่ช่วยให้คุณเชี่ยวชาญคำศัพท์ด้วยการทบทวนแบบเว้นระยะและ AI',
+        description: 'Kason Tools คือพื้นที่ทำงานเรียนภาษาอังกฤษครบวงจร ขับเคลื่อนด้วย AI ผสานการค้นหาพจนานุกรมหลายโหมดพร้อมคำอธิบาย การทบทวนคำศัพท์แบบเว้นระยะ การเรียนรู้บน YouTube พร้อมคำบรรยายแบบโต้ตอบ การอ่าน PDF พร้อมคำอธิบายทันที ระบบงานแบบเกมพร้อมจัดอันดับ และตัวจับเวลาโฟกัส—ทั้งหมดในอินเทอร์เฟซที่ลื่นไหลเพื่อเร่งการเรียนรู้ภาษาอังกฤษของคุณ',
         version: 'เวอร์ชัน 2.0',
         contact: 'ติดต่อเรา',
         instagram: 'Instagram',
@@ -438,7 +453,7 @@ export default {
         voiceRSSAttribution: 'Voice RSS - บริการแปลงข้อความเป็นเสียงออนไลน์',
         voiceRSSDescription: 'ให้บริการแปลงข้อความเป็นเสียงคุณภาพสูงสำหรับฟีเจอร์การออกเสียงของเรา',
         visitWebsite: 'เยี่ยมชมเว็บไซต์ทางการ',
-        copyright: '©2025 แพลตฟอร์มเรียนภาษาอังกฤษ Kason สงวนลิขสิทธิ์',
+        copyright: '©2025 Kason Tools สงวนลิขสิทธิ์',
         github: 'GitHub',
         followOnGitHub: 'ติดตามบน GitHub',
         downloads: 'ดาวน์โหลดไคลเอนต์',
