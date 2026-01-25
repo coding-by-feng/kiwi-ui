@@ -181,7 +181,7 @@
             size="small"
             :icon="isPlayingAll ? 'el-icon-video-pause' : 'el-icon-video-play'"
             @click="togglePlayAll">
-            {{ isPlayingAll ? 'Stop' : 'Play All' }}
+            {{ isPlayingAll ? 'Stop' : (canResume ? 'Resume' : 'Play All') }}
           </KiwiButton>
           <KiwiDropdown @command="handleLoopModeChange">
             <KiwiButton size="small" :type="loopMode !== 'off' ? 'warning' : 'default'">
@@ -456,6 +456,14 @@ export default {
       loopPlaylistIndex: 0,
       // History filter
       historyFilter: 'all', // 'all', 'favorites'
+      // Pause/Resume state
+      pauseState: {
+        isPaused: false,
+        remainingQueue: [],
+        conversationId: null,
+        loopPlaylistIndex: null,
+        loopMode: null
+      }
     }
   },
   computed: {
@@ -470,6 +478,11 @@ export default {
         return this.conversationList.filter(conv => conv.favorited)
       }
       return this.conversationList
+    },
+    canResume() {
+      return this.pauseState.isPaused &&
+             this.pauseState.conversationId === this.currentConversation.id &&
+             this.pauseState.remainingQueue.length > 0
     }
   },
   mounted() {
@@ -535,15 +548,71 @@ export default {
 
     async startLoopPlay() {
       if (this.loopMode === 'current') {
-        // Loop current conversation
+        // Loop current conversation - togglePlayAll handles resume
         this.togglePlayAll()
       } else if (this.loopMode === 'all' || this.loopMode === 'favorites') {
-        // Load playlist from history
-        await this.loadLoopPlaylist()
-        if (this.loopPlaylist.length > 0) {
-          this.loopPlaylistIndex = 0
-          await this.loadAndPlayConversation(this.loopPlaylist[0].id)
+        // Check if we can resume from pause state
+        if (this.pauseState.isPaused &&
+            this.pauseState.loopMode === this.loopMode &&
+            this.pauseState.conversationId) {
+          // Resume from paused position in loop playlist
+          await this.loadLoopPlaylist()
+          this.loopPlaylistIndex = this.pauseState.loopPlaylistIndex || 0
+
+          // If same conversation, use togglePlayAll to resume at message level
+          if (this.pauseState.conversationId === this.currentConversation.id) {
+            this.togglePlayAll()
+          } else {
+            // Load the paused conversation and resume
+            await this.loadAndPlayConversationWithResume(this.pauseState.conversationId)
+          }
+        } else {
+          // Start fresh - load playlist from history
+          this.clearPauseState()
+          await this.loadLoopPlaylist()
+          if (this.loopPlaylist.length > 0) {
+            this.loopPlaylistIndex = 0
+            await this.loadAndPlayConversation(this.loopPlaylist[0].id)
+          }
         }
+      }
+    },
+
+    async loadAndPlayConversationWithResume(id) {
+      try {
+        const response = await getConversationById(id)
+        if (response.data.code === 0) {
+          const data = response.data.data
+          this.currentConversation = {
+            id: data.id,
+            topic: data.topic,
+            speakers: data.speakers,
+            favorited: data.favorited || false
+          }
+          this.messages = data.messages || []
+          this.totalMessageCount = this.messages.length
+          this.form.prompt = data.topic || ''
+          this.currentMode = 'generator'
+
+          // Resume from pause state if available
+          this.$nextTick(() => {
+            if (this.pauseState.isPaused &&
+                this.pauseState.conversationId === id &&
+                this.pauseState.remainingQueue.length > 0) {
+              this.isPlayingAll = true
+              this.playAllQueue = [...this.pauseState.remainingQueue]
+              this.clearPauseState()
+              this.playNextInQueue()
+            } else {
+              this.clearPauseState()
+              this.isPlayingAll = true
+              this.playAllQueue = [...this.messages]
+              this.playNextInQueue()
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load conversation for resume:', error)
       }
     },
 
@@ -574,6 +643,9 @@ export default {
           this.totalMessageCount = this.messages.length
           this.form.prompt = data.topic || ''
           this.currentMode = 'generator'
+
+          // Clear pause state since we're starting a new conversation in loop
+          this.clearPauseState()
 
           // Start playing
           this.$nextTick(() => {
@@ -877,6 +949,7 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
       this.messages = []
       this.currentConversation = { id: null, topic: '', speakers: [], favorited: false }
       this.totalMessageCount = 0
+      this.clearPauseState()
 
       const token = getStore({ name: 'access_token' })
       if (!token) {
@@ -1038,12 +1111,28 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
       }
     },
 
-    stopAudio() {
+    stopAudio(savePauseState = true) {
       const audioPlayer = this.$refs.audioPlayer
       if (audioPlayer) {
         audioPlayer.pause()
         audioPlayer.currentTime = 0
       }
+
+      // Save pause state for resume functionality
+      if (savePauseState && this.isPlayingAll && (this.playAllQueue.length > 0 || this.currentPlayingId)) {
+        // Include current playing message in the remaining queue
+        const currentMsg = this.messages.find(m => m.id === this.currentPlayingId)
+        const remainingQueue = currentMsg ? [currentMsg, ...this.playAllQueue] : [...this.playAllQueue]
+
+        this.pauseState = {
+          isPaused: true,
+          remainingQueue: remainingQueue,
+          conversationId: this.currentConversation.id,
+          loopPlaylistIndex: this.loopPlaylistIndex,
+          loopMode: this.loopMode
+        }
+      }
+
       this.currentPlayingId = null
       this.isPlayingAll = false
       this.playAllQueue = []
@@ -1053,9 +1142,37 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
       if (this.isPlayingAll) {
         this.stopAudio()
       } else {
-        this.isPlayingAll = true
-        this.playAllQueue = [...this.messages]
-        this.playNextInQueue()
+        // Check if we can resume from pause state
+        if (this.pauseState.isPaused &&
+            this.pauseState.conversationId === this.currentConversation.id &&
+            this.pauseState.remainingQueue.length > 0) {
+          // Resume from paused position
+          this.isPlayingAll = true
+          this.playAllQueue = [...this.pauseState.remainingQueue]
+          // Restore loop mode if it was set
+          if (this.pauseState.loopMode && this.pauseState.loopMode !== 'off') {
+            this.loopMode = this.pauseState.loopMode
+            this.loopPlaylistIndex = this.pauseState.loopPlaylistIndex
+          }
+          this.clearPauseState()
+          this.playNextInQueue()
+        } else {
+          // Start fresh from beginning
+          this.clearPauseState()
+          this.isPlayingAll = true
+          this.playAllQueue = [...this.messages]
+          this.playNextInQueue()
+        }
+      }
+    },
+
+    clearPauseState() {
+      this.pauseState = {
+        isPaused: false,
+        remainingQueue: [],
+        conversationId: null,
+        loopPlaylistIndex: null,
+        loopMode: null
       }
     },
 
@@ -1133,6 +1250,10 @@ Example (in Chinese): 两个大学室友在宿舍里讨论即将到来的期末�
         const response = await getConversationById(id)
         if (response.data.code === 0) {
           const data = response.data.data
+          // Clear pause state if loading a different conversation
+          if (this.pauseState.conversationId !== data.id) {
+            this.clearPauseState()
+          }
           this.currentConversation = {
             id: data.id,
             topic: data.topic,
