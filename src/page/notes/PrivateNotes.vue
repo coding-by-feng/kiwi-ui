@@ -87,9 +87,6 @@
           :style="{ '--accent-color': category.color || '#409EFF' }"
           @click="selectCategory(category)"
         >
-          <div class="category-icon" :style="{ background: (category.color || '#409EFF') + '18' }">
-            <i :class="getCategoryIcon(category.icon)" :style="{ color: category.color || '#409EFF' }"></i>
-          </div>
           <div class="category-info">
             <h3>{{ category.name }}</h3>
             <p v-if="category.description">{{ category.description }}</p>
@@ -798,17 +795,6 @@ export default {
       this.viewMode = 'card'
     },
 
-    getCategoryIcon(icon) {
-      const iconMap = {
-        star: 'el-icon-star-on',
-        heart: 'el-icon-star-off',
-        book: 'el-icon-notebook-2',
-        folder: 'el-icon-folder',
-        default: 'el-icon-document'
-      }
-      return iconMap[icon] || iconMap.default
-    },
-
     truncateContent(content, maxLength = 100) {
       if (!content) return ''
       return content.length > maxLength ? content.substring(0, maxLength) + '...' : content
@@ -1294,18 +1280,6 @@ export default {
 
     &:active {
       transform: translateY(-2px);
-    }
-
-    .category-icon {
-      font-size: 28px;
-      flex-shrink: 0;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      transition: all 0.3s ease;
     }
 
     .category-info {
@@ -2240,12 +2214,6 @@ export default {
     .category-card {
       padding: 14px !important;
 
-      .category-icon {
-        font-size: 24px;
-        width: 36px;
-        height: 36px;
-      }
-
       .category-info h3 {
         font-size: 1rem;
       }
@@ -2428,13 +2396,6 @@ export default {
       padding: 12px !important;
       gap: 12px;
       border-radius: 10px;
-
-      .category-icon {
-        font-size: 22px;
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-      }
 
       .category-info {
         h3 {
@@ -2644,12 +2605,6 @@ export default {
 
   .categories-container .category-card {
     padding: 10px !important;
-
-    .category-icon {
-      width: 28px;
-      height: 28px;
-      font-size: 18px;
-    }
   }
 
   .card-view .note-card {
