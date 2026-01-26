@@ -1648,8 +1648,7 @@ export default {
         width: 100%;
         height: auto;
         display: block;
-        max-height: 300px;
-        object-fit: cover;
+        object-fit: contain;
         transition: all 0.4s ease;
       }
     }
@@ -2484,10 +2483,6 @@ export default {
       .card-image {
         margin-bottom: 16px;
         border-radius: 8px;
-
-        img {
-          max-height: 200px;
-        }
       }
 
       .card-content {
