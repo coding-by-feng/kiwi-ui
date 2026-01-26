@@ -218,7 +218,9 @@ export default {
         aiHistory: true, // New: AI History tab enabled by default
         pdfReader: true,
         signature: true,
-        aiConversation: true // AI Conversation Generator tab
+        aiConversation: true, // AI Conversation Generator tab
+        whiteNoise: true, // White Noise & Ambient Sounds tab
+        privateNotes: true // Private Notes with categories, TTS audio, and AI images
     }),
 
     DB_NAME: 'KIWI_VOCABULARY',

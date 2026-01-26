@@ -8,30 +8,6 @@
             <i class="el-icon-aim"></i>
             {{ $t('todo.focus.title') }}
           </h2>
-          <!-- BGM Selector -->
-          <div class="bgm-selector">
-            <KiwiDropdown placement="bottom-end" @command="selectBgm">
-              <button class="bgm-trigger" :class="{ playing: isBgmPlaying }">
-                <i :class="isBgmPlaying ? 'el-icon-headset' : 'el-icon-headset'"></i>
-                <span>{{ currentBgmLabel }}</span>
-                <i class="el-icon-arrow-down"></i>
-              </button>
-              <template #dropdown>
-                <KiwiDropdownItem
-                  v-for="bgm in bgmOptions"
-                  :key="bgm.id"
-                  :command="bgm.id"
-                  :class="{ 'is-active': currentBgm === bgm.id }"
-                >
-                  <i :class="bgm.icon"></i>
-                  {{ bgm.label }}
-                </KiwiDropdownItem>
-              </template>
-            </KiwiDropdown>
-            <button v-if="currentBgm !== 'none'" class="bgm-toggle" @click="toggleBgm">
-              <i :class="isBgmPlaying ? 'el-icon-video-pause' : 'el-icon-video-play'"></i>
-            </button>
-          </div>
         </div>
 
         <!-- Tree Type Selector -->
@@ -281,8 +257,6 @@
       </template>
     </KiwiDialog>
 
-    <!-- Hidden Audio Elements for BGM -->
-    <audio ref="bgmAudio" loop :src="currentBgmSrc" @ended="onBgmEnded"></audio>
   </div>
 </template>
 
@@ -290,8 +264,6 @@
 import { mapState, mapActions } from 'vuex'
 import KiwiDialog from '@/components/ui/KiwiDialog.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
-import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
-import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 import Tree3D from './components/Tree3D.vue'
 import PlantedTree3D from './components/PlantedTree3D.vue'
 
@@ -304,8 +276,6 @@ export default {
   components: {
     KiwiDialog,
     KiwiButton,
-    KiwiDropdown,
-    KiwiDropdownItem,
     Tree3D,
     PlantedTree3D
   },
@@ -342,19 +312,6 @@ export default {
         { label: '90', value: 90, points: 300 },
         { label: '120', value: 120, points: 400 }
       ],
-
-      // BGM options
-      bgmOptions: [
-        { id: 'none', label: 'No Sound', icon: 'el-icon-turn-off-microphone' },
-        { id: 'rain', label: 'Rain', icon: 'el-icon-heavy-rain' },
-        { id: 'forest', label: 'Forest', icon: 'el-icon-sunny' },
-        { id: 'ocean', label: 'Ocean Waves', icon: 'el-icon-ship' },
-        { id: 'fire', label: 'Fireplace', icon: 'el-icon-hot-water' },
-        { id: 'cafe', label: 'Cafe', icon: 'el-icon-coffee-cup' },
-        { id: 'wind', label: 'Wind', icon: 'el-icon-cloudy' }
-      ],
-      currentBgm: 'none',
-      isBgmPlaying: false,
 
       // Forest grid (8x6 = 48 cells)
       forestCells: Array(48).fill(null).map(() => ({ tree: null })),
@@ -432,16 +389,6 @@ export default {
     currentTreeColorDark() {
       const tree = this.treeTypes.find(t => t.id === this.selectedTreeType)
       return tree ? tree.colorDark : '#2E7D32'
-    },
-
-    currentBgmLabel() {
-      const bgm = this.bgmOptions.find(b => b.id === this.currentBgm)
-      return bgm ? bgm.label : 'BGM'
-    },
-
-    currentBgmSrc() {
-      if (this.currentBgm === 'none') return ''
-      return `/assets/audio/bgm/${this.currentBgm}.mp3`
     }
   },
 
@@ -474,7 +421,6 @@ export default {
   beforeDestroy() {
     this.cleanupBrowserLeaveDetection()
     this.stopTimer()
-    this.stopBgm()
   },
 
   methods: {
@@ -552,7 +498,6 @@ export default {
       }
 
       this.startTimer()
-      this.playBgm()
     },
 
     pauseFocus() {
@@ -578,7 +523,6 @@ export default {
 
     async handleFocusFail(reason = 'give_up') {
       this.stopTimer()
-      this.stopBgm()
       this.isRunning = false
       this.isPaused = false
       this.isCompleted = false
@@ -618,7 +562,6 @@ export default {
 
     async completeSession() {
       this.stopTimer()
-      this.stopBgm()
       this.isRunning = false
       this.isPaused = false
       this.isCompleted = true
@@ -674,55 +617,6 @@ export default {
 
     getTreeCount(type) {
       return this.plantedTrees.filter(t => t.type === type).length
-    },
-
-    // BGM controls
-    selectBgm(bgmId) {
-      this.currentBgm = bgmId
-      if (bgmId !== 'none' && this.isRunning) {
-        this.playBgm()
-      } else {
-        this.stopBgm()
-      }
-    },
-
-    toggleBgm() {
-      if (this.isBgmPlaying) {
-        this.pauseBgm()
-      } else {
-        this.playBgm()
-      }
-    },
-
-    playBgm() {
-      if (this.currentBgm === 'none') return
-      const audio = this.$refs.bgmAudio
-      if (audio) {
-        audio.volume = 0.3
-        audio.play().catch(e => console.warn('BGM play failed:', e))
-        this.isBgmPlaying = true
-      }
-    },
-
-    pauseBgm() {
-      const audio = this.$refs.bgmAudio
-      if (audio) {
-        audio.pause()
-        this.isBgmPlaying = false
-      }
-    },
-
-    stopBgm() {
-      const audio = this.$refs.bgmAudio
-      if (audio) {
-        audio.pause()
-        audio.currentTime = 0
-        this.isBgmPlaying = false
-      }
-    },
-
-    onBgmEnded() {
-      // Audio is set to loop, so this shouldn't trigger
     },
 
     // Browser leave detection
@@ -851,59 +745,7 @@ export default {
 
 /* Timer Header */
 .timer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 24px;
-}
-
-/* BGM Selector */
-.bgm-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.bgm-trigger {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: var(--bg-container);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.bgm-trigger:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.bgm-trigger.playing {
-  background: var(--color-primary-light-9);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.bgm-toggle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.bgm-toggle:hover {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
 }
 
 /* Tree Selector */

@@ -28,6 +28,7 @@ function init() {
     etags: {},         // { [id]: string }
     nextId: 1,         // for simple ID generation
     ranks: defaultRanks(),
+    highestPoints: 0,  // Track the highest points ever achieved (for rank retention)
   }
   save(db)
   return db
@@ -42,7 +43,26 @@ function normalize(db) {
   if (!Array.isArray(db.ranks)) db.ranks = defaultRanks()
   // Upgrade existing ranks to the calibrated scheme if outdated
   db.ranks = ensureRanksCalibrated(db.ranks)
+  // Initialize highestPoints if not present, computing from history for existing data
+  if (typeof db.highestPoints !== 'number') {
+    // For existing databases, compute the max total points ever reached from history
+    db.highestPoints = computeHistoricalMaxPoints(db.history || [])
+  }
   return db
+}
+
+// Compute the maximum total points ever reached by replaying history
+function computeHistoricalMaxPoints(history) {
+  if (!Array.isArray(history) || history.length === 0) return 0
+  // Sort history by completedAt ascending to replay in order
+  const sorted = [...history].sort((a, b) => new Date(a.completedAt || 0) - new Date(b.completedAt || 0))
+  let runningTotal = 0
+  let maxTotal = 0
+  for (const h of sorted) {
+    runningTotal += h.pointsApplied || 0
+    if (runningTotal > maxTotal) maxTotal = runningTotal
+  }
+  return maxTotal
 }
 
 function genId() { const db = load(); const id = String(db.nextId++); save(db); return id }
@@ -108,12 +128,16 @@ function computeTotalPoints(db) {
 
 function computeRanking(db) {
   const totalPoints = computeTotalPoints(db)
+  // Use highestPoints to determine the rank (once achieved, rank is never lost)
+  const highestPoints = db.highestPoints || totalPoints
   const ranks = [...(db.ranks || [])].sort((a,b)=> a.threshold - b.threshold)
   let current = ranks[0]
   let next = null
+  // Determine rank based on highest points ever achieved
   for (let i=0; i<ranks.length; i++) {
-    if (totalPoints >= ranks[i].threshold) { current = ranks[i]; next = ranks[i+1] || null } else break
+    if (highestPoints >= ranks[i].threshold) { current = ranks[i]; next = ranks[i+1] || null } else break
   }
+  // Progress is still based on current totalPoints towards the next rank
   const progressPct = next ? Math.max(0, Math.min(100, ((totalPoints - current.threshold) / (next.threshold - current.threshold)) * 100)) : 100
   return { totalPoints, currentRank: current, nextRank: next, progressPct }
 }
@@ -266,6 +290,13 @@ export async function completeTask(id, status) {
     completedAt
   }
   db.history.unshift(history)
+
+  // Update highestPoints if new total exceeds previous highest
+  const newTotal = computeTotalPoints(db)
+  if (newTotal > (db.highestPoints || 0)) {
+    db.highestPoints = newTotal
+  }
+
   const ranking = computeRanking(db)
   save(db)
   return { task: updatedTask, history, ranking }
@@ -367,6 +398,8 @@ export async function deleteHistory(id) {
   const db = load()
   const idx = db.history.findIndex(h => h.id === String(id))
   if (idx !== -1) db.history.splice(idx, 1)
+  // Recalculate highestPoints after history deletion
+  db.highestPoints = computeHistoricalMaxPoints(db.history)
   const ranking = computeRanking(db)
   save(db)
   return { data: { ok: true }, meta: { ranking } }

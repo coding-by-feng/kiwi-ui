@@ -59,7 +59,10 @@ export default {
         open: 'Öffnen',
         download: 'Herunterladen',
         upload: 'Hochladen',
-        default: 'Standard'
+        default: 'Standard',
+        all: 'Alle',
+        configure: 'Konfigurieren',
+        done: 'Fertig'
     },
 
     // Navigation
@@ -104,7 +107,46 @@ export default {
         username: 'Benutzername',
         password: 'Passwort',
         signIn: 'Anmelden',
-        or: 'ODER'
+        or: 'ODER',
+        usernameOrEmail: 'Benutzername / E-Mail',
+        // Registrierung
+        createAccount: 'Konto erstellen',
+        register: 'Registrieren',
+        registerSubtitle: 'Werden Sie Mitglied und beginnen Sie zu lernen',
+        registering: 'Registrierung...',
+        registerSuccess: 'Registrierung erfolgreich! Bitte melden Sie sich an.',
+        registerFailed: 'Registrierung fehlgeschlagen, bitte versuchen Sie es erneut',
+        email: 'E-Mail',
+        confirmPassword: 'Passwort bestätigen',
+        realName: 'Name (Optional)',
+        // Platzhalter
+        usernamePlaceholder: 'Benutzernamen eingeben',
+        usernameOrEmailPlaceholder: 'Benutzernamen oder E-Mail eingeben',
+        passwordPlaceholder: 'Passwort eingeben',
+        emailPlaceholder: 'E-Mail-Adresse eingeben',
+        confirmPasswordPlaceholder: 'Passwort bestätigen',
+        realNamePlaceholder: 'Namen eingeben',
+        // Validierungsmeldungen
+        usernameRequired: 'Benutzername ist erforderlich',
+        usernameLength: 'Benutzername muss 3-20 Zeichen lang sein',
+        usernamePattern: 'Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten',
+        usernameNotAvailable: 'Benutzername ist bereits vergeben',
+        emailRequired: 'E-Mail ist erforderlich',
+        emailInvalid: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
+        emailNotAvailable: 'E-Mail ist bereits registriert',
+        passwordRequired: 'Passwort ist erforderlich',
+        passwordTooShort: 'Passwort muss mindestens 6 Zeichen lang sein',
+        confirmPasswordRequired: 'Bitte bestätigen Sie Ihr Passwort',
+        passwordMismatch: 'Passwörter stimmen nicht überein',
+        realNameTooLong: 'Name muss weniger als 50 Zeichen haben',
+        // Passwortstärke
+        passwordWeak: 'Schwach',
+        passwordFair: 'Mittel',
+        passwordGood: 'Gut',
+        passwordStrong: 'Stark',
+        // Navigationslinks
+        noAccount: 'Haben Sie kein Konto?',
+        alreadyHaveAccount: 'Haben Sie bereits ein Konto?'
     },
 
     // Search modes
@@ -143,19 +185,96 @@ export default {
     },
 
     user: {
+        profile: 'Profil',
+        loginOut: 'Abmelden',
+        welcomeBack: 'Willkommen zurück',
+        loginWith: 'Anmelden mit',
+        useGoogleAccount: 'Mit Google-Konto anmelden',
+        learningStats: 'Lernstatistiken',
+        todayRemembered: 'Heute gemerkt',
+        todayReviewed: 'Heute wiederholt',
+        todayMastered: 'Heute gemeistert',
+        learningSettings: 'Lerneinstellungen',
+        theme: 'Thema',
+        pronunciationSource: 'Aussprache-Quelle',
+        nativeLanguage: 'Muttersprache',
+        uiLanguage: 'Oberflächensprache',
+        uiLanguageTooltip: 'Sprache der Benutzeroberfläche (unabhängig von der Übersetzungssprache)',
+        backgroundMusic: 'Hintergrundmusik',
+        letterSpelling: 'Buchstabieren',
+        englishDefinition: 'Englische Definition',
+        messageHints: 'Nachrichtenhinweise',
+        playExamples: 'Beispiele abspielen',
+        englishToEnglish: 'Englisch-Englisch-Modus',
+        defaultLanguage: 'Standardsprache',
+        unknownLanguage: 'Unbekannte Sprache',
+        registerSource: {
+            local: 'Lokale Registrierung',
+            google: 'Google-Registrierung',
+            wechat: 'WeChat-Registrierung',
+            qq: 'QQ-Registrierung',
+            unknown: 'Unbekannte Quelle'
+        },
+        clipboardDetection: 'Zwischenablage-Erkennung',
+        clipboardDetectionTooltip: 'Automatische Erkennung des Zwischenablage-Inhalts beim Tab-Wechsel oder wenn die Sucheingabe leer ist',
         searchModeHotkeys: 'Suchmodus-Tastenkürzel',
         searchModeHotkeysTip: 'Drücken Sie Strg (oder Cmd auf macOS) + Umschalt + Zahl, um den Modus zu wechseln',
         resetToDefaults: 'Auf Standardwerte zurücksetzen',
         hotkey: 'Tastenkürzel',
         pressKeys: 'Tasten drücken...',
-        // Neu: Funktions-Tabs-Einstellungen
         featureTabs: 'Funktions-Tabs',
         featureTabsTip: 'Tabs in der Werkzeugleiste ein- oder ausblenden',
-        uiLanguage: 'Oberflächensprache',
-        uiLanguageTooltip: 'Sprache der Benutzeroberfläche (unabhängig von der Übersetzungssprache)'
+        // Passwort ändern
+        changePassword: 'Passwort ändern',
+        currentPassword: 'Aktuelles Passwort',
+        newPassword: 'Neues Passwort',
+        confirmNewPassword: 'Neues Passwort bestätigen',
+        currentPasswordPlaceholder: 'Aktuelles Passwort eingeben',
+        newPasswordPlaceholder: 'Neues Passwort eingeben',
+        confirmNewPasswordPlaceholder: 'Neues Passwort erneut eingeben',
+        passwordMismatch: 'Neue Passwörter stimmen nicht überein',
+        passwordTooShort: 'Passwort muss mindestens 6 Zeichen lang sein',
+        passwordChangeSuccess: 'Passwort erfolgreich geändert',
+        passwordChangeFailed: 'Passwort konnte nicht geändert werden',
+        currentPasswordRequired: 'Aktuelles Passwort ist erforderlich',
+        newPasswordRequired: 'Neues Passwort ist erforderlich',
+        confirmPasswordRequired: 'Bitte bestätigen Sie Ihr neues Passwort',
+        // KI-Anbieter-Einstellungen
+        aiProviderSettings: 'KI-Anbieter-Einstellungen',
+        aiProvider: 'KI-Anbieter',
+        aiProviderTooltip: 'Wählen Sie zwischen Backend-API (Standard) oder direkter Gemini-API',
+        aiProviderBackend: 'Backend-API (Standard)',
+        aiProviderGemini: 'Direkte Gemini-API',
+        geminiApiKey: 'Gemini-API-Schlüssel',
+        geminiApiKeyTooltip: 'Ihr Google Gemini-API-Schlüssel. Erhalten Sie ihn bei Google AI Studio (aistudio.google.com)',
+        geminiApiKeyPlaceholder: 'Gemini-API-Schlüssel eingeben',
+        geminiApiKeyRequired: 'Bitte geben Sie Ihren Gemini-API-Schlüssel ein, um den direkten Gemini-Modus zu verwenden',
+        testConnection: 'Verbindung testen',
+        geminiConnectionSuccess: 'Gemini-API-Verbindung erfolgreich!',
+        geminiConnectionFailed: 'Verbindung zur Gemini-API fehlgeschlagen. Überprüfen Sie Ihren API-Schlüssel.',
+        configureApiKey: 'API-Schlüssel konfigurieren',
+        switchToBackend: 'Backend-API verwenden'
     },
 
     messages: {
+        operationTooFrequent: 'Vorgang zu häufig, bitte keine wiederholten Anfragen',
+        noPermission: 'Keine Berechtigung für den aktuellen Vorgang',
+        resourceNotFound: 'Ressource nicht gefunden',
+        accountNotBound: 'Kein Login-Konto verknüpft, bitte mit Passwort anmelden und verknüpfen',
+        systemError: 'Kason Tools hat Probleme, bitte kontaktieren Sie den Autor!',
+        guestUserLogin: 'Gastbenutzer bitte anmelden!',
+        autoLoginSuccess: 'Automatische Anmeldung erfolgreich!',
+        loginRequired: 'Bitte melden Sie sich zuerst an, um Sammlungsvorgänge durchzuführen',
+        dataLoadException: 'Datenladeausnahme',
+        initializationException: 'Initialisierungsausnahme',
+        reviewException: 'Überprüfungsausnahme',
+        listInitException: 'Listeninitialisierungsausnahme, bitte aktualisieren und erneut versuchen',
+        clipboardContentDetected: 'Zwischenablage-Inhalt erkannt',
+        useClipboardContent: 'Möchten Sie nach „{text}" suchen? Klicken Sie zum Fortfahren.',
+        usingClipboardContent: 'Verwende Zwischenablage-Inhalt: „{text}"',
+        enterTextToSearch: 'Bitte geben Sie Text zum Suchen ein oder kopieren Sie zuerst Text in die Zwischenablage.',
+        clipboardAccessDenied: 'Bitte geben Sie Text zum Suchen ein. Zwischenablage-Zugriff erfordert Berechtigung - bitte manuell eingeben oder einfügen.',
+        unableToAccessClipboard: 'Bitte geben Sie Text zum Suchen ein. Zugriff auf Zwischenablage-Inhalt nicht möglich.',
         operationSuccess: 'Vorgang erfolgreich',
         duplicateHotkey: 'Dieses Tastenkürzel wird bereits verwendet',
         invalidHotkey: 'Tastenkürzel muss mindestens eine Modifikatortaste enthalten (Ctrl/Alt/Shift/Cmd)',
@@ -164,7 +283,25 @@ export default {
         invalidConfig: 'Ungültige Konfiguration',
         confirmDelete: 'Möchten Sie wirklich löschen?',
         confirmClear: 'Aktuelle Daten werden bereinigt und neu geladen. Fortfahren?',
-        clearOperation: 'Bereinigungsvorgang'
+        clearOperation: 'Bereinigungsvorgang',
+        operationTipTitle: 'Benachrichtigung',
+        switchedModeHotkey: 'Modus über {key} gewechselt'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: 'Definitionen',
+            word: 'Wortlisten',
+            example: 'Beispiellisten'
+        },
+        listLabel: {
+            paraphrase: 'Definitionen',
+            word: 'Wortliste',
+            example: 'Beispielliste'
+        },
+        selectReviewModePlaceholder: 'Wiederholungs-/Lesemodus auswählen',
+        selectMode: 'Modus auswählen'
     },
 
     // AI features
@@ -375,7 +512,45 @@ export default {
         },
         rankLevel: 'Level {level}',
         nextRank: 'Nächste: {rank}',
-        maxRank: 'Maximaler Rang erreicht!'
+        maxRank: 'Maximaler Rang erreicht!',
+
+        // Fokus-Timer (Wald-Stil-Funktion)
+        focus: {
+            title: 'Fokus',
+            startFocus: 'Fokus starten',
+            pause: 'Pause',
+            resume: 'Fortsetzen',
+            giveUp: 'Aufgeben',
+            focusing: 'Fokussiert',
+            paused: 'Pausiert',
+            ready: 'Bereit zum Fokussieren',
+            completed: 'Abgeschlossen',
+            minutes: 'Min',
+            customMinutes: 'Benutzerdefiniert',
+            todayTrees: 'Heutige Bäume',
+            todayMinutes: 'Heutige Minuten',
+            streak: 'Tages-Streak',
+            congratulations: 'Glückwunsch!',
+            treeGrown: 'Du hast einen Baum gepflanzt!',
+            sessionCompleted: 'Fokus-Sitzung abgeschlossen',
+            sessionCancelled: 'Fokus-Sitzung abgebrochen',
+            selectTree: 'Wähle einen Baum zum Pflanzen',
+            myForest: 'Mein Wald',
+            treesPlanted: 'Bäume gepflanzt',
+            totalPoints: 'Gesamtpunkte',
+            pointsEarned: 'Verdiente Punkte',
+            focusTime: 'Fokuszeit',
+            plantTree: 'Baum pflanzen',
+            giveUpTitle: 'Sitzung aufgeben?',
+            giveUpMessage: 'Wenn du jetzt aufgibst, verlierst du Punkte und der Baum wird verwelken.',
+            confirmGiveUp: 'Ja, aufgeben',
+            leaveWarning: 'Nicht verlassen!',
+            leaveWarningDesc: 'Wenn du diese Seite verlässt, wird deine Fokus-Sitzung fehlschlagen und du verlierst Punkte.',
+            focusFailed: 'Fokus fehlgeschlagen! -{points} Punkte'
+        },
+
+        // Punkte-Label
+        points: 'Punkte'
     },
 
     // Neu: Tabs-Beschriftungen für Feature-Umschalter
@@ -386,7 +561,11 @@ export default {
         about: 'Über',
         bgm: 'BGM-Tab',
         vocabularyReview: 'Vokabelwiederholung',
-        aiHistory: 'AI-Verlauf'
+        aiHistory: 'AI-Verlauf',
+        focus: 'Fokus-Timer',
+        whiteNoise: 'Weißes Rauschen',
+        aiConversation: 'KI-Gespräch',
+        privateNotes: 'Private Notizen'
     },
 
     pdf: {
@@ -412,6 +591,9 @@ export default {
         description: 'Kason Tools ist Ihr All-in-One Englisch-Lernarbeitsbereich. Mit KI-Unterstützung kombiniert es Multi-Modus-Wörterbuchsuche mit Erklärungen, Spaced-Repetition-Vokabelwiederholung, YouTube-Lernen mit interaktiven Untertiteln, PDF-Lesen mit Soforterklärungen, ein gamifiziertes Aufgabensystem mit Rangliste und Fokus-Timer—alles in einer nahtlosen Oberfläche, die Ihre Englischbeherrschung beschleunigt.',
         version: 'Version 2.0',
         copyright: '©2025 Kason Tools. Alle Rechte vorbehalten.',
+        // Discord
+        discord: 'Discord',
+        joinDiscord: 'Discord beitreten',
         downloads: 'Clients herunterladen',
         mac: 'macOS',
         windows: 'Windows',
@@ -437,5 +619,76 @@ export default {
         prepareAudio: 'Audio vorbereiten',
         audioGenerationComplete: 'Audiogenerierung abgeschlossen',
         preparingAudioForReview: 'Audio für Überprüfung wird vorbereitet...'
+    },
+
+    // Private Notizen
+    privateNotes: {
+        title: 'Private Notizen',
+        back: 'Zurück',
+        loginRequired: 'Bitte melden Sie sich an, um Private Notizen zu verwenden.',
+        loginDescription: 'Melden Sie sich an, um Ihre persönlichen Notizen zu erstellen und zu verwalten.',
+        items: 'Einträge',
+        addCategory: 'Kategorie hinzufügen',
+        editCategory: 'Kategorie bearbeiten',
+        addNote: 'Notiz hinzufügen',
+        editNote: 'Notiz bearbeiten',
+        untitled: 'Ohne Titel',
+        noNotes: 'Noch keine Notizen. Fügen Sie Ihre erste Notiz hinzu!',
+        // Wiedergabesteuerung
+        play: 'Abspielen',
+        stop: 'Stopp',
+        loopNone: 'Keine Wiederholung',
+        loopSingle: 'Eins wiederholen',
+        loopAll: 'Alle wiederholen',
+        generateAudio: 'Audio',
+        generateImage: 'Bild',
+        categoryName: 'Name',
+        categoryNamePlaceholder: 'Kategorienamen eingeben',
+        description: 'Beschreibung',
+        descriptionPlaceholder: 'Optionale Beschreibung',
+        color: 'Farbe',
+        noteTitle: 'Titel',
+        noteTitlePlaceholder: 'Notiztitel eingeben',
+        content: 'Inhalt',
+        contentPlaceholder: 'Schreiben Sie Ihre Notiz hier...',
+        audioGenerated: 'Audio erfolgreich generiert',
+        imageGenerated: 'Bild erfolgreich generiert',
+        categoryNameRequired: 'Kategoriename ist erforderlich',
+        categorySaved: 'Kategorie erstellt',
+        categoryUpdated: 'Kategorie aktualisiert',
+        categoryDeleted: 'Kategorie gelöscht',
+        contentRequired: 'Inhalt ist erforderlich',
+        noteSaved: 'Notiz erstellt',
+        noteUpdated: 'Notiz aktualisiert',
+        noteDeleted: 'Notiz gelöscht',
+        confirmDelete: 'Löschen bestätigen',
+        deleteCategoryConfirm: 'Möchten Sie „{name}" wirklich löschen? Alle Notizen in dieser Kategorie werden dauerhaft gelöscht.',
+        deleteNoteConfirm: 'Möchten Sie „{content}" wirklich löschen?',
+        // Sperrfunktion
+        lockNotes: 'Notizen sperren',
+        unlockNotes: 'Notizen entsperren',
+        setPasscode: 'Passcode festlegen',
+        changePasscode: 'Passcode ändern',
+        removePasscode: 'Passcode entfernen',
+        currentPasscode: 'Aktueller Passcode',
+        newPasscode: 'Neuer Passcode',
+        confirmPasscode: 'Passcode bestätigen',
+        enterCurrentPasscode: 'Aktuellen Passcode eingeben',
+        enterNewPasscode: 'Neuen Passcode eingeben (min. 4 Zeichen)',
+        confirmNewPasscode: 'Neuen Passcode bestätigen',
+        enterPasscode: 'Passcode eingeben',
+        unlock: 'Entsperren',
+        notesLockedTitle: 'Notizen sind gesperrt',
+        notesLockedDescription: 'Geben Sie Ihren Passcode ein, um auf Ihre privaten Notizen zuzugreifen.',
+        notesLocked: 'Notizen gesperrt',
+        notesUnlocked: 'Notizen entsperrt',
+        passcodeSet: 'Passcode erfolgreich festgelegt',
+        passcodeChanged: 'Passcode erfolgreich geändert',
+        passcodeRemoved: 'Passcode erfolgreich entfernt',
+        passcodeRequired: 'Passcode ist erforderlich',
+        passcodeTooShort: 'Passcode muss mindestens 4 Zeichen haben',
+        passcodeNoMatch: 'Passcodes stimmen nicht überein',
+        currentPasscodeRequired: 'Aktueller Passcode ist erforderlich',
+        incorrectPasscode: 'Falscher Passcode'
     }
 }
