@@ -79,8 +79,12 @@ export function deleteAudio(id) {
 
 // ============ Image APIs ============
 
+export function getImageStyles() {
+    return request({url: `${BASE}/item/image/styles`, method: 'get', headers: {isToken: true}})
+}
+
 export function generateImage(body) {
-    // body: { noteItemId, customPrompt?, style? }
+    // body: { noteItemId, style? }
     return request({url: `${BASE}/item/image/generate`, method: 'post', data: body, headers: {isToken: true}})
 }
 
@@ -138,6 +142,7 @@ export default {
     getAudioStreamUrl,
     deleteAudio,
     // Image
+    getImageStyles,
     generateImage,
     getImageStreamUrl,
     deleteImage,
