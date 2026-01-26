@@ -291,10 +291,27 @@
               </el-dropdown-menu>
             </el-dropdown>
 
-            <el-button size="small" @click="handleGenerateImage" :loading="generatingImage">
-              <i class="el-icon-picture"></i>
-              {{ $t('privateNotes.generateImage') || 'Image' }}
-            </el-button>
+            <el-dropdown @command="handleGenerateImage" trigger="click">
+              <el-button size="small" :loading="generatingImage">
+                <i class="el-icon-picture"></i>
+                {{ $t('privateNotes.generateImage') || 'Image' }}
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item
+                  v-for="style in imageStyles"
+                  :key="style.id"
+                  :command="style.id"
+                >
+                  <div class="style-option">
+                    <span class="style-name">{{ style.name }}</span>
+                    <span class="style-desc">{{ style.description }}</span>
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item v-if="imageStyles.length === 0" disabled>
+                  {{ loadingImageStyles ? 'Loading styles...' : 'No styles available' }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
           </div>
         </div>
 
@@ -542,6 +559,10 @@ export default {
       generatingAudio: false,
       generatingImage: false,
 
+      // Image styles
+      imageStyles: [],
+      loadingImageStyles: false,
+
       // Responsive
       innerWidth: window.innerWidth
     }
@@ -581,6 +602,7 @@ export default {
   mounted() {
     if (this.isLogin) {
       this.checkLockStatus()
+      this.loadImageStyles()
     }
     // Add resize listener for responsive behavior
     window.addEventListener('resize', this.handleResize)
@@ -926,13 +948,28 @@ export default {
       }
     },
 
-    async handleGenerateImage() {
-      if (!this.currentItem) return
+    async loadImageStyles() {
+      if (this.imageStyles.length > 0) return // Already loaded
+      this.loadingImageStyles = true
+      try {
+        const res = await notesApi.getImageStyles()
+        if (res.data && res.data.code === 0) {
+          this.imageStyles = res.data.data || []
+        }
+      } catch (e) {
+        console.error('Failed to load image styles:', e)
+      } finally {
+        this.loadingImageStyles = false
+      }
+    },
+
+    async handleGenerateImage(styleId) {
+      if (!this.currentItem || !styleId) return
       this.generatingImage = true
       try {
         const res = await notesApi.generateImage({
           noteItemId: this.currentItem.id,
-          style: 'minimalist illustration'
+          style: styleId
         })
         if (res.data && res.data.code === 0) {
           const updated = res.data.data
@@ -1830,6 +1867,35 @@ export default {
         &:hover {
           transform: translateY(-2px);
           box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.08));
+        }
+      }
+
+      // Image style dropdown styling
+      ::v-deep .el-dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+
+        .el-dropdown-menu__item {
+          padding: 10px 16px;
+          line-height: 1.4;
+
+          .style-option {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            .style-name {
+              font-weight: 500;
+              color: var(--text-primary);
+            }
+
+            .style-desc {
+              font-size: 0.75rem;
+              color: var(--text-muted);
+              white-space: normal;
+              max-width: 250px;
+            }
+          }
         }
       }
     }
