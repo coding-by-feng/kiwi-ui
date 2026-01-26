@@ -319,26 +319,27 @@ export default {
       }
 
       // Fallback: use all ranks from RANK_ASSETS with default thresholds
+      // Evenly spaced progression with ~1.5x multipliers for consistent advancement
       const defaultThresholds = {
-        legendary: 1000000,
-        mythic: 500000,
-        immortal: 250000,
-        divine: 100000,
-        celestial: 50000,
-        grandmaster: 30000,
-        master: 20000,
-        diamond: 15000,
-        platinum: 12000,
-        gold: 10000,
-        silver: 8000,
-        bronze: 6000,
-        iron: 5000,
-        steel: 4000,
-        stone: 3000,
-        wood: 2000,
-        apprentice: 1500,
-        novice: 1000,
-        trainee: 500,
+        legendary: 10000000,
+        mythic: 5500000,
+        immortal: 3500000,
+        divine: 2250000,
+        celestial: 1500000,
+        grandmaster: 1000000,
+        master: 650000,
+        diamond: 420000,
+        platinum: 280000,
+        gold: 180000,
+        silver: 120000,
+        bronze: 80000,
+        iron: 50000,
+        steel: 30000,
+        stone: 17500,
+        wood: 10000,
+        apprentice: 5000,
+        novice: 2500,
+        trainee: 1000,
         beginner: 0
       }
 
