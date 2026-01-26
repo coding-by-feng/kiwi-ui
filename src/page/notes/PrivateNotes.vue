@@ -204,7 +204,7 @@
 
           <!-- Image -->
           <div v-if="currentItem.imageStatus === 'READY'" class="card-image">
-            <img :src="getImageUrl(currentItem.id)" alt="Note image" />
+            <img :src="getImageUrl(currentItem.id, currentItem.updateTime)" alt="Note image" />
           </div>
 
           <!-- Content -->
@@ -806,10 +806,11 @@ export default {
       return token ? `${baseUrl}?access_token=${token}` : baseUrl
     },
 
-    getImageUrl(itemId) {
+    getImageUrl(itemId, updateTime) {
       const token = getStore({ name: 'access_token' })
       const baseUrl = notesApi.getImageStreamUrl(itemId)
-      return token ? `${baseUrl}?access_token=${token}` : baseUrl
+      const cacheBuster = updateTime ? `&_t=${new Date(updateTime).getTime()}` : ''
+      return token ? `${baseUrl}?access_token=${token}${cacheBuster}` : baseUrl
     },
 
     navigateNext() {
