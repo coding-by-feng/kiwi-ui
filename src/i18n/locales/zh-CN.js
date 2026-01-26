@@ -72,7 +72,11 @@ export default {
         pdfReader: 'PDF 阅读器',
         about: '关于',
         vocabularyReview: '词汇复习',
-        aiHistory: 'AI 历史'
+        aiHistory: 'AI 历史',
+        focus: '专注计时器',
+        whiteNoise: '白噪音',
+        aiConversation: 'AI 对话',
+        privateNotes: '私人笔记'
     },
 
     pdf: {
@@ -536,7 +540,6 @@ export default {
             treeGrown: '你种下了一棵树！',
             sessionCompleted: '专注完成',
             sessionCancelled: '专注已取消',
-            // 增强功能
             selectTree: '选择要种植的树',
             myForest: '我的森林',
             treesPlanted: '棵树已种植',
@@ -577,6 +580,9 @@ export default {
         copyright: '©2025 Kason Tools。保留所有权利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上关注',
+        // 新增 Discord 相关
+        discord: 'Discord',
+        joinDiscord: '加入 Discord',
         // 新增：客户端下载
         downloads: '客户端下载',
         mac: 'macOS',
@@ -727,5 +733,74 @@ export default {
         preparingAudioForReview: '正在准备复习音频...'
     },
 
-
+    // 私人笔记
+    privateNotes: {
+        title: '私人笔记',
+        back: '返回',
+        loginRequired: '请登录以使用私人笔记。',
+        loginDescription: '登录以创建和管理您的个人笔记。',
+        items: '条',
+        addCategory: '添加分类',
+        editCategory: '编辑分类',
+        addNote: '添加笔记',
+        editNote: '编辑笔记',
+        untitled: '无标题',
+        noNotes: '暂无笔记。添加您的第一条笔记！',
+        // 播放控制
+        play: '播放',
+        stop: '停止',
+        loopNone: '不循环',
+        loopSingle: '单曲循环',
+        loopAll: '列表循环',
+        generateAudio: '音频',
+        generateImage: '图片',
+        categoryName: '名称',
+        categoryNamePlaceholder: '输入分类名称',
+        description: '描述',
+        descriptionPlaceholder: '可选描述',
+        color: '颜色',
+        noteTitle: '标题',
+        noteTitlePlaceholder: '输入笔记标题',
+        content: '内容',
+        contentPlaceholder: '在此输入笔记内容...',
+        audioGenerated: '音频生成成功',
+        imageGenerated: '图片生成成功',
+        categoryNameRequired: '分类名称不能为空',
+        categorySaved: '分类创建成功',
+        categoryUpdated: '分类更新成功',
+        categoryDeleted: '分类已删除',
+        contentRequired: '内容不能为空',
+        noteSaved: '笔记创建成功',
+        noteUpdated: '笔记更新成功',
+        noteDeleted: '笔记已删除',
+        confirmDelete: '确认删除',
+        deleteCategoryConfirm: '确定要删除"{name}"吗？该分类下的所有笔记将被永久删除。',
+        deleteNoteConfirm: '确定要删除"{content}"吗？',
+        // 锁定功能
+        lockNotes: '锁定笔记',
+        unlockNotes: '解锁笔记',
+        setPasscode: '设置密码',
+        changePasscode: '更改密码',
+        removePasscode: '移除密码',
+        currentPasscode: '当前密码',
+        newPasscode: '新密码',
+        confirmPasscode: '确认密码',
+        enterCurrentPasscode: '请输入当前密码',
+        enterNewPasscode: '请输入新密码（至少4位）',
+        confirmNewPasscode: '确认新密码',
+        enterPasscode: '请输入密码',
+        unlock: '解锁',
+        notesLockedTitle: '笔记已锁定',
+        notesLockedDescription: '请输入密码以访问您的私人笔记。',
+        notesLocked: '笔记已锁定',
+        notesUnlocked: '笔记已解锁',
+        passcodeSet: '密码设置成功',
+        passcodeChanged: '密码更改成功',
+        passcodeRemoved: '密码已移除',
+        passcodeRequired: '请输入密码',
+        passcodeTooShort: '密码至少需要4个字符',
+        passcodeNoMatch: '两次输入的密码不一致',
+        currentPasscodeRequired: '请输入当前密码',
+        incorrectPasscode: '密码错误'
+    }
 }

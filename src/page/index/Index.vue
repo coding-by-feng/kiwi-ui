@@ -163,7 +163,7 @@ export default {
       }
 
       // Tabs governed by enabledTabs
-      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader','aiConversation']
+      const governed = ['starList','todo','youtube','about','aiHistory','pdfReader','aiConversation','whiteNoise','privateNotes']
       if (governed.includes(act)) {
         const allowed = !!this.enabledTabs[act]
         // Only starList requires login to view; youtube and aiHistory should be visible with hints when logged out
@@ -349,6 +349,13 @@ export default {
         </keep-alive>
       </el-tab-pane>
 
+      <el-tab-pane name="whiteNoise" lazy v-if="enabledTabs.whiteNoise">
+        <span slot="label"><i class="el-icon-headset"></i></span>
+        <keep-alive>
+          <router-view name="whiteNoise" v-if="visitedTabs.whiteNoise" v-show="activeName==='whiteNoise'"></router-view>
+        </keep-alive>
+      </el-tab-pane>
+
       <el-tab-pane name="youtube" lazy v-if="enabledTabs.youtube">
         <span slot="label"><i class="el-icon-video-camera"></i></span>
         <keep-alive>
@@ -383,6 +390,16 @@ export default {
         </keep-alive>
         <div v-if="activeName==='aiConversation' && !isLogin" class="login-hint">
           <el-alert type="info" show-icon title="Please log in to use AI Conversation Generator." description="Login to generate multi-speaker conversations with audio."></el-alert>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane name="privateNotes" lazy v-if="enabledTabs.privateNotes">
+        <span slot="label"><i class="el-icon-notebook-1"></i></span>
+        <keep-alive>
+          <router-view name="privateNotes" v-if="visitedTabs.privateNotes && isLogin" v-show="activeName==='privateNotes'"></router-view>
+        </keep-alive>
+        <div v-if="activeName==='privateNotes' && !isLogin" class="login-hint">
+          <el-alert type="info" show-icon title="Please log in to use Private Notes." description="Login to create and manage your personal notes with AI-generated audio and images."></el-alert>
         </div>
       </el-tab-pane>
 

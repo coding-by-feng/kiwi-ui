@@ -84,6 +84,7 @@
             <!-- Custom loading indicator replacing v-loading -->
             <div v-if="item.loading && !item.isStreaming" class="loading-overlay">
               <i class="el-icon-loading spinning"></i>
+              <span class="loading-text">{{ $t('ai.connecting') || 'Connecting to AI...' }}</span>
             </div>
             
             <div v-show="item.isStreaming" class="streaming-indicator">
@@ -132,8 +133,9 @@
     <KiwiDialog
       title="Explain Selected Text"
       :visible.sync="selectionDialogVisible"
-      width="500px"
+      :width="selectionDialogWidth"
       :before-close="handleCloseSelectionDialog"
+      custom-class="selection-options-dialog"
     >
       <div class="selection-dialog-content">
         <div class="selected-text-preview" v-if="selectionSelectedText">
@@ -269,6 +271,9 @@ export default {
     },
     dialogWidth() {
       return this.isSmallScreen ? '95%' : '600px'
+    },
+    selectionDialogWidth() {
+      return this.isSmallScreen ? '90%' : '500px'
     },
     aiModeOptions() {
       const modes = kiwiConsts.SEARCH_AI_MODES
@@ -942,7 +947,21 @@ export default {
 }
 
 .selection-dialog-footer { display: flex; align-items: stretch; justify-content: center; gap: 10px; flex-wrap: wrap; width: 100%; padding: 6px 0; }
-.selection-dialog-footer .el-button { flex: 1 1 0; min-width: 0; white-space: normal; word-break: break-word; }
+.selection-dialog-footer .el-button,
+.selection-dialog-footer .kiwi-button { flex: 1 1 0; min-width: 0; white-space: normal; word-break: break-word; }
+
+/* Selection options dialog responsive */
+.ai-selection-popup-wrapper :deep(.selection-options-dialog) {
+  max-width: 90vw;
+}
+
+.ai-selection-popup-wrapper :deep(.selection-options-dialog .kiwi-dialog__body) {
+  padding: 16px 20px;
+}
+
+.ai-selection-popup-wrapper :deep(.selection-options-dialog .kiwi-dialog__footer) {
+  padding: 12px 20px 16px;
+}
 @media (max-width: 768px) {
   .ai-dialog-content {
     padding: 8px 0;
@@ -1103,6 +1122,47 @@ export default {
     font-size: 13px;
     max-height: 100px;
   }
+
+  /* Selection options dialog responsive footer */
+  .selection-dialog-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .selection-dialog-footer .el-button,
+  .selection-dialog-footer .kiwi-button {
+    width: 100%;
+    flex: none;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  /* Loading indicator mobile */
+  .loading-overlay {
+    padding: 20px 16px;
+  }
+
+  .loading-overlay i {
+    font-size: 24px;
+  }
+
+  .loading-text {
+    font-size: 13px;
+  }
+
+  /* Selection options dialog mobile */
+  .ai-selection-popup-wrapper :deep(.selection-options-dialog) {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+  }
+
+  .ai-selection-popup-wrapper :deep(.selection-options-dialog .kiwi-dialog__body) {
+    padding: 12px 16px;
+  }
+
+  .ai-selection-popup-wrapper :deep(.selection-options-dialog .kiwi-dialog__footer) {
+    padding: 10px 16px 14px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1139,27 +1199,67 @@ export default {
     font-size: 12px;
   }
 
+  .loading-overlay {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
   .loading-overlay i {
     font-size: 20px;
+  }
+
+  .loading-text {
+    font-size: 12px;
   }
 
   .dialog-footer .el-button,
   .dialog-footer .kiwi-button,
   .selection-dialog-footer .el-button,
   .selection-dialog-footer .kiwi-button {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 12px;
+  }
+
+  /* Selection dialog content for small screens */
+  .selection-dialog-content {
+    padding: 6px 0;
+  }
+
+  .selected-text-preview {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  .selected-text-preview strong {
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+  }
+
+  .selected-text {
+    font-size: 12px;
+    max-height: 80px;
   }
 }
 
 /* Loading indicator styles */
 .loading-overlay {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 24px 20px;
   color: var(--color-primary);
-  font-size: 24px;
+  gap: 12px;
+}
+
+.loading-overlay i {
+  font-size: 28px;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .streaming-indicator {

@@ -59,7 +59,10 @@ export default {
         open: '開啟',
         download: '下載',
         upload: '上傳',
-        default: '預設'
+        default: '預設',
+        all: '全部',
+        configure: '設定',
+        done: '完成'
     },
 
     // Navigation
@@ -210,6 +213,22 @@ export default {
         vocabularyCharacterExpansion: '輸入任何內容',
         ambiguousAssociationCorrection: '輸入任何內容',
         naturalIdiomaticRetouch: '輸入需要潤色的文本'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: '定義',
+            word: '單字列表',
+            example: '例句列表'
+        },
+        listLabel: {
+            paraphrase: '定義',
+            word: '單字列表',
+            example: '例句列表'
+        },
+        selectReviewModePlaceholder: '選擇複習/閱讀模式',
+        selectMode: '選擇模式'
     },
 
     // Todo Gamification
@@ -373,7 +392,45 @@ export default {
         },
 
         // Deletion confirms
-        confirmDeleteTask: '確定要刪除此任務嗎？'
+        confirmDeleteTask: '確定要刪除此任務嗎？',
+
+        // 專注計時器（森林風格功能）
+        focus: {
+            title: '專注',
+            startFocus: '開始專注',
+            pause: '暫停',
+            resume: '繼續',
+            giveUp: '放棄',
+            focusing: '專注中',
+            paused: '已暫停',
+            ready: '準備專注',
+            completed: '已完成',
+            minutes: '分鐘',
+            customMinutes: '自訂',
+            todayTrees: '今日樹木',
+            todayMinutes: '今日專注',
+            streak: '連續天數',
+            congratulations: '恭喜！',
+            treeGrown: '你種下了一棵樹！',
+            sessionCompleted: '專注完成',
+            sessionCancelled: '專注已取消',
+            selectTree: '選擇要種植的樹',
+            myForest: '我的森林',
+            treesPlanted: '棵樹已種植',
+            totalPoints: '總積分',
+            pointsEarned: '獲得積分',
+            focusTime: '專注時長',
+            plantTree: '種植樹木',
+            giveUpTitle: '放棄專注？',
+            giveUpMessage: '如果現在放棄，你將失去積分，樹木將會枯萎。',
+            confirmGiveUp: '是的，放棄',
+            leaveWarning: '不要離開！',
+            leaveWarningDesc: '如果你離開此頁面，專注將失敗，你將失去積分。',
+            focusFailed: '專注失敗！-{points} 積分'
+        },
+
+        // 積分標籤
+        points: '積分'
     },
 
     // New: full AI features
@@ -440,8 +497,54 @@ export default {
         loadDetailFailed: '載入詳情失敗'
     },
 
-    // Messages and notifications (added keys)
+    // Messages and notifications
     messages: {
+        operationTooFrequent: '操作太頻繁，請勿重複請求',
+        noPermission: '目前操作沒有權限',
+        resourceNotFound: '找不到資源',
+        accountNotBound: '沒有綁定登入帳戶，請使用密碼登入並綁定',
+        demoEnvironment: '示範環境無法操作，詳情請聯繫支援',
+        userNotExistOrWrongPassword: '使用者不存在或密碼錯誤',
+        verificationCodeError: '驗證碼錯誤，請重新輸入',
+        requestTooFrequent: '請求太頻繁',
+        demoNoPermission: '示範環境，沒有操作權限',
+        systemError: 'Kason Tools 發生問題，請聯繫作者！',
+        guestUserLogin: '訪客用戶請登入！',
+        autoLoginSuccess: '自動登入成功！',
+        loginRequired: '請先登入以進行收藏操作',
+        dataLoadException: '資料載入異常',
+        initializationException: '初始化異常',
+        reviewException: '複習異常',
+        listInitException: '清單初始化異常，請重新整理後再試',
+        noAudioPermission: '自動複習期間不允許播放音訊',
+        currentPageComplete: '目前頁面已完成',
+        alreadyFirstPage: '已在第一頁第一項',
+        alreadyLastPage: '已在最後一頁最後一項',
+        alreadyAtTop: '已在頂部',
+        alreadyAtBottom: '已在底部',
+        reviewResourceRefresh: '複習資源重新整理',
+        refreshingCurrentResources: '正在重新整理目前複習資源',
+        stopPlayingCurrent: '停止播放目前複習單字',
+        currentWordBlocked: '目前單字音訊被阻擋',
+        restartCurrentWord: '重新開始目前單字/用於音訊卡住時',
+        clipboardContentDetected: '偵測到剪貼簿內容',
+        useClipboardContent: '是否要搜尋「{text}」？點擊繼續。',
+        usingClipboardContent: '正在使用剪貼簿內容：「{text}」',
+        enterTextToSearch: '請輸入文字進行搜尋或先複製文字到剪貼簿。',
+        clipboardAccessDenied: '請輸入文字進行搜尋。剪貼簿存取需要權限 - 請手動輸入或貼上文字。',
+        unableToAccessClipboard: '請輸入文字進行搜尋。無法存取剪貼簿內容。',
+        confirmDelete: '即將刪除，是否繼續？',
+        confirmClear: '即將清除目前單字資料並重新取得，是否繼續？',
+        clearOperation: '清除操作',
+        operationSuccess: '操作成功',
+        clipboardDetectionEnabled: '已開啟剪貼簿偵測',
+        clipboardDetectionDisabled: '已關閉剪貼簿偵測',
+        invalidConfig: '無效的設定',
+        saveFailed: '儲存失敗',
+        duplicateHotkey: '此快捷鍵已被使用',
+        invalidHotkey: '快捷鍵必須包含至少一個修飾鍵（Ctrl/Alt/Shift/Cmd）',
+        noHotkeysConfigured: '尚未設定任何快捷鍵',
+        operationTipTitle: '通知',
         switchedModeHotkey: '已透過 {key} 切換模式'
     },
 
@@ -491,7 +594,22 @@ export default {
         passwordChangeFailed: '密碼修改失敗',
         currentPasswordRequired: '請輸入目前密碼',
         newPasswordRequired: '請輸入新密碼',
-        confirmPasswordRequired: '請確認新密碼'
+        confirmPasswordRequired: '請確認新密碼',
+        // AI 服務提供者設定
+        aiProviderSettings: 'AI 服務提供者設定',
+        aiProvider: 'AI 服務提供者',
+        aiProviderTooltip: '選擇使用後端 API（預設）或直接 Gemini API',
+        aiProviderBackend: '後端 API（預設）',
+        aiProviderGemini: '直接 Gemini API',
+        geminiApiKey: 'Gemini API 金鑰',
+        geminiApiKeyTooltip: '你的 Google Gemini API 金鑰。請前往 Google AI Studio (aistudio.google.com) 取得',
+        geminiApiKeyPlaceholder: '請輸入 Gemini API 金鑰',
+        geminiApiKeyRequired: '請輸入你的 Gemini API 金鑰以使用直接 Gemini 模式',
+        testConnection: '測試連線',
+        geminiConnectionSuccess: 'Gemini API 連線成功！',
+        geminiConnectionFailed: '無法連線至 Gemini API。請檢查你的 API 金鑰。',
+        configureApiKey: '設定 API 金鑰',
+        switchToBackend: '使用後端 API'
     },
 
     // Tabs labels for feature toggles
@@ -501,7 +619,11 @@ export default {
         pdfReader: 'PDF 閱讀器',
         about: '關於',
         vocabularyReview: '詞彙複習',
-        aiHistory: 'AI 歷史'
+        aiHistory: 'AI 歷史',
+        focus: '專注計時器',
+        whiteNoise: '白噪音',
+        aiConversation: 'AI 對話',
+        privateNotes: '私人筆記'
     },
 
     pdf: {
@@ -543,6 +665,9 @@ export default {
         copyright: '©2025 Kason Tools。保留所有權利。',
         github: 'GitHub',
         followOnGitHub: '在 GitHub 上關注',
+        // 新增 Discord 相關
+        discord: 'Discord',
+        joinDiscord: '加入 Discord',
         // 新增：客戶端下載
         downloads: '客戶端下載',
         mac: 'macOS',
@@ -583,5 +708,76 @@ export default {
         prepareAudio: '準備音訊',
         audioGenerationComplete: '音訊生成完成',
         preparingAudioForReview: '正在準備複習音訊...'
+    },
+
+    // 私人筆記
+    privateNotes: {
+        title: '私人筆記',
+        back: '返回',
+        loginRequired: '請登入以使用私人筆記。',
+        loginDescription: '登入以建立和管理您的個人筆記。',
+        items: '項',
+        addCategory: '新增分類',
+        editCategory: '編輯分類',
+        addNote: '新增筆記',
+        editNote: '編輯筆記',
+        untitled: '無標題',
+        noNotes: '暫無筆記。新增您的第一則筆記！',
+        // 播放控制
+        play: '播放',
+        stop: '停止',
+        loopNone: '不循環',
+        loopSingle: '單曲循環',
+        loopAll: '列表循環',
+        generateAudio: '音訊',
+        generateImage: '圖片',
+        categoryName: '名稱',
+        categoryNamePlaceholder: '輸入分類名稱',
+        description: '描述',
+        descriptionPlaceholder: '選填描述',
+        color: '顏色',
+        noteTitle: '標題',
+        noteTitlePlaceholder: '輸入筆記標題',
+        content: '內容',
+        contentPlaceholder: '在此輸入筆記內容...',
+        audioGenerated: '音訊生成成功',
+        imageGenerated: '圖片生成成功',
+        categoryNameRequired: '分類名稱不能為空',
+        categorySaved: '分類建立成功',
+        categoryUpdated: '分類更新成功',
+        categoryDeleted: '分類已刪除',
+        contentRequired: '內容不能為空',
+        noteSaved: '筆記建立成功',
+        noteUpdated: '筆記更新成功',
+        noteDeleted: '筆記已刪除',
+        confirmDelete: '確認刪除',
+        deleteCategoryConfirm: '確定要刪除「{name}」嗎？該分類下的所有筆記將被永久刪除。',
+        deleteNoteConfirm: '確定要刪除「{content}」嗎？',
+        // 鎖定功能
+        lockNotes: '鎖定筆記',
+        unlockNotes: '解鎖筆記',
+        setPasscode: '設定密碼',
+        changePasscode: '更改密碼',
+        removePasscode: '移除密碼',
+        currentPasscode: '目前密碼',
+        newPasscode: '新密碼',
+        confirmPasscode: '確認密碼',
+        enterCurrentPasscode: '請輸入目前密碼',
+        enterNewPasscode: '請輸入新密碼（至少4位）',
+        confirmNewPasscode: '確認新密碼',
+        enterPasscode: '請輸入密碼',
+        unlock: '解鎖',
+        notesLockedTitle: '筆記已鎖定',
+        notesLockedDescription: '請輸入密碼以存取您的私人筆記。',
+        notesLocked: '筆記已鎖定',
+        notesUnlocked: '筆記已解鎖',
+        passcodeSet: '密碼設定成功',
+        passcodeChanged: '密碼更改成功',
+        passcodeRemoved: '密碼已移除',
+        passcodeRequired: '請輸入密碼',
+        passcodeTooShort: '密碼至少需要4個字元',
+        passcodeNoMatch: '兩次輸入的密碼不一致',
+        currentPasscodeRequired: '請輸入目前密碼',
+        incorrectPasscode: '密碼錯誤'
     }
 }

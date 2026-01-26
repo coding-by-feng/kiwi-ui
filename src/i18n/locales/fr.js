@@ -59,7 +59,10 @@ export default {
         open: 'Ouvrir',
         download: 'Télécharger',
         upload: 'Uploader',
-        default: 'Par défaut'
+        default: 'Par défaut',
+        all: 'Tout',
+        configure: 'Configurer',
+        done: 'Terminé'
     },
 
     // Navigation
@@ -104,7 +107,46 @@ export default {
         username: 'Nom d\'utilisateur',
         password: 'Mot de passe',
         signIn: 'Se connecter',
-        or: 'OU'
+        or: 'OU',
+        usernameOrEmail: 'Nom d\'utilisateur / E-mail',
+        // Inscription
+        createAccount: 'Créer un compte',
+        register: 'S\'inscrire',
+        registerSubtitle: 'Rejoignez-nous et commencez à apprendre',
+        registering: 'Inscription...',
+        registerSuccess: 'Inscription réussie ! Veuillez vous connecter.',
+        registerFailed: 'Échec de l\'inscription, veuillez réessayer',
+        email: 'E-mail',
+        confirmPassword: 'Confirmer le mot de passe',
+        realName: 'Nom (Optionnel)',
+        // Placeholders
+        usernamePlaceholder: 'Entrez votre nom d\'utilisateur',
+        usernameOrEmailPlaceholder: 'Entrez votre nom d\'utilisateur ou e-mail',
+        passwordPlaceholder: 'Entrez votre mot de passe',
+        emailPlaceholder: 'Entrez votre adresse e-mail',
+        confirmPasswordPlaceholder: 'Confirmez votre mot de passe',
+        realNamePlaceholder: 'Entrez votre nom',
+        // Messages de validation
+        usernameRequired: 'Le nom d\'utilisateur est requis',
+        usernameLength: 'Le nom d\'utilisateur doit contenir 3-20 caractères',
+        usernamePattern: 'Le nom d\'utilisateur ne peut contenir que des lettres, chiffres et tirets bas',
+        usernameNotAvailable: 'Ce nom d\'utilisateur est déjà pris',
+        emailRequired: 'L\'e-mail est requis',
+        emailInvalid: 'Veuillez entrer une adresse e-mail valide',
+        emailNotAvailable: 'Cet e-mail est déjà enregistré',
+        passwordRequired: 'Le mot de passe est requis',
+        passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
+        confirmPasswordRequired: 'Veuillez confirmer votre mot de passe',
+        passwordMismatch: 'Les mots de passe ne correspondent pas',
+        realNameTooLong: 'Le nom doit contenir moins de 50 caractères',
+        // Force du mot de passe
+        passwordWeak: 'Faible',
+        passwordFair: 'Moyen',
+        passwordGood: 'Bon',
+        passwordStrong: 'Fort',
+        // Liens de navigation
+        noAccount: 'Vous n\'avez pas de compte ?',
+        alreadyHaveAccount: 'Vous avez déjà un compte ?'
     },
 
     // Search modes
@@ -140,6 +182,22 @@ export default {
         vocabularyCharacterExpansion: 'Entrez n\'importe quoi',
         ambiguousAssociationCorrection: 'Entrez n\'importe quoi',
         naturalIdiomaticRetouch: 'Saisir le texte à retoucher'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: 'Définitions',
+            word: 'Listes de mots',
+            example: 'Listes d\'exemples'
+        },
+        listLabel: {
+            paraphrase: 'Définitions',
+            word: 'Liste de mots',
+            example: 'Liste d\'exemples'
+        },
+        selectReviewModePlaceholder: 'Sélectionner le mode révision/lecture',
+        selectMode: 'Sélectionner le mode'
     },
 
     // AI features
@@ -351,10 +409,80 @@ export default {
         maxRankAchieved: 'Vous avez atteint le rang maximum !',
         allRanks: 'Tous les rangs',
         viewRankingDetails: 'Voir les détails du classement',
-        maxRankReached: 'Rang maximum atteint !'
+        maxRankReached: 'Rang maximum atteint !',
+
+        // Minuterie de concentration (fonctionnalité style forêt)
+        focus: {
+            title: 'Concentration',
+            startFocus: 'Commencer la concentration',
+            pause: 'Pause',
+            resume: 'Reprendre',
+            giveUp: 'Abandonner',
+            focusing: 'En concentration',
+            paused: 'En pause',
+            ready: 'Prêt à se concentrer',
+            completed: 'Terminé',
+            minutes: 'min',
+            customMinutes: 'Personnalisé',
+            todayTrees: 'Arbres d\'aujourd\'hui',
+            todayMinutes: 'Minutes d\'aujourd\'hui',
+            streak: 'Série de jours',
+            congratulations: 'Félicitations !',
+            treeGrown: 'Vous avez fait pousser un arbre !',
+            sessionCompleted: 'Session de concentration terminée',
+            sessionCancelled: 'Session de concentration annulée',
+            selectTree: 'Sélectionner un arbre à planter',
+            myForest: 'Ma forêt',
+            treesPlanted: 'arbres plantés',
+            totalPoints: 'Points totaux',
+            pointsEarned: 'Points gagnés',
+            focusTime: 'Temps de concentration',
+            plantTree: 'Planter un arbre',
+            giveUpTitle: 'Abandonner la session ?',
+            giveUpMessage: 'Si vous abandonnez maintenant, vous perdrez des points et l\'arbre va flétrir.',
+            confirmGiveUp: 'Oui, abandonner',
+            leaveWarning: 'Ne partez pas !',
+            leaveWarningDesc: 'Si vous quittez cette page, votre session de concentration échouera et vous perdrez des points.',
+            focusFailed: 'Concentration échouée ! -{points} points'
+        },
+
+        // Étiquette de points
+        points: 'points'
     },
 
     user: {
+        profile: 'Profil',
+        loginOut: 'Déconnexion',
+        welcomeBack: 'Bon retour',
+        loginWith: 'Se connecter avec',
+        useGoogleAccount: 'Se connecter avec un compte Google',
+        learningStats: 'Statistiques d\'apprentissage',
+        todayRemembered: 'Mémorisé aujourd\'hui',
+        todayReviewed: 'Révisé aujourd\'hui',
+        todayMastered: 'Maîtrisé aujourd\'hui',
+        learningSettings: 'Paramètres d\'apprentissage',
+        theme: 'Thème',
+        pronunciationSource: 'Source de prononciation',
+        nativeLanguage: 'Langue maternelle',
+        uiLanguage: 'Langue de l\'interface',
+        uiLanguageTooltip: 'Langue utilisée pour l\'interface (indépendante de la langue de traduction)',
+        backgroundMusic: 'Musique de fond',
+        letterSpelling: 'Épellation des lettres',
+        englishDefinition: 'Définition en anglais',
+        messageHints: 'Conseils de message',
+        playExamples: 'Lire les exemples',
+        englishToEnglish: 'Mode anglais-anglais',
+        defaultLanguage: 'Langue par défaut',
+        unknownLanguage: 'Langue inconnue',
+        registerSource: {
+            local: 'Inscription locale',
+            google: 'Inscription Google',
+            wechat: 'Inscription WeChat',
+            qq: 'Inscription QQ',
+            unknown: 'Source inconnue'
+        },
+        clipboardDetection: 'Détection du presse-papiers',
+        clipboardDetectionTooltip: 'Détecter automatiquement le contenu du presse-papiers lors du changement d\'onglet ou si le champ de recherche est vide',
         searchModeHotkeys: 'Raccourcis de mode de recherche',
         searchModeHotkeysTip: 'Appuyez sur Ctrl (ou Cmd sur macOS) + Maj + Nombre pour changer de mode',
         resetToDefaults: 'Rétablir les valeurs par défaut',
@@ -362,11 +490,57 @@ export default {
         pressKeys: 'Appuyez sur des touches...',
         featureTabs: 'Onglets de fonctionnalités',
         featureTabsTip: 'Afficher ou masquer les onglets dans la barre d\'outils',
-        uiLanguage: 'Langue de l\'interface',
-        uiLanguageTooltip: 'Langue utilisée pour l\'interface (indépendante de la langue de traduction)'
+        // Changement de mot de passe
+        changePassword: 'Changer le mot de passe',
+        currentPassword: 'Mot de passe actuel',
+        newPassword: 'Nouveau mot de passe',
+        confirmNewPassword: 'Confirmer le nouveau mot de passe',
+        currentPasswordPlaceholder: 'Entrez votre mot de passe actuel',
+        newPasswordPlaceholder: 'Entrez votre nouveau mot de passe',
+        confirmNewPasswordPlaceholder: 'Confirmez votre nouveau mot de passe',
+        passwordMismatch: 'Les nouveaux mots de passe ne correspondent pas',
+        passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
+        passwordChangeSuccess: 'Mot de passe changé avec succès',
+        passwordChangeFailed: 'Échec du changement de mot de passe',
+        currentPasswordRequired: 'Le mot de passe actuel est requis',
+        newPasswordRequired: 'Le nouveau mot de passe est requis',
+        confirmPasswordRequired: 'Veuillez confirmer votre nouveau mot de passe',
+        // Paramètres du fournisseur IA
+        aiProviderSettings: 'Paramètres du fournisseur IA',
+        aiProvider: 'Fournisseur IA',
+        aiProviderTooltip: 'Choisir entre l\'API backend (par défaut) ou l\'API Gemini directe',
+        aiProviderBackend: 'API Backend (par défaut)',
+        aiProviderGemini: 'API Gemini directe',
+        geminiApiKey: 'Clé API Gemini',
+        geminiApiKeyTooltip: 'Votre clé API Google Gemini. Obtenez-la sur Google AI Studio (aistudio.google.com)',
+        geminiApiKeyPlaceholder: 'Entrez votre clé API Gemini',
+        geminiApiKeyRequired: 'Veuillez entrer votre clé API Gemini pour utiliser le mode Gemini direct',
+        testConnection: 'Tester la connexion',
+        geminiConnectionSuccess: 'Connexion API Gemini réussie !',
+        geminiConnectionFailed: 'Échec de la connexion à l\'API Gemini. Vérifiez votre clé API.',
+        configureApiKey: 'Configurer la clé API',
+        switchToBackend: 'Utiliser l\'API Backend'
     },
 
     messages: {
+        operationTooFrequent: 'Opération trop fréquente, évitez les requêtes répétées',
+        noPermission: 'Pas d\'autorisation pour l\'opération actuelle',
+        resourceNotFound: 'Ressource introuvable',
+        accountNotBound: 'Aucun compte de connexion lié, veuillez vous connecter avec un mot de passe et lier',
+        systemError: 'Kason Tools rencontre des problèmes, veuillez contacter l\'auteur !',
+        guestUserLogin: 'Utilisateur invité, veuillez vous connecter !',
+        autoLoginSuccess: 'Connexion automatique réussie !',
+        loginRequired: 'Veuillez vous connecter d\'abord pour effectuer des opérations de collection',
+        dataLoadException: 'Exception de chargement des données',
+        initializationException: 'Exception d\'initialisation',
+        reviewException: 'Exception de révision',
+        listInitException: 'Exception d\'initialisation de la liste, actualisez et réessayez',
+        clipboardContentDetected: 'Contenu du presse-papiers détecté',
+        useClipboardContent: 'Voulez-vous rechercher « {text} » ? Cliquez pour continuer.',
+        usingClipboardContent: 'Utilisation du contenu du presse-papiers : « {text} »',
+        enterTextToSearch: 'Veuillez entrer du texte à rechercher ou copier d\'abord du texte dans le presse-papiers.',
+        clipboardAccessDenied: 'Veuillez entrer du texte à rechercher. L\'accès au presse-papiers nécessite une autorisation - veuillez entrer ou coller manuellement.',
+        unableToAccessClipboard: 'Veuillez entrer du texte à rechercher. Impossible d\'accéder au contenu du presse-papiers.',
         operationSuccess: 'Opération réussie',
         duplicateHotkey: 'Ce raccourci est déjà utilisé',
         invalidHotkey: 'Le raccourci doit inclure au moins une touche modificatrice (Ctrl/Alt/Shift/Cmd)',
@@ -375,7 +549,9 @@ export default {
         invalidConfig: 'Configuration invalide',
         confirmDelete: 'Voulez-vous vraiment supprimer ?',
         confirmClear: 'Vous allez nettoyer et recharger. Continuer ?',
-        clearOperation: 'Opération de nettoyage'
+        clearOperation: 'Opération de nettoyage',
+        operationTipTitle: 'Notification',
+        switchedModeHotkey: 'Mode changé via {key}'
     },
 
     tabs: {
@@ -385,7 +561,11 @@ export default {
         about: 'À propos',
         bgm: 'Onglet BGM',
         vocabularyReview: 'Révision du vocabulaire',
-        aiHistory: 'Historique IA'
+        aiHistory: 'Historique IA',
+        focus: 'Minuteur de concentration',
+        whiteNoise: 'Bruit blanc',
+        aiConversation: 'Conversation IA',
+        privateNotes: 'Notes privées'
     },
 
     pdf: {
@@ -411,6 +591,9 @@ export default {
         description: 'Kason Tools est votre espace de travail tout-en-un pour apprendre l\'anglais. Propulsé par l\'IA, il combine recherche de dictionnaire multi-modes, révision de vocabulaire par répétition espacée, apprentissage YouTube avec sous-titres interactifs, lecture PDF avec explications instantanées, système de tâches ludifiées avec classement, et minuteries de concentration—le tout dans une interface fluide conçue pour accélérer votre maîtrise de l\'anglais.',
         version: 'Version 2.0',
         copyright: '©2025 Kason Tools. Tous droits réservés.',
+        // Discord
+        discord: 'Discord',
+        joinDiscord: 'Rejoindre Discord',
         downloads: 'Télécharger les clients',
         mac: 'macOS',
         windows: 'Windows',
@@ -436,5 +619,76 @@ export default {
         prepareAudio: 'Préparer l\'audio',
         audioGenerationComplete: 'Génération audio terminée',
         preparingAudioForReview: 'Préparation de l\'audio pour la révision...'
+    },
+
+    // Notes privées
+    privateNotes: {
+        title: 'Notes privées',
+        back: 'Retour',
+        loginRequired: 'Veuillez vous connecter pour utiliser les Notes privées.',
+        loginDescription: 'Connectez-vous pour créer et gérer vos notes personnelles.',
+        items: 'éléments',
+        addCategory: 'Ajouter une catégorie',
+        editCategory: 'Modifier la catégorie',
+        addNote: 'Ajouter une note',
+        editNote: 'Modifier la note',
+        untitled: 'Sans titre',
+        noNotes: 'Aucune note. Ajoutez votre première note !',
+        // Contrôles de lecture
+        play: 'Lecture',
+        stop: 'Arrêt',
+        loopNone: 'Sans boucle',
+        loopSingle: 'Répéter un',
+        loopAll: 'Répéter tout',
+        generateAudio: 'Audio',
+        generateImage: 'Image',
+        categoryName: 'Nom',
+        categoryNamePlaceholder: 'Entrez le nom de la catégorie',
+        description: 'Description',
+        descriptionPlaceholder: 'Description optionnelle',
+        color: 'Couleur',
+        noteTitle: 'Titre',
+        noteTitlePlaceholder: 'Entrez le titre de la note',
+        content: 'Contenu',
+        contentPlaceholder: 'Écrivez votre note ici...',
+        audioGenerated: 'Audio généré avec succès',
+        imageGenerated: 'Image générée avec succès',
+        categoryNameRequired: 'Le nom de la catégorie est requis',
+        categorySaved: 'Catégorie créée',
+        categoryUpdated: 'Catégorie mise à jour',
+        categoryDeleted: 'Catégorie supprimée',
+        contentRequired: 'Le contenu est requis',
+        noteSaved: 'Note créée',
+        noteUpdated: 'Note mise à jour',
+        noteDeleted: 'Note supprimée',
+        confirmDelete: 'Confirmer la suppression',
+        deleteCategoryConfirm: 'Êtes-vous sûr de vouloir supprimer « {name} » ? Toutes les notes de cette catégorie seront définitivement supprimées.',
+        deleteNoteConfirm: 'Êtes-vous sûr de vouloir supprimer « {content} » ?',
+        // Fonction de verrouillage
+        lockNotes: 'Verrouiller les notes',
+        unlockNotes: 'Déverrouiller les notes',
+        setPasscode: 'Définir un code',
+        changePasscode: 'Changer le code',
+        removePasscode: 'Supprimer le code',
+        currentPasscode: 'Code actuel',
+        newPasscode: 'Nouveau code',
+        confirmPasscode: 'Confirmer le code',
+        enterCurrentPasscode: 'Entrez le code actuel',
+        enterNewPasscode: 'Entrez le nouveau code (min 4 caractères)',
+        confirmNewPasscode: 'Confirmez le nouveau code',
+        enterPasscode: 'Entrez votre code',
+        unlock: 'Déverrouiller',
+        notesLockedTitle: 'Notes verrouillées',
+        notesLockedDescription: 'Entrez votre code pour accéder à vos notes privées.',
+        notesLocked: 'Notes verrouillées',
+        notesUnlocked: 'Notes déverrouillées',
+        passcodeSet: 'Code défini avec succès',
+        passcodeChanged: 'Code modifié avec succès',
+        passcodeRemoved: 'Code supprimé avec succès',
+        passcodeRequired: 'Le code est requis',
+        passcodeTooShort: 'Le code doit contenir au moins 4 caractères',
+        passcodeNoMatch: 'Les codes ne correspondent pas',
+        currentPasscodeRequired: 'Le code actuel est requis',
+        incorrectPasscode: 'Code incorrect'
     }
 }

@@ -59,7 +59,10 @@ export default {
         open: 'เปิด',
         download: 'ดาวน์โหลด',
         upload: 'อัปโหลด',
-        default: 'ค่าเริ่มต้น'
+        default: 'ค่าเริ่มต้น',
+        all: 'ทั้งหมด',
+        configure: 'กำหนดค่า',
+        done: 'เสร็จสิ้น'
     },
 
     // Navigation
@@ -104,7 +107,46 @@ export default {
         username: 'ชื่อผู้ใช้',
         password: 'รหัสผ่าน',
         signIn: 'เข้าสู่ระบบ',
-        or: 'หรือ'
+        or: 'หรือ',
+        usernameOrEmail: 'ชื่อผู้ใช้ / อีเมล',
+        // การลงทะเบียน
+        createAccount: 'สร้างบัญชี',
+        register: 'ลงทะเบียน',
+        registerSubtitle: 'เข้าร่วมกับเราและเริ่มเรียนรู้',
+        registering: 'กำลังลงทะเบียน...',
+        registerSuccess: 'ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ',
+        registerFailed: 'ลงทะเบียนล้มเหลว กรุณาลองใหม่',
+        email: 'อีเมล',
+        confirmPassword: 'ยืนยันรหัสผ่าน',
+        realName: 'ชื่อ (ไม่บังคับ)',
+        // ตัวยึดตำแหน่ง
+        usernamePlaceholder: 'กรอกชื่อผู้ใช้',
+        usernameOrEmailPlaceholder: 'กรอกชื่อผู้ใช้หรืออีเมล',
+        passwordPlaceholder: 'กรอกรหัสผ่าน',
+        emailPlaceholder: 'กรอกอีเมล',
+        confirmPasswordPlaceholder: 'ยืนยันรหัสผ่าน',
+        realNamePlaceholder: 'กรอกชื่อ',
+        // ข้อความตรวจสอบ
+        usernameRequired: 'ต้องระบุชื่อผู้ใช้',
+        usernameLength: 'ชื่อผู้ใช้ต้องมี 3-20 ตัวอักษร',
+        usernamePattern: 'ชื่อผู้ใช้ใช้ได้เฉพาะตัวอักษร ตัวเลข และขีดล่าง',
+        usernameNotAvailable: 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว',
+        emailRequired: 'ต้องระบุอีเมล',
+        emailInvalid: 'กรุณากรอกอีเมลที่ถูกต้อง',
+        emailNotAvailable: 'อีเมลนี้ถูกลงทะเบียนแล้ว',
+        passwordRequired: 'ต้องระบุรหัสผ่าน',
+        passwordTooShort: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+        confirmPasswordRequired: 'กรุณายืนยันรหัสผ่าน',
+        passwordMismatch: 'รหัสผ่านไม่ตรงกัน',
+        realNameTooLong: 'ชื่อต้องน้อยกว่า 50 ตัวอักษร',
+        // ความแข็งแกร่งรหัสผ่าน
+        passwordWeak: 'อ่อน',
+        passwordFair: 'ปานกลาง',
+        passwordGood: 'ดี',
+        passwordStrong: 'แข็งแกร่ง',
+        // ลิงก์นำทาง
+        noAccount: 'ยังไม่มีบัญชี?',
+        alreadyHaveAccount: 'มีบัญชีแล้ว?'
     },
 
     // Search modes
@@ -311,7 +353,40 @@ export default {
         searchModeHotkeysTip: 'กด Ctrl (หรือ Cmd บน macOS) + Shift + ตัวเลข เพื่อสลับโหมด',
         resetToDefaults: 'รีเซ็ตเป็นค่าเริ่มต้น',
         hotkey: 'ปุ่มลัด',
-        pressKeys: 'กดปุ่ม...'
+        pressKeys: 'กดปุ่ม...',
+        featureTabs: 'แท็บฟีเจอร์',
+        featureTabsTip: 'แสดงหรือซ่อนแท็บในแถบเครื่องมือ',
+        theme: 'ธีม',
+        // เปลี่ยนรหัสผ่าน
+        changePassword: 'เปลี่ยนรหัสผ่าน',
+        currentPassword: 'รหัสผ่านปัจจุบัน',
+        newPassword: 'รหัสผ่านใหม่',
+        confirmNewPassword: 'ยืนยันรหัสผ่านใหม่',
+        currentPasswordPlaceholder: 'กรอกรหัสผ่านปัจจุบัน',
+        newPasswordPlaceholder: 'กรอกรหัสผ่านใหม่',
+        confirmNewPasswordPlaceholder: 'กรอกรหัสผ่านใหม่อีกครั้ง',
+        passwordMismatch: 'รหัสผ่านใหม่ไม่ตรงกัน',
+        passwordTooShort: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+        passwordChangeSuccess: 'เปลี่ยนรหัสผ่านสำเร็จ',
+        passwordChangeFailed: 'เปลี่ยนรหัสผ่านล้มเหลว',
+        currentPasswordRequired: 'ต้องระบุรหัสผ่านปัจจุบัน',
+        newPasswordRequired: 'ต้องระบุรหัสผ่านใหม่',
+        confirmPasswordRequired: 'กรุณายืนยันรหัสผ่านใหม่',
+        // ตั้งค่าผู้ให้บริการ AI
+        aiProviderSettings: 'ตั้งค่าผู้ให้บริการ AI',
+        aiProvider: 'ผู้ให้บริการ AI',
+        aiProviderTooltip: 'เลือกระหว่าง API แบ็กเอนด์ (ค่าเริ่มต้น) หรือ API Gemini โดยตรง',
+        aiProviderBackend: 'API แบ็กเอนด์ (ค่าเริ่มต้น)',
+        aiProviderGemini: 'API Gemini โดยตรง',
+        geminiApiKey: 'คีย์ API Gemini',
+        geminiApiKeyTooltip: 'คีย์ API Google Gemini ของคุณ รับได้จาก Google AI Studio (aistudio.google.com)',
+        geminiApiKeyPlaceholder: 'กรอกคีย์ API Gemini',
+        geminiApiKeyRequired: 'กรุณากรอกคีย์ API Gemini เพื่อใช้โหมด Gemini โดยตรง',
+        testConnection: 'ทดสอบการเชื่อมต่อ',
+        geminiConnectionSuccess: 'เชื่อมต่อ API Gemini สำเร็จ!',
+        geminiConnectionFailed: 'เชื่อมต่อ API Gemini ล้มเหลว กรุณาตรวจสอบคีย์ API',
+        configureApiKey: 'กำหนดค่าคีย์ API',
+        switchToBackend: 'ใช้ API แบ็กเอนด์'
     },
 
     // Login
@@ -342,6 +417,22 @@ export default {
             step4: 'หรือวางลงในช่องค้นหาเอง'
         },
         gotIt: 'เข้าใจแล้ว'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: 'คำนิยาม',
+            word: 'รายการคำศัพท์',
+            example: 'รายการตัวอย่าง'
+        },
+        listLabel: {
+            paraphrase: 'คำนิยาม',
+            word: 'รายการคำศัพท์',
+            example: 'รายการตัวอย่าง'
+        },
+        selectReviewModePlaceholder: 'เลือกโหมดทบทวน/อ่าน',
+        selectMode: 'เลือกโหมด'
     },
 
     // AI features
@@ -456,6 +547,9 @@ export default {
         copyright: '©2025 Kason Tools สงวนลิขสิทธิ์',
         github: 'GitHub',
         followOnGitHub: 'ติดตามบน GitHub',
+        // Discord
+        discord: 'Discord',
+        joinDiscord: 'เข้าร่วม Discord',
         downloads: 'ดาวน์โหลดไคลเอนต์',
         mac: 'macOS',
         windows: 'Windows',
@@ -510,7 +604,11 @@ export default {
         clipboardDetectionDisabled: 'ปิดการตรวจจับคลิปบอร์ดแล้ว',
         duplicateHotkey: 'ปุ่มลัดนี้ถูกใช้งานแล้ว',
         invalidHotkey: 'ปุ่มลัดต้องมีอย่างน้อยหนึ่งคีย์ดัดแปลง (Ctrl/Alt/Shift/Cmd)',
-        noHotkeysConfigured: 'ยังไม่ได้กำหนดปุ่มลัด'
+        noHotkeysConfigured: 'ยังไม่ได้กำหนดปุ่มลัด',
+        saveFailed: 'บันทึกล้มเหลว',
+        invalidConfig: 'การตั้งค่าไม่ถูกต้อง',
+        operationTipTitle: 'การแจ้งเตือน',
+        switchedModeHotkey: 'เปลี่ยนโหมดด้วย {key}'
     },
 
     // Time units
@@ -686,6 +784,44 @@ export default {
         allRanks: 'อันดับทั้งหมด',
         viewRankingDetails: 'ดูรายละเอียดอันดับ',
         maxRankReached: 'ถึงอันดับสูงสุดแล้ว!',
+
+        // ตัวจับเวลาโฟกัส (ฟีเจอร์สไตล์ป่า)
+        focus: {
+            title: 'โฟกัส',
+            startFocus: 'เริ่มโฟกัส',
+            pause: 'หยุดชั่วคราว',
+            resume: 'ดำเนินการต่อ',
+            giveUp: 'ยอมแพ้',
+            focusing: 'กำลังโฟกัส',
+            paused: 'หยุดชั่วคราว',
+            ready: 'พร้อมโฟกัส',
+            completed: 'เสร็จสิ้น',
+            minutes: 'นาที',
+            customMinutes: 'กำหนดเอง',
+            todayTrees: 'ต้นไม้วันนี้',
+            todayMinutes: 'นาทีวันนี้',
+            streak: 'สตรีควัน',
+            congratulations: 'ขอแสดงความยินดี!',
+            treeGrown: 'คุณปลูกต้นไม้แล้ว!',
+            sessionCompleted: 'เซสชันโฟกัสเสร็จสิ้น',
+            sessionCancelled: 'เซสชันโฟกัสถูกยกเลิก',
+            selectTree: 'เลือกต้นไม้ที่จะปลูก',
+            myForest: 'ป่าของฉัน',
+            treesPlanted: 'ต้นไม้ปลูกแล้ว',
+            totalPoints: 'คะแนนรวม',
+            pointsEarned: 'คะแนนที่ได้รับ',
+            focusTime: 'เวลาโฟกัส',
+            plantTree: 'ปลูกต้นไม้',
+            giveUpTitle: 'ยอมแพ้เซสชัน?',
+            giveUpMessage: 'ถ้าคุณยอมแพ้ตอนนี้ คุณจะเสียคะแนนและต้นไม้จะเหี่ยว',
+            confirmGiveUp: 'ใช่ ยอมแพ้',
+            leaveWarning: 'อย่าออกไป!',
+            leaveWarningDesc: 'ถ้าคุณออกจากหน้านี้ เซสชันโฟกัสจะล้มเหลวและคุณจะเสียคะแนน',
+            focusFailed: 'โฟกัสล้มเหลว! -{points} คะแนน'
+        },
+
+        // ป้ายกำกับคะแนน
+        points: 'คะแนน'
     },
 
     // Tabs labels for feature toggles
@@ -695,7 +831,11 @@ export default {
         pdfReader: 'เครื่องอ่าน PDF',
         about: 'เกี่ยวกับ',
         vocabularyReview: 'ทบทวนคำศัพท์',
-        aiHistory: 'ประวัติ AI'
+        aiHistory: 'ประวัติ AI',
+        focus: 'ตัวจับเวลาโฟกัส',
+        whiteNoise: 'เสียงสีขาว',
+        aiConversation: 'การสนทนา AI',
+        privateNotes: 'บันทึกส่วนตัว'
     },
 
     pdf: {
@@ -713,5 +853,76 @@ export default {
         noExtractedText: 'เอกสารนี้ไม่มีข้อความสำหรับดึงข้อมูล',
         markdownFailed: 'ไม่สามารถแปลง PDF เป็น Markdown ได้',
         explainSelection: 'อธิบายข้อความที่เลือก'
+    },
+
+    // บันทึกส่วนตัว
+    privateNotes: {
+        title: 'บันทึกส่วนตัว',
+        back: 'กลับ',
+        loginRequired: 'กรุณาเข้าสู่ระบบเพื่อใช้บันทึกส่วนตัว',
+        loginDescription: 'เข้าสู่ระบบเพื่อสร้างและจัดการบันทึกส่วนตัวของคุณ',
+        items: 'รายการ',
+        addCategory: 'เพิ่มหมวดหมู่',
+        editCategory: 'แก้ไขหมวดหมู่',
+        addNote: 'เพิ่มบันทึก',
+        editNote: 'แก้ไขบันทึก',
+        untitled: 'ไม่มีชื่อ',
+        noNotes: 'ยังไม่มีบันทึก เพิ่มบันทึกแรกของคุณ!',
+        // การควบคุมการเล่น
+        play: 'เล่น',
+        stop: 'หยุด',
+        loopNone: 'ไม่วนซ้ำ',
+        loopSingle: 'วนซ้ำรายการเดียว',
+        loopAll: 'วนซ้ำทั้งหมด',
+        generateAudio: 'เสียง',
+        generateImage: 'รูปภาพ',
+        categoryName: 'ชื่อ',
+        categoryNamePlaceholder: 'ใส่ชื่อหมวดหมู่',
+        description: 'คำอธิบาย',
+        descriptionPlaceholder: 'คำอธิบายเพิ่มเติม (ไม่บังคับ)',
+        color: 'สี',
+        noteTitle: 'หัวข้อ',
+        noteTitlePlaceholder: 'ใส่หัวข้อบันทึก',
+        content: 'เนื้อหา',
+        contentPlaceholder: 'เขียนบันทึกของคุณที่นี่...',
+        audioGenerated: 'สร้างเสียงสำเร็จ',
+        imageGenerated: 'สร้างรูปภาพสำเร็จ',
+        categoryNameRequired: 'ต้องระบุชื่อหมวดหมู่',
+        categorySaved: 'สร้างหมวดหมู่สำเร็จ',
+        categoryUpdated: 'อัปเดตหมวดหมู่สำเร็จ',
+        categoryDeleted: 'ลบหมวดหมู่แล้ว',
+        contentRequired: 'ต้องระบุเนื้อหา',
+        noteSaved: 'สร้างบันทึกสำเร็จ',
+        noteUpdated: 'อัปเดตบันทึกสำเร็จ',
+        noteDeleted: 'ลบบันทึกแล้ว',
+        confirmDelete: 'ยืนยันการลบ',
+        deleteCategoryConfirm: 'คุณแน่ใจหรือไม่ที่จะลบ "{name}"? บันทึกทั้งหมดในหมวดหมู่นี้จะถูกลบอย่างถาวร',
+        deleteNoteConfirm: 'คุณแน่ใจหรือไม่ที่จะลบ "{content}"?',
+        // ฟีเจอร์ล็อค
+        lockNotes: 'ล็อคโน้ต',
+        unlockNotes: 'ปลดล็อคโน้ต',
+        setPasscode: 'ตั้งรหัสผ่าน',
+        changePasscode: 'เปลี่ยนรหัสผ่าน',
+        removePasscode: 'ลบรหัสผ่าน',
+        currentPasscode: 'รหัสผ่านปัจจุบัน',
+        newPasscode: 'รหัสผ่านใหม่',
+        confirmPasscode: 'ยืนยันรหัสผ่าน',
+        enterCurrentPasscode: 'ป้อนรหัสผ่านปัจจุบัน',
+        enterNewPasscode: 'ป้อนรหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)',
+        confirmNewPasscode: 'ยืนยันรหัสผ่านใหม่',
+        enterPasscode: 'ป้อนรหัสผ่านของคุณ',
+        unlock: 'ปลดล็อค',
+        notesLockedTitle: 'โน้ตถูกล็อค',
+        notesLockedDescription: 'ป้อนรหัสผ่านเพื่อเข้าถึงโน้ตส่วนตัวของคุณ',
+        notesLocked: 'ล็อคโน้ตแล้ว',
+        notesUnlocked: 'ปลดล็อคโน้ตแล้ว',
+        passcodeSet: 'ตั้งรหัสผ่านสำเร็จ',
+        passcodeChanged: 'เปลี่ยนรหัสผ่านสำเร็จ',
+        passcodeRemoved: 'ลบรหัสผ่านสำเร็จ',
+        passcodeRequired: 'กรุณาป้อนรหัสผ่าน',
+        passcodeTooShort: 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร',
+        passcodeNoMatch: 'รหัสผ่านไม่ตรงกัน',
+        currentPasscodeRequired: 'กรุณาป้อนรหัสผ่านปัจจุบัน',
+        incorrectPasscode: 'รหัสผ่านไม่ถูกต้อง'
     }
 }

@@ -59,7 +59,10 @@ export default {
         open: '開く',
         download: 'ダウンロード',
         upload: 'アップロード',
-        default: 'デフォルト'
+        default: 'デフォルト',
+        all: 'すべて',
+        configure: '設定',
+        done: '完了'
     },
 
     // Navigation
@@ -100,7 +103,50 @@ export default {
             title: 'Kason Tools',
             subtitle: 'オールインワン英語学習ワークスペース'
         },
-        copyright: '©2025 Kason Tools v2.0'
+        copyright: '©2025 Kason Tools v2.0',
+        username: 'ユーザー名',
+        usernameOrEmail: 'ユーザー名 / メール',
+        password: 'パスワード',
+        signIn: 'サインイン',
+        or: 'または',
+        // 登録関連
+        createAccount: 'アカウント作成',
+        register: '登録',
+        registerSubtitle: '参加して学習を始めましょう',
+        registering: '登録中...',
+        registerSuccess: '登録成功！ログインしてください。',
+        registerFailed: '登録に失敗しました。もう一度お試しください',
+        email: 'メール',
+        confirmPassword: 'パスワード確認',
+        realName: '名前（任意）',
+        // プレースホルダー
+        usernamePlaceholder: 'ユーザー名を入力',
+        usernameOrEmailPlaceholder: 'ユーザー名またはメールを入力',
+        passwordPlaceholder: 'パスワードを入力',
+        emailPlaceholder: 'メールアドレスを入力',
+        confirmPasswordPlaceholder: 'パスワードを再入力',
+        realNamePlaceholder: '名前を入力',
+        // 検証メッセージ
+        usernameRequired: 'ユーザー名は必須です',
+        usernameLength: 'ユーザー名は3-20文字である必要があります',
+        usernamePattern: 'ユーザー名は文字、数字、アンダースコアのみ使用可能です',
+        usernameNotAvailable: 'ユーザー名は既に使用されています',
+        emailRequired: 'メールは必須です',
+        emailInvalid: '有効なメールアドレスを入力してください',
+        emailNotAvailable: 'メールは既に登録されています',
+        passwordRequired: 'パスワードは必須です',
+        passwordTooShort: 'パスワードは6文字以上必要です',
+        confirmPasswordRequired: 'パスワードを確認してください',
+        passwordMismatch: 'パスワードが一致しません',
+        realNameTooLong: '名前は50文字以内にしてください',
+        // パスワード強度
+        passwordWeak: '弱い',
+        passwordFair: '普通',
+        passwordGood: '良い',
+        passwordStrong: '強い',
+        // ナビゲーションリンク
+        noAccount: 'アカウントをお持ちでないですか？',
+        alreadyHaveAccount: '既にアカウントをお持ちですか？'
     },
 
     // New: complete login block
@@ -261,7 +307,61 @@ export default {
             beginner: 'ビギナー'
         },
         rankLevel: 'レベル {level}',
-        nextRank: '次: {rank}'
+        nextRank: '次: {rank}',
+
+        // フォーカスタイマー（森林スタイル機能）
+        focus: {
+            title: 'フォーカス',
+            startFocus: 'フォーカス開始',
+            pause: '一時停止',
+            resume: '再開',
+            giveUp: '諦める',
+            focusing: 'フォーカス中',
+            paused: '一時停止中',
+            ready: 'フォーカス準備完了',
+            completed: '完了',
+            minutes: '分',
+            customMinutes: 'カスタム',
+            todayTrees: '今日の木',
+            todayMinutes: '今日の分数',
+            streak: '連続日数',
+            congratulations: 'おめでとうございます！',
+            treeGrown: '木を植えました！',
+            sessionCompleted: 'フォーカスセッション完了',
+            sessionCancelled: 'フォーカスセッションがキャンセルされました',
+            selectTree: '植える木を選択',
+            myForest: 'マイフォレスト',
+            treesPlanted: '本の木を植えました',
+            totalPoints: '合計ポイント',
+            pointsEarned: '獲得ポイント',
+            focusTime: 'フォーカス時間',
+            plantTree: '木を植える',
+            giveUpTitle: 'セッションを諦めますか？',
+            giveUpMessage: '今諦めると、ポイントを失い、木は枯れてしまいます。',
+            confirmGiveUp: 'はい、諦めます',
+            leaveWarning: '離れないでください！',
+            leaveWarningDesc: 'このページを離れると、フォーカスセッションが失敗し、ポイントを失います。',
+            focusFailed: 'フォーカス失敗！-{points} ポイント'
+        },
+
+        // ポイントラベル
+        points: 'ポイント'
+    },
+
+    // StarList specific labels
+    starList: {
+        listType: {
+            paraphrase: '定義',
+            word: '単語リスト',
+            example: '例文リスト'
+        },
+        listLabel: {
+            paraphrase: '定義',
+            word: '単語リスト',
+            example: '例文リスト'
+        },
+        selectReviewModePlaceholder: '復習/読解モードを選択',
+        selectMode: 'モードを選択'
     },
 
     // New: full AI features
@@ -355,28 +455,107 @@ export default {
     },
 
     user: {
+        profile: 'プロフィール',
+        loginOut: 'ログアウト',
+        welcomeBack: 'おかえりなさい',
+        loginWith: 'ログイン方法',
+        useGoogleAccount: 'Googleアカウントでログイン',
+        learningStats: '学習統計',
+        todayRemembered: '今日覚えた',
+        todayReviewed: '今日復習した',
+        todayMastered: '今日マスターした',
+        learningSettings: '学習設定',
+        theme: 'テーマ',
+        pronunciationSource: '発音ソース',
+        nativeLanguage: '母国語',
+        uiLanguage: 'インターフェース言語',
+        uiLanguageTooltip: 'インターフェースに使用される言語（翻訳言語とは独立）',
+        backgroundMusic: 'バックグラウンドミュージック',
+        letterSpelling: '文字スペリング',
+        englishDefinition: '英語の定義',
+        messageHints: 'メッセージヒント',
+        playExamples: '例文を再生',
+        englishToEnglish: '英英モード',
+        defaultLanguage: 'デフォルト言語',
+        unknownLanguage: '不明な言語',
+        registerSource: {
+            local: 'ローカル登録',
+            google: 'Google登録',
+            wechat: 'WeChat登録',
+            qq: 'QQ登録',
+            unknown: '不明なソース'
+        },
+        clipboardDetection: 'クリップボード検出',
+        clipboardDetectionTooltip: 'タブ切り替え時や検索入力が空の時、クリップボードの内容を自動検出して使用を提案',
         searchModeHotkeys: '検索モードのショートカット',
         searchModeHotkeysTip: 'Ctrl（macOS は Cmd）+ Shift + 数字 でモードを切り替え',
         resetToDefaults: 'デフォルトにリセット',
         hotkey: 'ショートカット',
         pressKeys: 'キーを押してください...',
-        // 追加：機能タブ設定
         featureTabs: '機能タブ',
         featureTabsTip: 'ツールバーのタブを表示/非表示',
-        uiLanguage: 'インターフェース言語',
-        uiLanguageTooltip: 'インターフェースに使用される言語（翻訳言語とは独立）'
+        // パスワード変更
+        changePassword: 'パスワード変更',
+        currentPassword: '現在のパスワード',
+        newPassword: '新しいパスワード',
+        confirmNewPassword: '新しいパスワードの確認',
+        currentPasswordPlaceholder: '現在のパスワードを入力',
+        newPasswordPlaceholder: '新しいパスワードを入力',
+        confirmNewPasswordPlaceholder: '新しいパスワードを再入力',
+        passwordMismatch: '新しいパスワードが一致しません',
+        passwordTooShort: 'パスワードは6文字以上必要です',
+        passwordChangeSuccess: 'パスワードの変更に成功しました',
+        passwordChangeFailed: 'パスワードの変更に失敗しました',
+        currentPasswordRequired: '現在のパスワードは必須です',
+        newPasswordRequired: '新しいパスワードは必須です',
+        confirmPasswordRequired: '新しいパスワードを確認してください',
+        // AI プロバイダー設定
+        aiProviderSettings: 'AIプロバイダー設定',
+        aiProvider: 'AIプロバイダー',
+        aiProviderTooltip: 'バックエンドAPI（デフォルト）または直接Gemini APIを選択',
+        aiProviderBackend: 'バックエンドAPI（デフォルト）',
+        aiProviderGemini: '直接Gemini API',
+        geminiApiKey: 'Gemini APIキー',
+        geminiApiKeyTooltip: 'Google Gemini APIキー。Google AI Studio (aistudio.google.com) から取得',
+        geminiApiKeyPlaceholder: 'Gemini APIキーを入力',
+        geminiApiKeyRequired: '直接Geminiモードを使用するにはAPIキーを入力してください',
+        testConnection: '接続テスト',
+        geminiConnectionSuccess: 'Gemini API接続成功！',
+        geminiConnectionFailed: 'Gemini API接続失敗。APIキーを確認してください。',
+        configureApiKey: 'APIキーを設定',
+        switchToBackend: 'バックエンドAPIを使用'
     },
 
     messages: {
+        operationTooFrequent: '操作が頻繁すぎます。重複リクエストを避けてください',
+        noPermission: '現在の操作の権限がありません',
+        resourceNotFound: 'リソースが見つかりません',
+        accountNotBound: 'ログインアカウントがバインドされていません。パスワードでログインしてバインドしてください',
+        systemError: 'Kason Toolsに問題が発生しました。作者に連絡してください！',
+        guestUserLogin: 'ゲストユーザーはログインしてください！',
+        autoLoginSuccess: '自動ログイン成功！',
+        loginRequired: 'コレクション操作を行うには、まずログインしてください',
+        dataLoadException: 'データ読み込み例外',
+        initializationException: '初期化例外',
+        reviewException: '復習例外',
+        listInitException: 'リスト初期化例外。更新してやり直してください',
+        clipboardContentDetected: 'クリップボードの内容を検出',
+        useClipboardContent: '「{text}」を検索しますか？クリックして続行。',
+        usingClipboardContent: 'クリップボードの内容を使用中：「{text}」',
+        enterTextToSearch: '検索するテキストを入力するか、先にテキストをクリップボードにコピーしてください。',
+        clipboardAccessDenied: '検索するテキストを入力してください。クリップボードへのアクセスには許可が必要です - テキストを手動で入力または貼り付けてください。',
+        unableToAccessClipboard: '検索するテキストを入力してください。クリップボードの内容にアクセスできません。',
         operationSuccess: '操作が成功しました',
         duplicateHotkey: 'このショートカットは既に使用されています',
-        invalidHotkey: 'ショートカットは少なくとも 1 つの修飾キー（Ctrl/Alt/Shift/Cmd）を含める必要があります',
+        invalidHotkey: 'ショートカットは少なくとも1つの修飾キー（Ctrl/Alt/Shift/Cmd）を含める必要があります',
         noHotkeysConfigured: 'ショートカットが設定されていません',
         saveFailed: '保存に失敗しました',
         invalidConfig: '無効な設定',
         confirmDelete: '削除してもよろしいですか？',
         confirmClear: '現在のデータをクリアして再取得します。続行しますか？',
-        clearOperation: 'クリア操作'
+        clearOperation: 'クリア操作',
+        operationTipTitle: '通知',
+        switchedModeHotkey: '{key}でモードを切り替えました'
     },
 
     tabs: {
@@ -386,7 +565,11 @@ export default {
         about: '概要',
         bgm: 'BGM タブ',
         vocabularyReview: '語彙復習',
-        aiHistory: 'AI履歴'
+        aiHistory: 'AI履歴',
+        focus: 'フォーカスタイマー',
+        whiteNoise: 'ホワイトノイズ',
+        aiConversation: 'AI会話',
+        privateNotes: 'プライベートノート'
     },
 
     pdf: {
@@ -412,6 +595,9 @@ export default {
         description: 'Kason Toolsは、オールインワンの英語学習ワークスペースです。AIを活用し、マルチモード辞書検索と解説、間隔反復による語彙復習、YouTube字幕でのインタラクティブ学習、PDF読解の即時解説、ランキング付きゲーミフィケーションタスク、集中タイマーを一つのシームレスなインターフェースに統合し、英語習得を加速します。',
         version: 'バージョン 2.0',
         copyright: '©2025 Kason Tools。全著作権所有。',
+        // Discord関連
+        discord: 'Discord',
+        joinDiscord: 'Discordに参加',
         downloads: 'クライアントのダウンロード',
         mac: 'macOS',
         windows: 'Windows',
@@ -437,5 +623,76 @@ export default {
         prepareAudio: 'オーディオを準備',
         audioGenerationComplete: 'オーディオ生成完了',
         preparingAudioForReview: '復習用オーディオを準備中...'
+    },
+
+    // プライベートノート
+    privateNotes: {
+        title: 'プライベートノート',
+        back: '戻る',
+        loginRequired: 'プライベートノートを使用するにはログインしてください。',
+        loginDescription: 'ログインして個人ノートを作成・管理できます。',
+        items: '件',
+        addCategory: 'カテゴリを追加',
+        editCategory: 'カテゴリを編集',
+        addNote: 'ノートを追加',
+        editNote: 'ノートを編集',
+        untitled: '無題',
+        noNotes: 'ノートがありません。最初のノートを追加してください！',
+        // 再生コントロール
+        play: '再生',
+        stop: '停止',
+        loopNone: 'ループなし',
+        loopSingle: '1曲リピート',
+        loopAll: '全曲リピート',
+        generateAudio: 'オーディオ',
+        generateImage: '画像',
+        categoryName: '名前',
+        categoryNamePlaceholder: 'カテゴリ名を入力',
+        description: '説明',
+        descriptionPlaceholder: '任意の説明',
+        color: '色',
+        noteTitle: 'タイトル',
+        noteTitlePlaceholder: 'ノートのタイトルを入力',
+        content: '内容',
+        contentPlaceholder: 'ノートをここに書いてください...',
+        audioGenerated: 'オーディオの生成に成功しました',
+        imageGenerated: '画像の生成に成功しました',
+        categoryNameRequired: 'カテゴリ名は必須です',
+        categorySaved: 'カテゴリを作成しました',
+        categoryUpdated: 'カテゴリを更新しました',
+        categoryDeleted: 'カテゴリを削除しました',
+        contentRequired: '内容は必須です',
+        noteSaved: 'ノートを作成しました',
+        noteUpdated: 'ノートを更新しました',
+        noteDeleted: 'ノートを削除しました',
+        confirmDelete: '削除の確認',
+        deleteCategoryConfirm: '「{name}」を削除してもよろしいですか？このカテゴリ内のすべてのノートが完全に削除されます。',
+        deleteNoteConfirm: '「{content}」を削除してもよろしいですか？',
+        // ロック機能
+        lockNotes: 'ノートをロック',
+        unlockNotes: 'ノートをアンロック',
+        setPasscode: 'パスコードを設定',
+        changePasscode: 'パスコードを変更',
+        removePasscode: 'パスコードを削除',
+        currentPasscode: '現在のパスコード',
+        newPasscode: '新しいパスコード',
+        confirmPasscode: 'パスコードを確認',
+        enterCurrentPasscode: '現在のパスコードを入力',
+        enterNewPasscode: '新しいパスコードを入力（4文字以上）',
+        confirmNewPasscode: '新しいパスコードを確認',
+        enterPasscode: 'パスコードを入力',
+        unlock: 'アンロック',
+        notesLockedTitle: 'ノートがロックされています',
+        notesLockedDescription: 'プライベートノートにアクセスするにはパスコードを入力してください。',
+        notesLocked: 'ノートをロックしました',
+        notesUnlocked: 'ノートをアンロックしました',
+        passcodeSet: 'パスコードを設定しました',
+        passcodeChanged: 'パスコードを変更しました',
+        passcodeRemoved: 'パスコードを削除しました',
+        passcodeRequired: 'パスコードを入力してください',
+        passcodeTooShort: 'パスコードは4文字以上必要です',
+        passcodeNoMatch: 'パスコードが一致しません',
+        currentPasscodeRequired: '現在のパスコードを入力してください',
+        incorrectPasscode: 'パスコードが正しくありません'
     }
 }

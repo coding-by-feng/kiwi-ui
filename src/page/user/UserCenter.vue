@@ -266,30 +266,76 @@
               <i class="el-icon-question help-icon"></i>
             </el-tooltip>
           </div>
-          <div class="feature-toggles feature-toggles--stacked">
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.todo') }}</span>
+          <div class="feature-toggles-grid">
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.todo }">
+              <div class="feature-toggle-icon"><i class="el-icon-check"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.todo') }}</span>
+              </div>
               <el-switch v-model="enabledTabsLocal.todo" class="custom-switch" @change="onFeatureToggle('todo', $event)" :aria-label="$t('tabs.todo')"></el-switch>
             </div>
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.youtube') }}</span>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.starList }">
+              <div class="feature-toggle-icon"><i class="el-icon-tickets"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.vocabularyReview') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview')"></el-switch>
+            </div>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.focus }">
+              <div class="feature-toggle-icon"><i class="el-icon-aim"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.focus') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.focus" class="custom-switch" @change="onFeatureToggle('focus', $event)" :aria-label="$t('tabs.focus')"></el-switch>
+            </div>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.whiteNoise }">
+              <div class="feature-toggle-icon"><i class="el-icon-headset"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.whiteNoise') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.whiteNoise" class="custom-switch" @change="onFeatureToggle('whiteNoise', $event)" :aria-label="$t('tabs.whiteNoise')"></el-switch>
+            </div>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.youtube }">
+              <div class="feature-toggle-icon"><i class="el-icon-video-camera"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.youtube') }}</span>
+              </div>
               <el-switch v-model="enabledTabsLocal.youtube" class="custom-switch" @change="onFeatureToggle('youtube', $event)" :aria-label="$t('tabs.youtube')"></el-switch>
             </div>
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.pdfReader') }}</span>
-              <el-switch
-                  v-model="enabledTabsLocal.pdfReader"
-                  class="custom-switch"
-                  @change="onFeatureToggle('pdfReader', $event)"
-                  :aria-label="$t('tabs.pdfReader')"></el-switch>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.pdfReader }">
+              <div class="feature-toggle-icon"><i class="el-icon-document"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.pdfReader') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.pdfReader" class="custom-switch" @change="onFeatureToggle('pdfReader', $event)" :aria-label="$t('tabs.pdfReader')"></el-switch>
             </div>
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.about') }}</span>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.aiHistory }">
+              <div class="feature-toggle-icon"><i class="el-icon-time"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.aiHistory') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.aiHistory" class="custom-switch" @change="onFeatureToggle('aiHistory', $event)" :aria-label="$t('tabs.aiHistory')"></el-switch>
+            </div>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.aiConversation }">
+              <div class="feature-toggle-icon"><i class="el-icon-chat-dot-round"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.aiConversation') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.aiConversation" class="custom-switch" @change="onFeatureToggle('aiConversation', $event)" :aria-label="$t('tabs.aiConversation')"></el-switch>
+            </div>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.privateNotes }">
+              <div class="feature-toggle-icon"><i class="el-icon-notebook-1"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.privateNotes') }}</span>
+              </div>
+              <el-switch v-model="enabledTabsLocal.privateNotes" class="custom-switch" @change="onFeatureToggle('privateNotes', $event)" :aria-label="$t('tabs.privateNotes')"></el-switch>
+            </div>
+            <div class="feature-toggle-card" :class="{ 'is-enabled': enabledTabsLocal.about }">
+              <div class="feature-toggle-icon"><i class="el-icon-postcard"></i></div>
+              <div class="feature-toggle-content">
+                <span class="feature-label">{{ $t('tabs.about') }}</span>
+              </div>
               <el-switch v-model="enabledTabsLocal.about" class="custom-switch" @change="onFeatureToggle('about', $event)" :aria-label="$t('tabs.about')"></el-switch>
-            </div>
-            <div class="feature-toggle">
-              <span class="feature-label">{{ $t('tabs.vocabularyReview') }}</span>
-              <el-switch v-model="enabledTabsLocal.starList" class="custom-switch" @change="onFeatureToggle('starList', $event)" :aria-label="$t('tabs.vocabularyReview')"></el-switch>
             </div>
           </div>
         </div>
@@ -1047,7 +1093,8 @@ export default {
 
           const response = await this.$http.post('/api/upms/user/change-password', params, {
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'isToken': true
             }
           })
 
@@ -1469,41 +1516,102 @@ export default {
     }
   }
 
-  /* Feature Tabs: left-aligned, responsive layout */
+  /* Feature Tabs: card-based responsive layout */
   .setting-item--feature-tabs {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
     grid-column: 1 / -1; /* span full width of the grid */
+    padding: 20px;
 
     .setting-label {
-      margin-bottom: 10px;
+      margin-bottom: 16px;
+      font-size: 15px;
     }
 
-    .feature-toggles {
+    .feature-toggles-grid {
       width: 100%;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 12px 16px;
-      justify-items: start; /* left align items */
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
 
-      &.feature-toggles--stacked {
-        /* keep same responsive grid but allow easy override if needed */
-        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      @media (max-width: 1200px) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      @media (max-width: 992px) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+        gap: 8px;
       }
     }
 
-    .feature-toggle {
+    .feature-toggle-card {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
       gap: 10px;
-      padding: 4px 0;
+      padding: 12px 14px;
+      background: var(--bg-body);
+      border: 1px solid var(--border-color-light);
+      border-radius: var(--radius-md);
+      transition: all 0.25s ease;
+      cursor: pointer;
 
-      .feature-label {
-        min-width: 120px;
-        color: var(--text-primary);
-        font-weight: 500;
+      &:hover {
+        border-color: var(--color-primary-light-5);
+        box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.1);
+        transform: translateY(-1px);
+      }
+
+      &.is-enabled {
+        border-color: var(--color-primary-light-5);
+        background: var(--color-primary-light-9);
+
+        .feature-toggle-icon {
+          background: var(--gradient-primary);
+          color: #fff;
+        }
+      }
+
+      .feature-toggle-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-container);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-size: 16px;
+        transition: all 0.25s ease;
+      }
+
+      .feature-toggle-content {
+        flex: 1;
+        min-width: 0;
+
+        .feature-label {
+          display: block;
+          color: var(--text-primary);
+          font-weight: 500;
+          font-size: 13px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .custom-switch {
+        flex-shrink: 0;
       }
     }
   }
@@ -1630,18 +1738,29 @@ export default {
     }
   }
 
-  /* Feature tabs: 1 column on small screens */
+  /* Feature tabs: responsive adjustments for mobile */
   .setting-item--feature-tabs {
     align-items: stretch;
-
-    .feature-toggles {
-      grid-template-columns: 1fr;
-      justify-items: start;
-    }
+    padding: 16px;
 
     .setting-label {
       justify-content: flex-start;
       text-align: left;
+    }
+
+    .feature-toggle-card {
+      padding: 10px 12px;
+
+      .feature-toggle-icon {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        font-size: 14px;
+      }
+
+      .feature-toggle-content .feature-label {
+        font-size: 12px;
+      }
     }
   }
 

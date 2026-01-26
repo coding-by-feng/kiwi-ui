@@ -15,6 +15,8 @@ import YoutubePlayer from "@/page/ai/YoutubePlayer.vue"; // Import the new compo
 import TodoView from '@/page/todo/TodoView.vue' // Import the TodoView component (moved)
 import PdfReader from '@/page/pdf/PdfReader.vue'
 import FocusView from '@/page/focus/FocusView.vue' // Import Focus Timer view
+import WhiteNoisePlayer from '@/page/whitenoise/WhiteNoisePlayer.vue' // White Noise tab
+import PrivateNotes from '@/page/notes/PrivateNotes.vue' // Private Notes tab
 import kiwiConsts from '@/const/kiwiConsts'
 
 export default [{
@@ -44,7 +46,9 @@ export default [{
             focus: FocusView, // Focus Timer with Forest feature
             aiHistory: AiCallHistory, // Expose AiCallHistory as a top-level named view for the Index tab
             aiConversation: AiConversationGenerator, // AI Conversation Generator tab
-            pdfReader: PdfReader
+            pdfReader: PdfReader,
+            whiteNoise: WhiteNoisePlayer, // White Noise & Ambient Sounds tab
+            privateNotes: PrivateNotes // Private Notes with categories, TTS audio, and AI images
         },
         children: [{
             path: 'detail',
