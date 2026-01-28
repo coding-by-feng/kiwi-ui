@@ -19,7 +19,7 @@
     "optimize:images": "node scripts/image-optimizer.js"
   },
   "dependencies": {
-    "@opendocsg/pdf2md": "^0.2.2",
+    "@opendocsg/pdf2md": "^0.2.3",
     "@smallwei/avue": "^2.13.2",
     "axios": "^0.19.2",
     "chart.js": "^4.5.0",
