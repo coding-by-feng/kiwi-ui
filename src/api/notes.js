@@ -61,6 +61,14 @@ export function reorderItems(categoryId, itemIds) {
     return request({url: `${BASE}/item/reorder/${categoryId}`, method: 'put', data: itemIds, headers: {isToken: true}})
 }
 
+export function moveItemUp(id) {
+    return request({url: `${BASE}/item/${id}/move-up`, method: 'put', headers: {isToken: true}})
+}
+
+export function moveItemDown(id) {
+    return request({url: `${BASE}/item/${id}/move-down`, method: 'put', headers: {isToken: true}})
+}
+
 // ============ Audio APIs ============
 
 export function generateAudio(body) {
@@ -137,6 +145,8 @@ export default {
     getNextItem,
     getPreviousItem,
     reorderItems,
+    moveItemUp,
+    moveItemDown,
     // Audio
     generateAudio,
     getAudioStreamUrl,

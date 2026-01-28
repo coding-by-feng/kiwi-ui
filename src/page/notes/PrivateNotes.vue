@@ -147,7 +147,7 @@
       <!-- List View -->
       <div v-if="viewMode === 'list'" class="notes-list">
         <div
-          v-for="item in items"
+          v-for="(item, index) in items"
           :key="item.id"
           class="note-item"
           @click="openCardView(item)"
@@ -161,6 +161,20 @@
             </span>
             <span v-if="item.imageStatus === 'READY'" class="icon-btn status-icon">
               <i class="el-icon-picture"></i>
+            </span>
+            <span
+              class="icon-btn reorder-icon"
+              :class="{ 'is-disabled': index === 0 || reorderingItemId === item.id }"
+              @click="moveItemUp(item, index)"
+            >
+              <i :class="reorderingItemId === item.id ? 'el-icon-loading' : 'el-icon-top'"></i>
+            </span>
+            <span
+              class="icon-btn reorder-icon"
+              :class="{ 'is-disabled': index === items.length - 1 || reorderingItemId === item.id }"
+              @click="moveItemDown(item, index)"
+            >
+              <i :class="reorderingItemId === item.id ? 'el-icon-loading' : 'el-icon-bottom'"></i>
             </span>
             <span class="icon-btn edit-icon" @click="editItem(item)">
               <i class="el-icon-edit"></i>
@@ -558,6 +572,7 @@ export default {
       savingItem: false,
       generatingAudio: false,
       generatingImage: false,
+      reorderingItemId: null,
 
       // Image styles
       imageStyles: [],
@@ -1159,6 +1174,49 @@ export default {
       }
     },
 
+    // ============ Item Reordering ============
+    async moveItemUp(item, index) {
+      if (index === 0 || this.reorderingItemId) return
+      this.reorderingItemId = item.id
+      try {
+        const res = await notesApi.moveItemUp(item.id)
+        if (res.data && res.data.code === 0) {
+          // Swap items in local array for immediate UI feedback
+          const temp = this.items[index]
+          this.$set(this.items, index, this.items[index - 1])
+          this.$set(this.items, index - 1, temp)
+        } else {
+          this.$message.error(res.data?.msg || 'Failed to move item')
+        }
+      } catch (e) {
+        console.error('Failed to move item up:', e)
+        this.$message.error('Failed to move item')
+      } finally {
+        this.reorderingItemId = null
+      }
+    },
+
+    async moveItemDown(item, index) {
+      if (index === this.items.length - 1 || this.reorderingItemId) return
+      this.reorderingItemId = item.id
+      try {
+        const res = await notesApi.moveItemDown(item.id)
+        if (res.data && res.data.code === 0) {
+          // Swap items in local array for immediate UI feedback
+          const temp = this.items[index]
+          this.$set(this.items, index, this.items[index + 1])
+          this.$set(this.items, index + 1, temp)
+        } else {
+          this.$message.error(res.data?.msg || 'Failed to move item')
+        }
+      } catch (e) {
+        console.error('Failed to move item down:', e)
+        this.$message.error('Failed to move item')
+      } finally {
+        this.reorderingItemId = null
+      }
+    },
+
     // ============ Delete Execution ============
     async executeDelete() {
       this.deleting = true
@@ -1511,7 +1569,8 @@ export default {
       transform: translateX(4px);
 
       .note-item-actions .edit-icon,
-      .note-item-actions .delete-icon {
+      .note-item-actions .delete-icon,
+      .note-item-actions .reorder-icon {
         opacity: 1;
         transform: scale(1);
       }
@@ -1624,6 +1683,36 @@ export default {
         &:hover {
           background: var(--color-danger-light, rgba(245, 108, 108, 0.1));
           border-color: var(--color-danger, #F56C6C);
+        }
+      }
+
+      // Reorder icons (up/down)
+      .reorder-icon {
+        opacity: 0;
+        transform: scale(0.8);
+        background: var(--bg-container);
+
+        i {
+          color: var(--color-info, #909399);
+        }
+
+        &:hover:not(.is-disabled) {
+          background: var(--color-info-light, rgba(144, 147, 153, 0.1));
+          border-color: var(--color-info, #909399);
+
+          i {
+            color: var(--color-primary);
+          }
+        }
+
+        &.is-disabled {
+          cursor: not-allowed;
+          opacity: 0.4 !important;
+
+          &:hover {
+            transform: scale(1);
+            box-shadow: none;
+          }
         }
       }
     }
@@ -2748,9 +2837,10 @@ export default {
     transform: scale(0.98);
   }
 
-  // Always show edit/delete icons on touch devices
+  // Always show edit/delete/reorder icons on touch devices
   .note-item-actions .edit-icon,
-  .note-item-actions .delete-icon {
+  .note-item-actions .delete-icon,
+  .note-item-actions .reorder-icon {
     opacity: 1;
     transform: scale(1);
   }
