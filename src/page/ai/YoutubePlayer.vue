@@ -203,14 +203,41 @@
              v-show="middleControlEnabled"
              @mouseup="handleTextSelectionWithPausing"
              @touchend="handleTextSelectionWithPausing">
-          <div v-if="hasPreviousSubtitle" class="previous-subtitle">
-            {{ subtitles[currentSubtitleIndex - 1]?.text }}
+          <div v-if="hasPreviousSubtitle" class="subtitle-line previous-subtitle">
+            <span class="subtitle-text">{{ subtitles[currentSubtitleIndex - 1]?.text }}</span>
+            <KiwiButton
+              class="subtitle-action-btn"
+              type="text"
+              icon="el-icon-search"
+              size="mini"
+              circle
+              @click.stop="openAiPopupWithSubtitle(subtitles[currentSubtitleIndex - 1]?.text)"
+              title="Search with AI"
+            />
           </div>
-          <div v-if="subtitles.length" class="current-subtitle-display">
-            {{ subtitles[currentSubtitleIndex]?.text }}
+          <div v-if="subtitles.length" class="subtitle-line current-subtitle-display">
+            <span class="subtitle-text">{{ subtitles[currentSubtitleIndex]?.text }}</span>
+            <KiwiButton
+              class="subtitle-action-btn current"
+              type="primary"
+              icon="el-icon-search"
+              size="mini"
+              circle
+              @click.stop="openAiPopupWithSubtitle(subtitles[currentSubtitleIndex]?.text)"
+              title="Search with AI"
+            />
           </div>
-          <div v-if="hasNextSubtitle" class="next-subtitle">
-            {{ subtitles[currentSubtitleIndex + 1]?.text }}
+          <div v-if="hasNextSubtitle" class="subtitle-line next-subtitle">
+            <span class="subtitle-text">{{ subtitles[currentSubtitleIndex + 1]?.text }}</span>
+            <KiwiButton
+              class="subtitle-action-btn"
+              type="text"
+              icon="el-icon-search"
+              size="mini"
+              circle
+              @click.stop="openAiPopupWithSubtitle(subtitles[currentSubtitleIndex + 1]?.text)"
+              title="Search with AI"
+            />
           </div>
         </div>
       </div>
@@ -1631,6 +1658,22 @@ export default {
       }
     },
 
+    // Open AI popup with specific subtitle text
+    openAiPopupWithSubtitle(text) {
+      const trimmedText = (text || '').trim();
+      if (!trimmedText) {
+        msgUtil.msgWarning(this, 'No subtitle text available');
+        return;
+      }
+
+      // Pause video before opening popup
+      this.pauseVideo();
+
+      // Set selected text and open popup
+      this.selectedText = trimmedText;
+      this.showSelectionPopup = true;
+    },
+
     // Inline AI search
     aiSearchSelectedText() {
       const text = (this.selectedText || '').trim();
@@ -2777,6 +2820,56 @@ export default {
   text-overflow: ellipsis;
 }
 
+/* Subtitle line with action button */
+.subtitle-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+}
+
+.subtitle-line .subtitle-text {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.subtitle-line .subtitle-action-btn {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: scale(0.9);
+}
+
+.subtitle-line:hover .subtitle-action-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Always show button on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .subtitle-line .subtitle-action-btn {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  .subtitle-line .subtitle-action-btn:active {
+    opacity: 1;
+  }
+}
+
+/* Special styling for current subtitle button */
+.subtitle-line.current-subtitle-display .subtitle-action-btn.current {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.subtitle-line.current-subtitle-display .subtitle-action-btn.current:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 /* Subtitles Container */
 .subtitles-container {
   flex: 1;
@@ -3248,6 +3341,16 @@ export default {
     font-size: 11px;
     padding: 6px 10px;
     max-height: 40px;
+  }
+
+  /* Make subtitle action buttons always visible on mobile */
+  .subtitle-line .subtitle-action-btn {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  .subtitle-line .subtitle-action-btn:active {
+    opacity: 1;
   }
 
   .right-panel {
