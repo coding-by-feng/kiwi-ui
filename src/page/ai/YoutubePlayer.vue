@@ -2744,6 +2744,20 @@ export default {
     background: rgba(30, 30, 30, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
+
+  /* Ensure subtitle action buttons have proper contrast in dark mode */
+  .subtitle-line.previous-subtitle .subtitle-action-btn,
+  .subtitle-line.next-subtitle .subtitle-action-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .subtitle-line.previous-subtitle .subtitle-action-btn:hover,
+  .subtitle-line.next-subtitle .subtitle-action-btn:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 64, 158, 255), 0.4);
+  }
 }
 /* Subtitle Context Display - Current subtitle viewer */
 .subtitles-context-display {
@@ -2859,15 +2873,33 @@ export default {
   }
 }
 
-/* Special styling for current subtitle button */
+/* Buttons on previous/next subtitles - ensure proper contrast */
+.subtitle-line.previous-subtitle .subtitle-action-btn,
+.subtitle-line.next-subtitle .subtitle-action-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  color: var(--color-primary);
+}
+
+.subtitle-line.previous-subtitle .subtitle-action-btn:hover,
+.subtitle-line.next-subtitle .subtitle-action-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 64, 158, 255), 0.3);
+}
+
+/* Special styling for current subtitle button - white on gradient */
 .subtitle-line.current-subtitle-display .subtitle-action-btn.current {
   background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
 }
 
 .subtitle-line.current-subtitle-display .subtitle-action-btn.current:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 /* Subtitles Container */
@@ -3530,6 +3562,18 @@ export default {
   .subtitles-context-display,
   .controls-wrapper {
     border: 2px solid #000 !important;
+  }
+
+  /* Ensure subtitle action buttons have high contrast */
+  .subtitle-line .subtitle-action-btn {
+    border: 2px solid #000 !important;
+    opacity: 1 !important;
+  }
+
+  .subtitle-line.current-subtitle-display .subtitle-action-btn.current {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #fff !important;
   }
 }
 
