@@ -7,6 +7,8 @@
   "scripts": {
     "serve": "vue-cli-service serve --verbose",
     "serve-prod": "VUE_APP_API_URL=https://kason.app vue-cli-service serve --verbose",
+    "serve:4001": "VUE_APP_API_URL=https://kason.app vue-cli-service serve --port 4001 --verbose",
+    "serve:4002": "VUE_APP_API_URL=http://localhost:8088 vue-cli-service serve --port 4002 --verbose",
     "build": "node scripts/pre-build.js && vue-cli-service build --verbose",
     "build:quick": "vue-cli-service build --verbose",
     "lint": "vue-cli-service lint",
