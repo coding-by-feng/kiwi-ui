@@ -137,6 +137,19 @@ export default {
             { id: 'deepHum', label: 'Deep Hum', icon: 'el-icon-moon', type: 'generated', generator: 'deepHum' },
             { id: 'binaural', label: 'Alpha Waves', icon: 'el-icon-magic-stick', type: 'generated', generator: 'binaural' }
           ]
+        },
+        {
+          id: 'minecraft',
+          name: 'Minecraft Ambience',
+          icon: 'el-icon-box',
+          sounds: [
+            { id: 'minecraft-cave', label: 'Cave Sounds', icon: 'el-icon-moon-night', type: 'file', src: '/assets/audio/bgm/minecraft-cave.mp3' },
+            { id: 'minecraft-overworld', label: 'Overworld', icon: 'el-icon-sunny', type: 'file', src: '/assets/audio/bgm/minecraft-overworld.mp3' },
+            { id: 'minecraft-nether', label: 'Nether', icon: 'el-icon-hot-water', type: 'file', src: '/assets/audio/bgm/minecraft-nether.mp3' },
+            { id: 'minecraft-end', label: 'The End', icon: 'el-icon-moon', type: 'file', src: '/assets/audio/bgm/minecraft-end.mp3' },
+            { id: 'minecraft-rain', label: 'Rain', icon: 'el-icon-heavy-rain', type: 'file', src: '/assets/audio/bgm/minecraft-rain.mp3' },
+            { id: 'minecraft-creative', label: 'Creative', icon: 'el-icon-picture', type: 'file', src: '/assets/audio/bgm/minecraft-creative.mp3' }
+          ]
         }
       ],
       playingSounds: {} // { soundId: { playing: true, volume: 50, node: AudioNode, gainNode: GainNode } }
