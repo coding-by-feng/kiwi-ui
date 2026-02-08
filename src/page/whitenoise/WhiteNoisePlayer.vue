@@ -86,6 +86,15 @@
       loop
       preload="none"
     />
+
+    <!-- Hidden YouTube Players for YouTube sounds -->
+    <div
+      v-for="sound in youtubeSounds"
+      :key="'youtube-' + sound.id"
+      class="youtube-player-container"
+    >
+      <div :id="'youtube-player-' + sound.id"></div>
+    </div>
   </div>
 </template>
 
@@ -104,6 +113,8 @@ export default {
     return {
       masterVolume: 50,
       audioContext: null,
+      youtubeApiReady: false,
+      youtubePlayers: {}, // { soundId: YT.Player instance }
       categories: [
         {
           id: 'nature',
@@ -143,12 +154,12 @@ export default {
           name: 'Minecraft Ambience',
           icon: 'el-icon-box',
           sounds: [
-            { id: 'minecraft-cave', label: 'Cave Sounds', icon: 'el-icon-moon-night', type: 'file', src: '/assets/audio/bgm/minecraft-cave.mp3' },
-            { id: 'minecraft-overworld', label: 'Overworld', icon: 'el-icon-sunny', type: 'file', src: '/assets/audio/bgm/minecraft-overworld.mp3' },
-            { id: 'minecraft-nether', label: 'Nether', icon: 'el-icon-hot-water', type: 'file', src: '/assets/audio/bgm/minecraft-nether.mp3' },
-            { id: 'minecraft-end', label: 'The End', icon: 'el-icon-moon', type: 'file', src: '/assets/audio/bgm/minecraft-end.mp3' },
-            { id: 'minecraft-rain', label: 'Rain', icon: 'el-icon-heavy-rain', type: 'file', src: '/assets/audio/bgm/minecraft-rain.mp3' },
-            { id: 'minecraft-creative', label: 'Creative', icon: 'el-icon-picture', type: 'file', src: '/assets/audio/bgm/minecraft-creative.mp3' }
+            { id: 'minecraft-cave', label: 'Cave Sounds', icon: 'el-icon-moon-night', type: 'youtube', videoId: 'gZwabqbiPdU' },
+            { id: 'minecraft-overworld', label: 'Overworld', icon: 'el-icon-sunny', type: 'youtube', videoId: 'Dg0IjOzopYU' },
+            { id: 'minecraft-nether', label: 'Nether', icon: 'el-icon-hot-water', type: 'youtube', videoId: 'XKQzWe5w0hM' },
+            { id: 'minecraft-music', label: 'Music (C418)', icon: 'el-icon-headset', type: 'youtube', videoId: '_3ngiSxVCBs' },
+            { id: 'minecraft-rain', label: 'Rain', icon: 'el-icon-heavy-rain', type: 'youtube', videoId: 'z8MRing5nBo' },
+            { id: 'minecraft-calm', label: 'Calm Music', icon: 'el-icon-moon', type: 'youtube', videoId: 'aBkTkxKDduc' }
           ]
         }
       ],
@@ -159,20 +170,52 @@ export default {
     fileSounds() {
       return this.categories.flatMap(cat => cat.sounds.filter(s => s.type === 'file'))
     },
+    youtubeSounds() {
+      return this.categories.flatMap(cat => cat.sounds.filter(s => s.type === 'youtube'))
+    },
     activeSoundCount() {
       return Object.keys(this.playingSounds).length
     }
   },
   mounted() {
     this.loadSettings()
+    this.loadYouTubeAPI()
   },
   beforeDestroy() {
     this.stopAllSounds()
     if (this.audioContext) {
       this.audioContext.close()
     }
+    // Clean up YouTube players
+    Object.values(this.youtubePlayers).forEach(player => {
+      if (player && typeof player.destroy === 'function') {
+        player.destroy()
+      }
+    })
   },
   methods: {
+    // YouTube API initialization
+    loadYouTubeAPI() {
+      if (window.YT && window.YT.Player) {
+        this.youtubeApiReady = true
+        return
+      }
+      if (!document.getElementById('youtube-api-script')) {
+        const tag = document.createElement('script')
+        tag.id = 'youtube-api-script'
+        tag.src = '/assets/external/youtube-iframe-api.js'
+        document.head.appendChild(tag)
+      }
+      const self = this
+      const prevCb = window.onYouTubeIframeAPIReady
+      window.onYouTubeIframeAPIReady = function() {
+        self.youtubeApiReady = true
+        if (typeof prevCb === 'function') {
+          try { prevCb() } catch (e) { /* no-op */ }
+        }
+      }
+    },
+
     // Audio Context initialization
     getAudioContext() {
       if (!this.audioContext) {
@@ -204,6 +247,8 @@ export default {
         await this.playFileSound(sound, volume)
       } else if (sound.type === 'generated') {
         await this.playGeneratedSound(sound, volume)
+      } else if (sound.type === 'youtube') {
+        await this.playYoutubeSound(sound, volume)
       }
     },
 
@@ -277,6 +322,63 @@ export default {
       })
     },
 
+    // Play YouTube sound
+    async playYoutubeSound(sound, volume) {
+      if (!this.youtubeApiReady) {
+        console.warn('YouTube API not ready yet')
+        return
+      }
+
+      const playerId = 'youtube-player-' + sound.id
+
+      return new Promise((resolve) => {
+        // Check if player already exists
+        if (this.youtubePlayers[sound.id]) {
+          const player = this.youtubePlayers[sound.id]
+          player.setVolume(this.calculateVolume(volume) * 100)
+          player.playVideo()
+
+          this.$set(this.playingSounds, sound.id, {
+            playing: true,
+            volume: volume,
+            type: 'youtube',
+            player: player
+          })
+          resolve()
+          return
+        }
+
+        // Create new player
+        const player = new window.YT.Player(playerId, {
+          height: '0',
+          width: '0',
+          videoId: sound.videoId,
+          playerVars: {
+            'playsinline': 1,
+            'controls': 0,
+            'disablekb': 1,
+            'loop': 1,
+            'playlist': sound.videoId // Required for looping
+          },
+          events: {
+            'onReady': (event) => {
+              event.target.setVolume(this.calculateVolume(volume) * 100)
+              event.target.playVideo()
+
+              this.youtubePlayers[sound.id] = player
+              this.$set(this.playingSounds, sound.id, {
+                playing: true,
+                volume: volume,
+                type: 'youtube',
+                player: player
+              })
+              resolve()
+            }
+          }
+        })
+      })
+    },
+
     // Stop a specific sound
     stopSound(soundId) {
       const soundState = this.playingSounds[soundId]
@@ -295,6 +397,12 @@ export default {
         }
         if (soundState.gainNode) {
           soundState.gainNode.disconnect()
+        }
+      } else if (soundState.type === 'youtube' && soundState.player) {
+        try {
+          soundState.player.pauseVideo()
+        } catch (e) {
+          console.warn('Failed to pause YouTube player:', e)
         }
       }
 
@@ -333,6 +441,12 @@ export default {
         soundState.audio.volume = volume
       } else if (soundState.type === 'generated' && soundState.gainNode) {
         soundState.gainNode.gain.value = volume
+      } else if (soundState.type === 'youtube' && soundState.player) {
+        try {
+          soundState.player.setVolume(volume * 100)
+        } catch (e) {
+          console.warn('Failed to set YouTube volume:', e)
+        }
       }
     },
 
@@ -780,5 +894,16 @@ export default {
   .sound-label {
     font-size: 11px;
   }
+}
+
+/* YouTube Player Container */
+.youtube-player-container {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  left: -9999px;
 }
 </style>
