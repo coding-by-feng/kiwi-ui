@@ -544,6 +544,7 @@ export default {
           onCompleted: (response) => {
             item.isStreaming = false
             item.loading = false
+            this.aiSearchLoading = false // Clear search button loading state
             try {
               const finalPayload = (response.fullResponse && response.fullResponse.length > 0) ? response.fullResponse : item.responseText
               const extracted = this.extractResponseTextFromPayload(finalPayload)
@@ -572,6 +573,7 @@ export default {
     handleItemError(item, message, errorCode) {
       item.loading = false
       item.isStreaming = false
+      this.aiSearchLoading = false // Clear search button loading state
       try {
         if (item.abortFn) item.abortFn()
       } catch (_) {}
@@ -618,6 +620,9 @@ export default {
         this.aiLastError = 'No text selected'
         return
       }
+
+      // Set loading state for search button
+      this.aiSearchLoading = true
 
       // Check if there is already a pending item for this text (added but not started)
       const pendingItem = (this.nestedItems || []).find(i => i.selectedText === text && !i.loading && !i.responseText && !i.error)
