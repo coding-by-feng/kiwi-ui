@@ -49,6 +49,16 @@
     50% { width: 70%; }
     100% { width: 0%; }
 }
+
+/* Prevent zoom on mobile devices */
+* {
+    touch-action: manipulation;
+}
+
+html, body {
+    touch-action: pan-x pan-y;
+    -ms-touch-action: pan-x pan-y;
+}
 </style>
 
 <!-- Additional loading monitoring -->
@@ -65,6 +75,39 @@ window.addEventListener('load', function() {
         window.loadingDiagnostics.logStep('🌟 Window Load Complete', 'All resources including images and stylesheets loaded');
     }
 });
+</script>
+
+<!-- Prevent mobile zoom gestures -->
+<script>
+// Prevent double-tap zoom
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, { passive: false });
+
+// Prevent pinch-to-zoom
+document.addEventListener('gesturestart', function (event) {
+    event.preventDefault();
+});
+
+document.addEventListener('gesturechange', function (event) {
+    event.preventDefault();
+});
+
+document.addEventListener('gestureend', function (event) {
+    event.preventDefault();
+});
+
+// Prevent multi-touch zoom
+document.addEventListener('touchmove', function (event) {
+    if (event.scale !== 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
 </script>
 </body>
 </html>
