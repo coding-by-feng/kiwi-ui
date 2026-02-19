@@ -578,6 +578,7 @@ export default {
         clipboardContentDetected: '클립보드 내용 감지됨',
         useClipboardContent: '"{text}"을(를) 검색하시겠습니까? 클릭하여 계속하세요.',
         usingClipboardContent: '클립보드 내용 사용 중: "{text}"',
+        requestCancelled: '요청이 취소되었습니다',
         enterTextToSearch: '검색할 텍스트를 입력하거나 먼저 클립보드에 텍스트를 복사하세요.',
         clipboardAccessDenied: '검색할 텍스트를 입력하세요. 클립보드 접근에는 권한이 필요합니다 - 텍스트를 수동으로 입력하거나 붙여넣으세요.',
         unableToAccessClipboard: '검색할 텍스트를 입력하세요. 클립보드 내용에 접근할 수 없습니다.',

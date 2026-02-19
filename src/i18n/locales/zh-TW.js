@@ -530,6 +530,7 @@ export default {
         clipboardContentDetected: '偵測到剪貼簿內容',
         useClipboardContent: '是否要搜尋「{text}」？點擊繼續。',
         usingClipboardContent: '正在使用剪貼簿內容：「{text}」',
+        requestCancelled: '請求已取消',
         enterTextToSearch: '請輸入文字進行搜尋或先複製文字到剪貼簿。',
         clipboardAccessDenied: '請輸入文字進行搜尋。剪貼簿存取需要權限 - 請手動輸入或貼上文字。',
         unableToAccessClipboard: '請輸入文字進行搜尋。無法存取剪貼簿內容。',

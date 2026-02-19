@@ -27,14 +27,29 @@ jobs:
         env:
           VUE_APP_API_URL: https://kason.app
 
-      - name: Deploy to server
+      - name: Compress dist
+        run: tar -czf dist.tar.gz -C dist .
+
+      - name: Copy dist to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: dist/*
-          target: /usr/share/nginx/html
-          strip_components: 1
-          rm: true
+          source: dist.tar.gz
+          target: /tmp
+
+      - name: Deploy to Docker container
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            docker exec kiwi-ui rm -rf /usr/share/nginx/html/*
+            docker cp /tmp/dist.tar.gz kiwi-ui:/tmp/dist.tar.gz
+            docker exec kiwi-ui tar -xzf /tmp/dist.tar.gz -C /usr/share/nginx/html
+            docker exec kiwi-ui rm -f /tmp/dist.tar.gz
+            rm -f /tmp/dist.tar.gz

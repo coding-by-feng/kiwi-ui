@@ -538,6 +538,7 @@ export default {
         clipboardContentDetected: 'Contenu du presse-papiers détecté',
         useClipboardContent: 'Voulez-vous rechercher « {text} » ? Cliquez pour continuer.',
         usingClipboardContent: 'Utilisation du contenu du presse-papiers : « {text} »',
+        requestCancelled: 'Requête annulée',
         enterTextToSearch: 'Veuillez entrer du texte à rechercher ou copier d\'abord du texte dans le presse-papiers.',
         clipboardAccessDenied: 'Veuillez entrer du texte à rechercher. L\'accès au presse-papiers nécessite une autorisation - veuillez entrer ou coller manuellement.',
         unableToAccessClipboard: 'Veuillez entrer du texte à rechercher. Impossible d\'accéder au contenu du presse-papiers.',

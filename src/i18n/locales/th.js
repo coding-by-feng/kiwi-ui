@@ -593,6 +593,7 @@ export default {
         clipboardContentDetected: 'ตรวจพบเนื้อหาคลิปบอร์ด',
         useClipboardContent: 'คุณต้องการค้นหา "{text}" หรือไม่? คลิกเพื่อดำเนินการ',
         usingClipboardContent: 'กำลังใช้เนื้อหาคลิปบอร์ด: "{text}"',
+        requestCancelled: 'คำขอถูกยกเลิก',
         enterTextToSearch: 'กรุณากรอกข้อความเพื่อค้นหาหรือคัดลอกข้อความไปยังคลิปบอร์ดก่อน',
         clipboardAccessDenied: 'กรุณากรอกข้อความเพื่อค้นหา การเข้าถึงคลิปบอร์ดต้องได้รับอนุญาต - กรุณากรอกหรือวางข้อความด้วยตนเอง',
         unableToAccessClipboard: 'กรุณากรอกข้อความเพื่อค้นหา ไม่สามารถเข้าถึงเนื้อหาคลิปบอร์ด',

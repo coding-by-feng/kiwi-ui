@@ -673,6 +673,7 @@ export default {
         clipboardContentDetected: 'Clipboard Content Detected',
         useClipboardContent: 'Do you want to search for "{text}"? Click to proceed.',
         usingClipboardContent: 'Using clipboard content: "{text}"',
+        requestCancelled: 'Request cancelled',
         enterTextToSearch: 'Please enter some text to search or copy text to clipboard first.',
         clipboardAccessDenied: 'Please enter some text to search. Clipboard access requires permission - please manually enter or paste your text.',
         unableToAccessClipboard: 'Please enter some text to search. Unable to access clipboard content.',

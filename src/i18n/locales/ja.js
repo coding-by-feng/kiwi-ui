@@ -542,6 +542,7 @@ export default {
         clipboardContentDetected: 'クリップボードの内容を検出',
         useClipboardContent: '「{text}」を検索しますか？クリックして続行。',
         usingClipboardContent: 'クリップボードの内容を使用中：「{text}」',
+        requestCancelled: 'リクエストがキャンセルされました',
         enterTextToSearch: '検索するテキストを入力するか、先にテキストをクリップボードにコピーしてください。',
         clipboardAccessDenied: '検索するテキストを入力してください。クリップボードへのアクセスには許可が必要です - テキストを手動で入力または貼り付けてください。',
         unableToAccessClipboard: '検索するテキストを入力してください。クリップボードの内容にアクセスできません。',
