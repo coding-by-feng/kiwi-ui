@@ -688,6 +688,7 @@ export default {
     messages: {
         clipboardDetectionEnabled: '剪贴板检测已开启',
         clipboardDetectionDisabled: '剪贴板检测已关闭',
+        requestCancelled: '请求已取消',
         invalidConfig: '无效的配置',
         saveFailed: '保存失败',
         duplicateHotkey: '该快捷键已被使用',

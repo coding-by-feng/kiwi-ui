@@ -272,6 +272,7 @@ export default {
         clipboardContentDetected: 'Zwischenablage-Inhalt erkannt',
         useClipboardContent: 'Möchten Sie nach „{text}" suchen? Klicken Sie zum Fortfahren.',
         usingClipboardContent: 'Verwende Zwischenablage-Inhalt: „{text}"',
+        requestCancelled: 'Anfrage abgebrochen',
         enterTextToSearch: 'Bitte geben Sie Text zum Suchen ein oder kopieren Sie zuerst Text in die Zwischenablage.',
         clipboardAccessDenied: 'Bitte geben Sie Text zum Suchen ein. Zwischenablage-Zugriff erfordert Berechtigung - bitte manuell eingeben oder einfügen.',
         unableToAccessClipboard: 'Bitte geben Sie Text zum Suchen ein. Zugriff auf Zwischenablage-Inhalt nicht möglich.',

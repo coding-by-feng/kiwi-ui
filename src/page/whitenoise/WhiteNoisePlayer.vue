@@ -150,16 +150,16 @@ export default {
           ]
         },
         {
-          id: 'minecraft',
-          name: 'Minecraft Ambience',
-          icon: 'el-icon-box',
+          id: 'chill',
+          name: 'Chill & Relaxing',
+          icon: 'el-icon-coffee-cup',
           sounds: [
-            { id: 'minecraft-cave', label: 'Cave Sounds', icon: 'el-icon-moon-night', type: 'youtube', videoId: 'gZwabqbiPdU' },
-            { id: 'minecraft-overworld', label: 'Overworld', icon: 'el-icon-sunny', type: 'youtube', videoId: 'Dg0IjOzopYU' },
-            { id: 'minecraft-nether', label: 'Nether', icon: 'el-icon-hot-water', type: 'youtube', videoId: 'XKQzWe5w0hM' },
-            { id: 'minecraft-music', label: 'Music (C418)', icon: 'el-icon-headset', type: 'youtube', videoId: '_3ngiSxVCBs' },
-            { id: 'minecraft-rain', label: 'Rain', icon: 'el-icon-heavy-rain', type: 'youtube', videoId: 'z8MRing5nBo' },
-            { id: 'minecraft-calm', label: 'Calm Music', icon: 'el-icon-moon', type: 'youtube', videoId: 'aBkTkxKDduc' }
+            { id: 'chill-lofi', label: 'Lo-Fi Beats', icon: 'el-icon-headset', type: 'file', src: '/assets/audio/bgm/chill-lofi.mp3' },
+            { id: 'chill-jazz', label: 'Smooth Jazz', icon: 'el-icon-mic', type: 'file', src: '/assets/audio/bgm/chill-jazz.mp3' },
+            { id: 'chill-piano', label: 'Soft Piano', icon: 'el-icon-video-camera', type: 'file', src: '/assets/audio/bgm/chill-piano.mp3' },
+            { id: 'chill-ambient', label: 'Ambient Dreams', icon: 'el-icon-moon', type: 'file', src: '/assets/audio/bgm/chill-ambient.mp3' },
+            { id: 'chill-acoustic', label: 'Acoustic Calm', icon: 'el-icon-sunrise', type: 'file', src: '/assets/audio/bgm/chill-acoustic.mp3' },
+            { id: 'chill-meditation', label: 'Meditation', icon: 'el-icon-magic-stick', type: 'file', src: '/assets/audio/bgm/chill-meditation.mp3' }
           ]
         }
       ],

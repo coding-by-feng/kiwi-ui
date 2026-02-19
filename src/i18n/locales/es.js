@@ -578,6 +578,7 @@ export default {
         clipboardContentDetected: 'Contenido del portapapeles detectado',
         useClipboardContent: '¿Quieres buscar "{text}"? Haz clic para continuar.',
         usingClipboardContent: 'Usando contenido del portapapeles: "{text}"',
+        requestCancelled: 'Solicitud cancelada',
         enterTextToSearch: 'Por favor ingresa texto para buscar o primero copia texto al portapapeles.',
         clipboardAccessDenied: 'Por favor ingresa texto para buscar. El acceso al portapapeles requiere permiso - por favor ingresa o pega manualmente.',
         unableToAccessClipboard: 'Por favor ingresa texto para buscar. No se puede acceder al contenido del portapapeles.',
