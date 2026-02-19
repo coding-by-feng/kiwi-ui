@@ -93,7 +93,7 @@
           <!-- Suggestions Dropdown -->
           <transition name="el-zoom-in-top">
             <div v-if="suggestionsVisible && suggestions.length > 0" class="search-suggestions">
-               <div v-for="(item, index) in suggestions" :key="index" class="suggestion-item" @click="querySelect(item)">
+               <div v-for="(item, index) in suggestions" :key="index" class="suggestion-item" :class="{ highlighted: index === highlightedIndex }" @click="querySelect(item)">
                  {{ item.value }}
                </div>
             </div>
@@ -228,6 +228,7 @@ export default {
       // Custom Autocomplete
       suggestions: [],
       suggestionsVisible: false,
+      highlightedIndex: -1,
       debounceTimer: null,
     }
   },
@@ -692,7 +693,8 @@ export default {
       console.log('updateFromRoute - this.$route:', this.$route);
       this.originalText = this.$route.query.originalText ? decodeURIComponent(this.$route.query.originalText) : this.originalText;
       this.lazy = this.$route.path.indexOf('lazy') > -1;
-      const newMode = this.$route.query.selectedMode || this.selectedMode;
+      const isDetailRoute = this.$route.path === kiwiConsts.ROUTES.DETAIL;
+      const newMode = this.$route.query.selectedMode || (isDetailRoute ? kiwiConsts.SEARCH_DEFAULT_MODE : this.selectedMode);
       if (newMode !== this.selectedMode) {
         this.selectedMode = newMode;
       }
@@ -732,21 +734,25 @@ export default {
       if (!util.isEmptyStr(this.$route.query.selectedMode) && this.$route.query.selectedMode !== kiwiConsts.SEARCH_DEFAULT_MODE) {
         this.suggestions = [];
         this.suggestionsVisible = false;
+        this.highlightedIndex = -1;
         return;
       }
       let real = queryString ? queryString.trimLeft() : '';
       if (real === '' || /.*[\u4e00-\u9fa5]+.*$/.test(real)) {
         this.suggestions = [];
         this.suggestionsVisible = false;
+        this.highlightedIndex = -1;
         return;
       }
       this.fuzzyQueryWord(real.toLowerCase(), 1, 50).then(response => {
         this.suggestions = response.data.data;
         this.suggestionsVisible = this.suggestions.length > 0;
+        this.highlightedIndex = -1;
       }).catch(e => {
         console.error(e);
         this.suggestions = [];
         this.suggestionsVisible = false;
+        this.highlightedIndex = -1;
       });
     },
 
@@ -875,6 +881,25 @@ export default {
       this.navigateIfChanged(target)
     },
     handleKeyDown(event) {
+      if (this.suggestionsVisible && this.suggestions.length > 0) {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          this.highlightedIndex = (this.highlightedIndex + 1) % this.suggestions.length;
+          this.scrollHighlightedIntoView();
+          return;
+        }
+        if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          this.highlightedIndex = this.highlightedIndex <= 0 ? this.suggestions.length - 1 : this.highlightedIndex - 1;
+          this.scrollHighlightedIntoView();
+          return;
+        }
+        if (event.key === 'Enter' && this.highlightedIndex >= 0) {
+          event.preventDefault();
+          this.querySelect(this.suggestions[this.highlightedIndex]);
+          return;
+        }
+      }
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey || event.shiftKey)) {
         if (this.getInputType === kiwiConsts.INPUT_TYPE.TEXTAREA) {
           event.preventDefault();
@@ -890,6 +915,16 @@ export default {
       else if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         this.onSubmit();
       }
+    },
+
+    scrollHighlightedIntoView() {
+      this.$nextTick(() => {
+        const container = this.$el.querySelector('.search-suggestions');
+        const items = container && container.querySelectorAll('.suggestion-item');
+        if (items && items[this.highlightedIndex]) {
+          items[this.highlightedIndex].scrollIntoView({ block: 'nearest' });
+        }
+      });
     },
 
     async onSubmit() {
@@ -1105,7 +1140,8 @@ export default {
   border-bottom: none;
 }
 
-.suggestion-item:hover {
+.suggestion-item:hover,
+.suggestion-item.highlighted {
   background: var(--bg-hover);
 }
 
