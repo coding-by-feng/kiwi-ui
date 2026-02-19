@@ -331,7 +331,12 @@ export default {
 
       // Browser leave detection
       beforeUnloadHandler: null,
-      pageHideHandler: null
+      pageHideHandler: null,
+
+      // Alert sounds
+      audioContext: null,
+      halfwayAlerted: false,
+      progressAlertedAt: new Set()
     }
   },
 
@@ -421,6 +426,9 @@ export default {
   beforeDestroy() {
     this.cleanupBrowserLeaveDetection()
     this.stopTimer()
+    if (this.audioContext) {
+      this.audioContext.close()
+    }
   },
 
   methods: {
@@ -497,6 +505,8 @@ export default {
         console.warn('Failed to create focus session:', e)
       }
 
+      this.resetAlertState()
+      this.playStartAlert()
       this.startTimer()
     },
 
@@ -547,6 +557,7 @@ export default {
       this.timerInterval = setInterval(() => {
         if (this.remainingSeconds > 0) {
           this.remainingSeconds--
+          this.checkTimerAlerts()
         } else {
           this.completeSession()
         }
@@ -562,6 +573,7 @@ export default {
 
     async completeSession() {
       this.stopTimer()
+      this.playEndAlert()
       this.isRunning = false
       this.isPaused = false
       this.isCompleted = true
@@ -687,6 +699,83 @@ export default {
       if (this.pageHideHandler) {
         window.removeEventListener('pagehide', this.pageHideHandler)
       }
+    },
+
+    // --- Alert Sound System ---
+    getAudioContext() {
+      if (!this.audioContext) {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume()
+      }
+      return this.audioContext
+    },
+
+    playTone(frequency, duration, type = 'sine', volume = 0.3) {
+      const ctx = this.getAudioContext()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = type
+      osc.frequency.setValueAtTime(frequency, ctx.currentTime)
+      gain.gain.setValueAtTime(volume, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + duration)
+    },
+
+    playStartAlert() {
+      // Ascending two-tone chime
+      this.playTone(523, 0.2, 'sine', 0.3)  // C5
+      setTimeout(() => this.playTone(659, 0.3, 'sine', 0.3), 200)  // E5
+    },
+
+    playEndAlert() {
+      // Triumphant three-tone chime
+      this.playTone(523, 0.2, 'sine', 0.35)  // C5
+      setTimeout(() => this.playTone(659, 0.2, 'sine', 0.35), 200)  // E5
+      setTimeout(() => this.playTone(784, 0.4, 'sine', 0.35), 400)  // G5
+    },
+
+    playHalfwayAlert() {
+      // Gentle double tap
+      this.playTone(440, 0.15, 'sine', 0.2)  // A4
+      setTimeout(() => this.playTone(440, 0.15, 'sine', 0.2), 200)  // A4
+    },
+
+    playProgressAlert() {
+      // Soft single tick
+      this.playTone(392, 0.12, 'sine', 0.15)  // G4
+    },
+
+    checkTimerAlerts() {
+      if (this.totalSeconds === 0) return
+      const elapsed = this.totalSeconds - this.remainingSeconds
+      const progress = elapsed / this.totalSeconds
+
+      // Halfway alert (once)
+      if (!this.halfwayAlerted && progress >= 0.5 && elapsed > 0) {
+        this.halfwayAlerted = true
+        this.playHalfwayAlert()
+      }
+
+      // Progress alerts every 10 minutes
+      const elapsedMinutes = Math.floor(elapsed / 60)
+      if (elapsedMinutes > 0 && elapsedMinutes % 10 === 0 && !this.progressAlertedAt.has(elapsedMinutes)) {
+        // Skip if this is also the halfway point (already alerted)
+        const halfwayMinutes = Math.floor(this.totalSeconds / 120)
+        if (elapsedMinutes !== halfwayMinutes) {
+          this.progressAlertedAt.add(elapsedMinutes)
+          this.playProgressAlert()
+        }
+      }
+    },
+
+    resetAlertState() {
+      this.halfwayAlerted = false
+      this.progressAlertedAt = new Set()
     }
   }
 }
