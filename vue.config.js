@@ -283,6 +283,22 @@ module.exports = {
         hot: true,
         compress: true,
         disableHostCheck: true,
+        before(app) {
+            const { getSubtitles } = require('youtube-captions-scraper')
+
+            app.get('/api/ytb/captions', async (req, res) => {
+                try {
+                    const { videoID, lang } = req.query
+                    if (!videoID) {
+                        return res.status(400).json({ code: 1, msg: 'videoID is required' })
+                    }
+                    const captions = await getSubtitles({ videoID, lang: lang || 'en' })
+                    res.json({ code: 0, msg: 'Success', data: captions })
+                } catch (err) {
+                    res.status(500).json({ code: 1, msg: err.message || 'Failed to fetch captions' })
+                }
+            })
+        },
         proxy: {
             '/auth': createProxyConfig('/auth'),
             '/api': createProxyConfig('/api'),
