@@ -249,6 +249,10 @@
             <i :class="scrollingSubtitlesCollapsed ? 'el-icon-arrow-right' : 'el-icon-arrow-down'" class="toggle-arrow"></i>
           </div>
         </div>
+        <div v-if="isSubtitlesLoading && !subtitles.length && !scrollingSubtitlesCollapsed" class="subtitles-loading-placeholder">
+          <i class="el-icon-loading"></i>
+          <span>Loading subtitles...</span>
+        </div>
         <div class="subtitles-container" v-if="subtitles.length && !scrollingSubtitlesCollapsed" ref="subtitlesContainer">
           <div class="subtitles-wrapper"
                v-show="!scrollingSubtitlesCollapsed"
@@ -2309,9 +2313,21 @@ export default {
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.subtitles-loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.subtitles-loading-placeholder i {
+  font-size: 24px;
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
 }
 
 
