@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@opendocsg/pdf2md": "^0.2.2",
+    "youtube-captions-scraper": "^2.0.1",
     "@smallwei/avue": "^2.13.2",
     "axios": "^0.19.2",
     "chart.js": "^4.5.0",
