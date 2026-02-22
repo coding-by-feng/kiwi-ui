@@ -185,7 +185,6 @@ export default {
         UI_LANGUAGE: 'ui_language', // Add UI language key
         CLIPBOARD_DETECTION: 'clipboard_detection',
         SUBTITLES_AUTO_CENTER: 'subtitles_auto_center', // New: persist subtitles auto-center preference
-        ENHANCED_SUBTITLES: 'enhanced_subtitles', // Toggle between enhanced and regular subtitles API
         // New: feature tabs enable/disable map
         ENABLED_TABS: 'enabled_tabs',
         AI_MODE_USAGE_STATS: 'ai_mode_usage_stats',
