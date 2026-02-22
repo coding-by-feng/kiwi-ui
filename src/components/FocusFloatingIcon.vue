@@ -1,7 +1,7 @@
 <template>
   <transition name="float-fade">
     <div
-      v-if="timerState.isRunning || timerState.isPaused"
+      v-if="isVisible"
       class="focus-floating-icon"
       :class="{ paused: timerState.isPaused, dragging: isDragging }"
       :style="floatStyle"
@@ -30,9 +30,7 @@
       <!-- Tree Icon -->
       <div class="float-tree-icon">
         <svg viewBox="0 0 32 32" width="28" height="28">
-          <!-- Trunk -->
           <rect x="14" y="20" width="4" height="8" rx="1.5" fill="#8B6914" />
-          <!-- Crown layers based on stage -->
           <template v-if="timerState.treeStage === 'seed'">
             <circle cx="16" cy="18" r="6" :fill="timerState.treeColor" opacity="0.6" />
           </template>
@@ -60,6 +58,19 @@
       <div v-if="timerState.isPaused" class="float-paused-badge">
         <i class="el-icon-video-pause"></i>
       </div>
+
+      <!-- PiP pop-out button -->
+      <div
+        v-if="supportsPiP"
+        class="float-pip-btn"
+        @click.stop="openPiP"
+        :title="$t('todo.focus.popOut')"
+      >
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+          <path d="M2 2.5A1.5 1.5 0 013.5 1h9A1.5 1.5 0 0114 2.5v4a.5.5 0 01-1 0v-4a.5.5 0 00-.5-.5h-9a.5.5 0 00-.5.5v9a.5.5 0 00.5.5h4a.5.5 0 010 1h-4A1.5 1.5 0 012 12.5v-10z"/>
+          <path d="M8 8.5a.5.5 0 01.5-.5h5a.5.5 0 01.5.5v5a.5.5 0 01-.5.5h-5a.5.5 0 01-.5-.5v-5z"/>
+        </svg>
+      </div>
     </div>
   </transition>
 </template>
@@ -79,12 +90,22 @@ export default {
       posY: window.innerHeight - 100,
       startPosX: 0,
       startPosY: 0,
-      hasMoved: false
+      hasMoved: false,
+      pipWindow: null,
+      pipUpdateInterval: null
     }
   },
 
   computed: {
     ...mapGetters('focus', ['timerState']),
+
+    isVisible() {
+      return (this.timerState.isRunning || this.timerState.isPaused) && !this.pipWindow
+    },
+
+    supportsPiP() {
+      return 'documentPictureInPicture' in window
+    },
 
     circumference() {
       return 2 * Math.PI * 26
@@ -110,8 +131,29 @@ export default {
     }
   },
 
+  watch: {
+    'timerState.remainingSeconds'() {
+      this.updatePiPContent()
+    },
+    'timerState.treeStage'() {
+      this.updatePiPContent()
+    },
+    'timerState.isPaused'() {
+      this.updatePiPContent()
+    },
+    'timerState.isRunning'(val) {
+      if (!val && !this.timerState.isPaused) {
+        this.closePiP()
+      }
+    }
+  },
+
   mounted() {
     this.loadPosition()
+  },
+
+  beforeDestroy() {
+    this.closePiP()
   },
 
   methods: {
@@ -152,7 +194,6 @@ export default {
 
     handleClick() {
       if (this.hasMoved) return
-      // Navigate to focus tab
       this.$router.replace({
         path: this.$route.path,
         query: { ...this.$route.query, active: 'focus' }
@@ -173,6 +214,193 @@ export default {
           this.posY = Math.min(pos.y, window.innerHeight - 80)
         }
       } catch (_) {}
+    },
+
+    // --- Picture-in-Picture ---
+    async openPiP() {
+      if (!this.supportsPiP) return
+      if (this.pipWindow) {
+        this.pipWindow.focus()
+        return
+      }
+
+      try {
+        const pipWin = await window.documentPictureInPicture.requestWindow({
+          width: 220,
+          height: 280
+        })
+
+        this.pipWindow = pipWin
+
+        // Inject styles
+        const style = pipWin.document.createElement('style')
+        style.textContent = this.getPiPStyles()
+        pipWin.document.head.appendChild(style)
+
+        // Set page title
+        const title = pipWin.document.createElement('title')
+        title.textContent = 'Focus Timer'
+        pipWin.document.head.appendChild(title)
+
+        // Build content
+        const container = pipWin.document.createElement('div')
+        container.id = 'pip-root'
+        pipWin.document.body.appendChild(container)
+
+        this.updatePiPContent()
+
+        // Handle close
+        pipWin.addEventListener('pagehide', () => {
+          this.pipWindow = null
+          if (this.pipUpdateInterval) {
+            clearInterval(this.pipUpdateInterval)
+            this.pipUpdateInterval = null
+          }
+        })
+      } catch (e) {
+        this.pipWindow = null
+      }
+    },
+
+    closePiP() {
+      if (this.pipWindow) {
+        try { this.pipWindow.close() } catch (_) {}
+        this.pipWindow = null
+      }
+      if (this.pipUpdateInterval) {
+        clearInterval(this.pipUpdateInterval)
+        this.pipUpdateInterval = null
+      }
+    },
+
+    updatePiPContent() {
+      if (!this.pipWindow) return
+      const root = this.pipWindow.document.getElementById('pip-root')
+      if (!root) return
+
+      const state = this.timerState
+      const minutes = Math.floor(state.remainingSeconds / 60)
+      const seconds = state.remainingSeconds % 60
+      const time = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      const progress = state.totalSeconds > 0 ? state.remainingSeconds / state.totalSeconds : 1
+      const circumference = 2 * Math.PI * 70
+      const offset = circumference * progress
+      const color = state.treeColor || '#4CAF50'
+      const stage = state.treeStage || 'seed'
+      const paused = state.isPaused
+
+      root.innerHTML = `
+        <div class="pip-container${paused ? ' paused' : ''}">
+          <div class="pip-tree-area">
+            <svg class="pip-ring" viewBox="0 0 160 160">
+              <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
+              <circle cx="80" cy="80" r="70" fill="none" stroke="${color}" stroke-width="5"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+                stroke-linecap="round" style="transition:stroke-dashoffset 1s linear"/>
+            </svg>
+            <div class="pip-tree">
+              ${this.getTreeSVG(stage, color)}
+            </div>
+          </div>
+          <div class="pip-time">${time}</div>
+          <div class="pip-status">${paused ? 'PAUSED' : 'FOCUSING'}</div>
+        </div>
+      `
+    },
+
+    getTreeSVG(stage, color) {
+      const trunk = '<rect x="26" y="42" width="8" height="16" rx="3" fill="#8B6914"/>'
+      if (stage === 'seed') {
+        return `<svg viewBox="0 0 60 60" width="80" height="80">
+          <circle cx="30" cy="36" r="10" fill="${color}" opacity="0.6"/>
+        </svg>`
+      }
+      if (stage === 'sprout') {
+        return `<svg viewBox="0 0 60 60" width="80" height="80">
+          ${trunk}
+          <ellipse cx="30" cy="30" rx="12" ry="16" fill="${color}" opacity="0.7"/>
+        </svg>`
+      }
+      if (stage === 'growing') {
+        return `<svg viewBox="0 0 60 60" width="80" height="80">
+          ${trunk}
+          <ellipse cx="30" cy="22" rx="16" ry="18" fill="${color}" opacity="0.8"/>
+          <ellipse cx="20" cy="28" rx="8" ry="10" fill="${color}" opacity="0.6"/>
+          <ellipse cx="40" cy="28" rx="8" ry="10" fill="${color}" opacity="0.6"/>
+        </svg>`
+      }
+      // full tree
+      return `<svg viewBox="0 0 60 60" width="80" height="80">
+        ${trunk}
+        <ellipse cx="30" cy="18" rx="20" ry="16" fill="${color}"/>
+        <ellipse cx="20" cy="24" rx="10" ry="12" fill="${color}" opacity="0.8"/>
+        <ellipse cx="40" cy="24" rx="10" ry="12" fill="${color}" opacity="0.8"/>
+        <ellipse cx="26" cy="12" rx="5" ry="6" fill="rgba(255,255,255,0.12)"/>
+      </svg>`
+    },
+
+    getPiPStyles() {
+      return `
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          background: #0f0f23;
+          color: #fff;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          user-select: none;
+        }
+        .pip-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+        .pip-container.paused { opacity: 0.7; }
+        .pip-tree-area {
+          position: relative;
+          width: 160px;
+          height: 160px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .pip-ring {
+          position: absolute;
+          width: 160px;
+          height: 160px;
+          transform: rotate(-90deg);
+          filter: drop-shadow(0 0 6px rgba(255,255,255,0.15));
+        }
+        .pip-tree {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: breathe 3s ease-in-out infinite;
+        }
+        @keyframes breathe {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.04); }
+        }
+        .pip-time {
+          font-size: 36px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          font-variant-numeric: tabular-nums;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .pip-status {
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          opacity: 0.6;
+        }
+      `
     }
   }
 }
@@ -267,6 +495,34 @@ export default {
   font-size: 10px;
   color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* PiP pop-out button */
+.float-pip-btn {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 18px;
+  height: 18px;
+  background: var(--color-primary, #6366f1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.focus-floating-icon:hover .float-pip-btn {
+  opacity: 1;
+}
+
+.float-pip-btn:hover {
+  transform: scale(1.2);
+  background: var(--color-primary-dark, #4f46e5);
 }
 
 /* Transition */
