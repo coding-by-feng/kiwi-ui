@@ -552,7 +552,13 @@ export default {
             confirmGiveUp: '是的，放弃',
             leaveWarning: '不要离开！',
             leaveWarningDesc: '如果你离开此页面，专注将失败，你将失去积分。',
-            focusFailed: '专注失败！-{points} 积分'
+            focusFailed: '专注失败！-{points} 积分',
+            alertSettings: '提醒设置',
+            quarterAlert: '1/4 进度提醒',
+            halfAlert: '1/2 进度提醒',
+            endAlertLabel: '结束提醒',
+            endAlertRepeat: '结束提醒重复次数',
+            testSound: '测试声音'
         },
 
         // 积分标签

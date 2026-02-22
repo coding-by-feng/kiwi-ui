@@ -123,6 +123,45 @@
           </template>
         </div>
 
+        <!-- Alert Settings -->
+        <div class="alert-settings">
+          <div class="settings-header" @click="showAlertSettings = !showAlertSettings">
+            <span class="settings-title">
+              <i class="el-icon-bell"></i>
+              {{ $t('todo.focus.alertSettings') }}
+            </span>
+            <i :class="showAlertSettings ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
+          </div>
+          <transition name="settings-slide">
+            <div v-show="showAlertSettings" class="settings-body">
+              <div class="setting-row">
+                <span class="setting-label">{{ $t('todo.focus.quarterAlert') }}</span>
+                <el-switch v-model="localAlertConfig.quarterAlert" @change="saveAlertConfig" active-color="var(--color-success)"></el-switch>
+              </div>
+              <div class="setting-row">
+                <span class="setting-label">{{ $t('todo.focus.halfAlert') }}</span>
+                <el-switch v-model="localAlertConfig.halfAlert" @change="saveAlertConfig" active-color="var(--color-success)"></el-switch>
+              </div>
+              <div class="setting-row">
+                <span class="setting-label">{{ $t('todo.focus.endAlertLabel') }}</span>
+                <el-switch v-model="localAlertConfig.endAlert" @change="saveAlertConfig" active-color="var(--color-success)"></el-switch>
+              </div>
+              <div class="setting-row" v-if="localAlertConfig.endAlert">
+                <span class="setting-label">{{ $t('todo.focus.endAlertRepeat') }}</span>
+                <div class="repeat-control">
+                  <button class="repeat-btn" @click="adjustRepeatCount(-1)">-</button>
+                  <span class="repeat-value">{{ localAlertConfig.endAlertRepeatCount }}</span>
+                  <button class="repeat-btn" @click="adjustRepeatCount(1)">+</button>
+                </div>
+              </div>
+              <button class="test-sound-btn" @click="testAlertSound">
+                <i class="el-icon-video-play"></i>
+                {{ $t('todo.focus.testSound') }}
+              </button>
+            </div>
+          </transition>
+        </div>
+
         <!-- Session Stats -->
         <div class="session-stats">
           <div class="stat-card points-card">
@@ -261,7 +300,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 import KiwiDialog from '@/components/ui/KiwiDialog.vue'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import Tree3D from './components/Tree3D.vue'
@@ -336,7 +375,20 @@ export default {
       // Alert sounds
       audioContext: null,
       halfwayAlerted: false,
-      progressAlertedAt: new Set()
+      quarterAlerted: false,
+      progressAlertedAt: new Set(),
+
+      // Alert settings UI
+      showAlertSettings: false,
+      localAlertConfig: {
+        quarterAlert: true,
+        halfAlert: true,
+        endAlert: true,
+        endAlertRepeatCount: 5
+      },
+
+      // End alert repeat tracking
+      endAlertRepeatTimer: null
     }
   },
 
@@ -344,6 +396,7 @@ export default {
     ...mapState('focus', {
       focusStats: state => state.stats
     }),
+    ...mapGetters('focus', ['alertConfig']),
 
     circumference() {
       return 2 * Math.PI * 90
@@ -417,6 +470,7 @@ export default {
     this.loadFocusStats()
     this.loadLocalData()
     this.checkForFailedSession()
+    this.loadAlertConfigFromStore()
   },
 
   mounted() {
@@ -426,13 +480,14 @@ export default {
   beforeDestroy() {
     this.cleanupBrowserLeaveDetection()
     this.stopTimer()
+    this.clearEndAlertRepeat()
     if (this.audioContext) {
       this.audioContext.close()
     }
   },
 
   methods: {
-    ...mapActions('focus', ['fetchFocusStats', 'createFocusSession', 'completeFocusSession', 'cancelFocusSession', 'failFocusSession']),
+    ...mapActions('focus', ['fetchFocusStats', 'createFocusSession', 'completeFocusSession', 'cancelFocusSession', 'failFocusSession', 'updateTimerState', 'updateAlertConfig']),
 
     loadLocalData() {
       try {
@@ -514,6 +569,7 @@ export default {
       this.isRunning = false
       this.isPaused = true
       this.stopTimer()
+      this.syncTimerState()
     },
 
     resumeFocus() {
@@ -533,6 +589,7 @@ export default {
 
     async handleFocusFail(reason = 'give_up') {
       this.stopTimer()
+      this.clearEndAlertRepeat()
       this.isRunning = false
       this.isPaused = false
       this.isCompleted = false
@@ -551,13 +608,16 @@ export default {
 
       this.remainingSeconds = 0
       this.totalSeconds = 0
+      this.syncTimerState()
     },
 
     startTimer() {
+      this.syncTimerState()
       this.timerInterval = setInterval(() => {
         if (this.remainingSeconds > 0) {
           this.remainingSeconds--
           this.checkTimerAlerts()
+          this.syncTimerState()
         } else {
           this.completeSession()
         }
@@ -573,7 +633,7 @@ export default {
 
     async completeSession() {
       this.stopTimer()
-      this.playEndAlert()
+      this.playEndAlertRepeating()
       this.isRunning = false
       this.isPaused = false
       this.isCompleted = true
@@ -584,6 +644,7 @@ export default {
       this.totalPoints += this.earnedPoints
       this.todayTrees++
       this.todayMinutes += this.completedDuration
+      this.syncTimerState()
 
       try {
         await this.completeFocusSession({
@@ -601,10 +662,12 @@ export default {
 
     closeCompletionDialog() {
       this.showCompletionDialog = false
+      this.clearEndAlertRepeat()
       this.plantTreeInForest()
       this.isCompleted = false
       this.remainingSeconds = 0
       this.totalSeconds = 0
+      this.syncTimerState()
     },
 
     plantTreeInForest() {
@@ -701,6 +764,43 @@ export default {
       }
     },
 
+    // --- Vuex Timer State Sync ---
+    syncTimerState() {
+      this.updateTimerState({
+        isRunning: this.isRunning,
+        isPaused: this.isPaused,
+        remainingSeconds: this.remainingSeconds,
+        totalSeconds: this.totalSeconds,
+        treeType: this.selectedTreeType,
+        treeColor: this.currentTreeColor,
+        treeStage: this.treeStage
+      })
+    },
+
+    // --- Alert Config ---
+    loadAlertConfigFromStore() {
+      const config = this.alertConfig
+      if (config) {
+        this.localAlertConfig = { ...this.localAlertConfig, ...config }
+      }
+    },
+
+    saveAlertConfig() {
+      this.updateAlertConfig({ ...this.localAlertConfig })
+    },
+
+    adjustRepeatCount(delta) {
+      const next = this.localAlertConfig.endAlertRepeatCount + delta
+      if (next >= 1 && next <= 20) {
+        this.localAlertConfig.endAlertRepeatCount = next
+        this.saveAlertConfig()
+      }
+    },
+
+    testAlertSound() {
+      this.playObviousAlert()
+    },
+
     // --- Alert Sound System ---
     getAudioContext() {
       if (!this.audioContext) {
@@ -732,17 +832,61 @@ export default {
       setTimeout(() => this.playTone(659, 0.3, 'sine', 0.3), 200)  // E5
     },
 
-    playEndAlert() {
-      // Triumphant three-tone chime
-      this.playTone(523, 0.2, 'sine', 0.35)  // C5
-      setTimeout(() => this.playTone(659, 0.2, 'sine', 0.35), 200)  // E5
-      setTimeout(() => this.playTone(784, 0.4, 'sine', 0.35), 400)  // G5
+    // Obvious loud alert for milestone notifications (1/4, 1/2 marks)
+    playObviousAlert() {
+      // Loud attention-grabbing sequence: rising tones with triangle wave
+      this.playTone(587, 0.25, 'triangle', 0.5)   // D5
+      setTimeout(() => this.playTone(698, 0.25, 'triangle', 0.55), 250)  // F5
+      setTimeout(() => this.playTone(880, 0.35, 'triangle', 0.6), 500)   // A5
+      setTimeout(() => this.playTone(880, 0.15, 'sine', 0.4), 850)       // A5 echo
+    },
+
+    // End alert: triumphant fanfare, played once
+    playEndAlertOnce() {
+      this.playTone(523, 0.2, 'triangle', 0.6)   // C5
+      setTimeout(() => this.playTone(659, 0.2, 'triangle', 0.6), 200)   // E5
+      setTimeout(() => this.playTone(784, 0.2, 'triangle', 0.6), 400)   // G5
+      setTimeout(() => this.playTone(1047, 0.5, 'triangle', 0.7), 600)  // C6
+      setTimeout(() => this.playTone(784, 0.15, 'sine', 0.4), 1100)     // G5 echo
+      setTimeout(() => this.playTone(1047, 0.15, 'sine', 0.3), 1300)    // C6 echo
+    },
+
+    // End alert with configurable repeat
+    playEndAlertRepeating() {
+      if (!this.localAlertConfig.endAlert) return
+      this.clearEndAlertRepeat()
+
+      const repeatCount = this.localAlertConfig.endAlertRepeatCount || 5
+      let played = 0
+
+      const playOnce = () => {
+        if (played >= repeatCount) {
+          this.clearEndAlertRepeat()
+          return
+        }
+        this.playEndAlertOnce()
+        played++
+        if (played < repeatCount) {
+          this.endAlertRepeatTimer = setTimeout(playOnce, 2000)
+        }
+      }
+
+      playOnce()
+    },
+
+    clearEndAlertRepeat() {
+      if (this.endAlertRepeatTimer) {
+        clearTimeout(this.endAlertRepeatTimer)
+        this.endAlertRepeatTimer = null
+      }
     },
 
     playHalfwayAlert() {
-      // Gentle double tap
-      this.playTone(440, 0.15, 'sine', 0.2)  // A4
-      setTimeout(() => this.playTone(440, 0.15, 'sine', 0.2), 200)  // A4
+      this.playObviousAlert()
+    },
+
+    playQuarterAlert() {
+      this.playObviousAlert()
     },
 
     playProgressAlert() {
@@ -755,8 +899,14 @@ export default {
       const elapsed = this.totalSeconds - this.remainingSeconds
       const progress = elapsed / this.totalSeconds
 
-      // Halfway alert (once)
-      if (!this.halfwayAlerted && progress >= 0.5 && elapsed > 0) {
+      // Quarter alert (25%) - once
+      if (this.localAlertConfig.quarterAlert && !this.quarterAlerted && progress >= 0.25 && elapsed > 0) {
+        this.quarterAlerted = true
+        this.playQuarterAlert()
+      }
+
+      // Halfway alert (50%) - once
+      if (this.localAlertConfig.halfAlert && !this.halfwayAlerted && progress >= 0.5 && elapsed > 0) {
         this.halfwayAlerted = true
         this.playHalfwayAlert()
       }
@@ -764,9 +914,9 @@ export default {
       // Progress alerts every 10 minutes
       const elapsedMinutes = Math.floor(elapsed / 60)
       if (elapsedMinutes > 0 && elapsedMinutes % 10 === 0 && !this.progressAlertedAt.has(elapsedMinutes)) {
-        // Skip if this is also the halfway point (already alerted)
+        const quarterMinutes = Math.floor(this.totalSeconds / 240)
         const halfwayMinutes = Math.floor(this.totalSeconds / 120)
-        if (elapsedMinutes !== halfwayMinutes) {
+        if (elapsedMinutes !== halfwayMinutes && elapsedMinutes !== quarterMinutes) {
           this.progressAlertedAt.add(elapsedMinutes)
           this.playProgressAlert()
         }
@@ -775,7 +925,9 @@ export default {
 
     resetAlertState() {
       this.halfwayAlerted = false
+      this.quarterAlerted = false
       this.progressAlertedAt = new Set()
+      this.clearEndAlertRepeat()
     }
   }
 }
@@ -1146,6 +1298,139 @@ export default {
 .stop-btn:hover {
   background: var(--color-danger);
   color: #fff;
+}
+
+/* Alert Settings */
+.alert-settings {
+  margin-bottom: 20px;
+  background: var(--bg-container);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.settings-header:hover {
+  background: var(--bg-highlight, rgba(255, 255, 255, 0.05));
+}
+
+.settings-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-title i {
+  color: var(--color-warning);
+}
+
+.settings-header > i {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.settings-body {
+  padding: 8px 16px 16px;
+  border-top: 1px solid var(--border-color-light);
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.setting-row + .setting-row {
+  border-top: 1px solid var(--border-color-light);
+}
+
+.setting-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.repeat-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.repeat-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.repeat-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.repeat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 24px;
+  text-align: center;
+}
+
+.test-sound-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  margin-top: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.test-sound-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.settings-slide-enter-active,
+.settings-slide-leave-active {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.settings-slide-enter,
+.settings-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* Session Stats */

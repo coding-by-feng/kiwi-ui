@@ -5,11 +5,13 @@ import {handleGoogleOAuthCallback} from '@/util/oauth'
 import kiwiConst from '@/const/kiwiConsts'
 import UserLogin from '@/page/login/UserLogin'
 import UserRegister from '@/page/login/UserRegister'
+import FocusFloatingIcon from '@/components/FocusFloatingIcon.vue'
 
 export default {
   components: {
     UserLogin,
-    UserRegister
+    UserRegister,
+    FocusFloatingIcon
   },
   data() {
     return {
@@ -430,5 +432,6 @@ export default {
         </keep-alive>
       </el-tab-pane>
     </el-tabs>
+    <FocusFloatingIcon />
   </div>
 </template>

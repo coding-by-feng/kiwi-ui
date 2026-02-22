@@ -426,7 +426,13 @@ export default {
             confirmGiveUp: '是的，放棄',
             leaveWarning: '不要離開！',
             leaveWarningDesc: '如果你離開此頁面，專注將失敗，你將失去積分。',
-            focusFailed: '專注失敗！-{points} 積分'
+            focusFailed: '專注失敗！-{points} 積分',
+            alertSettings: '提醒設定',
+            quarterAlert: '1/4 進度提醒',
+            halfAlert: '1/2 進度提醒',
+            endAlertLabel: '結束提醒',
+            endAlertRepeat: '結束提醒重複次數',
+            testSound: '測試聲音'
         },
 
         // 積分標籤

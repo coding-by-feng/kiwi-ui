@@ -64,6 +64,7 @@ export function saveAiCallHistory(data) {
         data: {
             aiUrl: data.aiUrl,
             prompt: data.prompt,
+            aiResponse: data.aiResponse,
             promptMode: data.promptMode,
             targetLanguage: data.targetLanguage,
             nativeLanguage: data.nativeLanguage

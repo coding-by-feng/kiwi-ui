@@ -341,7 +341,13 @@ export default {
             confirmGiveUp: 'はい、諦めます',
             leaveWarning: '離れないでください！',
             leaveWarningDesc: 'このページを離れると、フォーカスセッションが失敗し、ポイントを失います。',
-            focusFailed: 'フォーカス失敗！-{points} ポイント'
+            focusFailed: 'フォーカス失敗！-{points} ポイント',
+            alertSettings: 'アラート設定',
+            quarterAlert: '1/4 進捗アラート',
+            halfAlert: '1/2 進捗アラート',
+            endAlertLabel: '終了アラート',
+            endAlertRepeat: '終了アラート繰り返し回数',
+            testSound: 'サウンドテスト'
         },
 
         // ポイントラベル

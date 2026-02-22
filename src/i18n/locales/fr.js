@@ -443,7 +443,13 @@ export default {
             confirmGiveUp: 'Oui, abandonner',
             leaveWarning: 'Ne partez pas !',
             leaveWarningDesc: 'Si vous quittez cette page, votre session de concentration échouera et vous perdrez des points.',
-            focusFailed: 'Concentration échouée ! -{points} points'
+            focusFailed: 'Concentration échouée ! -{points} points',
+            alertSettings: 'Paramètres d\'alerte',
+            quarterAlert: 'Alerte 1/4 progression',
+            halfAlert: 'Alerte 1/2 progression',
+            endAlertLabel: 'Alerte de fin',
+            endAlertRepeat: 'Répétitions alerte de fin',
+            testSound: 'Tester le son'
         },
 
         // Étiquette de points
