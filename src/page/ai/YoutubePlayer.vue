@@ -327,7 +327,7 @@
 <script>
 // Removed defineComponent import for Vue 2 options API
 // import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, downloadVideoScrollingSubtitlesEnhanced, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, downloadVideoScrollingSubtitlesEnhanced, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl, fetchSubtitlesDirect, fetchSubtitlesWithFallback} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from '@/const/kiwiConsts'
 import {getStore, setStore} from "@/util/store";
@@ -1296,10 +1296,11 @@ export default {
       }, 200);
 
       try {
-        // Use enhanced or regular API based on toggle
+        // Use direct YouTube fetch (youtube-captions-scraper approach) with fallback to backend API
+        // Enhanced mode still uses backend API for additional processing
         const apiCall = this.enhancedSubtitlesEnabled
             ? () => downloadVideoScrollingSubtitlesEnhanced(this.videoUrl)
-            : () => downloadVideoScrollingSubtitles(this.videoUrl);
+            : () => fetchSubtitlesWithFallback(this.videoUrl);
         const response = await this.retryApiCall(apiCall);
 
         if (response.status === 'fulfilled' && response.value?.status === 200) {
