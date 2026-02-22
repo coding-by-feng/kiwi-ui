@@ -490,6 +490,7 @@ export function createGeminiStream(options = {}) {
       saveAiCallHistory({
         aiUrl: url.split('?')[0], // Remove API key from URL
         prompt: body.prompt,
+        aiResponse: fullResponse,
         promptMode: body.promptMode,
         targetLanguage: body.targetLanguage,
         nativeLanguage: body.nativeLanguage

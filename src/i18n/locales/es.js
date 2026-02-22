@@ -313,7 +313,13 @@ export default {
             confirmGiveUp: 'Sí, rendirse',
             leaveWarning: '¡No te vayas!',
             leaveWarningDesc: 'Si abandonas esta página, tu sesión de concentración fallará y perderás puntos.',
-            focusFailed: '¡Concentración fallida! -{points} puntos'
+            focusFailed: '¡Concentración fallida! -{points} puntos',
+            alertSettings: 'Configuración de alertas',
+            quarterAlert: 'Alerta de progreso 1/4',
+            halfAlert: 'Alerta de progreso 1/2',
+            endAlertLabel: 'Alerta de finalización',
+            endAlertRepeat: 'Repeticiones alerta final',
+            testSound: 'Probar sonido'
         },
 
         // Etiqueta de puntos

@@ -547,7 +547,13 @@ export default {
             confirmGiveUp: 'Ja, aufgeben',
             leaveWarning: 'Nicht verlassen!',
             leaveWarningDesc: 'Wenn du diese Seite verlässt, wird deine Fokus-Sitzung fehlschlagen und du verlierst Punkte.',
-            focusFailed: 'Fokus fehlgeschlagen! -{points} Punkte'
+            focusFailed: 'Fokus fehlgeschlagen! -{points} Punkte',
+            alertSettings: 'Alarm-Einstellungen',
+            quarterAlert: '1/4 Fortschrittsalarm',
+            halfAlert: '1/2 Fortschrittsalarm',
+            endAlertLabel: 'Endalarm',
+            endAlertRepeat: 'Endalarm Wiederholungen',
+            testSound: 'Sound testen'
         },
 
         // Punkte-Label

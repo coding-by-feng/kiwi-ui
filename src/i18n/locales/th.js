@@ -818,7 +818,13 @@ export default {
             confirmGiveUp: 'ใช่ ยอมแพ้',
             leaveWarning: 'อย่าออกไป!',
             leaveWarningDesc: 'ถ้าคุณออกจากหน้านี้ เซสชันโฟกัสจะล้มเหลวและคุณจะเสียคะแนน',
-            focusFailed: 'โฟกัสล้มเหลว! -{points} คะแนน'
+            focusFailed: 'โฟกัสล้มเหลว! -{points} คะแนน',
+            alertSettings: 'ตั้งค่าการแจ้งเตือน',
+            quarterAlert: 'แจ้งเตือนความคืบหน้า 1/4',
+            halfAlert: 'แจ้งเตือนความคืบหน้า 1/2',
+            endAlertLabel: 'แจ้งเตือนเมื่อจบ',
+            endAlertRepeat: 'จำนวนครั้งแจ้งเตือนซ้ำ',
+            testSound: 'ทดสอบเสียง'
         },
 
         // ป้ายกำกับคะแนน

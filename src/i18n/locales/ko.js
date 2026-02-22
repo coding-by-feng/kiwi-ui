@@ -313,7 +313,13 @@ export default {
             confirmGiveUp: '예, 포기합니다',
             leaveWarning: '떠나지 마세요!',
             leaveWarningDesc: '이 페이지를 떠나면 집중 세션이 실패하고 포인트를 잃게 됩니다.',
-            focusFailed: '집중 실패! -{points} 포인트'
+            focusFailed: '집중 실패! -{points} 포인트',
+            alertSettings: '알림 설정',
+            quarterAlert: '1/4 진행 알림',
+            halfAlert: '1/2 진행 알림',
+            endAlertLabel: '종료 알림',
+            endAlertRepeat: '종료 알림 반복 횟수',
+            testSound: '소리 테스트'
         },
 
         // 포인트 라벨

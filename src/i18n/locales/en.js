@@ -973,7 +973,14 @@ export default {
             confirmGiveUp: 'Yes, Give Up',
             leaveWarning: 'Don\'t leave!',
             leaveWarningDesc: 'If you leave this page, your focus session will fail and you will lose points.',
-            focusFailed: 'Focus failed! -{points} points'
+            focusFailed: 'Focus failed! -{points} points',
+            // Alert settings
+            alertSettings: 'Alert Settings',
+            quarterAlert: '1/4 Progress Alert',
+            halfAlert: '1/2 Progress Alert',
+            endAlertLabel: 'End Alert',
+            endAlertRepeat: 'End Alert Repeat',
+            testSound: 'Test Sound'
         },
 
         // Points label

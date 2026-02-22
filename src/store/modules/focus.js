@@ -231,6 +231,24 @@ const localApi = {
   }
 }
 
+// Alert configuration storage
+const ALERT_CONFIG_KEY = 'kiwi_focus_alert_config'
+const DEFAULT_ALERT_CONFIG = {
+  quarterAlert: true,
+  halfAlert: true,
+  endAlert: true,
+  endAlertRepeatCount: 5
+}
+
+function loadAlertConfig() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(ALERT_CONFIG_KEY))
+    return { ...DEFAULT_ALERT_CONFIG, ...stored }
+  } catch (_) {
+    return { ...DEFAULT_ALERT_CONFIG }
+  }
+}
+
 const state = {
   stats: {
     todayTrees: 0,
@@ -243,7 +261,19 @@ const state = {
   },
   activeSession: null,
   sessions: [],
-  sessionsMeta: { page: 1, pageSize: 20, total: 0 }
+  sessionsMeta: { page: 1, pageSize: 20, total: 0 },
+  // Global timer state for floating icon
+  timerState: {
+    isRunning: false,
+    isPaused: false,
+    remainingSeconds: 0,
+    totalSeconds: 0,
+    treeType: 'oak',
+    treeColor: '#4CAF50',
+    treeStage: 'seed'
+  },
+  // Alert configuration
+  alertConfig: loadAlertConfig()
 }
 
 const getters = {
@@ -252,7 +282,9 @@ const getters = {
   focusSessions: s => s.sessions,
   focusSessionsMeta: s => s.sessionsMeta,
   totalPoints: s => s.stats.totalPoints || 0,
-  plantedTrees: s => s.stats.plantedTrees || []
+  plantedTrees: s => s.stats.plantedTrees || [],
+  timerState: s => s.timerState,
+  alertConfig: s => s.alertConfig
 }
 
 const mutations = {
@@ -285,6 +317,13 @@ const mutations = {
   ADD_PLANTED_TREE(state, tree) {
     if (!state.stats.plantedTrees) state.stats.plantedTrees = []
     state.stats.plantedTrees.push(tree)
+  },
+  SET_TIMER_STATE(state, timerState) {
+    state.timerState = { ...state.timerState, ...timerState }
+  },
+  SET_ALERT_CONFIG(state, config) {
+    state.alertConfig = { ...state.alertConfig, ...config }
+    localStorage.setItem(ALERT_CONFIG_KEY, JSON.stringify(state.alertConfig))
   }
 }
 
@@ -338,6 +377,14 @@ const actions = {
     const { sessions, meta } = await api.getSessions(params)
     commit('SET_SESSIONS', { sessions, meta })
     return { sessions, meta }
+  },
+
+  updateTimerState({ commit }, timerState) {
+    commit('SET_TIMER_STATE', timerState)
+  },
+
+  updateAlertConfig({ commit }, config) {
+    commit('SET_ALERT_CONFIG', config)
   }
 }
 
