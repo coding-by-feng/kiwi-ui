@@ -107,24 +107,6 @@
         <div class="divider" v-if="!isSmallScreen"></div>
         <div class="switch-group">
           <el-switch
-              v-model="enhancedSubtitlesEnabled"
-              :active-text="isSmallScreen ? '' : 'Enhanced Subtitles'"
-              @change="onEnhancedSubtitlesChange"
-              class="enhanced-switch">
-            <template v-if="isSmallScreen" #inactive-icon>
-              <i class="el-icon-document"></i>
-            </template>
-            <template v-if="isSmallScreen" #active-icon>
-              <i class="el-icon-magic-stick"></i>
-            </template>
-          </el-switch>
-          <span v-if="isSmallScreen" class="mobile-switch-label">
-            <i class="el-icon-magic-stick"></i>
-          </span>
-        </div>
-        <div class="divider" v-if="!isSmallScreen"></div>
-        <div class="switch-group">
-          <el-switch
               v-model="loopEnabled"
               :active-text="isSmallScreen ? '' : 'Loop Video'"
               @change="onLoopChange"
@@ -171,8 +153,8 @@
       <p v-else class="status-message compact">{{ statusMessage }}</p>
     </div>
 
-    <!-- Subtitles Loading Indicator - only shows during active loading (hidden when enhanced subtitles enabled) -->
-    <div v-if="!enhancedSubtitlesEnabled && (isSubtitlesLoading || isTranslationLoading)" class="subtitles-loading-indicator">
+    <!-- Subtitles Loading Indicator - only shows during active loading -->
+    <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-loading-indicator">
       <i class="el-icon-loading"></i>
       <span>{{ isTranslationLoading ? 'Translating...' : 'Loading subtitles...' }}</span>
     </div>
@@ -354,7 +336,7 @@
 <script>
 // Removed defineComponent import for Vue 2 options API
 // import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, downloadVideoScrollingSubtitlesEnhanced, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl, fetchSubtitlesDirect, fetchSubtitlesWithFallback} from '@/api/ai';
+import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl, fetchSubtitlesWithFallback} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from '@/const/kiwiConsts'
 import {getStore, setStore} from "@/util/store";
@@ -393,19 +375,7 @@ export default {
       }
       return false; // default OFF
     })();
-    // Normalize stored enhanced subtitles toggle; default OFF
-    const storedEnhancedSubtitlesRaw = getStore({ name: kiwiConsts.CONFIG_KEY.ENHANCED_SUBTITLES });
-    const normalizedEnhancedSubtitles = (() => {
-      if (typeof storedEnhancedSubtitlesRaw === 'boolean') return storedEnhancedSubtitlesRaw;
-      if (typeof storedEnhancedSubtitlesRaw === 'string') {
-        const v = storedEnhancedSubtitlesRaw.toLowerCase();
-        if (v === 'true') return true;
-        if (v === 'false') return false;
-      }
-      return false; // default OFF
-    })();
     return {
-      enhancedSubtitlesEnabled: normalizedEnhancedSubtitles,
       loopEnabled: false,
       videoUrl: null,
       ifTranslation: normalizedIfTranslation,
@@ -1323,11 +1293,7 @@ export default {
       }, 200);
 
       try {
-        // Use direct YouTube fetch (youtube-captions-scraper approach) with fallback to backend API
-        // Enhanced mode still uses backend API for additional processing
-        const apiCall = this.enhancedSubtitlesEnabled
-            ? () => downloadVideoScrollingSubtitlesEnhanced(this.videoUrl)
-            : () => fetchSubtitlesWithFallback(this.videoUrl);
+        const apiCall = () => fetchSubtitlesWithFallback(this.videoUrl);
         const response = await this.retryApiCall(apiCall);
 
         if (response.status === 'fulfilled' && response.value?.status === 200) {
@@ -1984,14 +1950,6 @@ export default {
       setStore({ name: kiwiConsts.CONFIG_KEY.SUBTITLES_AUTO_CENTER, content: enabled, type: 'local' });
       if (enabled) {
         this.$nextTick(() => this.ensureActiveSubtitleVisibility());
-      }
-    },
-
-    onEnhancedSubtitlesChange(enabled) {
-      setStore({ name: kiwiConsts.CONFIG_KEY.ENHANCED_SUBTITLES, content: enabled, type: 'local' });
-      // Reload subtitles if video is loaded
-      if (this.videoReady && this.videoUrl) {
-        this.loadSubtitlesInBackground();
       }
     },
 
