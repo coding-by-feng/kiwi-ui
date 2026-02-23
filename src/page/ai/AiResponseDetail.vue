@@ -25,6 +25,7 @@
       :contextText="lastSelectionContextText"
       title="Explain Selected Text"
       :auto-request="false"
+      default-mode="selection-explanation"
     />
 
     <!-- Gemini API Key Configuration Hint -->
