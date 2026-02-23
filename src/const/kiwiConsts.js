@@ -251,7 +251,8 @@ export default {
         // New modes
         VOCABULARY_CHARACTER_EXPANSION: { label: 'Vocabulary Character Expansion', value: 'vocabulary-character-expansion' },
         AMBIGUOUS_ASSOCIATION_CORRECTION: { label: 'Ambiguous Association Correction', value: 'ambiguous-association-correction' },
-        NATURAL_IDIOMATIC_RETOUCH: { label: 'Natural Idiomatic Retouch', value: 'natural-idiomatic-retouch' }
+        NATURAL_IDIOMATIC_RETOUCH: { label: 'Natural Idiomatic Retouch', value: 'natural-idiomatic-retouch' },
+        SELECTION_EXPLANATION: { label: 'Explain in Context', value: 'selection-explanation' }
     },
 
     SEARCH_MODES_DATA: Object.freeze({
