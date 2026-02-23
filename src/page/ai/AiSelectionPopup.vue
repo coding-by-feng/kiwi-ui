@@ -195,7 +195,8 @@ export default {
     contextText: { type: String, default: '' },
     title: { type: String, default: 'AI Search' },
     fileName: { type: String, default: '' },
-    autoRequest: { type: Boolean, default: true }
+    autoRequest: { type: Boolean, default: true },
+    defaultMode: { type: String, default: '' }
   },
   data() {
     return {
@@ -291,7 +292,8 @@ export default {
         modes.GRAMMAR_EXPLANATION,
         modes.VOCABULARY_EXPLANATION,
         modes.TRANSLATION_AND_EXPLANATION,
-        modes.DIRECTLY_TRANSLATION
+        modes.DIRECTLY_TRANSLATION,
+        modes.SELECTION_EXPLANATION
       ]
     },
     selectedAiModeLabel() {
@@ -320,6 +322,8 @@ export default {
       const saved = localStorage.getItem('ai-selection-popup-mode')
       if (saved && this.aiModeOptions.some(m => m.value === saved)) {
         this.selectedAiMode = saved
+      } else if (this.defaultMode) {
+        this.selectedAiMode = this.defaultMode
       } else {
         this.selectedAiMode = kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
       }
@@ -464,7 +468,7 @@ export default {
       const selected = (selectedText || '').trim()
       if (!selected) return
       const mode = promptMode || 'selection-explanation'
-      const context = mode === 'selection-explanation' ? ((contextText || '').trim() || selected) : ''
+      const context = (contextText || '').trim() || selected
       // Prevent duplicates by selected+context+mode triple
       if ((this.nestedItems || []).some(i => i.selectedText === selected && (i.contextSelectedText || '') === context && i.promptMode === mode)) return
       const id = this.generateRequestId()
@@ -510,10 +514,10 @@ export default {
         return
       }
 
-      // Build prompt by mode
+      // Build prompt by mode - always include context when available
       let prompt = ''
       let promptMode = item.promptMode || 'selection-explanation'
-      if (promptMode === 'selection-explanation') {
+      if (context) {
         prompt = `${kiwiConsts.AI_MODE_TAG.SELECTION_EXPLANATION}${promptSelection}${kiwiConsts.AI_MODE_TAG.SPLITTER}${context}`
       } else {
         prompt = promptSelection
