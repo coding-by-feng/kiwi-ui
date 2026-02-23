@@ -32,6 +32,11 @@
           <strong>Selected Text:</strong>
           <div class="selected-text-display">"{{ localSelectedText }}"</div>
         </div>
+        <!-- Show the full context so the user can see the word in context -->
+        <div v-if="contextText && contextText !== localSelectedText" class="context-text-section">
+          <strong>Context:</strong>
+          <div class="context-text-display">{{ contextText }}</div>
+        </div>
 
         <!-- All selections rendered as explanation cards -->
         <div v-for="item in nestedItems" :key="item.id" class="selection-response-container">
@@ -823,6 +828,33 @@ export default {
   word-break: break-word;
 }
 
+.context-text-section {
+  background: var(--bg-container);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid var(--color-warning);
+  box-shadow: var(--shadow-card);
+}
+
+.context-text-section strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.context-text-display {
+  color: var(--text-primary);
+  line-height: 1.6;
+  max-height: 150px;
+  overflow-y: auto;
+  word-break: break-word;
+  font-size: 0.9rem;
+}
+
 /* Ensure markdown blocks stay left-aligned */
 .selection-response-content p,
 .selection-response-content ul,
@@ -989,6 +1021,16 @@ export default {
   .selected-text-display {
     font-size: 14px;
     max-height: 100px;
+  }
+
+  .context-text-section {
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+
+  .context-text-display {
+    font-size: 13px;
+    max-height: 120px;
   }
 
   .selection-response-container {

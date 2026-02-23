@@ -230,8 +230,7 @@
           <!-- AI Response section -->
           <div class="detail-section">
             <label class="section-label">{{ $t('ai.aiResponse') || 'AI Response' }}:</label>
-            <div v-if="selectedRecord.aiResponse" class="detail-response">
-              {{ selectedRecord.aiResponse }}
+            <div v-if="selectedRecord.aiResponse" class="detail-response markdown-body" v-html="renderMarkdown(selectedRecord.aiResponse)">
             </div>
             <div v-else class="detail-response detail-response--empty">
               <i class="el-icon-warning-outline"></i>
@@ -268,6 +267,13 @@ import KiwiPagination from '@/components/ui/KiwiPagination.vue';
 import KiwiDialog from '@/components/ui/KiwiDialog.vue';
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue';
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue';
+import MarkdownIt from 'markdown-it';
+
+const md = new MarkdownIt({
+  html: true,
+  breaks: false,
+  linkify: true,
+});
 
 export default {
   name: 'AiCallHistory',
@@ -601,6 +607,20 @@ export default {
       } finally {
         this.detailLoading = false;
       }
+    },
+
+    unescapeContent(content) {
+      if (!content) return '';
+      return content
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\\"/g, '"')
+          .replace(/\\\\/g, '\\');
+    },
+
+    renderMarkdown(content) {
+      const unescaped = this.unescapeContent(content || '');
+      return md.render(unescaped);
     },
 
     async archiveItem(id) {
@@ -1069,6 +1089,7 @@ export default {
 .detail-dialog .detail-content {
   max-height: 70vh;
   overflow-y: auto;
+  text-align: left;
 }
 
 .detail-loading {
@@ -1142,13 +1163,130 @@ export default {
   border: 1px solid var(--border-color-light);
   border-left: 4px solid var(--color-success, #67c23a);
   line-height: 1.8;
-  white-space: pre-wrap;
   word-break: break-word;
   max-height: 400px;
   overflow-y: auto;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
   color: var(--text-primary);
   font-size: 14px;
+}
+
+.detail-response.markdown-body {
+  text-align: left;
+
+  ::v-deep {
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 16px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    h1 { font-size: 1.4em; }
+    h2 { font-size: 1.25em; }
+    h3 { font-size: 1.1em; }
+
+    p {
+      margin: 0 0 12px 0;
+      line-height: 1.8;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    ul, ol {
+      padding-left: 24px;
+      margin: 8px 0 12px;
+      text-align: left;
+    }
+
+    li {
+      margin-bottom: 4px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    li > ul, li > ol {
+      margin: 4px 0;
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: var(--color-primary);
+    }
+
+    pre {
+      background: rgba(0, 0, 0, 0.06);
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 10px 0;
+
+      code {
+        background: none;
+        padding: 0;
+        color: inherit;
+        font-size: 0.88em;
+        line-height: 1.6;
+      }
+    }
+
+    blockquote {
+      border-left: 3px solid var(--color-primary);
+      margin: 10px 0;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 0 8px 8px 0;
+      color: var(--text-secondary);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border-color-light);
+      margin: 16px 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color-light);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.04);
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
 }
 
 .detail-response--empty {
