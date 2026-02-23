@@ -322,6 +322,7 @@
       <ai-selection-popup
           :visible.sync="showSelectionPopup"
           :selected-text.sync="selectedText"
+          :context-text="selectionContextText"
           title="AI Search"
           :auto-request="true"
           @open-ai-tab="onOpenAiTabFromPopup"
@@ -410,6 +411,7 @@ export default {
       controlsCollapsed: false,
       isSmallScreen: false,
       selectedText: '',
+      selectionContextText: '',
       // Use dialog instead of small bubble for selection actions and AI streaming
       showSelectionPopup: false,
       // AI search streaming state
@@ -1620,6 +1622,8 @@ export default {
 
       if (selectedText) {
         this.selectedText = selectedText;
+        // Capture context from the container where the selection happened
+        this.selectionContextText = this.getSubtitleContext(selection);
         // Ensure video is paused before showing popup
         this.pauseVideo();
         // Open inline AI dialog directly instead of navigating
@@ -1627,6 +1631,36 @@ export default {
       } else {
         this.closePopup();
       }
+    },
+
+    // Build context string from the container that holds the selection
+    getSubtitleContext(selection) {
+      if (!selection || !selection.rangeCount) return '';
+      const range = selection.getRangeAt(0);
+      const ancestor = range.commonAncestorContainer;
+      // Check translated subtitles wrapper
+      const translatedEl = this.$refs.translatedSubtitlesWrapper;
+      if (translatedEl && translatedEl.contains(ancestor)) {
+        return (translatedEl.innerText || '').trim();
+      }
+      // Check scrolling subtitles container
+      const subtitlesEl = this.$refs.subtitlesContainer;
+      if (subtitlesEl && subtitlesEl.contains(ancestor)) {
+        return this.subtitles.map(s => s.text).join(' ');
+      }
+      // Fallback: use nearby subtitle lines for context display area
+      return this.getSurroundingSubtitleText();
+    },
+
+    // Get surrounding subtitle text as context
+    getSurroundingSubtitleText() {
+      if (!this.subtitles.length || this.currentSubtitleIndex < 0) return '';
+      const idx = this.currentSubtitleIndex;
+      const lines = [];
+      if (idx > 0) lines.push(this.subtitles[idx - 1].text);
+      lines.push(this.subtitles[idx].text);
+      if (idx < this.subtitles.length - 1) lines.push(this.subtitles[idx + 1].text);
+      return lines.join(' ');
     },
 
     // Open AI popup with specific subtitle text
@@ -1640,8 +1674,9 @@ export default {
       // Pause video before opening popup
       this.pauseVideo();
 
-      // Set selected text and open popup
+      // Set selected text and surrounding subtitles as context
       this.selectedText = trimmedText;
+      this.selectionContextText = this.getSurroundingSubtitleText();
       this.showSelectionPopup = true;
     },
 
