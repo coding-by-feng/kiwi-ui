@@ -545,28 +545,45 @@ export default {
         },
         callbacks: {
           onStarted: () => {
-            item.isStreaming = true
+            const idx = this.nestedItems.findIndex(i => i.id === item.id)
+            if (idx !== -1) this.$set(this.nestedItems[idx], 'isStreaming', true)
+            else item.isStreaming = true
           },
           onChunk: (chunk) => {
-            if (chunk) item.responseText += chunk
+            if (!chunk) return
+            const idx = this.nestedItems.findIndex(i => i.id === item.id)
+            if (idx !== -1) {
+              this.$set(this.nestedItems[idx], 'responseText', this.nestedItems[idx].responseText + chunk)
+            } else {
+              item.responseText += chunk
+            }
           },
           onCompleted: (response) => {
-            item.isStreaming = false
-            item.loading = false
+            const idx = this.nestedItems.findIndex(i => i.id === item.id)
+            const target = idx !== -1 ? this.nestedItems[idx] : item
+            if (idx !== -1) {
+              this.$set(target, 'isStreaming', false)
+              this.$set(target, 'loading', false)
+            } else {
+              target.isStreaming = false
+              target.loading = false
+            }
             this.aiSearchLoading = false // Clear search button loading state
             try {
-              const finalPayload = (response.fullResponse && response.fullResponse.length > 0) ? response.fullResponse : item.responseText
+              const finalPayload = (response.fullResponse && response.fullResponse.length > 0) ? response.fullResponse : target.responseText
               const extracted = this.extractResponseTextFromPayload(finalPayload)
-              item.responseText = (typeof extracted === 'string' && extracted.length > 0) ? extracted : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload))
-            } catch (_) { if (response.fullResponse) item.responseText = response.fullResponse }
-            item.abortFn = null
+              const finalText = (typeof extracted === 'string' && extracted.length > 0) ? extracted : (typeof finalPayload === 'string' ? finalPayload : JSON.stringify(finalPayload))
+              if (idx !== -1) this.$set(target, 'responseText', finalText)
+              else target.responseText = finalText
+            } catch (_) { if (response.fullResponse) { if (idx !== -1) this.$set(target, 'responseText', response.fullResponse); else target.responseText = response.fullResponse } }
+            target.abortFn = null
             // Persist history for this file
             this.saveHistoryItem({
-              id: item.id,
-              selectedText: item.selectedText,
-              contextSelectedText: item.contextSelectedText,
-              promptMode: item.promptMode,
-              responseText: item.responseText,
+              id: target.id,
+              selectedText: target.selectedText,
+              contextSelectedText: target.contextSelectedText,
+              promptMode: target.promptMode,
+              responseText: target.responseText,
               timestamp: Date.now()
             })
           },
@@ -641,9 +658,9 @@ export default {
         return
       }
 
-      // Use the user-selected AI mode
+      // Use the user-selected AI mode, pass context from parent
       const mode = this.selectedAiMode || kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
-      this.addNestedItemWithContext(text, null, mode, true)
+      this.addNestedItemWithContext(text, this.contextText || null, mode, true)
     },
 
     emitOpenInAiTab() {

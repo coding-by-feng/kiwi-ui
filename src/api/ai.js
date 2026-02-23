@@ -1,6 +1,6 @@
 import request from '@/router/axios'
 import kiwiConsts from '@/const/kiwiConsts'
-import { fetchYouTubeSubtitles, extractVideoId, toScrollingFormat } from '@/util/youtubeSubtitles'
+import { extractVideoId } from '@/util/youtubeSubtitles'
 
 // AI Call History API calls
 export function getAiCallHistory(current, size, filter = null) {
@@ -287,51 +287,14 @@ export function getVideoTitle(videoUrl) {
 }
 
 /**
- * Fetch YouTube subtitles directly using youtube-captions-scraper approach
- * This fetches captions directly from YouTube without going through backend
- * @param {string} videoUrl - YouTube video URL or video ID
- * @param {string} [lang='en'] - Language code (e.g., 'en', 'fr', 'zh')
- * @returns {Promise<{status: number, data: {data: {scrollingSubtitles: string, subtitles: Array, videoId: string}}}>}
- */
-export async function fetchSubtitlesDirect(videoUrl, lang = 'en') {
-    try {
-        const result = await fetchYouTubeSubtitles(videoUrl, lang);
-
-        // Return in the same format as backend API for compatibility
-        return {
-            status: 200,
-            data: {
-                data: {
-                    scrollingSubtitles: result.scrollingText,
-                    subtitles: result.subtitles,
-                    youtubeVideoId: result.videoID,
-                    language: result.language
-                }
-            }
-        };
-    } catch (error) {
-        console.error('Direct subtitle fetch failed:', error);
-        throw error;
-    }
-}
-
-/**
- * Fetch YouTube subtitles with fallback strategy
- * Tries direct fetch first, falls back to backend API if CORS blocks it
+ * Fetch YouTube subtitles via backend API.
+ * Direct browser fetch to YouTube is blocked by CORS, so we always use the backend.
  * @param {string} videoUrl - YouTube video URL or video ID
  * @param {string} [lang='en'] - Language code
  * @returns {Promise<Object>}
  */
-export async function fetchSubtitlesWithFallback(videoUrl, lang = 'en') {
-    try {
-        // Try direct fetch first (faster, no backend dependency)
-        return await fetchSubtitlesDirect(videoUrl, lang);
-    } catch (directError) {
-        console.warn('Direct subtitle fetch failed, falling back to backend API:', directError.message);
-
-        // Fallback to backend API
-        return downloadVideoScrollingSubtitles(videoUrl);
-    }
+export function fetchSubtitlesWithFallback(videoUrl, lang = 'en') {
+    return downloadVideoScrollingSubtitles(videoUrl);
 }
 
 /**
