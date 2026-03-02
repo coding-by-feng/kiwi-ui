@@ -696,6 +696,10 @@ export default {
         passcodeTooShort: 'Passcode muss mindestens 4 Zeichen haben',
         passcodeNoMatch: 'Passcodes stimmen nicht überein',
         currentPasscodeRequired: 'Aktueller Passcode ist erforderlich',
-        incorrectPasscode: 'Falscher Passcode'
+        incorrectPasscode: 'Falscher Passcode',
+        // Listen All
+        listenAll: 'Alle Notizen in Schleife abspielen',
+        noAudioNotes: 'Keine Notizen mit Audio gefunden',
+        loadFailed: 'Notizen konnten nicht geladen werden'
     }
 }

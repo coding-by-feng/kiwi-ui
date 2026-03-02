@@ -700,6 +700,10 @@ export default {
         passcodeTooShort: 'パスコードは4文字以上必要です',
         passcodeNoMatch: 'パスコードが一致しません',
         currentPasscodeRequired: '現在のパスコードを入力してください',
-        incorrectPasscode: 'パスコードが正しくありません'
+        incorrectPasscode: 'パスコードが正しくありません',
+        // Listen All
+        listenAll: '全てのノートをループ再生',
+        noAudioNotes: '音声付きのノートが見つかりません',
+        loadFailed: 'ノートの読み込みに失敗しました'
     }
 }

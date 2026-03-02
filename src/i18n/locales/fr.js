@@ -696,6 +696,10 @@ export default {
         passcodeTooShort: 'Le code doit contenir au moins 4 caractères',
         passcodeNoMatch: 'Les codes ne correspondent pas',
         currentPasscodeRequired: 'Le code actuel est requis',
-        incorrectPasscode: 'Code incorrect'
+        incorrectPasscode: 'Code incorrect',
+        // Listen All
+        listenAll: 'Écouter toutes les notes en boucle',
+        noAudioNotes: 'Aucune note avec audio trouvée',
+        loadFailed: 'Échec du chargement des notes'
     }
 }

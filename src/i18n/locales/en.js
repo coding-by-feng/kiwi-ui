@@ -1055,6 +1055,10 @@ export default {
         passcodeTooShort: 'Passcode must be at least 4 characters',
         passcodeNoMatch: 'Passcodes do not match',
         currentPasscodeRequired: 'Current passcode is required',
-        incorrectPasscode: 'Incorrect passcode'
+        incorrectPasscode: 'Incorrect passcode',
+        // Listen All
+        listenAll: 'Listen All Notes in Loop',
+        noAudioNotes: 'No notes with audio found',
+        loadFailed: 'Failed to load notes'
     }
 }

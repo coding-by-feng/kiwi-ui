@@ -930,6 +930,10 @@ export default {
         passcodeTooShort: 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร',
         passcodeNoMatch: 'รหัสผ่านไม่ตรงกัน',
         currentPasscodeRequired: 'กรุณาป้อนรหัสผ่านปัจจุบัน',
-        incorrectPasscode: 'รหัสผ่านไม่ถูกต้อง'
+        incorrectPasscode: 'รหัสผ่านไม่ถูกต้อง',
+        // Listen All
+        listenAll: 'เล่นโน้ตทั้งหมดแบบวนซ้ำ',
+        noAudioNotes: 'ไม่พบโน้ตที่มีเสียง',
+        loadFailed: 'โหลดโน้ตไม่สำเร็จ'
     }
 }

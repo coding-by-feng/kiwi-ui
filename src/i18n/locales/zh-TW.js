@@ -785,6 +785,10 @@ export default {
         passcodeTooShort: '密碼至少需要4個字元',
         passcodeNoMatch: '兩次輸入的密碼不一致',
         currentPasscodeRequired: '請輸入目前密碼',
-        incorrectPasscode: '密碼錯誤'
+        incorrectPasscode: '密碼錯誤',
+        // Listen All
+        listenAll: '循環播放全部筆記',
+        noAudioNotes: '沒有找到含有音頻的筆記',
+        loadFailed: '筆記載入失敗'
     }
 }
