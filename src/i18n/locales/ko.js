@@ -736,6 +736,10 @@ export default {
         passcodeTooShort: '비밀번호는 최소 4자 이상이어야 합니다',
         passcodeNoMatch: '비밀번호가 일치하지 않습니다',
         currentPasscodeRequired: '현재 비밀번호를 입력해 주세요',
-        incorrectPasscode: '비밀번호가 올바르지 않습니다'
+        incorrectPasscode: '비밀번호가 올바르지 않습니다',
+        // Listen All
+        listenAll: '전체 노트 반복 재생',
+        noAudioNotes: '오디오가 있는 노트를 찾을 수 없습니다',
+        loadFailed: '노트 불러오기 실패'
     }
 }

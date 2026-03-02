@@ -6,6 +6,16 @@
         <h2>{{ $t('privateNotes.title') || 'Private Notes' }}</h2>
         <!-- Lock Controls -->
         <div v-if="isLogin && !checkingLockStatus && !showLockedOverlay" class="lock-controls">
+          <el-tooltip :content="$t('privateNotes.listenAll') || 'Listen All Notes in Loop'" placement="bottom">
+            <el-button
+              size="mini"
+              :icon="globalListenLoading ? '' : (globalListenMode ? 'el-icon-video-pause' : 'el-icon-headset')"
+              circle
+              :loading="globalListenLoading"
+              :type="globalListenMode ? 'primary' : ''"
+              @click="globalListenMode ? stopListenAll() : startListenAll()"
+            ></el-button>
+          </el-tooltip>
           <el-tooltip v-if="hasPasscode" :content="$t('privateNotes.lockNotes') || 'Lock Notes'" placement="bottom">
             <el-button
               size="mini"
@@ -462,6 +472,33 @@
       </span>
     </el-dialog>
 
+    <!-- Global Listen All Mini Player -->
+    <div v-if="globalListenMode" class="global-listen-player">
+      <audio
+        ref="globalAudioPlayer"
+        :src="globalAudioSrc"
+        @ended="onGlobalAudioEnded"
+        style="display:none"
+      ></audio>
+      <div class="glp-info">
+        <i class="el-icon-headset glp-icon"></i>
+        <p class="glp-content">{{ globalCurrentItem && truncateContent(globalCurrentItem.content, 70) }}</p>
+        <span class="glp-count">{{ globalListenIndex + 1 }} / {{ globalListenItems.length }}</span>
+      </div>
+      <div class="glp-controls">
+        <el-button icon="el-icon-arrow-left" size="mini" circle @click="globalPrevious"></el-button>
+        <el-button
+          :icon="isGlobalPlaying ? 'el-icon-video-pause' : 'el-icon-video-play'"
+          size="mini"
+          circle
+          :type="isGlobalPlaying ? 'danger' : 'primary'"
+          @click="toggleGlobalPlayback"
+        ></el-button>
+        <el-button icon="el-icon-arrow-right" size="mini" circle @click="globalNext"></el-button>
+        <el-button icon="el-icon-close" size="mini" circle @click="stopListenAll"></el-button>
+      </div>
+    </div>
+
     <!-- Unlock Dialog -->
     <el-dialog
       :title="$t('privateNotes.unlockNotes') || 'Unlock Notes'"
@@ -578,6 +615,13 @@ export default {
       imageStyles: [],
       loadingImageStyles: false,
 
+      // Global Listen All mode
+      globalListenMode: false,
+      globalListenItems: [],
+      globalListenIndex: 0,
+      globalListenLoading: false,
+      isGlobalPlaying: false,
+
       // Responsive
       innerWidth: window.innerWidth
     }
@@ -612,6 +656,25 @@ export default {
       if (this.isMobileDevice) return '100%'
       if (this.isTablet) return '80%'
       return '500px'
+    },
+    globalCurrentItem() {
+      return this.globalListenItems[this.globalListenIndex] || null
+    },
+    globalAudioSrc() {
+      if (!this.globalCurrentItem) return ''
+      return this.getAudioUrl(this.globalCurrentItem.id)
+    }
+  },
+  watch: {
+    globalListenIndex() {
+      if (this.globalListenMode && this.isGlobalPlaying) {
+        this.$nextTick(() => {
+          if (this.$refs.globalAudioPlayer) {
+            this.$refs.globalAudioPlayer.load()
+            this.$refs.globalAudioPlayer.play()
+          }
+        })
+      }
     }
   },
   mounted() {
@@ -624,6 +687,7 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
+    this.stopListenAll()
   },
   methods: {
     handleResize() {
@@ -1232,6 +1296,70 @@ export default {
         this.deleteType = null
         this.deleteTarget = null
       }
+    },
+
+    // ============ Global Listen All Methods ============
+    async startListenAll() {
+      if (this.globalListenLoading || this.categories.length === 0) return
+      this.globalListenLoading = true
+      try {
+        const results = await Promise.all(this.categories.map(cat => notesApi.listItems(cat.id)))
+        const allItems = results.flatMap(res =>
+          res.data && res.data.code === 0 ? res.data.data || [] : []
+        )
+        const audioItems = allItems.filter(item => item.audioStatus === 'READY')
+        if (audioItems.length === 0) {
+          this.$message.warning(this.$t('privateNotes.noAudioNotes') || 'No notes with audio found')
+          return
+        }
+        this.globalListenItems = audioItems
+        this.globalListenIndex = 0
+        this.globalListenMode = true
+        this.isGlobalPlaying = true
+        this.$nextTick(() => {
+          if (this.$refs.globalAudioPlayer) {
+            this.$refs.globalAudioPlayer.load()
+            this.$refs.globalAudioPlayer.play()
+          }
+        })
+      } catch (e) {
+        this.$message.error(this.$t('privateNotes.loadFailed') || 'Failed to load notes')
+      } finally {
+        this.globalListenLoading = false
+      }
+    },
+
+    stopListenAll() {
+      this.isGlobalPlaying = false
+      this.globalListenMode = false
+      this.globalListenItems = []
+      this.globalListenIndex = 0
+      if (this.$refs.globalAudioPlayer) {
+        this.$refs.globalAudioPlayer.pause()
+        this.$refs.globalAudioPlayer.currentTime = 0
+      }
+    },
+
+    toggleGlobalPlayback() {
+      if (this.isGlobalPlaying) {
+        this.isGlobalPlaying = false
+        this.$refs.globalAudioPlayer && this.$refs.globalAudioPlayer.pause()
+      } else {
+        this.isGlobalPlaying = true
+        this.$refs.globalAudioPlayer && this.$refs.globalAudioPlayer.play()
+      }
+    },
+
+    onGlobalAudioEnded() {
+      this.globalListenIndex = (this.globalListenIndex + 1) % this.globalListenItems.length
+    },
+
+    globalNext() {
+      this.globalListenIndex = (this.globalListenIndex + 1) % this.globalListenItems.length
+    },
+
+    globalPrevious() {
+      this.globalListenIndex = (this.globalListenIndex - 1 + this.globalListenItems.length) % this.globalListenItems.length
     }
   }
 }
@@ -2843,6 +2971,74 @@ export default {
   .note-item-actions .reorder-icon {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+// Global Listen All Mini Player
+.global-listen-player {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-light, rgba(0,0,0,0.08));
+  border-radius: 40px;
+  padding: 10px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(12px);
+  max-width: calc(100vw - 48px);
+  animation: fadeIn 0.3s ease;
+
+  .glp-icon {
+    font-size: 18px;
+    color: var(--color-primary, #409EFF);
+    flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .glp-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+
+    .glp-content {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
+    }
+
+    .glp-count {
+      font-size: 12px;
+      color: var(--text-secondary, #909399);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+  }
+
+  .glp-controls {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    bottom: 16px;
+    padding: 8px 14px;
+    gap: 10px;
+
+    .glp-info .glp-content {
+      max-width: 130px;
+    }
   }
 }
 </style>

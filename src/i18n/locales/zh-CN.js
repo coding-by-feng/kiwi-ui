@@ -808,6 +808,10 @@ export default {
         passcodeTooShort: '密码至少需要4个字符',
         passcodeNoMatch: '两次输入的密码不一致',
         currentPasscodeRequired: '请输入当前密码',
-        incorrectPasscode: '密码错误'
+        incorrectPasscode: '密码错误',
+        // Listen All
+        listenAll: '循环播放全部笔记',
+        noAudioNotes: '没有找到含有音频的笔记',
+        loadFailed: '笔记加载失败'
     }
 }
