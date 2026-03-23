@@ -356,6 +356,7 @@ import KiwiInput from '@/components/ui/KiwiInput.vue'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
 import KiwiDropdownItem from '@/components/ui/KiwiDropdownItem.vue'
 import GeminiApiKeyHint from '@/components/common/GeminiApiKeyHint.vue'
+import StatusService from '@/util/status-overlay-service'
 
 const md = new MarkdownIt({
   html: true,
@@ -1145,10 +1146,6 @@ export default {
       msgUtil.msgSuccess(this, 'Video ready to play!', 2000);
       // Start continuous subtitle sync so index updates during play, pause, and seeks.
       this.startSubtitleSync();
-      // Load subtitles now that player is ready
-      if (this.videoUrl) {
-        this.loadSubtitlesInBackground();
-      }
     },
 
     onPlayerStateChange(event) {
@@ -1221,21 +1218,26 @@ export default {
         this.checkFavoriteStatus();
         this.statusMessage = 'Initializing player...';
         this.startMiniLoaderPoll && this.startMiniLoaderPoll();
+
+        // Start subtitle loading in parallel with player initialization
+        // (subtitle API only needs videoUrl, not the player)
+        this.loadSubtitlesInBackground();
+
         await this.ensureYouTubeAPIReady();
-        
+
         if (this.player) {
           console.log('[YoutubePlayer] Reuse existing player loadVideoById', videoId);
-          try { 
-            this.player.loadVideoById(videoId); 
-            this.setPlayerInitTimeout(); 
-          } catch(e) { 
-            console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e); 
-            await this.initializePlayer(videoId); 
+          try {
+            this.player.loadVideoById(videoId);
+            this.setPlayerInitTimeout();
+          } catch(e) {
+            console.warn('[YoutubePlayer] loadVideoById failed, fallback initializePlayer', e);
+            await this.initializePlayer(videoId);
           }
         } else {
           await this.initializePlayer(videoId);
         }
-        
+
         this.isLoading = false; // may already be false after onReady
         if (!this.videoReady) {
           // onReady not fired yet; keep status if still initializing
@@ -1243,7 +1245,6 @@ export default {
         } else {
           this.statusMessage = ''; // ensure cleared
         }
-        // Subtitles are now loaded from onPlayerReady() after videoReady is set
         console.log('[YoutubePlayer] loadContent success');
       } catch (error) {
         console.error('Error loading content:', error);
@@ -1256,6 +1257,7 @@ export default {
     },
 
     resetStates() {
+      StatusService.closeAll();
       this.cleanupPlayer && this.cleanupPlayer();
       this.sseShouldReconnect = false; // Prevent reconnects during reset
       this.disconnectSSE(); // Ensure previous connection is closed
@@ -1285,11 +1287,14 @@ export default {
     },
 
     async loadSubtitlesInBackground() {
-      if (!this.videoReady) return;
+      if (!this.videoUrl) return;
 
       this.isSubtitlesLoading = true;
       this.subtitlesLoadingComplete = false;
       this.subtitlesLoadingProgress = 0;
+
+      // Show StatusOverlay progress hint
+      const statusHandle = StatusService.loading({ title: 'Loading subtitles...' });
 
       // Start progress animation
       const progressInterval = setInterval(() => {
@@ -1340,8 +1345,9 @@ export default {
           this.isSubtitlesLoading = false;
           this.middleControlEnabled = true;
 
-          // Suppress popup: subtitles loaded successfully
-          // msgUtil.msgSuccess(this, 'Subtitles loaded successfully!', 2000);
+          // Close loading overlay and show success
+          statusHandle.close();
+          StatusService.success({ title: 'Subtitles loaded' });
 
           this.$nextTick(() => {
             this.applyTouchPreventions();
@@ -1354,21 +1360,24 @@ export default {
             this.subtitlesLoadingComplete = true;
           }
         } else {
-          this.handleSubtitlesError(progressInterval, response.reason);
+          this.handleSubtitlesError(progressInterval, statusHandle, response.reason);
         }
       } catch (error) {
-        this.handleSubtitlesError(progressInterval, error);
+        this.handleSubtitlesError(progressInterval, statusHandle, error);
       }
     },
 
-    handleSubtitlesError(progressInterval, error) {
+    handleSubtitlesError(progressInterval, statusHandle, error) {
       clearInterval(progressInterval);
       this.isSubtitlesLoading = false;
       this.subtitlesLoadingComplete = true;
       this.subtitlesLoadingProgress = 0;
 
+      // Close loading overlay and show error
+      if (statusHandle) statusHandle.close();
+      StatusService.error({ title: 'Failed to load subtitles', message: error?.message || '' });
+
       console.error('Error loading subtitles:', error);
-      msgUtil.msgError(this, 'Failed to load subtitles', 3000);
     },
 
     async retryApiCall(apiCall, maxRetries = 3) {
