@@ -57,9 +57,6 @@ export default {
 
         // Check if example playback is enabled and examples exist
         let isExampleInvalid = IS_PLAY_EXAMPLE === kiwiConst.IS_PLAY_EXAMPLE.DISABLE || !exampleList || exampleList.length === 0
-        console.log('extractedEn2ChUrls')
-        console.log('exampleList: ', exampleList)
-        console.log('isExampleInvalid: ', isExampleInvalid)
         if (isExampleInvalid) {
             return urls
         }
@@ -250,7 +247,6 @@ export default {
         let commonDbObject = null
         await db.openDB(kiwiConst.DB_NAME, kiwiConst.DB_VERSION)
             .then(async dbObject => {
-                console.log('dbObject object', dbObject)
                 commonDbObject = dbObject
             }).catch(err => {
                 throw err
@@ -270,7 +266,6 @@ export default {
         })
         await Promise.all(multipleThreads)
             .then(response => {
-                console.log('multipleThreads handle ', response)
                 for (let urlsKey in urls) {
                     urls[urlsKey] = uniqueRebuiltUrls.get(urls[urlsKey])
                 }
@@ -284,17 +279,13 @@ export default {
             db.getDataByKey(commonDbObject, kiwiConst.DB_STORE_NAME, dataKey)
                 .then(async data => {
                     if (data) {
-                        console.log('get audio data from DB', data)
                         let reBuiltUrl = URL.createObjectURL(data.audio);
                         uniqueRebuiltUrls.set(url, reBuiltUrl)
                         resolve(kiwiConst.SUCCESS)
                     } else {
                         await fetch(url).then(async response => {
-                            console.log('Downloading audio from API', response)
-                            console.log('Downloading audio url', url)
                             return response.blob()
                         }).then(async buffer => {
-                            console.log('buffer', buffer)
                             let blob = new Blob([buffer], {type: 'audio/mpeg'});
                             await db.addData(commonDbObject, kiwiConst.DB_STORE_NAME, {
                                 sequenceKey: dataKey,
@@ -332,7 +323,6 @@ export default {
         try {
             const response = await reviewAudioApi.getAudioConfig()
             ttsAudioConfig = response.data?.data || { enabled: false }
-            console.log('TTS Audio config loaded:', ttsAudioConfig)
 
             // Open TTS audio DB
             if (ttsAudioConfig.enabled) {
@@ -412,14 +402,12 @@ export default {
             if (!forceDownload) {
                 const cachedData = await db.getDataByKey(dbObject, kiwiConst.DB_STORE_NAME, cacheKey)
                 if (cachedData && cachedData.audio) {
-                    console.log('TTS audio loaded from cache:', paraphraseId)
                     return URL.createObjectURL(cachedData.audio)
                 }
             }
 
             // Download from API with authentication
             const downloadUrl = this.getTtsAudioUrl(paraphraseId)
-            console.log('Downloading TTS audio:', downloadUrl)
 
             const token = getAccessToken()
             const headers = {}
@@ -442,7 +430,6 @@ export default {
                     sequenceKey: cacheKey,
                     audio: blob
                 })
-                console.log('TTS audio cached:', paraphraseId)
             } catch (cacheError) {
                 console.warn('Failed to cache TTS audio (may already exist):', cacheError)
             }
@@ -471,7 +458,6 @@ export default {
         // Initialize TTS system
         const config = await this.initTtsAudioSystem()
         if (!config.enabled) {
-            console.log('TTS audio is disabled on server')
             return result
         }
 
@@ -507,7 +493,6 @@ export default {
             }
         }
 
-        console.log('Audio preparation complete:', result)
         return result
     },
 
@@ -523,8 +508,6 @@ export default {
             // First, trigger server-side generation
             const genResponse = await reviewAudioApi.generateAudioForReviewItems(listId)
             const genResult = genResponse.data?.data || {}
-
-            console.log('Server audio generation result:', genResult)
 
             if (!genResult.enabled) {
                 return { enabled: false, message: 'Audio generation is disabled on server' }
@@ -585,7 +568,6 @@ export default {
             const transaction = dbObject.transaction([kiwiConst.DB_STORE_NAME], 'readwrite')
             const store = transaction.objectStore(kiwiConst.DB_STORE_NAME)
             store.delete(cacheKey)
-            console.log('TTS audio cache cleared:', paraphraseId)
         } catch (e) {
             console.warn('Failed to clear TTS audio cache:', e)
         }

@@ -351,6 +351,7 @@ import AiSelectionPopup from '@/page/ai/AiSelectionPopup.vue'
 import { buildAiTabQuery } from '@/util/aiNavigation'
 import { navigateIfChanged } from '@/util/routerUtil'
 import { createAIStream, createYouTubeSubtitleStream } from '@/util/sseClient'
+import { isGeminiEnabled } from '@/util/geminiClient'
 import KiwiButton from '@/components/ui/KiwiButton.vue'
 import KiwiInput from '@/components/ui/KiwiInput.vue'
 import KiwiDropdown from '@/components/ui/KiwiDropdown.vue'
@@ -835,6 +836,10 @@ export default {
         try { this.subtitleAbortFn(); } catch (_) {}
         this.subtitleAbortFn = null;
       }
+      if (this._translationAbort) {
+        try { this._translationAbort(); } catch (_) {}
+        this._translationAbort = null;
+      }
       if (this.sseReconnectTimer) {
         clearTimeout(this.sseReconnectTimer);
         this.sseReconnectTimer = null;
@@ -970,6 +975,55 @@ export default {
       this.shouldShowTranslationContainer = true;
       this.translatedSubtitlesCollapsed = false;
 
+      // If direct Gemini is enabled and subtitles are loaded, stream translation directly
+      if (isGeminiEnabled() && this.subtitles.length > 0) {
+        this.requestTranslationDirect(language);
+        return;
+      }
+
+      // Fallback: backend SSE
+      this.requestTranslationBackend(videoUrl, language);
+    },
+
+    // Direct Gemini streaming translation — chunks appear in real time
+    requestTranslationDirect(language) {
+      this.disconnectSSE();
+      this.handleTranslationStarted();
+
+      // Build subtitle text lines from parsed subtitles
+      const subtitleLines = this.subtitles.map(s => s.text).join('\n');
+
+      const targetLanguage = getStore({name: kiwiConsts.CONFIG_KEY.SELECTED_LANGUAGE}) || 'EN';
+      const nativeLanguage = language;
+
+      const { abort } = createAIStream({
+        body: {
+          prompt: subtitleLines,
+          promptMode: 'subtitle-translator',
+          targetLanguage,
+          nativeLanguage,
+          timestamp: Date.now()
+        },
+        callbacks: {
+          onStarted: () => {},
+          onChunk: (chunk) => {
+            this.handleTranslationChunk(chunk);
+          },
+          onCompleted: (data) => {
+            this.handleTranslationCompleted(data);
+          },
+          onError: (error) => {
+            this.handleTranslationError(error);
+          }
+        }
+      });
+
+      // Store abort function so disconnectSSE can cancel it
+      this._translationAbort = abort;
+    },
+
+    // Backend SSE translation (original path)
+    requestTranslationBackend(videoUrl, language) {
       // Generate session ID early
       this.sseSessionId = 'sse_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
       this.sseShouldReconnect = true;
@@ -1842,26 +1896,32 @@ export default {
       return top;
     },
 
-    scrollActiveSubtitleIntoView() {
+    scrollActiveSubtitleIntoView(center) {
       if (this.currentSubtitleIndex == null || this.currentSubtitleIndex < 0) return;
       if (this.scrollingSubtitlesCollapsed) return;
       const activeEl = document.getElementById(`subtitle-${this.currentSubtitleIndex}`);
-      if (activeEl) {
-        const container = this.$refs.subtitlesContainer || activeEl.closest('.subtitles-container') || activeEl.parentElement;
-        try {
-          activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        } catch (_) {
-          if (container) {
-            const targetTop = Math.max(activeEl.offsetTop - (container.clientHeight / 2 - activeEl.offsetHeight / 2), 0);
-            container.scrollTo({ top: targetTop, behavior: 'smooth' });
-          }
+      const container = this.$refs.subtitlesContainer;
+      if (!activeEl || !container) return;
+
+      if (center) {
+        // Center the active subtitle within the container
+        const targetTop = Math.max(activeEl.offsetTop - (container.clientHeight / 2 - activeEl.offsetHeight / 2), 0);
+        container.scrollTo({ top: targetTop, behavior: 'smooth' });
+      } else {
+        // Only scroll if the active subtitle is outside the visible area
+        const elTop = activeEl.offsetTop;
+        const elBottom = elTop + activeEl.offsetHeight;
+        const scrollTop = container.scrollTop;
+        const scrollBottom = scrollTop + container.clientHeight;
+        if (elTop < scrollTop || elBottom > scrollBottom) {
+          const targetTop = Math.max(elTop - (container.clientHeight / 2 - activeEl.offsetHeight / 2), 0);
+          container.scrollTo({ top: targetTop, behavior: 'smooth' });
         }
       }
     },
 
     ensureActiveSubtitleVisibility() {
-      // Always center active subtitle as per requirement.
-      this.scrollActiveSubtitleIntoView();
+      this.scrollActiveSubtitleIntoView(this.autoCenterEnabled);
     },
 
     // Auto-scroll the current subtitle text inside context display if it overflows
