@@ -1080,7 +1080,7 @@ export default {
       if (!document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'youtube-api-script';
-        tag.src = '/assets/external/youtube-iframe-api.js';
+        tag.src = 'https://www.youtube.com/iframe_api';
         document.head.appendChild(tag);
       }
 
