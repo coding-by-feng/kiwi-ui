@@ -330,7 +330,7 @@ export default {
       } else if (this.defaultMode) {
         this.selectedAiMode = this.defaultMode
       } else {
-        this.selectedAiMode = kiwiConsts.SEARCH_AI_MODES.DIRECTLY_TRANSLATION.value
+        this.selectedAiMode = kiwiConsts.SEARCH_AI_MODES.SELECTION_EXPLANATION.value
       }
     },
 

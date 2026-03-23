@@ -1,6 +1,6 @@
 import request from '@/router/axios'
 import kiwiConsts from '@/const/kiwiConsts'
-import { extractVideoId } from '@/util/youtubeSubtitles'
+import { extractVideoId, toSrtFormat } from '@/util/youtubeSubtitles'
 
 // AI Call History API calls
 export function getAiCallHistory(current, size, filter = null) {
@@ -287,13 +287,32 @@ export function getVideoTitle(videoUrl) {
 }
 
 /**
- * Fetch YouTube subtitles via backend API.
- * Direct browser fetch to YouTube is blocked by CORS, so we always use the backend.
+ * Fetch YouTube subtitles via the Node.js dev-server endpoint (youtube-captions-scraper),
+ * falling back to the backend API if the Node.js endpoint is unavailable.
  * @param {string} videoUrl - YouTube video URL or video ID
  * @param {string} [lang='en'] - Language code
  * @returns {Promise<Object>}
  */
-export function fetchSubtitlesWithFallback(videoUrl, lang = 'en') {
+export async function fetchSubtitlesWithFallback(videoUrl, lang = 'en') {
+    const videoID = extractVideoId(videoUrl);
+    if (videoID) {
+        try {
+            const res = await request({
+                url: '/api/ytb/captions',
+                method: 'get',
+                params: { videoID, lang }
+            });
+            if (res.status === 200 && res.data && res.data.code === 0 && Array.isArray(res.data.data)) {
+                const scrollingSubtitles = toSrtFormat(res.data.data);
+                return {
+                    status: 200,
+                    data: { data: { scrollingSubtitles } }
+                };
+            }
+        } catch (_) {
+            // Node.js endpoint unavailable, fall back to backend
+        }
+    }
     return downloadVideoScrollingSubtitles(videoUrl);
 }
 

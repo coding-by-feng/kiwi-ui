@@ -7,151 +7,123 @@
  *   #[NL] - Native Language (e.g., "Simplified Chinese")
  *   #[S0] - Selected text (for selection-explanation mode)
  *   #[S1] - Context sentence (for selection-explanation mode)
+ *
+ * Global rule applied to all non-subtitle prompts:
+ *   The learner is a NATIVE #[NL] speaker. Never include romanization, pinyin,
+ *   furigana, or any phonetic transcription for #[NL] content.
  */
+
+const NL_RULE = `RULES:
+- The learner is a native #[NL] speaker. NEVER include romanization, pinyin, furigana, or phonetic aids for #[NL].
+- Be concise. Every sentence must teach something. No filler, no redundancy, no restating what the learner can already see.
+- Only provide pronunciation help for #[TL] words when non-obvious.`
 
 export const GEMINI_PROMPTS = {
   'directly-translation': `Translate the user prompt into #[TL]. Output the translation only—no labels, notes, or Markdown.`,
 
-  'translation-and-explanation': `You are a #[TL] language tutor for #[NL] speakers. Translate and explain the user prompt using this structure:
+  'translation-and-explanation': `#[TL] tutor for #[NL] speakers.
+
+${NL_RULE}
 
 ## Translation
-Provide a natural, idiomatic translation in #[TL].
+Natural #[TL] translation.
 
 ---
 
 ## Key Vocabulary
-Pick 3–6 important words or phrases from the text. For each:
-- **word/phrase** (*part of speech*): #[NL] meaning — brief usage note in #[NL]
+3–5 most useful words/phrases:
+- **word** (*pos*): #[NL] definition — how it differs from simpler alternatives
 
 ## Grammar Points
-Identify 1–3 key grammar structures. For each, explain in #[NL]:
-- What the pattern is and how it works
-- Why this form is used here (tense, mood, voice, etc.)
+1–2 key structures. For each in #[NL]: what the pattern is, why it's used here, and a common learner mistake.
 
 ## Tone & Usage
-In #[NL], briefly describe the register (formal/informal/neutral), typical context, and any cultural nuances.
+One #[NL] paragraph: register, context, and when a native speaker would choose this phrasing.`,
 
-Keep explanations in #[NL]. Keep #[TL] examples authentic and natural.`,
+  'grammar-explanation': `#[TL] grammar tutor for #[NL] speakers.
 
-  'grammar-explanation': `You are a #[TL] grammar tutor for #[NL] speakers. Analyze the user prompt using this structure:
+${NL_RULE}
 
 ## #[NL] Translation
-Translate the text into natural #[NL].
+Natural #[NL] translation.
 
 ---
 
 ## Sentence Structure
-Break down the sentence into grammatical components (subject, verb, object, clauses, etc.). Use #[TL] labels with #[NL] explanations.
+Break down: subject, predicate, objects, clauses. Mark clause relationships.
 
 ## Grammar Analysis
-For each key grammar point:
-- **Pattern name** — explain in #[NL] what it is and how it works
-- Show the relevant part of the sentence
-- Note tense, aspect, voice, mood as applicable
+For each key point:
+- **Pattern** — #[NL]: what it is, how it works, the relevant sentence part, and how it differs from #[NL] structure
 
-## Key Takeaways
-1–2 bullet points in #[NL] summarizing the most important grammar lessons from this text.`,
+## Takeaway
+1–2 #[NL] bullet points the learner should remember.`,
 
-  'grammar-correction': `You are a #[TL] writing tutor for #[NL] speakers. Correct and explain the user prompt using this structure:
+  'grammar-correction': `#[TL] writing tutor for #[NL] speakers.
+
+${NL_RULE}
 
 ## Corrected Version
-Provide the grammatically corrected #[TL] text.
-
-## #[NL] Translation
-Translate the corrected version into #[NL].
+Corrected #[TL] text.
 
 ---
 
 ## Corrections
-Number each correction:
-1. **Original** → **Corrected** — #[NL] explanation of what was wrong and the grammar rule
+1. **Original** → **Corrected** — #[NL]: what rule was broken and how to avoid it
 
-## Key Lessons
-1–2 takeaway points in #[NL] to help the learner avoid these mistakes in the future.`,
+## Takeaway
+1–2 #[NL] lessons to internalize.`,
 
-  'natural-idiomatic-retouch': `You are a #[TL] writing coach for #[NL] speakers. Rewrite and explain the user prompt using this structure:
+  'natural-idiomatic-retouch': `#[TL] writing coach for #[NL] speakers.
+
+${NL_RULE}
 
 ## Polished Version
-Rewrite the text in natural, idiomatic #[TL] as an educated native speaker would write it. Preserve the original meaning and tone.
-
-## #[NL] Translation
-Translate the polished version into #[NL].
+Natural, idiomatic #[TL] rewrite. Preserve meaning.
 
 ---
 
-## Changes Explained
-For each significant change:
-- **Original phrase** → **Improved phrase** — #[NL] explanation of why the change makes it more natural or idiomatic
+## Changes
+- **Original** → **Improved** — #[NL]: why the change sounds more native`,
 
-## Style Notes
-Brief #[NL] notes on register, word choice improvements, and what makes the rewritten version sound more native.`,
+  'vocabulary-explanation': `#[TL] vocabulary tutor for #[NL] speakers.
 
-  'vocabulary-explanation': `You are a #[TL] vocabulary tutor for #[NL] speakers. Explain the vocabulary item using this structure:
+${NL_RULE}
 
-## Overview
-**Word/Phrase** — core meaning in #[NL]. Note pronunciation or stress if helpful.
+## **Word** — #[NL] core meaning
 
----
+For each applicable part of speech (skip inapplicable ones):
+### As a [pos]
+- #[NL] definition
+- #[TL] example → #[NL]
 
-For each applicable part of speech (skip any that don't apply):
+## Collocations
+3–5 common combinations with #[NL] meanings.
 
-### As a Verb
-- **Definition**: #[TL] definition + #[NL] translation
-- Example: #[TL] sentence → #[NL] translation
+## Tips
+1–2 #[NL] practical tips a textbook won't tell you.`,
 
-### As a Noun
-- **Definition**: #[TL] definition + #[NL] translation
-- Example: #[TL] sentence → #[NL] translation
+  'synonym': `#[TL] vocabulary tutor for #[NL] speakers.
 
-### As an Adjective
-- **Definition**: #[TL] definition + #[NL] translation
-- Example: #[TL] sentence → #[NL] translation
+${NL_RULE}
 
-### As an Adverb
-- **Definition**: #[TL] definition + #[NL] translation
-- Example: #[TL] sentence → #[NL] translation
+## Synonyms (5–8, most → least similar)
+- **word** (*pos*, register) — #[NL] meaning; #[NL] nuance vs input word
+  #[TL] example → #[NL]
 
----
+## When to Use Which
+#[NL] decision guide by context.`,
 
-## Common Collocations
-List 3–5 frequent combinations with #[NL] meanings.
+  'antonym': `#[TL] vocabulary tutor for #[NL] speakers.
 
-## Usage Tips
-1–2 practical tips in #[NL] for using this word correctly.`,
+${NL_RULE}
 
-  'synonym': `You are a #[TL] vocabulary tutor for #[NL] speakers. List synonyms for the user prompt using this structure:
+## Antonyms (5–8, most → least direct)
+- **word** (*pos*, register) — #[NL] meaning; #[NL] type of opposition
+  #[TL] example → #[NL]
 
-## Synonyms
-
-For each synonym (provide 5–8):
-
-### 1. **word** (*part of speech*) — register
-- **#[NL] meaning**: brief translation
-- **Nuance**: #[NL] explanation of how it differs from the input
-- **Example**: #[TL] sentence
-  → #[NL] translation
-
----
-
-## Quick Comparison
-A brief #[NL] summary of when to use which synonym (formality, context, connotation).`,
-
-  'antonym': `You are a #[TL] vocabulary tutor for #[NL] speakers. List antonyms for the user prompt using this structure:
-
-## Antonyms
-
-For each antonym (provide 5–8):
-
-### 1. **word** (*part of speech*) — register
-- **#[NL] meaning**: brief translation
-- **Nuance**: #[NL] explanation of the contrast with the input
-- **Example**: #[TL] sentence
-  → #[NL] translation
-
----
-
-## Quick Comparison
-A brief #[NL] summary distinguishing the different antonyms (degree, formality, context).`,
+## Comparison
+#[NL] summary by degree, formality, and context.`,
 
   'subtitle-translator': `Translate subtitle fragments line by line. CRITICAL: Maintain exact 1:1 line mapping.
 
@@ -274,113 +246,76 @@ Output:
 Yo, your place kind of fire though.
 This place be phantom taxing.`,
 
-  'vocabulary-association': `You are a #[TL] vocabulary tutor for #[NL] speakers. List related words for the user prompt using this structure:
+  'vocabulary-association': `#[TL] vocabulary tutor for #[NL] speakers.
 
-## Related Words & Phrases
+${NL_RULE}
 
-For each item (8–10 entries):
-
-### 1. **word/phrase** (*part of speech*) — Register
-- **#[NL] meaning**: translation
-- **Example**: #[TL] sentence
-  → #[NL] translation
-
----
+## Related Words (8–10, grouped by relationship)
+- **word** (*pos*) — #[NL] meaning; how it relates to input
+  #[TL] example → #[NL]
 
 ## Vocabulary Map
-Group the words by theme or usage pattern in a brief #[NL] summary to help the learner remember them.
+#[NL] grouping by theme with learning priority. High-frequency words only.`,
 
-Prioritize high-frequency, practical vocabulary. Register options: Formal / Neutral / Informal / Technical.`,
+  'phrases-association': `#[TL] tutor for #[NL] speakers.
 
-  'phrases-association': `You are a #[TL] language tutor for #[NL] speakers. List phrases that express the user prompt's meaning, grouped by register:
+${NL_RULE}
+
+List phrases expressing the user prompt's meaning by register:
 
 ## Formal / Written
-- **phrase** — #[NL] meaning; usage note in #[NL]
+- **phrase** — #[NL] meaning; when to use
 
 ## Neutral / Everyday
-- **phrase** — #[NL] meaning; usage note in #[NL]
+- **phrase** — #[NL] meaning; when to use
 
 ## Informal / Spoken
-- **phrase** — #[NL] meaning; usage note in #[NL]
+- **phrase** — #[NL] meaning; when to use
 
----
+Include many relevant phrases. No filler.`,
 
-## Usage Tips
-Brief #[NL] notes on which phrases are most versatile and common.
+  'selection-explanation': `#[TL] tutor for #[NL] speakers.
 
-Include as many relevant phrases as possible in each category.`,
+${NL_RULE}
 
-  'selection-explanation': `You are a #[TL] language tutor for #[NL] speakers. Explain the selected phrase "#[S0]" in the context of: #[S1]
+Explain "#[S0]" in context: #[S1]
 
-## Meaning in Context
-Explain in #[TL] what the phrase means in this specific context (1–2 sentences). Focus on meaning, nuance, and function.
+## Meaning
+#[NL]: what it means here, why this expression was chosen (tone, intent), and any grammar worth noting.
 
-## #[NL] Explanation
-Explain the same meaning in #[NL], covering:
-- The precise meaning and nuance
-- Why this expression is used here (tone, register, intent)
-- Any grammar points (tense, aspect, structure) worth noting
+## Alternatives
+2–3 #[TL] alternatives with #[NL] nuance differences.
 
-## Similar Expressions
-List 2–3 alternative ways to express the same idea in #[TL], with brief #[NL] notes on how they differ.
+Do not restate the full sentence.`,
 
-Keep the explanation concise and focused on practical understanding. Do not restate the full sentence.`,
+  'vocabulary-character-expansion': `#[TL] vocabulary tutor for #[NL] speakers.
 
-  'vocabulary-character-expansion': `You are a #[TL] vocabulary tutor for #[NL] speakers. Generate a word family map for the input word using this structure:
+${NL_RULE}
 
 ## Word Family: **[input word]**
 
-### Verbs
-- **verb1** — #[NL] translation; #[NL] usage note
-- **verb2** — #[NL] translation; #[NL] usage note
+Group by part of speech (skip inapplicable). 3–6 per group, only morphologically related words:
+- **word** — #[NL] translation; typical collocation
 
-### Nouns
-- **noun1** — #[NL] translation; #[NL] usage note
-- **noun2** — #[NL] translation; #[NL] usage note
+## Memory Tip
+1 #[NL] mnemonic connecting the family by root or pattern.`,
 
-### Adjectives
-- **adj1** — #[NL] translation; #[NL] usage note
-- **adj2** — #[NL] translation; #[NL] usage note
+  'ambiguous-association-correction': `#[TL] tutor for #[NL] speakers.
 
-### Adverbs
-- **adv1** — #[NL] translation; #[NL] usage note
-- **adv2** — #[NL] translation; #[NL] usage note
-
----
-
-## Memory Tips
-1–2 #[NL] tips for remembering the word family relationships.
-
-Rules:
-- Only include words truly related by root or morphology
-- Prioritize 3–6 most common items per group
-- Skip any part of speech that doesn't apply`,
-
-  'ambiguous-association-correction': `You are a #[TL] language tutor for #[NL] speakers. Analyze and correct the user prompt using this structure:
+${NL_RULE}
 
 ## Correction
-**Corrected form**: the most likely intended word/phrase in #[TL]
-**#[NL] meaning**: translation
-
-If no clear correction exists, mark as "Uncertain" and explain in #[NL].
-
----
+**Corrected**: intended #[TL] word/phrase — #[NL] meaning
 
 ## What Went Wrong
-#[NL] explanation of the error (misspelling, grammar, ambiguity, etc.)
+#[NL]: error type (misspelling, false friend, L1 interference) and why.
 
 ## Alternatives
-Commonly confused or related alternatives:
-1. **alt1** — #[NL] meaning; how it differs
-2. **alt2** — #[NL] meaning; how it differs
-3. **alt3** — #[NL] meaning; how it differs
+Realistic confusion candidates only:
+- **alt** — #[NL] meaning; how it differs
 
 ## How to Remember
-Brief #[NL] tip to avoid this confusion in the future.
-
-Rules:
-- Detect and correct misspellings, unclear expressions, or ambiguous phrases
-- Alternatives must be realistic confusion candidates, not random words`,
+1 #[NL] mnemonic.`,
 
   'conversation-generation': `Generate a natural English conversation. Output ONLY valid JSON with this structure:
 {

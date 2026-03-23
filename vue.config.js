@@ -284,15 +284,21 @@ module.exports = {
         compress: true,
         disableHostCheck: true,
         before(app) {
-            const { getSubtitles } = require('youtube-captions-scraper')
-
             app.get('/api/ytb/captions', async (req, res) => {
                 try {
                     const { videoID, lang } = req.query
                     if (!videoID) {
                         return res.status(400).json({ code: 1, msg: 'videoID is required' })
                     }
-                    const captions = await getSubtitles({ videoID, lang: lang || 'en' })
+                    // youtube-transcript is ESM-only; import the ESM bundle explicitly
+                    const { YoutubeTranscript } = await import('youtube-transcript/dist/youtube-transcript.esm.js')
+                    const raw = await YoutubeTranscript.fetchTranscript(videoID, { lang: lang || 'en' })
+                    // Map to {start, dur, text} format expected by toSrtFormat
+                    const captions = raw.map(item => ({
+                        start: item.offset / 1000,
+                        dur: item.duration / 1000,
+                        text: item.text
+                    }))
                     res.json({ code: 0, msg: 'Success', data: captions })
                 } catch (err) {
                     res.status(500).json({ code: 1, msg: err.message || 'Failed to fetch captions' })

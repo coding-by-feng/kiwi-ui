@@ -143,6 +143,7 @@ const audioVolumesEn2ChWhenLastIsSame = [0.3, 0.3, 0.3, 0.3, 0.3, 1, 1, 1, 1, 1,
 
 let that
 let noSleep
+let tokenCounter = 0
 
 const buildNotGlobalLoading = function () {
   return that.$loading({
@@ -265,11 +266,22 @@ export default {
     this.listenerMinBrowser()
   },
   destroyed() {
-    if (this.detail.audioPlayer) {
-      this.pauseAllPlayingAudio()
-      this.detail.audioPlayer = null
-      noSleep.disable()
-      this.detail.isEnableNoSleepMode = false
+    this.pauseAllPlayingAudio()
+    // Revoke blob URLs and release audio objects
+    this.detail.audioPlayerUrls.forEach(url => {
+      if (url && url.startsWith('blob:')) {
+        URL.revokeObjectURL(url)
+      }
+    })
+    this.detail.audioPlayerMap.clear()
+    this.detail.audioPlayer = null
+    this.detail.audioPlayerUrls = []
+    noSleep.disable()
+    this.detail.isEnableNoSleepMode = false
+    // Remove visibilitychange listener
+    if (this._visibilityHandler) {
+      document.removeEventListener('visibilitychange', this._visibilityHandler)
+      this._visibilityHandler = null
     }
   },
   watch: {
@@ -277,10 +289,8 @@ export default {
       this.init()
     },
     'playWordIndex'(newVal) {
-      console.log('watching this.playWordIndex = ' + this.playWordIndex)
       // noinspection JSVoidFunctionReturnValueUsed
       if (this.isNeedStopReview() || this.isReviewPlaying || newVal === 0) {
-        console.log('watching this.')
         return
       }
 
@@ -389,21 +399,19 @@ export default {
     ...paraphraseStarList,
     ...msgUtil,
     listenerMinBrowser() {
-      document.addEventListener('visibilitychange', function () {
+      this._visibilityHandler = () => {
         if (document.hidden) {
-          that.isReviewStop = true
-          that.isReviewPlaying = false
-          that.pauseAllPlayingAudio()
+          this.isReviewStop = true
+          this.isReviewPlaying = false
+          this.pauseAllPlayingAudio()
         } else {
-          that.isReviewStop = false
-          that.isReviewPlaying = true
+          this.isReviewStop = false
+          this.isReviewPlaying = true
         }
-        console.log('visibilitychange isReviewStop=' + that.isReviewStop)
-        console.log('visibilitychange isReviewPlaying=' + that.isReviewPlaying)
-      })
+      }
+      document.addEventListener('visibilitychange', this._visibilityHandler)
     },
     async init() {
-      console.log('init...')
       try {
         this.loading = true
         if (this.isReview) {
@@ -508,7 +516,6 @@ export default {
       })
     },
     async initList() {
-      console.log('initList')
       if (this.reviewMode === 'stockReview' || this.reviewMode === 'stockRead') {
         // 复习模式每页只加载5个单词
         this.page.size = playCountOnce
@@ -527,19 +534,13 @@ export default {
       await this.initDefaultListFun()
     },
     isLastReviewWordSame() {
-      console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
-      console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
       return this.detail.firstReviewWord === this.detail.secondReviewWord
     },
     handoffReviewWordSame() {
-      console.log('this.detail.firstReviewWord', this.detail.firstReviewWord)
-      console.log('this.detail.secondReviewWord', this.detail.secondReviewWord)
       this.detail.firstReviewWord = this.detail.secondReviewWord
       this.detail.secondReviewWord = this.detail.paraphraseVO.wordName
     },
     async initNextReviseDetail(isGetDetail) {
-      console.log('initNextReviewDetail this.playWordIndex = ' + this.playWordIndex)
-      console.log('initNextReviewDetail this.listItems[this.playWordIndex] = ' + this.listItems[this.playWordIndex])
       let loading = buildNotGlobalLoading()
       this.prepareReview()
 
@@ -609,7 +610,6 @@ export default {
     },
 
     async showDetailNotLoadData() {
-      console.log('showDetailNotLoadData')
       this.detail.dialogVisible = true
       if (this.isReview && !this.isReviewStop && !this.isReviewPlaying) {
         this.detail.reviewLoading = true
@@ -765,7 +765,6 @@ export default {
       return audio
     },
     isNeedStopReview() {
-      console.log('this.isReviewStop = ' + this.isReviewStop)
       return this.isReviewStop || !this.isReview || this.playWordIndex < 0
     },
     async stopPlaying() {
@@ -777,7 +776,6 @@ export default {
       this.pauseAllPlayingAudio()
     },
     async ignoreCurrentReview() {
-      console.log('ignoreCurrentReview')
       this.notifySuccess(this, '操作提示', `${this.isDownloadReviewAudio ? '下载' : '复习'}下一个单词`)
       await this.cleanDetailRevising()
       this.isReviewStop = false
@@ -877,22 +875,17 @@ export default {
       if (this.detail.audioPlayer) {
         this.detail.audioPlayer.pause()
       }
-      this.detail.audioPlayerMap.forEach((key, value) => {
-        console.log('this.detail.audioPlayerMap key', key)
-        console.log('this.detail.audioPlayerMap value', value)
-        if (key.paused) {
+      this.detail.audioPlayerMap.forEach((audioObj) => {
+        if (audioObj.paused) {
           return
         }
-        key.pause()
+        audioObj.pause()
       })
     },
     skipSomeAudio: function () {
-      console.log('skip some audio')
       this.pauseAllPlayingAudio()
-      console.log('this.isLastReviewWordSame()', this.isLastReviewWordSame())
       const isFirstSkip = this.detail.skippedCount % 2 === 0
       this.detail.skippedCount++
-      console.log('kiwi isFirstSkip', isFirstSkip)
       if (!this.isChToEn) {
         if (this.isLastReviewWordSame()) {
           const skipIndex = isFirstSkip ? skipWorkSpellingIndexWhenLastIsSameEn2Ch : skipWorkSpellingIndexWhenLastIsSameEn2Ch_2nd
@@ -900,7 +893,6 @@ export default {
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         } else {
           const skipIndex = isFirstSkip ? skipWorkSpellingIndexEn2Ch : skipWorkSpellingIndexEn2Ch_2nd
-          console.log('kiwi skipIndex', skipIndex)
           this.detail.playIndex = skipIndex
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         }
@@ -915,12 +907,11 @@ export default {
           this.detail.audioPlayer = this.getCurrentAudioPlayer(skipIndex)
         }
       }
-      console.log('this.detail.audioPlayer', this.detail.audioPlayer)
-      this.detail.audioPlayer.play()
+      if (this.detail.audioPlayer) {
+        this.detail.audioPlayer.play()
+      }
     },
     async showNext(isSkipSomeAudio) {
-      console.log('isSkipSomeAudio', isSkipSomeAudio)
-      console.log('this.detail.isSleepMode', this.detail.isSleepMode)
       if (isSkipSomeAudio === false || isSkipSomeAudio === undefined) {
         await this.reviewNextWord();
       } else {
@@ -934,7 +925,6 @@ export default {
       return this.page.current >= this.page.pages
     },
     async skipCurrent() {
-      console.log('skipCurrent')
       // alert('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
       // alert('skipCurrent this.playWordIndex = ' + this.playWordIndex)
       // alert('skipCurrent this.page.size = ' + this.page.size)
@@ -948,15 +938,6 @@ export default {
             : this.detail.showIndex >= this.listItems.length
         let lastPage = this.isLastPage()
         // 最后一页条目数可能小于每页条目数
-        console.log('skipCurrent wordName = ', this.detail.paraphraseVO.wordName)
-        console.log('skipCurrent audioPlayerUrls = ', this.detail.audioPlayerUrls)
-        console.log('skipCurrent audioPlayerMap = ', this.detail.audioPlayerMap)
-        console.log('skipCurrent lastPage = ' + lastPage)
-        console.log('skipCurrent this.playWordIndex = ' + this.playWordIndex)
-        console.log('skipCurrent lastIndexPerPage = ' + lastIndexPerPage)
-        console.log('skipCurrent this.detail.showIndex = ' + this.detail.showIndex)
-        console.log('skipCurrent this.page.current = ' + this.page.current)
-        console.log('skipCurrent this.page.size = ' + this.page.size)
         if (lastPage) {
           let lastPageRemainder = this.page.total % this.page.size
           // Check if we've reached the end of the current page's items
@@ -968,7 +949,6 @@ export default {
             return
           }
         }
-        console.log('kason skipping... lastIndexPerPage', lastIndexPerPage)
         if (lastIndexPerPage) {
           this.page.current++
           await this.init()
@@ -1005,13 +985,20 @@ export default {
       await this.recursiveReview()
     },
     async cleanRevising() {
+      // Revoke blob URLs to prevent memory leaks
+      this.detail.audioPlayerUrls.forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+      })
       this.reviseAudioCandidates = []
       this.detail.firstReviewWord = null
       this.detail.secondReviewWord = null
       this.detail.paraphraseVO = {}
       this.detail.dialogVisible = false
-      this.detail.audioPlayerToken = new Date().getTime()
+      this.detail.audioPlayerToken = ++tokenCounter
       this.detail.audioPlayerMap.clear()
+      this.detail.audioPlayerUrls = []
     },
     async cleanInitRevising() {
       // stop playing
@@ -1033,7 +1020,6 @@ export default {
     },
 
     extractReviewAudioUrls: function () {
-      console.log('this.isLastReviewWordSame() in extractReviewAudioUrls', this.isLastReviewWordSame())
       let paraphraseId = this.detail.paraphraseVO.paraphraseId
       let wordId = this.detail.paraphraseVO.wordId
       let wordCharacter = this.detail.paraphraseVO.wordCharacter
@@ -1054,7 +1040,8 @@ export default {
       }
     },
     getCurrentAudioPlayer: function (index) {
-      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[index ? index : this.detail.playIndex])
+      let idx = (index !== undefined && index !== null) ? index : this.detail.playIndex
+      return this.detail.audioPlayerMap.get(this.detail.audioPlayerUrls[idx])
     },
     setSoundListener: function (sound, token) {
       sound.addEventListener('ended', async function () {
@@ -1076,16 +1063,15 @@ export default {
         if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
           return
         }
-        console.log('kason 1 that.detail.playIndex++ ' + that.detail.playIndex)
-        console.log('that.detail.audioPlayerMap', that.detail.audioPlayerMap)
-        console.log('that.detail.audioPlayerUrls', that.detail.audioPlayerUrls)
         if (++that.detail.playIndex < that.detail.audioPlayerUrls.length) {
           that.detail.audioPlayer = that.getCurrentAudioPlayer()
-          console.log('that.detail.audioPlayer', that.detail.audioPlayer)
+          if (!that.detail.audioPlayer) {
+            ++that.playWordIndex
+            return
+          }
           that.detail.audioPlayer.play()
         } else {
           ++that.playWordIndex
-          console.log('kason 2 that.playWordIndex++ ' + that.playWordIndex)
         }
       })
       sound.addEventListener('play', function () {
@@ -1098,9 +1084,22 @@ export default {
         that.isReviewPlaying = false
       })
       sound.addEventListener('error', function () {
-        // that.notifySuccess(that, 'error ' + i)
         that.isReviewPlaying = false
         that.detail.reviewLoading = false
+        if (token !== that.detail.audioPlayerToken || that.isReviewStop) {
+          return
+        }
+        // Advance past failed audio to prevent review from getting stuck
+        if (++that.detail.playIndex < that.detail.audioPlayerUrls.length) {
+          that.detail.audioPlayer = that.getCurrentAudioPlayer()
+          if (that.detail.audioPlayer) {
+            that.detail.audioPlayer.play()
+          } else {
+            ++that.playWordIndex
+          }
+        } else {
+          ++that.playWordIndex
+        }
       })
     },
     async createReviseQueue(token) {
@@ -1113,24 +1112,24 @@ export default {
       }
 
       let urls = this.extractReviewAudioUrls()
-      console.log('extracting urls', urls)
       await audioUtil.rebuildUrls(urls)
-      console.log('rebuildUrls', urls)
+
+      // Token may have changed during async rebuild — abandon stale queue
+      if (token !== this.detail.audioPlayerToken) {
+        return []
+      }
 
       this.detail.audioPlayerUrls = urls
 
       if (this.isDownloadReviewAudio) {
         let msg = `${this.detail.paraphraseVO.wordName} audio resources successfully downloaded`;
         this.msgSuccess(this, msg, 4000)
-        console.log(msg)
       }
 
       this.detail.playIndex = 0
       for (let i = 0; i < this.detail.audioPlayerUrls.length; i++) {
         // noinspection JSUnusedGlobalSymbols
         let sound = this.detail.audioPlayerMap.get(urls[i]);
-        console.log('this.detail.audioPlayerMap', this.detail.audioPlayerMap)
-        console.log('this.detail.audioPlayerMap sound', sound)
         if (sound === null || sound === undefined) {
           sound = new Audio(urls[i])
           if (!this.isChToEn) {
@@ -1143,7 +1142,6 @@ export default {
           sound.loop = false;
           this.setSoundListener(sound, token)
 
-          console.log('this.detail.audioPlayerMap.set(urls[i], sound)', urls[i], sound)
           this.detail.audioPlayerMap.set(urls[i], sound)
         }
       }
