@@ -51,7 +51,7 @@ module.exports = {
         '@opendocsg/pdf2md',
         'unpdf',
         'signature_pad',
-        'pdfjs-dist'
+        'pdfjs-dist',
     ],
     configureWebpack: {
         devtool: false,
@@ -284,26 +284,21 @@ module.exports = {
         compress: true,
         disableHostCheck: true,
         before(app) {
-            app.get('/api/ytb/captions', async (req, res) => {
-                try {
-                    const { videoID, lang } = req.query
-                    if (!videoID) {
-                        return res.status(400).json({ code: 1, msg: 'videoID is required' })
-                    }
-                    // youtube-transcript is ESM-only; import the ESM bundle explicitly
-                    const { YoutubeTranscript } = await import('youtube-transcript/dist/youtube-transcript.esm.js')
-                    const raw = await YoutubeTranscript.fetchTranscript(videoID, { lang: lang || 'en' })
-                    // Map to {start, dur, text} format expected by toSrtFormat
-                    const captions = raw.map(item => ({
-                        start: item.offset / 1000,
-                        dur: item.duration / 1000,
-                        text: item.text
-                    }))
-                    res.json({ code: 0, msg: 'Success', data: captions })
-                } catch (err) {
-                    res.status(500).json({ code: 1, msg: err.message || 'Failed to fetch captions' })
+            app.get('/ytb/transcript', async (req, res) => {
+                const { videoId, lang } = req.query;
+                if (!videoId) {
+                    return res.status(400).json({ error: 'videoId is required' });
                 }
-            })
+                try {
+                    const { YoutubeTranscript } = await import('youtube-transcript/dist/youtube-transcript.esm.js');
+                    const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
+                        lang: lang || 'en'
+                    });
+                    res.json({ data: transcript });
+                } catch (err) {
+                    res.status(500).json({ error: err.message || 'Failed to fetch transcript' });
+                }
+            });
         },
         proxy: {
             '/auth': createProxyConfig('/auth'),
