@@ -31,7 +31,7 @@
 
           <!-- Channel list -->
           <div v-else class="channel-list">
-            <div v-for="channel in channels" :key="channel.channelId" class="channel-item" @click="handleChannelClick(channel)">
+            <div v-for="channel in channels" :key="channel.id" class="channel-item" @click="handleChannelClick(channel)">
               <div class="channel-content">
                 <div class="channel-name">{{ channel.channelName }}</div>
               </div>
@@ -40,7 +40,7 @@
                            :icon="channel.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
                            :class="['fav-btn', channel.favorited ? 'favorited' : '']"
                            :aria-pressed="channel.favorited ? 'true' : 'false'"
-                           :disabled="!!pendingChannelFavorite[channel.channelId]"
+                           :disabled="!!pendingChannelFavorite[channel.id]"
                            @click.stop="toggleChannelFavorite(channel)"></KiwiButton>
                 <KiwiButton type="text" size="small" class="ml-8" @click.stop="handleChannelClick(channel)">View</KiwiButton>
               </div>
@@ -171,11 +171,11 @@ export default {
   watch: {
     '$route.query.channelId'(id) {
       if (id) {
-        const found = this.channels.find(c => String(c.channelId) === String(id))
+        const found = this.channels.find(c => String(c.id) === String(id))
         if (found) {
           this.handleChannelClick(found)
         } else {
-          this.selectedChannel = { channelId: id, id: id, channelName: 'Channel' }
+          this.selectedChannel = { id: id, channelName: 'Channel' }
           this.activeTabName = 'videos'
           this.videoQuery.current = 1
           this.fetchVideos()
@@ -240,8 +240,7 @@ export default {
       this.selectedChannel = row
       this.activeTabName = 'videos'
       this.videoQuery.current = 1
-      // Use channelId if available, otherwise fall back to id
-      this.selectedChannel.id = row.channelId || row.id
+      this.selectedChannel.id = row.id
       await this.fetchVideos()
     },
 
@@ -365,7 +364,7 @@ export default {
     },
 
     async toggleChannelFavorite(item) {
-      const id = item.channelId || item.id
+      const id = item.id
       if (!id) {
         return this.$message.error('No valid channel identifier')
       }
@@ -409,7 +408,7 @@ export default {
     syncChannelFavoriteState(channelId, favorited, count) {
       const apply = (arr) => {
         if (!arr) return
-        arr.forEach(c => { if (c && c.channelId === channelId) { c.favorited = favorited; c.favoriteCount = count } })
+        arr.forEach(c => { if (c && c.id === channelId) { c.favorited = favorited; c.favoriteCount = count } })
       }
       apply(this.channels)
     },
