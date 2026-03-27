@@ -270,7 +270,7 @@ export default {
       // Switch to channel mode and point to the channelId so YoutubeChannel can pick it up
       this.$router.push({
         path: this.$route.path,
-        query: { ...this.$route.query, ytbMode: 'channel', channelId: row.id }
+        query: { ...this.$route.query, ytbMode: 'channel', channelId: row.id, channelName: row.channelName || '' }
       })
     },
 
