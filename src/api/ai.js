@@ -304,7 +304,8 @@ function transcriptToSrt(transcript) {
 }
 
 /**
- * Fetch YouTube subtitles via the dev server youtube-transcript endpoint.
+ * Fetch YouTube subtitles via the Node.js youtube-transcript endpoint.
+ * Falls back to the backend API (yt-dlp) if the Node.js endpoint fails.
  * @param {string} videoUrl - YouTube video URL or video ID
  * @param {string} [lang='en'] - Language code
  * @returns {Promise<Object>}
@@ -315,17 +316,22 @@ export async function fetchSubtitlesWithFallback(videoUrl, lang = 'en') {
         throw new Error('Invalid YouTube URL or video ID');
     }
 
-    const res = await window.fetch(`/ytb/transcript?videoId=${encodeURIComponent(videoID)}&lang=${encodeURIComponent(lang)}`);
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to fetch subtitles');
+    // 1st: try Node.js youtube-transcript endpoint
+    try {
+        const res = await window.fetch(`/ytb/transcript?videoId=${encodeURIComponent(videoID)}&lang=${encodeURIComponent(lang)}`);
+        if (res.ok) {
+            const { data: transcript } = await res.json();
+            if (transcript && transcript.length > 0) {
+                const scrollingSubtitles = transcriptToSrt(transcript);
+                return { status: 200, data: { data: { scrollingSubtitles } } };
+            }
+        }
+    } catch (_) {
+        // Node.js endpoint unavailable, fall through to backend
     }
-    const { data: transcript } = await res.json();
-    if (!transcript || transcript.length === 0) {
-        throw new Error('No subtitles found');
-    }
-    const scrollingSubtitles = transcriptToSrt(transcript);
-    return { status: 200, data: { data: { scrollingSubtitles } } };
+
+    // 2nd: fall back to backend API (yt-dlp)
+    return downloadVideoScrollingSubtitles(videoUrl);
 }
 
 /**

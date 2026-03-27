@@ -55,7 +55,7 @@
 
           <!-- Channel list -->
           <div v-else class="channel-list">
-            <div v-for="channel in favoriteChannels" :key="channel.channelId" class="channel-item" @click="goToChannel(channel)">
+            <div v-for="channel in favoriteChannels" :key="channel.id" class="channel-item" @click="goToChannel(channel)">
               <div class="channel-content">
                 <div class="channel-name">{{ channel.channelName }}</div>
               </div>
@@ -64,7 +64,7 @@
                            :icon="channel.favorited ? 'el-icon-star-on' : 'el-icon-star-off'"
                            :class="['fav-btn', channel.favorited ? 'favorited' : '']"
                            :aria-pressed="channel.favorited ? 'true' : 'false'"
-                           :disabled="!!pendingChannelFavorite[channel.channelId]"
+                           :disabled="!!pendingChannelFavorite[channel.id]"
                            @click.stop="toggleChannelFavorite(channel)"></KiwiButton>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default {
       } finally { this.$delete(this.pendingVideoFavorite, key) }
     },
     async toggleChannelFavorite(item) {
-      const id = item.channelId
+      const id = item.id
       if (this.pendingChannelFavorite[id]) return
       this.$set(this.pendingChannelFavorite, id, true)
       const prevF = !!item.favorited, prevC = item.favoriteCount || 0
@@ -270,7 +270,7 @@ export default {
       // Switch to channel mode and point to the channelId so YoutubeChannel can pick it up
       this.$router.push({
         path: this.$route.path,
-        query: { ...this.$route.query, ytbMode: 'channel', channelId: row.channelId }
+        query: { ...this.$route.query, ytbMode: 'channel', channelId: row.id }
       })
     },
 
