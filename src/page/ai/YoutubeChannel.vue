@@ -175,7 +175,8 @@ export default {
         if (found) {
           this.handleChannelClick(found)
         } else {
-          this.selectedChannel = { id: id, channelName: 'Channel' }
+          const name = this.$route.query.channelName || 'Channel'
+          this.selectedChannel = { id: id, channelName: decodeURIComponent(name) }
           this.activeTabName = 'videos'
           this.videoQuery.current = 1
           this.fetchVideos()
