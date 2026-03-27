@@ -153,12 +153,6 @@
       <p v-else class="status-message compact">{{ statusMessage }}</p>
     </div>
 
-    <!-- Subtitles Loading Indicator - only shows during active loading -->
-    <div v-if="isSubtitlesLoading || isTranslationLoading" class="subtitles-loading-indicator">
-      <i class="el-icon-loading"></i>
-      <span>{{ isTranslationLoading ? 'Translating...' : 'Loading subtitles...' }}</span>
-    </div>
-
     <!-- Enhanced Content Container -->
     <div class="content-container" :class="{ resizing: isResizing }" v-if="(videoUrl && videoUrl !== '')">
       <!-- Left Panel (video and controls) -->
@@ -2392,29 +2386,6 @@ export default {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-}
-
-/* Subtitles loading indicator */
-.subtitles-loading-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg-card);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 100;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.subtitles-loading-indicator i {
-  font-size: 18px;
-  color: var(--color-primary);
-  animation: spin 1s linear infinite;
 }
 
 .subtitles-loading-placeholder {
