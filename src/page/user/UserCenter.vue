@@ -55,15 +55,6 @@
             <p>{{ $t('user.todayReviewed') }}</p>
           </div>
         </div>
-        <div class="stat-card master-card">
-          <div class="stat-icon master">
-            <i class="el-icon-star-on"></i>
-          </div>
-          <div class="stat-content">
-            <h5>{{ user.keepInMindCount }}</h5>
-            <p>{{ $t('user.todayMastered') }}</p>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -599,7 +590,6 @@
 <script>
 import website from '@/const/website'
 import { getStore, setStore } from '@/util/store'
-import review from '@/api/review'
 import kiwiConst from '@/const/kiwiConsts'
 import util from '@/util/util'
 import msgUtil from '@/util/msg'
@@ -645,7 +635,6 @@ export default {
         nativeLang: getStore({ name: kiwiConst.CONFIG_KEY.NATIVE_LANG }),
         uiLanguage: getStore({ name: kiwiConst.CONFIG_KEY.UI_LANGUAGE }) || 'en',
         clipboardDetection: getStore({ name: kiwiConst.CONFIG_KEY.CLIPBOARD_DETECTION }),
-        keepInMindCount: 0,
         rememberCount: 0,
         reviewCount: 0,
         theme: getStore({ name: 'theme' }) || 'classic-book',
@@ -1036,16 +1025,6 @@ export default {
     },
 
     refresh() {
-      // Get today's review statistics with error handling
-      review.getReviewCounterVO(kiwiConst.REVIEW_DAILY_COUNTER_TYPE.KEEP_IN_MIND)
-          .then(response => {
-            if (response.data.data) {
-              this.user.keepInMindCount = response.data.data.reviewCount
-            }
-          })
-          .catch(error => {
-            console.error('Error loading review count:', error)
-          })
     },
 
     // Theme handling

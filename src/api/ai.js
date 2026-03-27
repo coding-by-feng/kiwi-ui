@@ -1,6 +1,6 @@
 import request from '@/router/axios'
 import kiwiConsts from '@/const/kiwiConsts'
-import { extractVideoId, toSrtFormat } from '@/util/youtubeSubtitles'
+import { extractVideoId } from '@/util/youtubeSubtitles'
 
 // AI Call History API calls
 export function getAiCallHistory(current, size, filter = null) {
@@ -286,38 +286,50 @@ export function getVideoTitle(videoUrl) {
     })
 }
 
+function formatSrtTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 1000);
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+}
+
+function transcriptToSrt(transcript) {
+    return transcript.map((item, index) => {
+        const isMs = Number.isInteger(item.offset) && (item.offset > 500 || item.duration > 500);
+        const startSec = isMs ? item.offset / 1000 : item.offset;
+        const endSec = startSec + (isMs ? item.duration / 1000 : item.duration);
+        return `${index + 1}\n${formatSrtTime(startSec)} --> ${formatSrtTime(endSec)}\n${item.text}\n`;
+    }).join('\n');
+}
+
 /**
- * Fetch YouTube subtitles via the Node.js dev-server endpoint (youtube-captions-scraper),
- * falling back to the backend API if the Node.js endpoint is unavailable.
+ * Fetch YouTube subtitles via the dev server youtube-transcript endpoint.
  * @param {string} videoUrl - YouTube video URL or video ID
  * @param {string} [lang='en'] - Language code
  * @returns {Promise<Object>}
  */
 export async function fetchSubtitlesWithFallback(videoUrl, lang = 'en') {
     const videoID = extractVideoId(videoUrl);
-    if (videoID) {
-        try {
-            const res = await request({
-                url: '/api/ytb/captions',
-                method: 'get',
-                params: { videoID, lang }
-            });
-            if (res.status === 200 && res.data && res.data.code === 0 && Array.isArray(res.data.data)) {
-                const scrollingSubtitles = toSrtFormat(res.data.data);
-                return {
-                    status: 200,
-                    data: { data: { scrollingSubtitles } }
-                };
-            }
-        } catch (_) {
-            // Node.js endpoint unavailable, fall back to backend
-        }
+    if (!videoID) {
+        throw new Error('Invalid YouTube URL or video ID');
     }
-    return downloadVideoScrollingSubtitles(videoUrl);
+
+    const res = await window.fetch(`/ytb/transcript?videoId=${encodeURIComponent(videoID)}&lang=${encodeURIComponent(lang)}`);
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to fetch subtitles');
+    }
+    const { data: transcript } = await res.json();
+    if (!transcript || transcript.length === 0) {
+        throw new Error('No subtitles found');
+    }
+    const scrollingSubtitles = transcriptToSrt(transcript);
+    return { status: 200, data: { data: { scrollingSubtitles } } };
 }
 
 /**
- * Get video ID from URL using youtube-captions-scraper utility
+ * Get video ID from URL
  * @param {string} videoUrl - YouTube video URL
  * @returns {string|null}
  */

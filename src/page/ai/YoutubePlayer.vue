@@ -341,7 +341,7 @@
 <script>
 // Removed defineComponent import for Vue 2 options API
 // import {defineComponent} from 'vue';
-import {downloadVideoScrollingSubtitles, favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl, fetchSubtitlesWithFallback} from '@/api/ai';
+import {favoriteVideoByUrl, unfavoriteVideoByUrl, checkVideoFavoriteById, checkVideoFavoriteByUrl, fetchSubtitlesWithFallback} from '@/api/ai';
 import msgUtil from '@/util/msg';
 import kiwiConsts from '@/const/kiwiConsts'
 import {getStore, setStore} from "@/util/store";
