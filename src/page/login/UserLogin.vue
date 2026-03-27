@@ -456,9 +456,13 @@ export default {
       const word = currentQuery.word
       console.log('📊 [REDIRECT] Route query word:', word)
 
-      // Build destination and preserve all current query params, forcing active=search
+      // Only preserve search-relevant params; strip YouTube/other tab params
+      // to avoid triggering unrelated API calls (e.g., /ytb/transcript) after login
       const redirectPath = kiwiConsts.ROUTES.DETAIL
-      const redirectQuery = { ...currentQuery, active: 'search' }
+      const redirectQuery = { active: 'search' }
+      if (word) redirectQuery.word = word
+      if (currentQuery.selectedMode) redirectQuery.selectedMode = currentQuery.selectedMode
+      if (currentQuery.language) redirectQuery.language = currentQuery.language
 
       console.log('🎯 [REDIRECT] Redirect destination:', {
         path: redirectPath,
