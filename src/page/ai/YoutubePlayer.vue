@@ -1586,7 +1586,9 @@ export default {
           currentTime >= subtitle.start && currentTime < subtitle.end
       );
 
-      if (newIndex !== this.currentSubtitleIndex) {
+      // When newIndex is -1 (gap between subtitles / speaker pause),
+      // keep the last active subtitle to prevent jumping to the first line
+      if (newIndex !== -1 && newIndex !== this.currentSubtitleIndex) {
         this.currentSubtitleIndex = newIndex;
       }
     },
