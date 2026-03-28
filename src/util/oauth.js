@@ -1,6 +1,7 @@
 // src/util/oauth.js - Enhanced OAuth utility for mobile compatibility
 import {getStore, setStore} from '@/util/store'
 import messageCenter from '@/util/msg'
+import kiwiConsts from '@/const/kiwiConsts'
 
 // Flag to prevent multiple OAuth processing
 let isProcessingOAuth = false
@@ -102,7 +103,13 @@ export const handleGoogleOAuthCallback = () => {
 
             console.log(' [OAUTH] Redirecting to home after successful login')
 
-            // For other browsers, use immediate redirect
+            // Store redirect destination so permission.js navigates to the right page after reload
+            sessionStorage.setItem('loginRedirect', JSON.stringify({
+                path: kiwiConsts.ROUTES.DETAIL,
+                query: { active: 'search' }
+            }))
+
+            // Reload to clean URL and let the router guard handle redirect
             window.location.href = window.location.origin + window.location.pathname
 
             console.log(' [OAUTH] Showing success message')
