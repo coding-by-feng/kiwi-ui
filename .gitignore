@@ -24,3 +24,12 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+*.pem
+*.key
+*.jks
+*.p12
+.env
+.env.*
+.npmrc
+**/client_secret*.json
+**/*service-account*.json
